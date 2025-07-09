@@ -44,7 +44,7 @@ public class CaffeineCacheServiceImpl implements CacheService {
             return Lists.newArrayList();
         }
         Set<Object> cacheKey = cache.getNativeCache().asMap().keySet();
-        return cacheKey.stream().map(e -> e.toString()).collect(Collectors.toList());
+        return cacheKey.stream().map(Object::toString).collect(Collectors.toList());
     }
 
     /**

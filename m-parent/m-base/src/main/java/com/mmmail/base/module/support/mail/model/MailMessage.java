@@ -1,7 +1,9 @@
 package com.mmmail.base.module.support.mail.model;
 
 import jakarta.mail.Message;
+import lombok.Data;
 
+@Data
 public class MailMessage {
     private final String username;
     private final Message message;
@@ -15,37 +17,5 @@ public class MailMessage {
         this.processed = false;
         this.processingTime = 0;
         this.errorMessage = null;
-    }
-
-    public String getUsername() {
-        return username;
-    }
-
-    public Message getMessage() {
-        return message;
-    }
-
-     public boolean isProcessed() {
-        return processed;
-    }
-
-    public void setProcessed(boolean processed) {
-        this.processed = processed;
-    }
-
-    public long getProcessingTime() {
-        return processingTime;
-    }
-
-    public void setProcessingTime(long processingTime) {
-        this.processingTime = processingTime;
-    }
-
-    public String getErrorMessage() {
-        return errorMessage;
-    }
-
-    public void setErrorMessage(String errorMessage) {
-        this.errorMessage = errorMessage;
     }
 }

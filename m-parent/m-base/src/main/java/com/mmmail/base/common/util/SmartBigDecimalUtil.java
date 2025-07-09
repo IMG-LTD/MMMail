@@ -2,6 +2,7 @@ package com.mmmail.base.common.util;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
+import java.util.Objects;
 
 /**
  * BigDecimal 工具类
@@ -67,11 +68,7 @@ public class SmartBigDecimalUtil {
     public static BigDecimal add(int point, BigDecimal... array) {
         BigDecimal res = new BigDecimal(0);
         for (BigDecimal item : array) {
-            if (item == null) {
-                res = res.add(BigDecimal.ZERO);
-            } else {
-                res = res.add(item);
-            }
+            res = res.add(Objects.requireNonNullElse(item, BigDecimal.ZERO));
         }
         return setScale(res, point);
     }

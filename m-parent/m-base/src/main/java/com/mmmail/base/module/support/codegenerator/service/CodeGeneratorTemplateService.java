@@ -198,7 +198,7 @@ public class CodeGeneratorTemplateService {
         variablesMap.put("name", names);
 
         //主键字段名称和java类型
-        CodeField primaryKeycodeField = fields.stream().filter(e -> e.getPrimaryKeyFlag()).findFirst().get();
+        CodeField primaryKeycodeField = fields.stream().filter(CodeField::getPrimaryKeyFlag).findFirst().get();
         if (primaryKeycodeField != null) {
             variablesMap.put("primaryKeyJavaType", primaryKeycodeField.getJavaType());
             variablesMap.put("primaryKeyFieldName", primaryKeycodeField.getFieldName());

@@ -1,7 +1,6 @@
 package com.mmmail.base.module.support.mail.service;
 
 import com.mmmail.base.module.support.mail.config.MailProperties;
-import com.mmmail.base.module.support.mail.model.MailUser;
 import jakarta.mail.Folder;
 import jakarta.mail.MessagingException;
 import jakarta.mail.Session;
@@ -21,13 +20,11 @@ import java.util.Properties;
 @Component
 public class ImapConnectionPool {
     private static final Logger logger = LoggerFactory.getLogger(ImapConnectionPool.class);
-    
-    private final MailProperties mailProperties;
+
     private final GenericObjectPool<ImapConnection> pool;
 
     @Autowired
     public ImapConnectionPool(MailProperties mailProperties) {
-        this.mailProperties = mailProperties;
         GenericObjectPoolConfig<ImapConnection> config = new GenericObjectPoolConfig<>();
         config.setMaxTotal(100); // 最大连接数
         config.setMaxIdle(50); // 最大空闲连接数

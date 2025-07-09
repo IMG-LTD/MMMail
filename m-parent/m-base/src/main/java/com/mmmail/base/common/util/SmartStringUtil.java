@@ -46,9 +46,9 @@ public class SmartStringUtil extends StrUtil {
         }
         String[] strArr = str.split(split);
         List<Integer> list = new ArrayList<Integer>(strArr.length);
-        for (int i = 0; i < strArr.length; i++) {
+        for (String s : strArr) {
             try {
-                int parseInt = Integer.parseInt(strArr[i]);
+                int parseInt = Integer.parseInt(s);
                 list.add(parseInt);
             } catch (NumberFormatException e) {
                 list.add(defaultVal);
@@ -64,9 +64,9 @@ public class SmartStringUtil extends StrUtil {
         }
         String[] strArr = str.split(split);
         HashSet<Integer> set = new HashSet<Integer>(strArr.length);
-        for (int i = 0; i < strArr.length; i++) {
+        for (String s : strArr) {
             try {
-                int parseInt = Integer.parseInt(strArr[i]);
+                int parseInt = Integer.parseInt(s);
                 set.add(parseInt);
             } catch (NumberFormatException e) {
                 set.add(defaultVal);
@@ -113,9 +113,9 @@ public class SmartStringUtil extends StrUtil {
         }
         String[] strArr = str.split(split);
         List<Long> list = new ArrayList<Long>(strArr.length);
-        for (int i = 0; i < strArr.length; i++) {
+        for (String s : strArr) {
             try {
-                long parseLong = Long.parseLong(strArr[i]);
+                long parseLong = Long.parseLong(s);
                 list.add(parseLong);
             } catch (NumberFormatException e) {
                 list.add(defaultVal);
@@ -158,9 +158,9 @@ public class SmartStringUtil extends StrUtil {
         }
         String[] strArr = str.split(split);
         List<Byte> list = new ArrayList<Byte>(strArr.length);
-        for (int i = 0; i < strArr.length; i++) {
+        for (String s : strArr) {
             try {
-                byte parseByte = Byte.parseByte(strArr[i]);
+                byte parseByte = Byte.parseByte(s);
                 list.add(parseByte);
             } catch (NumberFormatException e) {
                 list.add(defaultVal);
@@ -203,9 +203,9 @@ public class SmartStringUtil extends StrUtil {
         }
         String[] strArr = str.split(split);
         List<Double> list = new ArrayList<Double>(strArr.length);
-        for (int i = 0; i < strArr.length; i++) {
+        for (String s : strArr) {
             try {
-                double parseByte = Double.parseDouble(strArr[i]);
+                double parseByte = Double.parseDouble(s);
                 list.add(parseByte);
             } catch (NumberFormatException e) {
                 list.add(defaultVal);
@@ -248,9 +248,9 @@ public class SmartStringUtil extends StrUtil {
         }
         String[] strArr = str.split(split);
         List<Float> list = new ArrayList<Float>(strArr.length);
-        for (int i = 0; i < strArr.length; i++) {
+        for (String s : strArr) {
             try {
-                float parseByte = Float.parseFloat(strArr[i]);
+                float parseByte = Float.parseFloat(s);
                 list.add(parseByte);
             } catch (NumberFormatException e) {
                 list.add(defaultVal);

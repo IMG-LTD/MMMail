@@ -1,13 +1,13 @@
 package com.mmmail.base.module.support.mail.service;
 
-import com.mmmail.base.module.support.mail.model.MailUser;
-import jakarta.mail.Message;
+import lombok.Data;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
+@Data
 @Component
 public class MailMonitor {
     private static final Logger logger = LoggerFactory.getLogger(MailMonitor.class);

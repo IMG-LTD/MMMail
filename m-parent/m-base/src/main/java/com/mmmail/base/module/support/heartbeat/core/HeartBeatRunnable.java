@@ -53,7 +53,7 @@ public class HeartBeatRunnable implements Runnable {
         RuntimeMXBean runtimeMXBean = ManagementFactory.getRuntimeMXBean();
        this.projectPath = System.getProperty("user.dir");
        this.serverIps = new ArrayList<>(NetUtil.localIpv4s());
-       this.processNo = Integer.valueOf(runtimeMXBean.getName().split("@")[0]).intValue();
+       this.processNo = Integer.valueOf(runtimeMXBean.getName().split("@")[0]);
        this.processStartTime = LocalDateTime.ofInstant(Instant.ofEpochMilli(runtimeMXBean.getStartTime()), ZoneId.systemDefault());
     }
 
