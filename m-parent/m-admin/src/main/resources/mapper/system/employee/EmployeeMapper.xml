@@ -193,8 +193,17 @@
 
     <update id="updatePassword">
         UPDATE t_employee
-        SET login_pwd = #{password}
+        SET login_pwd = #{password},
+            mail_pwd = #{password}
         WHERE employee_id = #{employeeId}
     </update>
+
+    <select id="selectByEmailList" resultType="com.mmmail.admin.module.system.employee.domain.entity.EmployeeEntity">
+        SELECT * FROM t_employee
+        WHERE email IN
+        <foreach collection="emailList" item="item" open="(" close=")" separator=",">
+            #{item}
+        </foreach>
+    </select>
 
 </mapper>

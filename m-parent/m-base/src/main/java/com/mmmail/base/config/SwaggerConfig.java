@@ -65,8 +65,8 @@ public class SwaggerConfig {
         return new OpenAPI()
                 .components(components())
                 .info(new Info()
-                        .title("SmartAdmin 3.X 接口文档")
-                        .contact(new Contact().name("1024创新实验室").email("lab1024@163.com").url("https://1024lab.net"))
+                        .title("MMMailAdmin 接口文档")
+                        .contact(new Contact().name("IMG.LTD开源项目平台").email("admin@img.ltd").url("https://www.img.ltd"))
                         .version("v3.X")
                         .description("<font color=\"#DC143C\">**以「高质量代码」为核心，「简洁、高效、安全」**</font>基于 SpringBoot + Sa-Token + Mybatis-Plus 和 Vue3 + Vite5 + Ant Design (同时支持JavaScript和TypeScript双版本) 的快速开发平台。" +
                                 "<br/><font color=\"#DC143C\">**国内首个满足《网络安全》、《数据安全》、三级等保**</font>， 支持登录限制、支持国产接口加解密等安全、支持数据加解密等一系列安全体系的开源项目。" +

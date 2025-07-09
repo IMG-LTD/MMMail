@@ -1,13 +1,13 @@
 {
-  "name": "smartadmin",
+  "name": "MMMailAdmin",
   "version": "3.0.0",
   "author": {
-    "name": "1024创新实验室（1024lab）",
-    "email": "lab1024@163.com",
-    "url": "https://www.1024lab.net"
+    "name": "MMMail",
+    "email": "hello@mmmail.com",
+    "url": "https://www.img.ltd"
   },
   "license": "MIT",
-  "homepage": "https://smartadmin.1024lab.net",
+  "homepage": "https://demo.mmmail.com",
   "scripts": {
     "localhost": "vite --mode localhost",
     "dev": "vite",

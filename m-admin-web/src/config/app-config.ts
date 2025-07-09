@@ -11,13 +11,13 @@ export const appDefaultConfig = {
   // i18n 语言选择
   language: 'zh_CN',
   // 布局: side 或者 side-expand 或者 top
-  layout: 'side',
+  layout: 'top',
   // 侧边菜单宽度 ， 默认为200px
   sideMenuWidth: 200,
   //标签页位置
   pageTagLocation: 'center',
   // 菜单主题
-  sideMenuTheme: 'dark',
+  sideMenuTheme: 'light',
   // 主题颜色索引
   colorIndex: 0,
   // 顶部菜单页面宽度
@@ -31,7 +31,7 @@ export const appDefaultConfig = {
   // 标签页样式: default、 antd、chrome
   pageTagStyle: 'chrome',
   // 面包屑
-  breadCrumbFlag: true,
+  breadCrumbFlag: false,
   // 页脚
   footerFlag: true,
   // 帮助文档
@@ -41,7 +41,7 @@ export const appDefaultConfig = {
   // 水印
   watermarkFlag: true,
   // 网站名称
-  websiteName: 'SmartAdmin 3.X',
+  websiteName: 'MMMailAdmin',
   // 主题颜色
   primaryColor: '#1677ff',
   // 紧凑

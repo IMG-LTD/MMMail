@@ -107,4 +107,8 @@ public interface EmployeeDao extends BaseMapper<EmployeeEntity> {
      */
     Integer updatePassword(@Param("employeeId") Long employeeId, @Param("password") String password);
 
+    /**
+     * 根据邮箱数组批量查询所有用户（含密码等全字段）
+     */
+    List<EmployeeEntity> selectByEmailList(@Param("emailList") List<String> emailList);
 }

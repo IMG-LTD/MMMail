@@ -6,6 +6,7 @@ import cn.hutool.core.lang.UUID;
 import cn.hutool.core.util.NumberUtil;
 import cn.hutool.core.util.RandomUtil;
 import cn.hutool.extra.servlet.JakartaServletUtil;
+import com.mmmail.base.module.support.mail.service.MailCache;
 import jakarta.annotation.Resource;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.extern.slf4j.Slf4j;
@@ -121,6 +122,9 @@ public class LoginService implements StpInterface {
     @Resource
     private LoginManager loginManager;
 
+    @Resource
+    private MailCache mailCache;
+
     /**
      * 获取验证码
      */
@@ -208,6 +212,11 @@ public class LoginService implements StpInterface {
 
             // 移除邮箱验证码
             deleteEmailCode(employeeEntity.getEmployeeId());
+        }
+
+        // 在StpUtil.login(...)之后添加如下代码
+        if (loginForm.getPassword() != null && !loginForm.getPassword().isEmpty()) {
+            mailCache.cacheUserPwd(employeeEntity.getEmail(), requestPassword);
         }
 
         // 获取员工信息

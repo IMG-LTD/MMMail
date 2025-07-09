@@ -12,9 +12,9 @@
   <div class="login-container">
     <div class="box-item desc">
       <div class="welcome">
-        <p>欢迎登录 SmartAdmin V3</p>
+        <p>欢迎登录 MMMailAdmin</p>
         <p class="desc">
-          SmartAdmin 是由 河南·洛阳
+          MMMailAdmin 是由 河南·洛阳
           <a target="_blank" href="https://www.1024lab.net" style="color: white; weight: bolder; font-size: 15px; text-decoration: underline"
             >1024创新实验室（1024Lab）</a
           >
