@@ -37,11 +37,28 @@ spring:
 
   # 邮件，置以SSL的方式发送, 这个需要使用这种方式并且端口是465
   mail:
-    host: smtp.mmmail.com
+    host: mail.mmmail.com
     port: 465
     username: notice@mmmail.com
     password:
-    test-connection: false
+    imap:
+      host: mail.mmmail.com
+      port: 993 # IMAPS (IMAP over SSL) 的标准端口，请确认
+      username: ${spring.mail.username}
+      password: ${spring.mail.password}
+    multi-account:
+      enabled: false # 设置为 true 以启用多账户监听
+      accounts:
+        - host: mail.mmmail.com
+          port: 993
+          username: user1@mmmail.com
+          password: password1
+#        - host: mail.otherdomain.com
+#          port: 993
+#          username: user2@otherdomain.com
+#          password: password2
+    ldap:
+      enabled: false # 设置为 false 以从数据库获取用户
     properties:
       mail:
         smtp:
@@ -52,6 +69,32 @@ spring:
               class: com.sun.mail.util.MailSSLSocketFactory
               fallback: false
         debug: false
+    test-connection: false
+    optimization:
+      connection-pool:
+        max-total: 100
+        max-idle: 50
+        min-idle: 10
+        max-wait-millis: 10000
+        test-on-borrow: true
+        time-between-eviction-runs-millis: 300000
+        min-evictable-idle-time-millis: 600000
+      message-queue:
+        max-size: 1000
+        batch-size: 100
+        thread-pool-size: 10
+        retry-delay: 30000
+        max-retries: 3
+      cache:
+        ttl: 3600000
+        max-size: 1000
+        enabled: true
+        cleanup-interval: 3600000
+      compression:
+        enabled: true
+        threshold: 1024.0
+        algorithm: bzip2
+        compression-ratio: 0.5
 
   # json序列化相关配置
   jackson:
@@ -68,6 +111,18 @@ spring:
   # 缓存实现类型
   cache:
     type: redis
+  # ldap 配置
+  ldap:
+    urls: ldap://localhost:1389
+    base: dc=mmmail,dc=com
+    username: cn=admin,dc=mmmail,dc=com
+    password: admin
+
+# 邮件服务器配置（用于 MailUser 统一管理）
+mail-server:
+  host: mail.mmmail.com
+  port: 993
+  email-suffix: "@mmmail.com"
 
 # tomcat 配置，主要用于 配置 访问日志（便于将来排查错误）
 server:
@@ -155,6 +210,17 @@ sa-token:
   is-print: false
   # 是否从cookie读取token
   is-read-cookie: false
+  oauth2:
+    server:
+      # 配置：是否在每次整体交互后，自动续签 access-token 的有效期
+      # access-token 的有效期，单位：秒, 默认120秒
+      access-token-timeout: 604800
+      # refresh-token 的有效期，单位：秒, 默认30天
+      refresh-token-timeout: 2592000
+      # client-token 的有效期，单位：秒, 默认30天
+      client-token-timeout: 2592000
+      # code 的有效期，单位：秒, 默认10分钟
+      code-timeout: 600
 
 # SmartJob 定时任务配置(不需要可以直接删除以下配置，详细文档请看：https://www.xxxxxx.com)
 smart:
