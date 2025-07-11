@@ -1,0 +1,99 @@
+version: '3.8'
+
+services:
+  # MySQL数据库
+  mysql:
+    image: mysql:8.0
+    container_name: mmmail-mysql
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: mmmail123
+      MYSQL_DATABASE: mmmail
+      MYSQL_USER: mmmail
+      MYSQL_PASSWORD: mmmail123
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+      - ./docker/mysql/conf:/etc/mysql/conf.d
+      - ./docker/mysql/init:/docker-entrypoint-initdb.d
+    command: --default-authentication-plugin=mysql_native_password
+    networks:
+      - mmmail-network
+
+  # Redis缓存
+  redis:
+    image: redis:7.2-alpine
+    container_name: mmmail-redis
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+      - ./docker/redis/redis.conf:/usr/local/etc/redis/redis.conf
+    command: redis-server /usr/local/etc/redis/redis.conf
+    networks:
+      - mmmail-network
+
+  # 后端服务
+  backend:
+    build:
+      context: .
+      dockerfile: ./docker/backend/Dockerfile
+    container_name: mmmail-backend
+    restart: unless-stopped
+    ports:
+      - "1024:1024"
+    environment:
+      - SPRING_PROFILES_ACTIVE=docker
+      - SPRING_DATASOURCE_URL=jdbc:mysql://mysql:3306/mmmail?useUnicode=true&characterEncoding=utf8&serverTimezone=GMT%2B8
+      - SPRING_DATASOURCE_USERNAME=mmmail
+      - SPRING_DATASOURCE_PASSWORD=mmmail123
+      - SPRING_REDIS_HOST=redis
+      - SPRING_REDIS_PORT=6379
+    depends_on:
+      - mysql
+      - redis
+    volumes:
+      - ./logs:/app/logs
+      - ./docker/backend/application-docker.yaml:/app/config/application-docker.yaml
+    networks:
+      - mmmail-network
+
+  # 前端管理后台
+  frontend:
+    build:
+      context: ./m-admin-web
+      dockerfile: ../docker/frontend/Dockerfile
+    container_name: mmmail-frontend
+    restart: unless-stopped
+    ports:
+      - "80:80"
+    depends_on:
+      - backend
+    networks:
+      - mmmail-network
+
+  # Nginx反向代理
+  nginx:
+    image: nginx:alpine
+    container_name: mmmail-nginx
+    restart: unless-stopped
+    ports:
+      - "8080:80"
+    volumes:
+      - ./docker/nginx/nginx.conf:/etc/nginx/nginx.conf
+      - ./docker/nginx/conf.d:/etc/nginx/conf.d
+    depends_on:
+      - backend
+      - frontend
+    networks:
+      - mmmail-network
+
+volumes:
+  mysql_data:
+  redis_data:
+
+networks:
+  mmmail-network:
+    driver: bridge

@@ -1,0 +1,77 @@
+# Docker ignore 文件
+# 排除不需要复制到 Docker 容器中的文件和目录
+
+# Git 相关
+.git
+.gitignore
+.gitattributes
+
+# 文档
+README.md
+README.en.md
+Docker-README.md
+docs/
+*.md
+
+# IDE 相关
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# 操作系统相关
+.DS_Store
+Thumbs.db
+
+# 日志文件
+logs/
+*.log
+
+# 临时文件
+tmp/
+temp/
+
+# 构建产物
+target/
+dist/
+build/
+
+# 依赖目录
+node_modules/
+m-admin-web/node_modules/
+
+# 环境配置文件
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# 测试相关
+coverage/
+.nyc_output/
+
+# Docker 相关
+Dockerfile
+docker-compose.yml
+docker-compose.*.yml
+docker-start.bat
+docker-start.sh
+
+# 数据库文件
+*.sql
+*.db
+*.sqlite
+
+# 缓存文件
+.cache/
+.npm/
+.yarn/
+
+# 备份文件
+*.bak
+*.backup
+
+# 系统文件
+*.pid
+*.sock
