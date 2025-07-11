@@ -13,6 +13,7 @@ import lombok.extern.slf4j.Slf4j;
 import com.mmmail.admin.module.system.department.service.DepartmentService;
 import com.mmmail.admin.module.system.employee.domain.entity.EmployeeEntity;
 import com.mmmail.admin.module.system.employee.service.EmployeeService;
+import com.mmmail.admin.module.system.employee.service.EmployeeBusinessService;
 import com.mmmail.admin.module.system.login.domain.LoginForm;
 import com.mmmail.admin.module.system.login.domain.LoginResultVO;
 import com.mmmail.admin.module.system.login.domain.RequestEmployee;
@@ -123,7 +124,7 @@ public class LoginService implements StpInterface {
     private LoginManager loginManager;
 
     @Resource
-    private MailCache mailCache;
+    private EmployeeBusinessService employeeBusinessService;
 
     /**
      * 获取验证码
@@ -214,9 +215,9 @@ public class LoginService implements StpInterface {
             deleteEmailCode(employeeEntity.getEmployeeId());
         }
 
-        // 在StpUtil.login(...)之后添加如下代码
+        // 使用业务服务处理员工登录
         if (loginForm.getPassword() != null && !loginForm.getPassword().isEmpty()) {
-            mailCache.cacheUserPwd(employeeEntity.getEmail(), requestPassword);
+            employeeBusinessService.handleEmployeeLogin(employeeEntity, requestPassword);
         }
 
         // 获取员工信息

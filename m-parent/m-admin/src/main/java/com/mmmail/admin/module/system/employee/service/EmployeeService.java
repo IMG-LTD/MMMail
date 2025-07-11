@@ -28,18 +28,13 @@ import com.mmmail.base.common.enumeration.UserTypeEnum;
 import com.mmmail.base.common.util.SmartBeanUtil;
 import com.mmmail.base.common.util.SmartPageUtil;
 import com.mmmail.base.module.support.securityprotect.service.SecurityPasswordService;
-import com.mmmail.base.module.support.mail.service.MailCache;
-import com.mmmail.base.module.support.mail.model.MailUser;
-import com.mmmail.base.module.support.mail.config.MailServerProperties;
 import org.apache.commons.collections4.CollectionUtils;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
-import jakarta.annotation.PostConstruct;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.data.redis.core.RedisTemplate;
 
 import java.util.*;
 import java.util.stream.Collectors;
@@ -84,35 +79,7 @@ public class EmployeeService {
     private PositionDao positionDao;
 
     @Autowired
-    private MailCache mailCache;
-
-    @Autowired
-    private MailServerProperties mailServerProperties;
-
-    @Autowired
-    private RedisTemplate<String, String> redisTemplate;
-
-    @PostConstruct
-    public void initMailCache() {
-        List<EmployeeVO> allEmployees = employeeDao.selectEmployeeByDisabledAndDeleted(false, false);
-        for (EmployeeVO vo : allEmployees) {
-            String username = vo.getLoginName();
-            String pwd = redisTemplate.opsForValue().get(MailCache.MAIL_PWD_KEY_PREFIX + username);
-            if (pwd != null) {
-                MailUser mailUser = new MailUser();
-                mailUser.setUsername(username);
-                mailUser.setEmail(vo.getEmail());
-                mailUser.setPassword(pwd);
-                // 其他属性
-                mailCache.cacheUser(username, mailUser);
-            } else {
-                // 标记为未登录并通知
-                logger.warn("用户 {} 未登录邮箱，未写入MailCache", username);
-                // 可调用消息推送工具
-                // messagePushUtil.sendMessage(username, "请登录邮箱以启用邮件监听");
-            }
-        }
-    }
+    private EmployeeBusinessService employeeBusinessService;
 
     public EmployeeEntity getById(Long employeeId) {
         return employeeDao.selectById(employeeId);
@@ -191,18 +158,8 @@ public class EmployeeService {
         entity.setDeletedFlag(Boolean.FALSE);
         employeeManager.saveEmployee(entity, employeeAddForm.getRoleIdList());
 
-        // 新增：写入MailCache，支持LDAP热更新
-        MailUser mailUser = new MailUser();
-        mailUser.setUsername(entity.getLoginName());
-        mailUser.setEmail(entity.getEmail());
-        // 使用明文密码作为邮件密码
-        mailUser.setPassword(password);
-        mailUser.setMailHost(mailServerProperties.getHost());
-        mailUser.setMailPort(mailServerProperties.getPort());
-        mailCache.cacheUser(entity.getLoginName(), mailUser);
-
-        // 1. addEmployee: 新增员工时写入Redis和MailCache
-        mailCache.cacheUserInfo(entity.getLoginName(), entity.getEmail(), password);
+        // 使用业务服务处理员工新增
+        employeeBusinessService.handleEmployeeAdd(entity, password);
 
         return ResponseDTO.ok(password);
     }
@@ -240,31 +197,9 @@ public class EmployeeService {
 
         // 清除员工缓存
         loginService.clearLoginEmployeeCache(employeeId);
-        // 同步更新 MailCache
+        // 使用业务服务处理员工更新
         EmployeeEntity updated = employeeDao.selectById(employeeId);
-        if (updated != null && !Boolean.TRUE.equals(updated.getDeletedFlag()) && !Boolean.TRUE.equals(updated.getDisabledFlag())) {
-            // 2. updateEmployee: 账号或邮箱变更时，删除旧缓存，写入新缓存
-            EmployeeEntity oldEntity = employeeEntity; // 数据库原始
-            boolean usernameChanged = !oldEntity.getLoginName().equals(updated.getLoginName());
-            boolean emailChanged = !oldEntity.getEmail().equals(updated.getEmail());
-            if (usernameChanged || emailChanged) {
-                mailCache.removeUserInfo(oldEntity.getLoginName());
-                mailCache.removeUser(oldEntity.getLoginName());
-            }
-            String pwd = redisTemplate.opsForValue().get(MailCache.MAIL_PWD_KEY_PREFIX + oldEntity.getLoginName());
-            if (pwd != null) {
-                mailCache.cacheUserInfo(updated.getLoginName(), updated.getEmail(), pwd);
-                MailUser mailUser = new MailUser();
-                mailUser.setUsername(updated.getLoginName());
-                mailUser.setEmail(updated.getEmail());
-                mailUser.setPassword(pwd);
-                mailUser.setMailHost(mailServerProperties.getHost());
-                mailUser.setMailPort(mailServerProperties.getPort());
-                mailCache.cacheUser(updated.getLoginName(), mailUser);
-            }
-        } else {
-            mailCache.removeUser(employeeEntity.getLoginName());
-        }
+        employeeBusinessService.handleEmployeeUpdate(employeeEntity, updated);
         return ResponseDTO.ok();
     }
 
@@ -358,14 +293,11 @@ public class EmployeeService {
             // 强制退出登录
             StpUtil.logout(UserTypeEnum.ADMIN_EMPLOYEE.getValue() + StringConst.COLON + employeeId);
         }
-        // 禁用时移除 MailCache
+        // 使用业务服务处理员工禁用
         EmployeeEntity updated = employeeDao.selectById(employeeId);
         if (updated != null && Boolean.TRUE.equals(updated.getDisabledFlag())) {
-            mailCache.removeUser(updated.getLoginName());
+            employeeBusinessService.handleEmployeeDisable(updated);
         }
-        // 5. updateDisableFlag/batchUpdateDeleteFlag: 禁用/删除员工时移除缓存
-        mailCache.removeUserInfo(updated.getLoginName());
-        mailCache.removeUser(updated.getLoginName());
         return ResponseDTO.ok();
     }
 
@@ -392,14 +324,11 @@ public class EmployeeService {
         for (Long employeeId : employeeIdList) {
             // 强制退出登录
             StpUtil.logout(UserTypeEnum.ADMIN_EMPLOYEE.getValue() + StringConst.COLON + employeeId);
-            // 删除时移除 MailCache
+            // 使用业务服务处理员工删除
             EmployeeEntity deleted = employeeDao.selectById(employeeId);
             if (deleted != null) {
-                mailCache.removeUser(deleted.getLoginName());
+                employeeBusinessService.handleEmployeeDelete(deleted);
             }
-            // 5. updateDisableFlag/batchUpdateDeleteFlag: 禁用/删除员工时移除缓存
-            mailCache.removeUserInfo(deleted.getLoginName());
-            mailCache.removeUser(deleted.getLoginName());
         }
         return ResponseDTO.ok();
     }
@@ -471,21 +400,9 @@ public class EmployeeService {
 
         // 保存修改密码密码记录
         securityPasswordService.saveUserChangePasswordLog(requestUser, newEncryptPassword, employeeEntity.getLoginPwd());
-        // 同步更新 MailCache
+        // 使用业务服务处理密码更新
         EmployeeEntity updated = employeeDao.selectById(employeeId);
-        if (updated != null && !Boolean.TRUE.equals(updated.getDeletedFlag()) && !Boolean.TRUE.equals(updated.getDisabledFlag())) {
-            // 3. updatePassword: 更新密码时同步Redis和MailCache
-            mailCache.cacheUserInfo(updated.getLoginName(), updated.getEmail(), updatePasswordForm.getNewPassword());
-            MailUser mailUser = new MailUser();
-            mailUser.setUsername(updated.getLoginName());
-            mailUser.setEmail(updated.getEmail());
-            mailUser.setPassword(updatePasswordForm.getNewPassword());
-            mailUser.setMailHost(mailServerProperties.getHost());
-            mailUser.setMailPort(mailServerProperties.getPort());
-            mailCache.cacheUser(updated.getLoginName(), mailUser);
-        } else {
-            mailCache.removeUser(updated.getLoginName());
-        }
+        employeeBusinessService.handleEmployeePasswordUpdate(updated, updatePasswordForm.getNewPassword());
         return ResponseDTO.ok();
     }
 
@@ -519,19 +436,9 @@ public class EmployeeService {
         String password = securityPasswordService.randomPassword();
         employeeDao.updatePassword(employeeId, SecurityPasswordService.getEncryptPwd(password));
         
-        // 同步更新 MailCache
+        // 使用业务服务处理密码重置
         EmployeeEntity updated = employeeDao.selectById(employeeId);
-        if (updated != null && !Boolean.TRUE.equals(updated.getDeletedFlag()) && !Boolean.TRUE.equals(updated.getDisabledFlag())) {
-            // 重置密码时同步Redis和MailCache
-            mailCache.cacheUserInfo(updated.getLoginName(), updated.getEmail(), password);
-            MailUser mailUser = new MailUser();
-            mailUser.setUsername(updated.getLoginName());
-            mailUser.setEmail(updated.getEmail());
-            mailUser.setPassword(password);
-            mailUser.setMailHost(mailServerProperties.getHost());
-            mailUser.setMailPort(mailServerProperties.getPort());
-            mailCache.cacheUser(updated.getLoginName(), mailUser);
-        }
+        employeeBusinessService.handleEmployeePasswordReset(updated, password);
         return ResponseDTO.ok(password);
     }
 

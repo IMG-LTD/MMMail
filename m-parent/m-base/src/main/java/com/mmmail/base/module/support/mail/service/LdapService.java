@@ -2,6 +2,9 @@ package com.mmmail.base.module.support.mail.service;
 
 import cn.dev33.satoken.stp.StpUtil;
 import com.mmmail.base.module.support.mail.model.MailUser;
+import com.mmmail.base.module.support.securityprotect.service.SecurityPasswordService;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -11,6 +14,8 @@ import org.springframework.stereotype.Service;
  */
 @Service
 public class LdapService {
+
+    private static final Logger logger = LoggerFactory.getLogger(LdapService.class);
 
     @Autowired
     private MailCache mailCache;
@@ -25,7 +30,8 @@ public class LdapService {
             return false;
         }
         // 这里可根据实际加密方式调整
-        boolean match = user.getPassword().equals(password);
+        // 使用加密验证
+        boolean match = SecurityPasswordService.matchesPwd(password, user.getPassword());
         if (match) {
             // sa-token登录
             StpUtil.login(username);
