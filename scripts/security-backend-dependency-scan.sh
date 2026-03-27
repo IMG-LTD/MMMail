@@ -20,9 +20,7 @@ fi
 
 maven_args=(
   -f backend/pom.xml
-  -pl mmmail-server
-  -am
-  org.owasp:dependency-check-maven:check
+  org.owasp:dependency-check-maven:aggregate
   -Dformats=HTML,JSON
   -Dodc.outputDirectory="$REPORT_DIR"
   -DdataDirectory="$DATA_DIR"
