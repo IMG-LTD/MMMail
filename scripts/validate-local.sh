@@ -160,7 +160,7 @@ required_env_keys=(
   NACOS_PASSWORD
 )
 for key in "${required_env_keys[@]}"; do
-  if ! rg -n "^${key}=" .env.example config/backend.env.example >/dev/null 2>&1; then
+  if ! grep -Eq "^${key}=" .env.example config/backend.env.example; then
     echo "missing required env key in templates: $key" >&2
     exit 1
   fi
