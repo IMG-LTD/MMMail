@@ -43,6 +43,18 @@ class SqlScriptMigrationSupportTest {
         assertThat(executedSql).isEmpty();
     }
 
+    @Test
+    void shouldSkipPlainAddColumnWhenColumnAlreadyExists() {
+        List<String> executedSql = new ArrayList<>();
+        Connection connection = fakeConnection(Set.of("search_preset.is_pinned"), executedSql);
+
+        SqlScriptMigrationSupport.execute(connection, "inline.sql", """
+                alter table search_preset add column is_pinned tinyint not null default 0;
+                """);
+
+        assertThat(executedSql).isEmpty();
+    }
+
     private Connection fakeConnection(Set<String> existingColumns, List<String> executedSql) {
         DatabaseMetaData metadata = fakeMetadata(existingColumns);
         Statement statement = fakeStatement(executedSql);

@@ -17,8 +17,8 @@ import java.util.regex.Pattern;
 
 public final class SqlScriptMigrationSupport {
 
-    private static final Pattern CONDITIONAL_ADD_COLUMN = Pattern.compile(
-            "(?is)^alter\\s+table\\s+`?([\\w]+)`?\\s+add\\s+column\\s+if\\s+not\\s+exists\\s+`?([\\w]+)`?\\s+(.+)$"
+    private static final Pattern ADD_COLUMN = Pattern.compile(
+            "(?is)^alter\\s+table\\s+`?([\\w]+)`?\\s+add\\s+column(?:\\s+if\\s+not\\s+exists)?\\s+`?([\\w]+)`?\\s+(.+)$"
     );
 
     private SqlScriptMigrationSupport() {
@@ -46,20 +46,20 @@ public final class SqlScriptMigrationSupport {
         if (sql.isEmpty()) {
             return;
         }
-        ConditionalAddColumn conditional = parseConditionalAddColumn(sql);
-        if (conditional != null && columnExists(connection, conditional.table(), conditional.column())) {
+        AddColumnStatement addColumn = parseAddColumn(sql);
+        if (addColumn != null && columnExists(connection, addColumn.table(), addColumn.column())) {
             return;
         }
-        String executable = conditional == null ? sql : conditional.toSql();
+        String executable = addColumn == null ? sql : addColumn.toSql();
         executeRaw(connection, executable, sourceName);
     }
 
-    private static ConditionalAddColumn parseConditionalAddColumn(String sql) {
-        Matcher matcher = CONDITIONAL_ADD_COLUMN.matcher(sql);
+    private static AddColumnStatement parseAddColumn(String sql) {
+        Matcher matcher = ADD_COLUMN.matcher(sql);
         if (!matcher.matches()) {
             return null;
         }
-        return new ConditionalAddColumn(matcher.group(1), matcher.group(2), matcher.group(3).trim());
+        return new AddColumnStatement(matcher.group(1), matcher.group(2), matcher.group(3).trim());
     }
 
     private static boolean columnExists(Connection connection, String tableName, String columnName) {
@@ -137,7 +137,7 @@ public final class SqlScriptMigrationSupport {
         }
     }
 
-    private record ConditionalAddColumn(String table, String column, String definition) {
+    private record AddColumnStatement(String table, String column, String definition) {
         private String toSql() {
             return "alter table " + table + " add column " + column + " " + definition;
         }
