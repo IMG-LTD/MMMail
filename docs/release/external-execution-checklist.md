@@ -13,7 +13,7 @@
 ## 执行前检查
 - [ ] 仓库已连接 Git remote，且可触发 GitHub Actions
 - [ ] runner 具备 Docker daemon 能力
-- [ ] 已配置 GitHub Actions secret：`MMMAIL_NVD_API_KEY`（推荐）
+- [ ] 已配置 GitHub Actions secret：`MMMAIL_NVD_API_KEY`（必需；未配置时 `validate` 会快速失败）
 - [ ] 外部执行人已阅读：
   - `docs/release/external-ci-handoff.md`
   - `docs/release/gate-backfill-template.md`
@@ -22,7 +22,7 @@
 ## 执行清单
 | 序号 | 执行项 | Workflow / Job | 前置条件 | Secrets / Env | 预期产物 | 通过标准 | 失败排查顺序 | 回填位置 |
 |---|---|---|---|---|---|---|---|---|
-| 1 | 运行官方 CI 门禁 | `MMMail CI / validate` | Git remote、GitHub Actions 可用、Docker-capable runner | `MMMAIL_VALIDATE_CONTAINER_TESTS=true`、`MMMAIL_RUN_BACKEND_DEPENDENCY_SCAN=true`、`MMMAIL_NVD_API_KEY`（推荐） | `artifacts/security/dependency-check/dependency-check-report.html`、`artifacts/security/dependency-check/dependency-check-report.json`、`artifacts/ci-logs/`、`backend/mmmail-server/target/surefire-reports/` | `frontend` / `backend` / `validate` 三个 job 全绿 | 先看 GitHub Step Summary，再看 `artifacts/ci-logs/`，最后看 `backend/mmmail-server/target/surefire-reports/` | `docs/release/community-v1-gate.md` 的 `## Gate 5 - 安全基线`、`## Gate 6 - 可运维性与 CI 回执` |
+| 1 | 运行官方 CI 门禁 | `MMMail CI / validate` | Git remote、GitHub Actions 可用、Docker-capable runner | `MMMAIL_VALIDATE_CONTAINER_TESTS=true`、`MMMAIL_RUN_BACKEND_DEPENDENCY_SCAN=true`、`MMMAIL_NVD_API_KEY`（必需） | `artifacts/security/dependency-check/dependency-check-report.html`、`artifacts/security/dependency-check/dependency-check-report.json`、`artifacts/ci-logs/`、`backend/mmmail-server/target/surefire-reports/` | `frontend` / `backend` / `validate` 三个 job 全绿 | 先看 GitHub Step Summary，再看 `artifacts/ci-logs/`，最后看 `backend/mmmail-server/target/surefire-reports/` | `docs/release/community-v1-gate.md` 的 `## Gate 5 - 安全基线`、`## Gate 6 - 可运维性与 CI 回执` |
 | 2 | 运行容器化 RC1 证据链 | 手工执行 `bash scripts/validate-rc1-container.sh` 或并入远端 CI | Docker daemon、Compose、MySQL/Redis/Nacos/前后端容器可起 | 同 `.env` 模板；若接入 CI 复用 `MMMAIL_NVD_API_KEY` | `artifacts/release/rc1-container/community-v1-rc1-container-evidence.md`、`artifacts/release/rc1-container/backups/`、`artifacts/release/rc1-container/compose.log` | fresh install、init/seed、upgrade、backup、restore、rollback 全为 `PASS` | 先看 `community-v1-rc1-container-evidence.md`，再看 `compose.log`，再看 `db-*.log` | `docs/release/community-v1-gate.md` 的 `## Gate 4 - RC1 安装 / 升级证据` |
 | 3 | 归档并登记外部回执 | 手工回填 | 上述两项都完成 | workflow run 链接、artifact 路径、执行日期、执行人 | 更新后的 gate / checklist / receipt log | Gate 4/5/6 的证据段完成回填，receipt log 记录完整 | 对照 `docs/release/gate-backfill-template.md` 查漏补缺 | `docs/release/community-v1-rc-checklist.md`、`docs/release/community-v1-pre-release-checklist.md`、`docs/release/community-v1-external-receipt-log.md` |
 | 4 | 形成 RC1 可签收状态 | 手工回填 + 签收 | Gate 4/5/6 已达 PASS 条件 | 外部回执链接、artifact 路径 | 更新后的 `docs/release/community-v1-rc-status.md`、`docs/release/community-v1-final-signoff.md` | 状态切换为 `RC1_READY`，最终签收模板可勾选完成 | 若任一 Gate 未 PASS，回到对应 gate 模板补证 | `docs/release/community-v1-rc-status.md` 的 `## 状态迁移条件`、`docs/release/community-v1-final-signoff.md` |

@@ -20,8 +20,8 @@
 - 允许执行：
   - `bash scripts/validate-ci.sh`
   - `bash scripts/validate-rc1-container.sh`
-- 推荐配置 GitHub Actions secret：
-  - `MMMAIL_NVD_API_KEY`：可选，但强烈建议，用于加速 `dependency-check` 更新。
+- 必须配置 GitHub Actions secret：
+  - `MMMAIL_NVD_API_KEY`：`validate` job 的硬前置条件；缺失时会快速失败，避免 `dependency-check` 在首次 NVD 全量更新时超时。
 
 ## 触发路径
 ### GitHub Actions
@@ -82,7 +82,7 @@
   - 查看 `artifacts/ci-logs/`
   - 查看 `backend/mmmail-server/target/surefire-reports/`
 - `dependency-check` 超时或失败：
-  - 检查 `MMMAIL_NVD_API_KEY`
+  - 先检查 `MMMAIL_NVD_API_KEY` 是否已配置到仓库或组织级 secret
   - 检查 `.tools/dependency-check-data` cache 是否命中
 - `validate-rc1-container.sh` 失败：
   - 查看 `artifacts/release/rc1-container/compose.log`

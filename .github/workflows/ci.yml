@@ -71,6 +71,14 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
+      - name: Validate required CI secrets
+        run: |
+          if [[ -z "${MMMAIL_NVD_API_KEY}" ]]; then
+            echo "::error::Missing required secret MMMAIL_NVD_API_KEY. The validate job runs OWASP dependency-check with MMMAIL_RUN_BACKEND_DEPENDENCY_SCAN=true, and the initial NVD bootstrap exceeds the CI timeout without an API key."
+            echo "::error::Add repository or organization secret MMMAIL_NVD_API_KEY, then re-run the validate job."
+            exit 1
+          fi
+
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
@@ -118,7 +126,7 @@ jobs:
             echo "## MMMail CI gate summary"
             echo "- validate-ci entry: \`bash scripts/validate-ci.sh\`"
             echo "- container gates: \`MMMAIL_VALIDATE_CONTAINER_TESTS=true\`"
-            echo "- dependency scan: \`MMMAIL_RUN_BACKEND_DEPENDENCY_SCAN=true\`"
+            echo "- dependency scan: \`MMMAIL_RUN_BACKEND_DEPENDENCY_SCAN=true\` + required secret \`MMMAIL_NVD_API_KEY\`"
             echo "- security reports: \`artifacts/security/dependency-check/\`"
             echo "- RC1 container reports: \`artifacts/release/rc1-container/\`"
             echo "- CI logs: \`artifacts/ci-logs/\`"

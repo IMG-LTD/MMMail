@@ -12,6 +12,12 @@ DATA_DIR="${MMMAIL_DEPENDENCY_CHECK_DATA_DIR:-$ROOT_DIR/.tools/dependency-check-
 FAIL_ON_CVSS="${MMMAIL_DEPENDENCY_SCAN_FAIL_ON_CVSS:-7}"
 mkdir -p "$REPORT_DIR" "$DATA_DIR"
 
+if [[ -z "${MMMAIL_NVD_API_KEY:-}" ]]; then
+  echo "Missing MMMAIL_NVD_API_KEY for OWASP dependency-check." >&2
+  echo "The NVD bootstrap is too slow for CI without an API key; configure MMMAIL_NVD_API_KEY and re-run." >&2
+  exit 1
+fi
+
 maven_args=(
   -f backend/pom.xml
   -pl mmmail-server
