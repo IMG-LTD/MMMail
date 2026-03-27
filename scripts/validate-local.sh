@@ -126,24 +126,24 @@ done
 
 echo "[validate-local] sanitized secrets in config templates"
 placeholder_checks=(
-  ".env.example:^NUXT_PUBLIC_ENABLE_PREVIEW_MODULES=false$"
-  ".env.example:^MMMAIL_JWT_SECRET=replace-with-32-plus-char-random-secret$"
-  "config/backend.env.example:^SPRING_DATASOURCE_PASSWORD=replace-with-db-password$"
-  "config/backend.env.example:^SPRING_REDIS_PASSWORD=replace-with-redis-password$"
-  "config/backend.env.example:^NACOS_PASSWORD=replace-with-nacos-password$"
-  "config/backend.env.example:^MMMAIL_JWT_SECRET=replace-with-32-plus-char-random-secret$"
-  "backend/mmmail-server/src/main/resources/application-local.yml:^    password: \\$\\{SPRING_DATASOURCE_PASSWORD:replace-with-db-password\\}$"
-  "backend/mmmail-server/src/main/resources/application-local.yml:^      password: \\$\\{SPRING_REDIS_PASSWORD:replace-with-redis-password\\}$"
-  "backend/mmmail-server/src/main/resources/application-local.yml:^    bootstrap-servers: \\$\\{SPRING_KAFKA_BOOTSTRAP_SERVERS:127.0.0.1:9092\\}$"
-  "backend/mmmail-server/src/main/resources/application-local.yml:^      username: \\$\\{NACOS_USERNAME:replace-with-nacos-user\\}$"
-  "backend/mmmail-server/src/main/resources/application-local.yml:^      password: \\$\\{NACOS_PASSWORD:replace-with-nacos-password\\}$"
-  "backend/mmmail-server/src/main/resources/application-local.yml:^  jwt-secret: \\$\\{MMMAIL_JWT_SECRET:replace-with-32-plus-char-random-secret\\}$"
+  ".env.example|NUXT_PUBLIC_ENABLE_PREVIEW_MODULES=false"
+  ".env.example|MMMAIL_JWT_SECRET=replace-with-32-plus-char-random-secret"
+  "config/backend.env.example|SPRING_DATASOURCE_PASSWORD=replace-with-db-password"
+  "config/backend.env.example|SPRING_REDIS_PASSWORD=replace-with-redis-password"
+  "config/backend.env.example|NACOS_PASSWORD=replace-with-nacos-password"
+  "config/backend.env.example|MMMAIL_JWT_SECRET=replace-with-32-plus-char-random-secret"
+  "backend/mmmail-server/src/main/resources/application-local.yml|    password: \${SPRING_DATASOURCE_PASSWORD:replace-with-db-password}"
+  "backend/mmmail-server/src/main/resources/application-local.yml|      password: \${SPRING_REDIS_PASSWORD:replace-with-redis-password}"
+  "backend/mmmail-server/src/main/resources/application-local.yml|    bootstrap-servers: \${SPRING_KAFKA_BOOTSTRAP_SERVERS:127.0.0.1:9092}"
+  "backend/mmmail-server/src/main/resources/application-local.yml|      username: \${NACOS_USERNAME:replace-with-nacos-user}"
+  "backend/mmmail-server/src/main/resources/application-local.yml|      password: \${NACOS_PASSWORD:replace-with-nacos-password}"
+  "backend/mmmail-server/src/main/resources/application-local.yml|  jwt-secret: \${MMMAIL_JWT_SECRET:replace-with-32-plus-char-random-secret}"
 )
 for entry in "${placeholder_checks[@]}"; do
-  file="${entry%%:*}"
-  pattern="${entry#*:}"
-  if ! rg -n "$pattern" "$file" >/dev/null 2>&1; then
-    echo "missing sanitized placeholder in $file: $pattern" >&2
+  file="${entry%%|*}"
+  expected_line="${entry#*|}"
+  if ! grep -Fqx -- "$expected_line" "$file"; then
+    echo "missing sanitized placeholder in $file: $expected_line" >&2
     exit 1
   fi
 done
