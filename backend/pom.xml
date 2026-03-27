@@ -33,6 +33,7 @@
         <testcontainers.version>1.20.4</testcontainers.version>
         <tomcat.version>10.1.52</tomcat.version>
         <log4j2.version>2.25.2</log4j2.version>
+        <netty.version>4.1.124.Final</netty.version>
     </properties>
 
     <dependencyManagement>
