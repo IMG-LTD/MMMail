@@ -23,8 +23,8 @@ maven_args=(
   -pl mmmail-server
   -am
   org.owasp:dependency-check-maven:check
-  -Dformat=HTML,JSON
-  -Dout="$REPORT_DIR"
+  -Dformats=HTML,JSON
+  -Dodc.outputDirectory="$REPORT_DIR"
   -DdataDirectory="$DATA_DIR"
   -DfailBuildOnCVSS="$FAIL_ON_CVSS"
 )
