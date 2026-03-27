@@ -28,4 +28,5 @@ timeout 180s env \
   MMMAIL_JWT_SECRET=0123456789abcdef0123456789abcdef \
   NACOS_USERNAME=nacos \
   NACOS_PASSWORD=nacos \
-  "$MVN_BIN" -f backend/pom.xml -pl mmmail-server -am -Dtest="$TESTS" test
+  "$MVN_BIN" -f backend/pom.xml -pl mmmail-server -am \
+  -Dtest="$TESTS" -Dsurefire.failIfNoSpecifiedTests=false test
