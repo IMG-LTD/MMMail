@@ -12,6 +12,15 @@ BACKEND_SECURITY_TESTS="SecurityBaselineIntegrationTest,DriveSecureShareIntegrat
 echo "[validate-security] secret regression scan"
 bash scripts/security-secret-scan.sh >/tmp/mmmail-security-secret-scan.log 2>&1
 
+echo "[validate-security] backend security dependencies warmup"
+env \
+  SPRING_DATASOURCE_PASSWORD=test-password \
+  MMMAIL_JWT_SECRET=0123456789abcdef0123456789abcdef \
+  NACOS_USERNAME=test-nacos-user \
+  NACOS_PASSWORD=test-nacos-password \
+  "$MVN_BIN" -f backend/pom.xml -pl mmmail-server -am -DskipTests test-compile \
+  >/tmp/mmmail-backend-security-warmup.log 2>&1
+
 echo "[validate-security] backend security regression"
 timeout 60s env \
   SPRING_DATASOURCE_PASSWORD=test-password \
