@@ -186,7 +186,9 @@ else
 fi
 
 echo "[validate-local] secure defaults"
-if rg -n "change-me|please-change-me-before-production-use" backend/mmmail-server/src/main/resources/application.yml >/tmp/mmmail-insecure-defaults.log 2>&1; then
+if grep -nE "change-me|please-change-me-before-production-use" \
+  backend/mmmail-server/src/main/resources/application.yml \
+  >/tmp/mmmail-insecure-defaults.log 2>&1; then
   echo "insecure default placeholder still exists in backend application.yml" >&2
   cat /tmp/mmmail-insecure-defaults.log >&2
   exit 1

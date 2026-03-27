@@ -14,19 +14,24 @@ require_datasource_env
 MVN_BIN="$(resolve_maven_bin "$ROOT_DIR")"
 BACKEND_POM="$ROOT_DIR/backend/pom.xml"
 SERVER_POM="$ROOT_DIR/backend/mmmail-server/pom.xml"
+SERVER_ARTIFACTS_PREPARED=0
 
-compile_server_dependencies() {
+prepare_server_artifacts() {
+  if [[ "$SERVER_ARTIFACTS_PREPARED" -eq 1 ]]; then
+    return
+  fi
   timeout 60s "$MVN_BIN" \
     -f "$BACKEND_POM" \
     -pl mmmail-server \
     -am \
     -DskipTests \
-    compile
+    install
+  SERVER_ARTIFACTS_PREPARED=1
 }
 
 run_cli() {
   local action="$1"
-  compile_server_dependencies
+  prepare_server_artifacts
   timeout 60s "$MVN_BIN" \
     -f "$SERVER_POM" \
     -DskipTests \

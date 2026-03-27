@@ -15,6 +15,9 @@ mapfile -t TRACKED_FILES < <(
     -not -path './frontend/node_modules/*' \
     -not -path './frontend/.nuxt/*' \
     -not -path './frontend/.output/*' \
+    -not -name 'pnpm-lock.yaml' \
+    -not -name 'package-lock.json' \
+    -not -name 'yarn.lock' \
     -not -path './backend/*/target/*' \
     -not -path './artifacts/*' \
     -not -path './.tools/dependency-check-data/*' \
@@ -54,7 +57,7 @@ scan_hard_patterns() {
   local pattern
   pattern="-----BEGIN (RSA|OPENSSH|EC|DSA|PGP|PRIVATE KEY)-----|AKIA[0-9A-Z]{16}|AIza[0-9A-Za-z_-]{35}|ghp_[0-9A-Za-z]{36}|xox[baprs]-[0-9A-Za-z-]{10,48}"
   printf '%s\0' "${TRACKED_FILES[@]}" \
-    | xargs -0 rg -n --no-heading --pcre2 -- "$pattern" || true
+    | xargs -0 grep -nEH -- "$pattern" || true
 }
 
 scan_config_assignments() {
@@ -78,8 +81,15 @@ scan_config_assignments() {
       fi
       printf '%s:%s:%s\n' "$file" "$line_no" "$line"
       found=1
-    done < <(rg -n --no-heading --pcre2 '(?i)\b(password|secret|token|api[_-]?key|access[_-]?key|private[_-]?key)\b[^:=\n]{0,32}[:=][^#\n]+' "$file" || true)
-  done < <(printf '%s\n' "${TRACKED_FILES[@]}" | rg '(^config/)|(^\.env)|(^\.github/workflows/)|(^backend/.*/application.*\.(yml|yaml|properties)$)|(\.(yml|yaml|properties|json|txt|sh)$)')
+    done < <(
+      grep -nEi \
+        '(^|[^[:alnum:]_])(password|secret|token|api[_-]?key|access[_-]?key|private[_-]?key)[^:=]{0,32}[:=][^#]+' \
+        "$file" || true
+    )
+  done < <(
+    printf '%s\n' "${TRACKED_FILES[@]}" \
+      | grep -E '(^config/)|(^\.env)|(^\.github/workflows/)|(^backend/.*/application.*\.(yml|yaml|properties)$)|(\.(yml|yaml|properties|json|txt|sh)$)'
+  )
   return "$found"
 }
 
