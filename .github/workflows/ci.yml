@@ -99,11 +99,12 @@ jobs:
           java-version: 21
           cache: maven
 
-      - name: Cache dependency-check data
-        uses: actions/cache@v4
+      - name: Restore dependency-check data
+        id: dependency-check-cache
+        uses: actions/cache/restore@v4
         with:
           path: .tools/dependency-check-data
-          key: dependency-check-${{ runner.os }}-${{ github.run_id }}
+          key: dependency-check-${{ runner.os }}-${{ github.run_id }}-${{ github.run_attempt }}
           restore-keys: |
             dependency-check-${{ runner.os }}-
 
@@ -118,6 +119,13 @@ jobs:
           for file in /tmp/mmmail-*.log; do
             cp "$file" artifacts/ci-logs/
           done
+
+      - name: Save dependency-check data
+        if: always()
+        uses: actions/cache/save@v4
+        with:
+          path: .tools/dependency-check-data
+          key: dependency-check-${{ runner.os }}-${{ github.run_id }}-${{ github.run_attempt }}
 
       - name: Publish gate summary
         if: always()
