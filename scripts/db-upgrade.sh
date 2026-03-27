@@ -12,15 +12,24 @@ load_env_file "$ENV_FILE"
 require_datasource_env
 
 MVN_BIN="$(resolve_maven_bin "$ROOT_DIR")"
+BACKEND_POM="$ROOT_DIR/backend/pom.xml"
+SERVER_POM="$ROOT_DIR/backend/mmmail-server/pom.xml"
 
-run_cli() {
-  local action="$1"
+compile_server_dependencies() {
   timeout 60s "$MVN_BIN" \
-    -f "$ROOT_DIR/backend/pom.xml" \
+    -f "$BACKEND_POM" \
     -pl mmmail-server \
     -am \
     -DskipTests \
-    compile \
+    compile
+}
+
+run_cli() {
+  local action="$1"
+  compile_server_dependencies
+  timeout 60s "$MVN_BIN" \
+    -f "$SERVER_POM" \
+    -DskipTests \
     exec:java \
     -Dexec.mainClass=com.mmmail.server.migration.MigrationCli \
     -Dexec.args="$action"
