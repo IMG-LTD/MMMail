@@ -73,7 +73,7 @@ class BackupRestoreWorkflowIntegrationTest {
         assertThat(queryForLong("select count(*) from user_account where id = 99")).isEqualTo(1);
         assertThat(Files.readString(driveRoot.resolve("note.txt"))).isEqualTo("backup-original");
         assertThat(Files.exists(backupDir.resolve("manifest.txt"))).isTrue();
-        assertThat(Files.readString(backupDir.resolve("manifest.txt"))).contains("schema_version=3");
+        assertThat(Files.readString(backupDir.resolve("manifest.txt"))).contains("schema_version=5");
     }
 
     @Test
@@ -119,8 +119,9 @@ class BackupRestoreWorkflowIntegrationTest {
     }
 
     private void runScript(String scriptPath, String envFile, String backupDir) throws Exception {
-        ProcessBuilder builder = new ProcessBuilder("bash", scriptPath, envFile, backupDir);
-        builder.directory(Path.of("").toAbsolutePath().toFile());
+        Path repoRoot = resolveRepoRoot();
+        ProcessBuilder builder = new ProcessBuilder("bash", repoRoot.resolve(scriptPath).toString(), envFile, backupDir);
+        builder.directory(repoRoot.toFile());
         builder.redirectErrorStream(true);
         Process process = builder.start();
         String output = new String(process.getInputStream().readAllBytes());
@@ -154,5 +155,14 @@ class BackupRestoreWorkflowIntegrationTest {
             }
         }
         return tableNames;
+    }
+
+    private Path resolveRepoRoot() {
+        Path current = Path.of("").toAbsolutePath();
+        while (current != null && !Files.exists(current.resolve("scripts/db-backup.sh"))) {
+            current = current.getParent();
+        }
+        assertThat(current).as("repo root containing scripts/db-backup.sh").isNotNull();
+        return current;
     }
 }

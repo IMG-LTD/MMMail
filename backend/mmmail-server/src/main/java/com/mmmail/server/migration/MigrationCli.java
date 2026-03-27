@@ -1,12 +1,15 @@
 package com.mmmail.server.migration;
 
 import org.flywaydb.core.Flyway;
+import org.flywaydb.core.api.CoreErrorCode;
 import org.flywaydb.core.api.output.InfoOutput;
 import org.flywaydb.core.api.output.InfoResult;
 import org.flywaydb.core.api.output.MigrateResult;
+import org.flywaydb.core.api.output.ValidateOutput;
 import org.flywaydb.core.api.output.ValidateResult;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 public final class MigrationCli {
 
@@ -22,7 +25,7 @@ public final class MigrationCli {
         Flyway flyway = createFlyway();
         switch (command) {
             case "info" -> printInfo(flyway.info().getInfoResult());
-            case "validate" -> validate(flyway.validateWithResult());
+            case "validate" -> validate(flyway, flyway.validateWithResult());
             case "migrate" -> migrate(flyway.migrate());
             case "repair" -> repair(flyway);
             default -> throw new IllegalArgumentException("Unsupported migration command: " + command);
@@ -52,11 +55,45 @@ public final class MigrationCli {
         System.out.printf("migrations=%d target=%s%n", result.migrationsExecuted, result.targetSchemaVersion);
     }
 
-    private static void validate(ValidateResult result) {
-        if (!result.validationSuccessful) {
-            throw new IllegalStateException("Flyway validation failed: " + result.invalidMigrations);
+    private static void validate(Flyway flyway, ValidateResult result) {
+        if (!result.validationSuccessful && !isPendingOnlyOnEmptySchema(result, flyway.info().getInfoResult())) {
+            throw new IllegalStateException("Flyway validation failed: " + formatInvalidMigrations(result.invalidMigrations));
         }
         System.out.println("validation=ok");
+    }
+
+    static boolean isPendingOnlyOnEmptySchema(ValidateResult result, InfoResult info) {
+        if (result.validationSuccessful || info == null || !info.allSchemasEmpty || info.schemaVersion != null) {
+            return false;
+        }
+        if (result.invalidMigrations == null || result.invalidMigrations.isEmpty()) {
+            return false;
+        }
+        return result.invalidMigrations.stream()
+                .map(output -> output.errorDetails == null ? null : output.errorDetails.errorCode)
+                .allMatch(errorCode -> errorCode == CoreErrorCode.RESOLVED_VERSIONED_MIGRATION_NOT_APPLIED
+                        || errorCode == CoreErrorCode.RESOLVED_REPEATABLE_MIGRATION_NOT_APPLIED);
+    }
+
+    static String formatInvalidMigrations(List<ValidateOutput> invalidMigrations) {
+        if (invalidMigrations == null || invalidMigrations.isEmpty()) {
+            return "unknown";
+        }
+        return invalidMigrations.stream()
+                .map(MigrationCli::formatInvalidMigration)
+                .collect(Collectors.joining("; "));
+    }
+
+    private static String formatInvalidMigration(ValidateOutput output) {
+        String version = output.version == null ? "?" : output.version;
+        String description = output.description == null ? "?" : output.description;
+        String code = output.errorDetails == null || output.errorDetails.errorCode == null
+                ? "UNKNOWN"
+                : output.errorDetails.errorCode.toString();
+        String message = output.errorDetails == null || output.errorDetails.errorMessage == null
+                ? "no details"
+                : output.errorDetails.errorMessage;
+        return "%s:%s [%s] %s".formatted(version, description, code, message);
     }
 
     private static void repair(Flyway flyway) {
