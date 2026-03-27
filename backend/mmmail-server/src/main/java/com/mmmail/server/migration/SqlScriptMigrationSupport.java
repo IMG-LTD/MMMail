@@ -38,6 +38,13 @@ public final class SqlScriptMigrationSupport {
         executeRaw(connection, "alter table " + tableName + " add column " + columnName + " " + definition, tableName + "." + columnName);
     }
 
+    public static void createIndexIfMissing(Connection connection, String tableName, String indexName, String definition) {
+        if (indexExists(connection, tableName, indexName)) {
+            return;
+        }
+        executeRaw(connection, "create index " + indexName + " on " + tableName + definition, tableName + "." + indexName);
+    }
+
     static void execute(Connection connection, String sourceName, String scriptContent) {
         for (String statement : splitStatements(scriptContent)) {
             executeStatement(connection, sourceName, statement);

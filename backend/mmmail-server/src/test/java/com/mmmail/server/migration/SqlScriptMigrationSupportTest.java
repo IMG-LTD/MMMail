@@ -67,6 +67,42 @@ class SqlScriptMigrationSupportTest {
         assertThat(executedSql).isEmpty();
     }
 
+    @Test
+    void shouldCreateIndexWhenIndexIsMissing() {
+        List<String> executedSql = new ArrayList<>();
+        Connection connection = fakeConnection(Set.of(), Set.of(), executedSql);
+
+        SqlScriptMigrationSupport.createIndexIfMissing(
+                connection,
+                "mail_attachment",
+                "idx_mail_attachment_owner_mail_created",
+                "(owner_id, mail_id, created_at)"
+        );
+
+        assertThat(executedSql).containsExactly(
+                "create index idx_mail_attachment_owner_mail_created on mail_attachment(owner_id, mail_id, created_at)"
+        );
+    }
+
+    @Test
+    void shouldSkipCreateIndexWhenIndexAlreadyExists() {
+        List<String> executedSql = new ArrayList<>();
+        Connection connection = fakeConnection(
+                Set.of(),
+                Set.of("mail_attachment.idx_mail_attachment_owner_mail_created"),
+                executedSql
+        );
+
+        SqlScriptMigrationSupport.createIndexIfMissing(
+                connection,
+                "mail_attachment",
+                "idx_mail_attachment_owner_mail_created",
+                "(owner_id, mail_id, created_at)"
+        );
+
+        assertThat(executedSql).isEmpty();
+    }
+
     private Connection fakeConnection(Set<String> existingColumns, Set<String> existingIndexes, List<String> executedSql) {
         DatabaseMetaData metadata = fakeMetadata(existingColumns, existingIndexes);
         Statement statement = fakeStatement(executedSql);
