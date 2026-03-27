@@ -1,0 +1,136 @@
+name: MMMail CI
+
+on:
+  push:
+    branches: ["main", "master"]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  frontend:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 9
+
+      - name: Install frontend deps
+        run: pnpm --dir frontend install --frozen-lockfile
+
+      - name: Frontend tests
+        run: pnpm --dir frontend test
+
+      - name: Frontend typecheck
+        run: pnpm --dir frontend typecheck
+
+      - name: Frontend audit (high)
+        run: pnpm --dir frontend audit --prod --audit-level=high
+
+  backend:
+    runs-on: ubuntu-latest
+    env:
+      SPRING_DATASOURCE_PASSWORD: test-password
+      MMMAIL_JWT_SECRET: 0123456789abcdef0123456789abcdef
+      NACOS_USERNAME: test-nacos-user
+      NACOS_PASSWORD: test-nacos-password
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 21
+
+      - name: Backend auth/rbac regression
+        run: >
+          mvn -f backend/pom.xml -pl mmmail-server -am
+          -Dtest=AuthFlowIntegrationTest,OrgAuthenticationSecurityIntegrationTest,OrgAdminConsoleIntegrationTest,OrgMemberGovernanceIntegrationTest
+          -Dsurefire.failIfNoSpecifiedTests=false test
+
+  validate:
+    runs-on: ubuntu-latest
+    needs: [frontend, backend]
+    env:
+      MMMAIL_VALIDATE_CONTAINER_TESTS: "true"
+      MMMAIL_RUN_BACKEND_DEPENDENCY_SCAN: "true"
+      MMMAIL_NVD_API_KEY: ${{ secrets.MMMAIL_NVD_API_KEY }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 9
+
+      - name: Install frontend deps
+        run: pnpm --dir frontend install --frozen-lockfile
+
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 21
+          cache: maven
+
+      - name: Cache dependency-check data
+        uses: actions/cache@v4
+        with:
+          path: .tools/dependency-check-data
+          key: dependency-check-${{ runner.os }}-${{ hashFiles('backend/pom.xml') }}
+          restore-keys: |
+            dependency-check-${{ runner.os }}-
+
+      - name: Validate CI gates
+        run: bash scripts/validate-ci.sh
+
+      - name: Collect validation logs
+        if: always()
+        run: |
+          mkdir -p artifacts/ci-logs
+          shopt -s nullglob
+          for file in /tmp/mmmail-*.log; do
+            cp "$file" artifacts/ci-logs/
+          done
+
+      - name: Publish gate summary
+        if: always()
+        run: |
+          {
+            echo "## MMMail CI gate summary"
+            echo "- validate-ci entry: \`bash scripts/validate-ci.sh\`"
+            echo "- container gates: \`MMMAIL_VALIDATE_CONTAINER_TESTS=true\`"
+            echo "- dependency scan: \`MMMAIL_RUN_BACKEND_DEPENDENCY_SCAN=true\`"
+            echo "- security reports: \`artifacts/security/dependency-check/\`"
+            echo "- RC1 container reports: \`artifacts/release/rc1-container/\`"
+            echo "- CI logs: \`artifacts/ci-logs/\`"
+            echo "- surefire reports: \`backend/mmmail-server/target/surefire-reports/\`"
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Upload validation artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: mmmail-validate-artifacts
+          if-no-files-found: warn
+          path: |
+            artifacts/
+            backend/mmmail-server/target/surefire-reports/

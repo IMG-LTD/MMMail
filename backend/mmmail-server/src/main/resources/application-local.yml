@@ -1,0 +1,60 @@
+spring:
+  datasource:
+    driver-class-name: ${SPRING_DATASOURCE_DRIVER:com.mysql.cj.jdbc.Driver}
+    url: ${SPRING_DATASOURCE_URL:jdbc:mysql://127.0.0.1:3306/mmmail?useUnicode=true&characterEncoding=utf8&serverTimezone=Asia/Shanghai&useSSL=false&allowPublicKeyRetrieval=true}
+    username: ${SPRING_DATASOURCE_USERNAME:mmmail_app}
+    password: ${SPRING_DATASOURCE_PASSWORD:replace-with-db-password}
+  data:
+    redis:
+      host: ${SPRING_REDIS_HOST:127.0.0.1}
+      port: ${SPRING_REDIS_PORT:6379}
+      password: ${SPRING_REDIS_PASSWORD:replace-with-redis-password}
+      database: ${SPRING_REDIS_DATABASE:0}
+      timeout: ${SPRING_REDIS_TIMEOUT:5s}
+  kafka:
+    bootstrap-servers: ${SPRING_KAFKA_BOOTSTRAP_SERVERS:127.0.0.1:9092}
+  cloud:
+    nacos:
+      server-addr: ${NACOS_SERVER_ADDR:127.0.0.1:8848}
+      username: ${NACOS_USERNAME:replace-with-nacos-user}
+      password: ${NACOS_PASSWORD:replace-with-nacos-password}
+      discovery:
+        namespace: ${NACOS_NAMESPACE:public}
+        group: ${NACOS_GROUP:DEFAULT_GROUP}
+      config:
+        namespace: ${NACOS_NAMESPACE:public}
+        group: ${NACOS_GROUP:DEFAULT_GROUP}
+  sql:
+    init:
+      mode: ${SPRING_SQL_INIT_MODE:never}
+      continue-on-error: ${SPRING_SQL_INIT_CONTINUE_ON_ERROR:true}
+  servlet:
+    multipart:
+      max-file-size: ${SPRING_SERVLET_MULTIPART_MAX_FILE_SIZE:20MB}
+      max-request-size: ${SPRING_SERVLET_MULTIPART_MAX_REQUEST_SIZE:25MB}
+
+mmmail:
+  jwt-secret: ${MMMAIL_JWT_SECRET:replace-with-32-plus-char-random-secret}
+  cors-allowed-origins: ${MMMAIL_CORS_ALLOWED_ORIGINS:http://localhost:5173,http://127.0.0.1:5173,http://localhost:3000,http://127.0.0.1:3000,http://localhost:3001,http://127.0.0.1:3001,http://localhost:3002,http://127.0.0.1:3002,http://localhost:3003,http://127.0.0.1:3003}
+  auth:
+    refresh-cookie-name: ${MMMAIL_AUTH_REFRESH_COOKIE_NAME:MMMAIL_REFRESH_TOKEN}
+    csrf-cookie-name: ${MMMAIL_AUTH_CSRF_COOKIE_NAME:MMMAIL_CSRF_TOKEN}
+    cookie-secure: ${MMMAIL_AUTH_COOKIE_SECURE:false}
+    cookie-same-site: ${MMMAIL_AUTH_COOKIE_SAME_SITE:Lax}
+  security:
+    rate-limit:
+      login:
+        window-seconds: ${MMMAIL_SECURITY_LOGIN_RATE_LIMIT_WINDOW_SECONDS:300}
+        max-attempts: ${MMMAIL_SECURITY_LOGIN_RATE_LIMIT_MAX_ATTEMPTS:10}
+      client-errors:
+        window-seconds: ${MMMAIL_SECURITY_CLIENT_ERROR_RATE_LIMIT_WINDOW_SECONDS:60}
+        max-events: ${MMMAIL_SECURITY_CLIENT_ERROR_RATE_LIMIT_MAX_EVENTS:30}
+  drive:
+    storage-root: ${MMMAIL_DRIVE_STORAGE_ROOT:${java.io.tmpdir}/mmmail-drive-local}
+    recycle-bin:
+      retention-days: ${MMMAIL_DRIVE_RECYCLE_BIN_RETENTION_DAYS:30}
+    preview-text-max-bytes: ${MMMAIL_DRIVE_PREVIEW_TEXT_MAX_BYTES:262144}
+    public-share-rate-limit:
+      window-seconds: ${MMMAIL_DRIVE_PUBLIC_SHARE_RATE_LIMIT_WINDOW_SECONDS:60}
+      max-requests: ${MMMAIL_DRIVE_PUBLIC_SHARE_RATE_LIMIT_MAX_REQUESTS:30}
+      redis-key-prefix: ${MMMAIL_DRIVE_PUBLIC_SHARE_RATE_LIMIT_REDIS_KEY_PREFIX:mmmail:drive:share-rate}

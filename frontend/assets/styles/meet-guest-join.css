@@ -1,0 +1,153 @@
+.meet-guest-page {
+  min-height: 100vh;
+  padding: 24px;
+  background:
+    radial-gradient(circle at top left, rgba(109, 74, 255, 0.18), transparent 28%),
+    linear-gradient(180deg, #f8f7ff 0%, #eef2ff 100%);
+  color: #261f48;
+}
+
+.meet-guest-page__header,
+.meet-guest-page__main,
+.meet-guest-card__toggles,
+.meet-guest-session__status,
+.meet-guest-session__controls,
+.meet-guest-session__participants-head,
+.meet-guest-session__media-tags {
+  display: flex;
+}
+
+.meet-guest-page__header,
+.meet-guest-session__participants-head {
+  justify-content: space-between;
+  align-items: center;
+}
+
+.meet-guest-page__brand {
+  font-size: 24px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  color: #30275e;
+}
+
+.meet-guest-page__main {
+  flex-direction: column;
+  gap: 20px;
+  width: min(100%, 1040px);
+  margin: 40px auto 0;
+}
+
+.meet-guest-hero,
+.meet-guest-card {
+  border-radius: 28px;
+  border: 1px solid rgba(109, 74, 255, 0.12);
+  background: rgba(255, 255, 255, 0.9);
+  box-shadow: 0 24px 60px rgba(37, 31, 67, 0.08);
+}
+
+.meet-guest-hero {
+  padding: 28px 30px;
+}
+
+.meet-guest-hero h1,
+.meet-guest-card h2,
+.meet-guest-session__participants-head h3 {
+  margin: 12px 0 0;
+}
+
+.meet-guest-hero p,
+.meet-guest-card__head p,
+.meet-guest-card__summary {
+  margin: 10px 0 0;
+  color: #655f83;
+  line-height: 1.6;
+}
+
+.meet-guest-hero__facts {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-top: 16px;
+}
+
+.meet-guest-hero__facts span,
+.meet-guest-session__status span {
+  font-size: 13px;
+  color: #7b7596;
+}
+
+.meet-guest-card {
+  padding: 24px 26px;
+}
+
+.meet-guest-card__head {
+  margin-bottom: 16px;
+}
+
+.meet-guest-card__toggles,
+.meet-guest-session__controls {
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.meet-guest-card__submit {
+  margin-top: 18px;
+}
+
+.meet-guest-card__summary {
+  margin-bottom: 16px;
+}
+
+.meet-guest-session__status {
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 14px;
+}
+
+.meet-guest-session__panel {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.meet-guest-session__participants {
+  border-radius: 20px;
+  border: 1px solid rgba(109, 74, 255, 0.12);
+  padding: 16px 18px;
+  background: rgba(248, 247, 255, 0.78);
+}
+
+.meet-guest-session__participants-head {
+  margin-bottom: 12px;
+}
+
+.meet-guest-session__participants-head span {
+  font-size: 14px;
+  color: #655f83;
+}
+
+.meet-guest-session__media-tags {
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+@media (max-width: 768px) {
+  .meet-guest-page {
+    padding: 18px;
+  }
+
+  .meet-guest-page__main {
+    margin-top: 24px;
+  }
+
+  .meet-guest-card,
+  .meet-guest-hero {
+    padding: 20px;
+  }
+
+  .meet-guest-session__status {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+}

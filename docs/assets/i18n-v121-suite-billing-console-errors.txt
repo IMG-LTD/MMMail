@@ -1,0 +1,10 @@
+Playwright MCP console capture - 2026-03-13 09:00 CST
+Level: error
+Result: 0 error messages on /suite during authenticated billing verification.
+
+Additional info capture:
+- [INFO] <Suspense> is an experimental feature and its API will likely change.
+
+Historical observation during unauthenticated /register flow earlier in this iteration:
+- A transient /api/v1/settings/profile related console error was observed before login.
+- It did not block registration, login, quote refresh, or checkout draft save.

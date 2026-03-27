@@ -1,0 +1,94 @@
+# Community Edition v1.0 运维 Runbook
+
+**版本**: `v1.0-draft`  
+**日期**: `2026-03-13`  
+**作者**: `Codex`
+
+## 1. 入口清单
+- 健康检查：`GET /actuator/health`
+- Prometheus 导出：`GET /actuator/prometheus`
+- 管理页：`/settings/system-health`
+- 本地门禁：`bash scripts/validate-local.sh`
+- CI 门禁：`MMMAIL_VALIDATE_CONTAINER_TESTS=true bash scripts/validate-ci.sh`
+
+## 2. 核心检查
+### 服务存活
+- Backend：
+  - `curl -sf http://127.0.0.1:8080/actuator/health`
+- Frontend：
+  - 访问 `http://127.0.0.1:3001`
+- 系统健康页：
+  - 使用管理员账号登录后访问 `/settings/system-health`
+
+### 日志
+- 后端日志为结构化 JSON，包含：
+  - `requestId`
+  - `event`
+  - `module`
+  - `userId`
+  - `sessionId`
+- 排查请求链时，优先按 `requestId` 聚合：
+  - `docker compose logs backend | rg '"requestId":"'`
+
+### 指标
+- 导出 Prometheus 文本：
+  - `curl -s -H "Authorization: Bearer <admin-access-token>" http://127.0.0.1:8080/actuator/prometheus`
+- 首发关键指标：
+  - `mmmail_api_requests_total`
+  - `mmmail_api_requests_failed_total`
+  - `mmmail_errors_events_total`
+  - `mmmail_jobs_executions_total`
+
+## 3. 常见故障排查
+### 系统健康页显示 `DOWN` 或 `DEGRADED`
+- 先看 `components` 区块中哪个组件异常。
+- `redis=DOWN`：
+  - 检查 `SPRING_REDIS_HOST`、`SPRING_REDIS_PORT`、`SPRING_REDIS_PASSWORD`
+  - 查看 backend 日志中的 `Redis health check failed`
+- `db=DOWN`：
+  - 先执行 `./scripts/db-upgrade.sh .env info`
+  - 再检查 `SPRING_DATASOURCE_*` 配置和 MySQL 连接性
+
+### `/actuator/prometheus` 返回 `403`
+- 该接口仅管理员可访问。
+- 先重新登录管理员，再确认请求带 `Authorization: Bearer <token>`。
+
+### 前端 runtime error 未上报
+- 只在已登录会话下上报。
+- 检查浏览器控制台是否存在：
+  - `Failed to report client runtime error`
+- 再检查：
+  - `/api/v1/system/errors/client`
+  - 后端结构化日志中的 `module=system`
+
+### 后台任务失败
+- 系统健康页 `Background jobs` 区块会显示最近任务与失败状态。
+- 首发关键后台任务：
+  - `MAIL_EASY_SWITCH_IMPORT`
+- 若任务失败：
+  - 查看后端日志中同 `jobName` 记录
+  - 结合 `recentJobs[].detail` 判断失败阶段
+
+## 4. 升级 / 回滚 / 恢复
+- 升级前：
+  - `./scripts/db-backup.sh .env`
+  - `./scripts/db-upgrade.sh .env info`
+- 执行升级：
+  - `./scripts/db-upgrade.sh .env upgrade`
+- 前滚修复：
+  - `./scripts/db-upgrade.sh .env repair`
+  - `./scripts/db-upgrade.sh .env upgrade`
+- 恢复：
+  - `./scripts/db-restore.sh .env <backup-dir>`
+- 回滚：
+  - `./scripts/db-rollback.sh .env <backup-dir>`
+
+## 5. 发布前运维检查
+- 本地：
+  - `bash scripts/validate-local.sh`
+- CI：
+  - `MMMAIL_VALIDATE_CONTAINER_TESTS=true bash scripts/validate-ci.sh`
+- 手动确认：
+  - 管理员可打开 `/settings/system-health`
+  - `/actuator/prometheus` 可导出核心指标
+  - 最近错误与后台任务列表非空时能正确展示

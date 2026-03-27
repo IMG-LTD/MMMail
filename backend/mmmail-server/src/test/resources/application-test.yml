@@ -1,0 +1,53 @@
+spring:
+  datasource:
+    driver-class-name: org.h2.Driver
+    url: jdbc:h2:mem:mmmail;MODE=MySQL;DATABASE_TO_LOWER=TRUE;CASE_INSENSITIVE_IDENTIFIERS=TRUE;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE
+    username: sa
+    password: test-password
+  flyway:
+    enabled: false
+  sql:
+    init:
+      mode: always
+      schema-locations: classpath:schema.sql
+      continue-on-error: true
+  cloud:
+    nacos:
+      username: test-nacos-user
+      password: test-nacos-password
+      discovery:
+        enabled: false
+      config:
+        enabled: false
+
+mmmail:
+  jwt-secret: 0123456789abcdef0123456789abcdef
+  cors-allowed-origins: http://127.0.0.1:3001,http://localhost:3001
+  auth:
+    cookie-secure: false
+    cookie-same-site: Lax
+  security:
+    rate-limit:
+      login:
+        window-seconds: 300
+        max-attempts: 10
+      client-errors:
+        window-seconds: 60
+        max-events: 30
+  drive:
+    storage-root: ${java.io.tmpdir}/mmmail-drive-test
+    upload:
+      max-file-size-bytes: 52428800
+    recycle-bin:
+      retention-days: 30
+    preview-text-max-bytes: 262144
+    public-share-rate-limit:
+      window-seconds: 60
+      max-requests: 30
+      redis-key-prefix: mmmail:drive:share-rate:test
+  mail:
+    attachment:
+      storage-root: ${java.io.tmpdir}/mmmail-mail-attachments-test
+  schema:
+    preview-initializers:
+      enabled: false

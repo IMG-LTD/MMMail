@@ -1,0 +1,48 @@
+@import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@300;400;500;600;700&display=swap');
+
+:root {
+  --mm-bg: linear-gradient(135deg, #edf7f7 0%, #f8f3ea 100%);
+  --mm-surface: #ffffff;
+  --mm-primary: #0f6e6e;
+  --mm-primary-dark: #094747;
+  --mm-accent: #d98e04;
+  --mm-text: #17212b;
+  --mm-muted: #617281;
+  --mm-danger: #c0392b;
+  --mm-border: #dbe4e8;
+  --mm-radius: 12px;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  font-family: 'IBM Plex Sans', 'PingFang SC', 'Hiragino Sans GB', sans-serif;
+  color: var(--mm-text);
+  background: var(--mm-bg);
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+.mm-card {
+  background: var(--mm-surface);
+  border: 1px solid var(--mm-border);
+  border-radius: var(--mm-radius);
+  box-shadow: 0 8px 24px rgba(9, 71, 71, 0.08);
+}
+
+.mm-page {
+  min-height: calc(100vh - 64px);
+  padding: 20px;
+}
+
+.mm-section-title {
+  margin: 0 0 12px;
+  font-size: 20px;
+  font-weight: 600;
+}

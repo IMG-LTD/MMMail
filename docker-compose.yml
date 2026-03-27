@@ -1,0 +1,129 @@
+services:
+  mysql:
+    image: mysql:8.4
+    container_name: mmmail-mysql
+    restart: unless-stopped
+    environment:
+      MYSQL_DATABASE: mmmail
+      MYSQL_USER: ${SPRING_DATASOURCE_USERNAME}
+      MYSQL_PASSWORD: ${SPRING_DATASOURCE_PASSWORD}
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+    ports:
+      - "3306:3306"
+    volumes:
+      - mmmail-mysql-data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD-SHELL", "mysqladmin ping -h 127.0.0.1 -uroot -p$$MYSQL_ROOT_PASSWORD --silent"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+
+  redis:
+    image: redis:7.4-alpine
+    container_name: mmmail-redis
+    restart: unless-stopped
+    environment:
+      SPRING_REDIS_PASSWORD: ${SPRING_REDIS_PASSWORD}
+    command: ["redis-server", "--appendonly", "yes", "--requirepass", "${SPRING_REDIS_PASSWORD}"]
+    ports:
+      - "6379:6379"
+    volumes:
+      - mmmail-redis-data:/data
+    healthcheck:
+      test: ["CMD-SHELL", "redis-cli --no-auth-warning -a \"$$SPRING_REDIS_PASSWORD\" ping | grep PONG"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+
+  nacos:
+    image: nacos/nacos-server:v2.4.2
+    container_name: mmmail-nacos
+    restart: unless-stopped
+    environment:
+      MODE: standalone
+      PREFER_HOST_MODE: hostname
+      NACOS_AUTH_ENABLE: "false"
+    ports:
+      - "8848:8848"
+    volumes:
+      - mmmail-nacos-data:/home/nacos/data
+
+  backend:
+    build:
+      context: .
+      dockerfile: backend/Dockerfile
+    container_name: mmmail-backend
+    restart: unless-stopped
+    environment:
+      SPRING_PROFILES_ACTIVE: local
+      SERVER_PORT: 8080
+      SPRING_DATASOURCE_DRIVER: ${SPRING_DATASOURCE_DRIVER}
+      SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/mmmail?useUnicode=true&characterEncoding=utf8&serverTimezone=Asia/Shanghai&useSSL=false&allowPublicKeyRetrieval=true
+      SPRING_DATASOURCE_USERNAME: ${SPRING_DATASOURCE_USERNAME}
+      SPRING_DATASOURCE_PASSWORD: ${SPRING_DATASOURCE_PASSWORD}
+      SPRING_REDIS_HOST: redis
+      SPRING_REDIS_PORT: ${SPRING_REDIS_PORT}
+      SPRING_REDIS_PASSWORD: ${SPRING_REDIS_PASSWORD}
+      SPRING_REDIS_DATABASE: ${SPRING_REDIS_DATABASE}
+      SPRING_REDIS_TIMEOUT: ${SPRING_REDIS_TIMEOUT}
+      SPRING_KAFKA_BOOTSTRAP_SERVERS: 127.0.0.1:9092
+      NACOS_SERVER_ADDR: nacos:8848
+      NACOS_USERNAME: ${NACOS_USERNAME}
+      NACOS_PASSWORD: ${NACOS_PASSWORD}
+      NACOS_NAMESPACE: ${NACOS_NAMESPACE}
+      NACOS_GROUP: ${NACOS_GROUP}
+      MMMAIL_JWT_SECRET: ${MMMAIL_JWT_SECRET}
+      MMMAIL_AUTH_CSRF_COOKIE_NAME: ${MMMAIL_AUTH_CSRF_COOKIE_NAME}
+      MMMAIL_AUTH_REFRESH_COOKIE_NAME: ${MMMAIL_AUTH_REFRESH_COOKIE_NAME}
+      MMMAIL_PUBLIC_BASE_URL: http://localhost:3001
+      MMMAIL_CORS_ALLOWED_ORIGINS: http://localhost:3001,http://127.0.0.1:3001
+      MMMAIL_DRIVE_STORAGE_ROOT: /var/lib/mmmail/drive
+    depends_on:
+      mysql:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      nacos:
+        condition: service_started
+    ports:
+      - "8080:8080"
+    volumes:
+      - mmmail-drive-data:/var/lib/mmmail/drive
+    healthcheck:
+      test: ["CMD-SHELL", "curl -fsS http://127.0.0.1:8080/actuator/health >/dev/null"]
+      interval: 15s
+      timeout: 5s
+      retries: 12
+
+  frontend:
+    build:
+      context: .
+      dockerfile: frontend/Dockerfile
+      args:
+        NUXT_PUBLIC_API_BASE: http://localhost:8080
+        NUXT_PUBLIC_AUTH_CSRF_COOKIE_NAME: ${NUXT_PUBLIC_AUTH_CSRF_COOKIE_NAME}
+        NUXT_PUBLIC_ENABLE_PREVIEW_MODULES: ${NUXT_PUBLIC_ENABLE_PREVIEW_MODULES}
+    container_name: mmmail-frontend
+    restart: unless-stopped
+    environment:
+      HOST: 0.0.0.0
+      PORT: 3001
+      NUXT_PUBLIC_API_BASE: http://localhost:8080
+      NUXT_PUBLIC_AUTH_CSRF_COOKIE_NAME: ${NUXT_PUBLIC_AUTH_CSRF_COOKIE_NAME}
+      NUXT_PUBLIC_ENABLE_PREVIEW_MODULES: ${NUXT_PUBLIC_ENABLE_PREVIEW_MODULES}
+    depends_on:
+      backend:
+        condition: service_healthy
+    ports:
+      - "3001:3001"
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q -O- http://127.0.0.1:3001 >/dev/null"]
+      interval: 15s
+      timeout: 5s
+      retries: 12
+
+volumes:
+  mmmail-mysql-data:
+  mmmail-redis-data:
+  mmmail-nacos-data:
+  mmmail-drive-data:
