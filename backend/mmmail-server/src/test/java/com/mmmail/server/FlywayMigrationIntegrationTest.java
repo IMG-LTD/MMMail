@@ -1,18 +1,15 @@
 package com.mmmail.server;
 
 import com.mmmail.server.migration.MigrationDefaults;
+import com.mmmail.server.migration.SqlScriptMigrationSupport;
 import org.flywaydb.core.Flyway;
 import org.flywaydb.core.api.output.MigrateResult;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.springframework.core.io.ClassPathResource;
-import org.springframework.core.io.support.EncodedResource;
-import org.springframework.jdbc.datasource.init.ScriptUtils;
 import org.testcontainers.containers.MySQLContainer;
 import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
 
-import java.nio.charset.StandardCharsets;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.ResultSet;
@@ -87,7 +84,7 @@ class FlywayMigrationIntegrationTest {
 
     private void executeLegacyScript(String resourcePath) throws Exception {
         try (Connection connection = openConnection()) {
-            ScriptUtils.executeSqlScript(connection, new EncodedResource(new ClassPathResource(resourcePath), StandardCharsets.UTF_8));
+            SqlScriptMigrationSupport.execute(connection, resourcePath);
         }
     }
 
