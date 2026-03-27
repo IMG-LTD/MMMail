@@ -103,7 +103,7 @@ jobs:
         uses: actions/cache@v4
         with:
           path: .tools/dependency-check-data
-          key: dependency-check-${{ runner.os }}-${{ hashFiles('backend/pom.xml') }}
+          key: dependency-check-${{ runner.os }}-${{ github.run_id }}
           restore-keys: |
             dependency-check-${{ runner.os }}-
 
