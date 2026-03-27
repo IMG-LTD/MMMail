@@ -31,6 +31,8 @@
         <jjwt.version>0.12.6</jjwt.version>
         <flyway.version>10.22.0</flyway.version>
         <testcontainers.version>1.20.4</testcontainers.version>
+        <tomcat.version>10.1.52</tomcat.version>
+        <log4j2.version>2.25.2</log4j2.version>
     </properties>
 
     <dependencyManagement>
