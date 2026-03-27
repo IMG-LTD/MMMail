@@ -18,7 +18,7 @@ class SqlScriptMigrationSupportTest {
     @Test
     void shouldNormalizeConditionalAddColumnWhenColumnIsMissing() {
         List<String> executedSql = new ArrayList<>();
-        Connection connection = fakeConnection(Set.of(), executedSql);
+        Connection connection = fakeConnection(Set.of(), Set.of(), executedSql);
 
         SqlScriptMigrationSupport.execute(connection, "inline.sql", """
                 alter table mail_message add column if not exists delivery_targets_json text;
@@ -34,7 +34,7 @@ class SqlScriptMigrationSupportTest {
     @Test
     void shouldSkipConditionalAddColumnWhenColumnAlreadyExists() {
         List<String> executedSql = new ArrayList<>();
-        Connection connection = fakeConnection(Set.of("mail_message.delivery_targets_json"), executedSql);
+        Connection connection = fakeConnection(Set.of("mail_message.delivery_targets_json"), Set.of(), executedSql);
 
         SqlScriptMigrationSupport.execute(connection, "inline.sql", """
                 alter table mail_message add column if not exists delivery_targets_json text;
@@ -46,7 +46,7 @@ class SqlScriptMigrationSupportTest {
     @Test
     void shouldSkipPlainAddColumnWhenColumnAlreadyExists() {
         List<String> executedSql = new ArrayList<>();
-        Connection connection = fakeConnection(Set.of("search_preset.is_pinned"), executedSql);
+        Connection connection = fakeConnection(Set.of("search_preset.is_pinned"), Set.of(), executedSql);
 
         SqlScriptMigrationSupport.execute(connection, "inline.sql", """
                 alter table search_preset add column is_pinned tinyint not null default 0;
@@ -55,8 +55,20 @@ class SqlScriptMigrationSupportTest {
         assertThat(executedSql).isEmpty();
     }
 
-    private Connection fakeConnection(Set<String> existingColumns, List<String> executedSql) {
-        DatabaseMetaData metadata = fakeMetadata(existingColumns);
+    @Test
+    void shouldSkipDropIndexWhenIndexIsMissing() {
+        List<String> executedSql = new ArrayList<>();
+        Connection connection = fakeConnection(Set.of(), Set.of(), executedSql);
+
+        SqlScriptMigrationSupport.execute(connection, "inline.sql", """
+                drop index uk_calendar_attendee_event_email on calendar_event_attendee;
+                """);
+
+        assertThat(executedSql).isEmpty();
+    }
+
+    private Connection fakeConnection(Set<String> existingColumns, Set<String> existingIndexes, List<String> executedSql) {
+        DatabaseMetaData metadata = fakeMetadata(existingColumns, existingIndexes);
         Statement statement = fakeStatement(executedSql);
         return (Connection) Proxy.newProxyInstance(
                 Connection.class.getClassLoader(),
@@ -71,18 +83,47 @@ class SqlScriptMigrationSupportTest {
         );
     }
 
-    private DatabaseMetaData fakeMetadata(Set<String> existingColumns) {
+    private DatabaseMetaData fakeMetadata(Set<String> existingColumns, Set<String> existingIndexes) {
         return (DatabaseMetaData) Proxy.newProxyInstance(
                 DatabaseMetaData.class.getClassLoader(),
                 new Class[]{DatabaseMetaData.class},
                 (proxy, method, args) -> {
-                    if (!"getColumns".equals(method.getName())) {
-                        return defaultValue(method.getReturnType());
+                    return switch (method.getName()) {
+                        case "getColumns" -> {
+                            String tableName = String.valueOf(args[2]);
+                            String columnName = String.valueOf(args[3]);
+                            boolean present = existingColumns.contains(tableName + "." + columnName);
+                            yield fakeResultSet(present);
+                        }
+                        case "getIndexInfo" -> {
+                            String tableName = String.valueOf(args[2]);
+                            yield fakeIndexResultSet(tableName, existingIndexes);
+                        }
+                        default -> defaultValue(method.getReturnType());
+                    };
+                }
+        );
+    }
+
+    private ResultSet fakeIndexResultSet(String tableName, Set<String> existingIndexes) {
+        List<String> matches = existingIndexes.stream()
+                .filter(index -> index.startsWith(tableName + "."))
+                .map(index -> index.substring(tableName.length() + 1))
+                .toList();
+        return (ResultSet) Proxy.newProxyInstance(
+                ResultSet.class.getClassLoader(),
+                new Class[]{ResultSet.class},
+                new java.lang.reflect.InvocationHandler() {
+                    private int position = -1;
+
+                    @Override
+                    public Object invoke(Object proxy, java.lang.reflect.Method method, Object[] args) {
+                        return switch (method.getName()) {
+                            case "next" -> ++position < matches.size();
+                            case "getString" -> "INDEX_NAME".equals(args[0]) ? matches.get(position) : null;
+                            default -> defaultValue(method.getReturnType());
+                        };
                     }
-                    String tableName = String.valueOf(args[2]);
-                    String columnName = String.valueOf(args[3]);
-                    boolean present = existingColumns.contains(tableName + "." + columnName);
-                    return fakeResultSet(present);
                 }
         );
     }

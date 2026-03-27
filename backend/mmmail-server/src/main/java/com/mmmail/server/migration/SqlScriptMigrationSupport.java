@@ -20,6 +20,9 @@ public final class SqlScriptMigrationSupport {
     private static final Pattern ADD_COLUMN = Pattern.compile(
             "(?is)^alter\\s+table\\s+`?([\\w]+)`?\\s+add\\s+column(?:\\s+if\\s+not\\s+exists)?\\s+`?([\\w]+)`?\\s+(.+)$"
     );
+    private static final Pattern DROP_INDEX = Pattern.compile(
+            "(?is)^drop\\s+index\\s+`?([\\w]+)`?\\s+on\\s+`?([\\w]+)`?$"
+    );
 
     private SqlScriptMigrationSupport() {
     }
@@ -50,6 +53,10 @@ public final class SqlScriptMigrationSupport {
         if (addColumn != null && columnExists(connection, addColumn.table(), addColumn.column())) {
             return;
         }
+        DropIndexStatement dropIndex = parseDropIndex(sql);
+        if (dropIndex != null && !indexExists(connection, dropIndex.table(), dropIndex.index())) {
+            return;
+        }
         String executable = addColumn == null ? sql : addColumn.toSql();
         executeRaw(connection, executable, sourceName);
     }
@@ -60,6 +67,14 @@ public final class SqlScriptMigrationSupport {
             return null;
         }
         return new AddColumnStatement(matcher.group(1), matcher.group(2), matcher.group(3).trim());
+    }
+
+    private static DropIndexStatement parseDropIndex(String sql) {
+        Matcher matcher = DROP_INDEX.matcher(sql);
+        if (!matcher.matches()) {
+            return null;
+        }
+        return new DropIndexStatement(matcher.group(2), matcher.group(1));
     }
 
     private static boolean columnExists(Connection connection, String tableName, String columnName) {
@@ -79,10 +94,39 @@ public final class SqlScriptMigrationSupport {
         }
     }
 
+    private static boolean indexExists(Connection connection, String tableName, String indexName) {
+        try {
+            DatabaseMetaData metadata = connection.getMetaData();
+            String catalog = connection.getCatalog();
+            for (String tableVariant : variants(tableName)) {
+                for (String indexVariant : variants(indexName)) {
+                    if (hasIndex(metadata, catalog, tableVariant, indexVariant)) {
+                        return true;
+                    }
+                }
+            }
+            return false;
+        } catch (SQLException exception) {
+            throw new IllegalStateException("Failed to inspect index metadata for " + tableName + "." + indexName, exception);
+        }
+    }
+
     private static boolean hasColumn(DatabaseMetaData metadata, String catalog, String tableName, String columnName)
             throws SQLException {
         try (ResultSet resultSet = metadata.getColumns(catalog, null, tableName, columnName)) {
             return resultSet.next();
+        }
+    }
+
+    private static boolean hasIndex(DatabaseMetaData metadata, String catalog, String tableName, String indexName)
+            throws SQLException {
+        try (ResultSet resultSet = metadata.getIndexInfo(catalog, null, tableName, false, false)) {
+            while (resultSet.next()) {
+                if (indexName.equalsIgnoreCase(resultSet.getString("INDEX_NAME"))) {
+                    return true;
+                }
+            }
+            return false;
         }
     }
 
@@ -141,5 +185,8 @@ public final class SqlScriptMigrationSupport {
         private String toSql() {
             return "alter table " + table + " add column " + column + " " + definition;
         }
+    }
+
+    private record DropIndexStatement(String table, String index) {
     }
 }
