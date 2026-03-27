@@ -192,6 +192,9 @@ if rg -n "change-me|please-change-me-before-production-use" backend/mmmail-serve
   exit 1
 fi
 
+echo "[validate-local] db scripts syntax"
+bash -n scripts/db-backup.sh scripts/db-restore.sh scripts/db-rollback.sh >/tmp/mmmail-db-scripts-syntax.log 2>&1
+
 echo "[validate-local] backend compile"
 env -u http_proxy -u https_proxy -u HTTP_PROXY -u HTTPS_PROXY -u ALL_PROXY -u all_proxy \
   "$MVN_BIN" -f backend/pom.xml -pl mmmail-server -am -DskipTests compile >/tmp/mmmail-backend-compile.log 2>&1

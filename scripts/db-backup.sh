@@ -15,7 +15,9 @@ require_mysql_client_support
 
 mkdir -p "$OUTPUT_DIR" "$MMMAIL_BACKUP_DRIVE_PATH"
 
-mysqldump_cli --single-transaction --skip-comments > "$OUTPUT_DIR/database.sql"
+SCHEMA_VERSION="$(mysql_cli -N -B -e "select coalesce((select version from flyway_schema_history where success = 1 and version is not null order by installed_rank desc limit 1), 'none')")"
+
+mysqldump_cli --single-transaction --skip-comments --no-tablespaces > "$OUTPUT_DIR/database.sql"
 tar -C "$MMMAIL_BACKUP_DRIVE_PATH" -czf "$OUTPUT_DIR/drive-data.tar.gz" .
 
 {
@@ -23,7 +25,7 @@ tar -C "$MMMAIL_BACKUP_DRIVE_PATH" -czf "$OUTPUT_DIR/drive-data.tar.gz" .
   echo "database=$DB_NAME"
   echo "jdbc_url=$SPRING_DATASOURCE_URL"
   echo "drive_path=$MMMAIL_BACKUP_DRIVE_PATH"
-  echo "schema_version=$(mysql_cli -N -B -e \"select coalesce((select version from flyway_schema_history where success = 1 and version is not null order by installed_rank desc limit 1), 'none')\")"
+  echo "schema_version=$SCHEMA_VERSION"
 } > "$OUTPUT_DIR/manifest.txt"
 
 echo "$OUTPUT_DIR"
