@@ -7,7 +7,7 @@
 ## 当前状态
 - 正式状态：`RC1_READY`
 - 含义：Gate 0 ~ Gate 7 已全部通过，`v1.0.0-rc1` prerelease 已发布；当前进入 `v1.0.0` GA 稳定窗口
-- 最新 green head：`1015418` / GitHub Actions run `23675077518`
+- 最新 green head：以 GitHub Actions 上 `dev/community-v1` 的最新成功 run 为准
 
 ## Gate 概览
 - 已完成：Gate 0、Gate 1、Gate 2、Gate 3、Gate 4、Gate 5、Gate 6、Gate 7

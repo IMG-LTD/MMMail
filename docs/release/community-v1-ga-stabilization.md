@@ -9,9 +9,7 @@
 - 候选说明：`https://github.com/IMG-LTD/MMMail/releases/tag/v1.0.0-rc1`
 - 候选基线提交：`6cd3bbc`
 - 当前规划分支：`dev/community-v1`
-- 当前最新 green head：
-  - 提交：`1015418`
-  - GitHub Actions run：`23675077518`
+- 当前最新 green head：以 GitHub Actions 上 `dev/community-v1` 的最新成功 run 为准
 
 ## 当前阶段目标
 - 保持 `dev/community-v1` 最新 head 持续绿灯。

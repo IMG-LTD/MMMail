@@ -4,7 +4,7 @@
 
 ## 当前发布状态
 - 当前正式状态：`RC1_READY`
-- 状态说明：`v1.0.0-rc1` prerelease 已发布，`dev/community-v1` 最新 green head 为 run `23675077518`；当前版本处于 `v1.0.0` GA 稳定窗口
+- 状态说明：`v1.0.0-rc1` prerelease 已发布；`dev/community-v1` 必须持续保持最新 head 绿灯；当前版本处于 `v1.0.0` GA 稳定窗口
 - 状态文档：`docs/release/community-v1-rc-status.md`
 - 当前仍处于发布冻结；除最终签收、release-blocking regression 修复或已批准的 freeze exception 外，不再接受产品或工程改动
 
