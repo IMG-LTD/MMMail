@@ -38,6 +38,8 @@ export const docsEn = {
   'docs.messages.suggestionAcceptFailed': 'Accept suggestion failed',
   'docs.messages.suggestionRejected': 'Suggestion rejected',
   'docs.messages.suggestionRejectFailed': 'Reject suggestion failed',
+  'docs.messages.noteUnavailable': 'Requested note is unavailable. Showing the latest accessible note.',
+  'docs.messages.noteUnavailableInline': 'This note is no longer available. It may have been deleted or access was revoked.',
   'docs.messages.sharePermissionUpdated': 'Collaborator permission updated',
   'docs.messages.sharePermissionUpdateFailed': 'Update collaborator permission failed'
 }
@@ -82,6 +84,8 @@ export const docsZhCN = {
   'docs.messages.suggestionAcceptFailed': '接受建议失败',
   'docs.messages.suggestionRejected': '建议已拒绝',
   'docs.messages.suggestionRejectFailed': '拒绝建议失败',
+  'docs.messages.noteUnavailable': '目标笔记当前不可用，已回退到最近可访问的笔记。',
+  'docs.messages.noteUnavailableInline': '这条笔记当前不可用，可能已被删除或你的访问权限已被撤销。',
   'docs.messages.sharePermissionUpdated': '协作者权限已更新',
   'docs.messages.sharePermissionUpdateFailed': '更新协作者权限失败'
 }
@@ -126,6 +130,8 @@ export const docsZhTW = {
   'docs.messages.suggestionAcceptFailed': '接受建議失敗',
   'docs.messages.suggestionRejected': '建議已拒絕',
   'docs.messages.suggestionRejectFailed': '拒絕建議失敗',
+  'docs.messages.noteUnavailable': '目標筆記目前不可用，已回退到最近可存取的筆記。',
+  'docs.messages.noteUnavailableInline': '這則筆記目前不可用，可能已被刪除或你的存取權限已被撤銷。',
   'docs.messages.sharePermissionUpdated': '協作者權限已更新',
   'docs.messages.sharePermissionUpdateFailed': '更新協作者權限失敗'
 }

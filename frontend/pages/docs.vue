@@ -16,6 +16,7 @@ import { useI18n } from '~/composables/useI18n'
 import { useDocsSyncStream } from '~/composables/useDocsSyncStream'
 import { useAuthStore } from '~/stores/auth'
 import { resolveSessionIdFromAccessToken } from '~/utils/auth-session'
+import { buildDocsRouteQuery, extractDocsNoteIdFromRouteQuery, upsertDocsNoteSummary } from '~/utils/docs-route'
 import { extractSelectedExcerpt } from '~/utils/docs-selection'
 import { needsDocsDetailRefresh } from '~/utils/docs-suggestions'
 
@@ -26,6 +27,8 @@ interface TextareaInputRef {
 const PRESENCE_HEARTBEAT_MS = 20000
 
 const authStore = useAuthStore()
+const route = useRoute()
+const router = useRouter()
 const { t } = useI18n()
 const {
   listNotes,
@@ -162,11 +165,22 @@ async function loadNotes(keepSelection = true): Promise<void> {
     notes.value = next
     if (!next.length) {
       resetEditor()
+      await syncRoute(null)
       return
     }
-    if (!keepSelection || !activeNoteId.value || !next.some((note) => note.id === activeNoteId.value)) {
-      await selectNote(next[0].id)
+    const routeNoteId = resolveRouteNoteId()
+    if (routeNoteId && routeNoteId !== activeNoteId.value) {
+      const selected = await selectNote(routeNoteId, false)
+      if (selected) {
+        return
+      }
+      ElMessage.warning(t('docs.messages.noteUnavailable'))
     }
+    if (keepSelection && activeNoteId.value && next.some((note) => note.id === activeNoteId.value)) {
+      await syncRoute(activeNoteId.value)
+      return
+    }
+    await selectNote(next[0].id)
   } catch (error) {
     ElMessage.error((error as Error).message || t('docs.messages.loadNotesFailed'))
   } finally {
@@ -174,7 +188,7 @@ async function loadNotes(keepSelection = true): Promise<void> {
   }
 }
 
-async function selectNote(noteId: string): Promise<void> {
+async function selectNote(noteId: string, syncRouteAfterLoad = true): Promise<boolean> {
   stopPresenceTicker()
   disconnectSync()
   noteDeleted.value = false
@@ -183,16 +197,24 @@ async function selectNote(noteId: string): Promise<void> {
   selectedExcerpt.value = ''
   selectedRangeStart.value = 0
   selectedRangeEnd.value = 0
-  await Promise.all([loadActiveNote(), loadCollaboration(), loadSuggestions()])
+  const loaded = await loadActiveNote()
+  if (!loaded) {
+    return false
+  }
+  await Promise.all([loadCollaboration(), loadSuggestions()])
   await sendPresence(true)
   startPresenceTicker()
   await nextTick()
+  if (syncRouteAfterLoad) {
+    await syncRoute(noteId)
+  }
   void connectSync(editor.syncCursor || undefined)
+  return true
 }
 
-async function loadActiveNote(): Promise<void> {
+async function loadActiveNote(): Promise<boolean> {
   if (!activeNoteId.value) {
-    return
+    return false
   }
   loadingDetail.value = true
   try {
@@ -208,14 +230,17 @@ async function loadActiveNote(): Promise<void> {
     editor.syncCursor = detail.syncCursor
     editor.syncVersion = detail.syncVersion
     syncCursor.value = detail.syncCursor
+    notes.value = upsertDocsNoteSummary(notes.value, detail)
+    return true
   } catch (error) {
     const normalized = error as ApiClientError
     if (normalized.status === 404) {
       noteDeleted.value = true
-      syncConflictMessage.value = 'This note is no longer available. It may have been deleted by the owner.'
-      return
+      syncConflictMessage.value = t('docs.messages.noteUnavailableInline')
+      return false
     }
     ElMessage.error(normalized.message || t('docs.messages.loadNoteFailed'))
+    return false
   } finally {
     loadingDetail.value = false
   }
@@ -630,9 +655,36 @@ function resetEditor(): void {
   reviewMode.value = 'EDIT'
 }
 
+function resolveRouteNoteId(): string | null {
+  return extractDocsNoteIdFromRouteQuery(route.query.noteId)
+}
+
+async function syncRoute(noteId: string | null): Promise<void> {
+  const currentRouteNoteId = resolveRouteNoteId()
+  if (currentRouteNoteId === noteId) {
+    return
+  }
+  await router.replace({
+    path: '/docs',
+    query: buildDocsRouteQuery(route.query, noteId)
+  })
+}
+
 watch(() => authStore.accessToken, (token) => {
   currentSessionId.value = resolveSessionIdFromAccessToken(token || '')
 }, { immediate: true })
+
+watch(() => route.query.noteId, async (value) => {
+  const routeNoteId = extractDocsNoteIdFromRouteQuery(value)
+  if (!routeNoteId || routeNoteId === activeNoteId.value) {
+    return
+  }
+  const selected = await selectNote(routeNoteId, false)
+  if (!selected) {
+    ElMessage.warning(t('docs.messages.noteUnavailable'))
+    await loadNotes(false)
+  }
+})
 
 onMounted(() => {
   void loadNotes(false)
