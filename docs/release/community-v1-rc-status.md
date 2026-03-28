@@ -70,12 +70,23 @@
 - 最终签收模板已完成
 
 ### `RC1_READY` -> 正式发布候选确认
+- `dev/community-v1` 最新 head 的 `MMMail CI` 必须为绿色
 - 发布负责人确认 `community-v1-final-signoff.md`
 - `community-v1-rc1-notes.md` 审核通过
-- release notes 与 tag/commit 准备完成
+- 创建 `v1.0.0-rc1` tag
+- 发布 GitHub Release 候选说明
+- 进入仅允许 release-blocking 修复的 GA 稳定窗口
 
 ### 任意状态 -> `RELEASE_BLOCKED`
 - 出现新的 release-blocking regression
 - 外部回执与 gate 证据冲突
 - 关键 artifact 缺失或无法追溯
 - freeze exception 未批准却发生实现改动
+
+## `RC1_READY` 后的执行顺序
+1. 确认 `dev/community-v1` 最新 head workflow 全绿。
+2. 复核 `docs/release/community-v1-final-signoff.md`。
+3. 复核 `docs/release/community-v1-rc1-notes.md` 与已知问题说明。
+4. 创建 `v1.0.0-rc1` tag 并推送。
+5. 发布 GitHub Release 候选说明。
+6. 进入 `v1.0.0` GA 稳定窗口，只接收 release-blocking 缺陷。

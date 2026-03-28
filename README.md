@@ -8,6 +8,12 @@
 - 状态文档：`docs/release/community-v1-rc-status.md`
 - 当前仍处于发布冻结；除最终签收、release-blocking regression 修复或已批准的 freeze exception 外，不再接受产品或工程改动
 
+## 下一步版本节奏
+- `v1.0.0-rc1`：保持 `dev/community-v1` 最新 head CI 全绿，完成 tag 与 GitHub Release 候选发布。
+- `v1.0.0`：进入短周期稳定窗口，只处理 release-blocking 缺陷与自托管反馈。
+- `v1.1`：聚焦 `Docs / Sheets` 稳定性、国际化治理、Community / Hosted 边界继续收敛。
+- 不在当前版本节奏中推进 `VPN / Meet / Wallet / Lumo` 等 `Preview` 模块。
+
 ## 快速启动
 1. 准备运行时环境：
    - `cp .env.example .env`
