@@ -79,3 +79,7 @@
 - 每条 stream 都要有独立 release-blocking 集合。
 - 继续保持范围收敛，不把 `Preview` 混入 `GA / Beta` 叙事。
 - 每条 stream 必须同步文档、测试与门禁，不接受“先做功能后补治理”。
+
+## backlog 入口
+- 分诊手册：`docs/release/community-v1-ga-triage-playbook.md`
+- backlog seed：`docs/release/community-v1-v1.1-backlog-seed.md`

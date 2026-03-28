@@ -12,11 +12,14 @@
 - `v1.0.0-rc1`：保持 `dev/community-v1` 最新 head CI 全绿，完成 tag 与 GitHub Release 候选发布。
 - `v1.0.0`：进入短周期稳定窗口，只处理 release-blocking 缺陷与自托管反馈。
 - `v1.1`：聚焦 `Docs / Sheets` 稳定性、国际化治理、Community / Hosted 边界继续收敛。
+- GitHub milestones：`v1.0.0`、`v1.1`、`post-v1.1`
 - 不在当前版本节奏中推进 `VPN / Meet / Wallet / Lumo` 等 `Preview` 模块。
 - GA 稳定窗口：`docs/release/community-v1-ga-stabilization.md`
 - GA 正式发布清单：`docs/release/community-v1-ga-release-checklist.md`
 - 反馈收集：`docs/release/community-v1-feedback-intake.md`
+- GA 分诊手册：`docs/release/community-v1-ga-triage-playbook.md`
 - `v1.1` 规划基线：`docs/release/community-v1-v1.1-plan.md`
+- `v1.1` backlog seed：`docs/release/community-v1-v1.1-backlog-seed.md`
 
 ## 快速启动
 1. 准备运行时环境：
@@ -58,6 +61,8 @@
 - 预发布清单：`docs/release/community-v1-pre-release-checklist.md`
 - 外部执行清单：`docs/release/external-execution-checklist.md`
 - 发布负责人摘要：`docs/release/community-v1-release-manager-brief.md`
+- GA 分诊手册：`docs/release/community-v1-ga-triage-playbook.md`
+- `v1.1` backlog seed：`docs/release/community-v1-v1.1-backlog-seed.md`
 - 外部失败分诊：`docs/release/external-failure-triage.md`
 - Gate 回填模板：`docs/release/gate-backfill-template.md`
 - 外部回执日志：`docs/release/community-v1-external-receipt-log.md`

@@ -17,6 +17,11 @@
 - Release：`https://github.com/IMG-LTD/MMMail/releases/tag/v1.0.0-rc1`
 - 候选提交：`6cd3bbc`
 
+## GitHub milestones
+- `v1.0.0`：`release-blocking` 与自托管阻断项
+- `v1.1`：`Docs / Sheets / i18n / Community / Hosted`
+- `post-v1.1`：`Preview` 与延后能力
+
 ## 提交入口
 ### `release-blocking` 回归
 - 使用模板：`.github/ISSUE_TEMPLATE/release-blocking-regression.md`
@@ -48,6 +53,8 @@
   - 国际化
   - Community / Hosted 边界
   - 其他 post-v1.0 能力
+- 分诊手册：`docs/release/community-v1-ga-triage-playbook.md`
+- `v1.1` backlog seed：`docs/release/community-v1-v1.1-backlog-seed.md`
 
 ## 分流矩阵
 | 反馈 | 归类 | 动作 |
@@ -77,3 +84,4 @@
 - 非阻塞问题不混入当前发布窗口。
 - 无法证明影响 `GA` 主路径的问题，不升级为 release-blocking。
 - 自托管反馈优先使用专用模板，避免与功能缺陷、功能需求混在一起。
+- `v1.1` backlog 仅允许进入 `Docs / Sheets / i18n / Community / Hosted` 四条主线。

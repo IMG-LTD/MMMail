@@ -13,11 +13,18 @@
 - 已完成：Gate 0、Gate 1、Gate 2、Gate 3、Gate 4、Gate 5、Gate 6、Gate 7
 - 待外部执行：无
 
+## GitHub milestones
+- `v1.0.0`
+- `v1.1`
+- `post-v1.1`
+
 ## 入口文档
 - GA 稳定窗口：`docs/release/community-v1-ga-stabilization.md`
 - GA 正式发布清单：`docs/release/community-v1-ga-release-checklist.md`
 - 反馈收集：`docs/release/community-v1-feedback-intake.md`
+- GA 分诊手册：`docs/release/community-v1-ga-triage-playbook.md`
 - `v1.1` 规划：`docs/release/community-v1-v1.1-plan.md`
+- `v1.1` backlog seed：`docs/release/community-v1-v1.1-backlog-seed.md`
 - 自托管反馈模板：`.github/ISSUE_TEMPLATE/self-hosting-feedback.md`
 - release-blocking 模板：`.github/ISSUE_TEMPLATE/release-blocking-regression.md`
 - 外部执行：`docs/release/external-execution-checklist.md`
