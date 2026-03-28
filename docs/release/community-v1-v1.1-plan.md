@@ -16,6 +16,17 @@
 - `dev/community-v1` 最新 head 连续保持绿色。
 - `v1.0.0` 的 release-blocking 缺陷已清零。
 
+## 推进顺序
+1. `Docs`
+2. 国际化治理
+3. Community / Hosted 边界
+4. `Sheets`
+
+## 分支边界
+- `dev/community-v1`：承载 `v1.1`
+- `release/v1.0`：承载 `v1.0.0` 与 `v1.0.x`
+- 当前 `Docs` 深链与恢复改动（`6b01ae6`）属于 `v1.1`，不回灌 `v1.0.0`
+
 ## Stream A - Docs
 ### 目标
 - 将当前 `BETA` 提升到稳定的单人编辑 / 轻协作能力。
@@ -45,6 +56,9 @@
 - 实时协作
 - 复杂公式引擎
 - 企业级流程编排
+
+### 进入顺序
+- 仅在 `Docs`、国际化治理、Community / Hosted 边界完成第一阶段后再进入
 
 ## Stream C - 国际化治理
 ### 目标

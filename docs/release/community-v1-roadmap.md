@@ -6,7 +6,8 @@
 
 ## 当前阶段
 - 当前正式状态为 `RC1_READY`，首发范围、门禁、交接材料已经收口。
-- 当前主线不再扩产品面，只推进发布、签收和首批自托管反馈闭环。
+- `release/v1.0` 已从 `6f86864` 切出，承接 `v1.0.0` 与 `v1.0.x`。
+- `dev/community-v1` 已转入 `v1.1` 集成开发，不再作为 `v1.0.0` 直接发布基线。
 
 ## `v1.0.0-rc1`
 - 完成 Gate 0 ~ Gate 7 的 release closeout。
@@ -14,13 +15,19 @@
 - 保持 `GA` 范围冻结，不再扩 `Mail / Calendar / Drive / Admin` 功能。
 
 ## `v1.0.0`
-- 保持 `dev/community-v1` 最新 head 的 `MMMail CI` 全绿。
-- 发布 `v1.0.0-rc1` tag 与 GitHub Release 候选说明。
+- 保持 `release/v1.0` 最新 head 的 `MMMail CI` 全绿。
+- 基于 `release/v1.0` 完成 `v1.0.0` 正式发布。
 - 进入短周期 GA 稳定窗口，只处理 release-blocking regression。
 - 收敛首批自托管安装、升级、备份恢复、运维反馈。
 - 输出首个公开 `v1.0.0` release notes。
 
+## `v1.0.x`
+- 沿 `release/v1.0` 维护线接收 release-blocking backport。
+- 安全修复优先，其次为自托管阻断与最小文档勘误。
+- 不回灌 `Docs / Sheets` Beta 能力增强。
+
 ## `v1.1`
+- 按 `Docs → i18n → Community / Hosted → Sheets` 的顺序推进。
 - `Docs / Sheets` 从当前 `BETA` 提升到稳定的单人编辑 / 轻协作能力。
 - 国际化治理进入工程化（简体中文 / 繁体中文 / 英语）。
 - 继续明确 `Billing` 的 Community / Hosted 边界，不把真实支付链路混入 Community GA。
