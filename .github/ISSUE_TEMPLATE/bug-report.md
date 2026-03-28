@@ -8,6 +8,8 @@ assignees: ""
 
 ## Summary
 
+> 若该问题会阻塞 `v1.0.0` 发布，请改用 `Release-blocking regression` 模板。
+
 ## Scope
 - [ ] `GA`
 - [ ] `Beta`
@@ -30,3 +32,4 @@ assignees: ""
 - Browser / OS:
 - Backend profile:
 - Commit / branch:
+- Tag / release:

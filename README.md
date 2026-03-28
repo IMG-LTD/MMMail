@@ -4,7 +4,7 @@
 
 ## 当前发布状态
 - 当前正式状态：`RC1_READY`
-- 状态说明：GitHub Actions run `23661060407` 已完成远端 CI 与 Docker-capable RC1 证据链回填；当前版本已满足 RC1 候选发布条件
+- 状态说明：`v1.0.0-rc1` prerelease 已发布，`dev/community-v1` 最新 green head 为 run `23675077518`；当前版本处于 `v1.0.0` GA 稳定窗口
 - 状态文档：`docs/release/community-v1-rc-status.md`
 - 当前仍处于发布冻结；除最终签收、release-blocking regression 修复或已批准的 freeze exception 外，不再接受产品或工程改动
 
@@ -13,6 +13,9 @@
 - `v1.0.0`：进入短周期稳定窗口，只处理 release-blocking 缺陷与自托管反馈。
 - `v1.1`：聚焦 `Docs / Sheets` 稳定性、国际化治理、Community / Hosted 边界继续收敛。
 - 不在当前版本节奏中推进 `VPN / Meet / Wallet / Lumo` 等 `Preview` 模块。
+- GA 稳定窗口：`docs/release/community-v1-ga-stabilization.md`
+- 反馈收集：`docs/release/community-v1-feedback-intake.md`
+- `v1.1` 规划基线：`docs/release/community-v1-v1.1-plan.md`
 
 ## 快速启动
 1. 准备运行时环境：

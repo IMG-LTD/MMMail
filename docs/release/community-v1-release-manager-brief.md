@@ -1,18 +1,22 @@
 # Community Edition v1.0 Release Manager Brief
 
-**版本**: `v1.0-rc1-draft`  
-**日期**: `2026-03-15`  
+**版本**: `v1.0-ga-window`
+**日期**: `2026-03-28`
 **作者**: `Codex`
 
 ## 当前状态
 - 正式状态：`RC1_READY`
-- 含义：Gate 0 ~ Gate 7 已全部通过，官方 CI 与容器化 RC1 证据链已完成回填；当前可进入发布候选确认
+- 含义：Gate 0 ~ Gate 7 已全部通过，`v1.0.0-rc1` prerelease 已发布；当前进入 `v1.0.0` GA 稳定窗口
+- 最新 green head：`1015418` / GitHub Actions run `23675077518`
 
 ## Gate 概览
 - 已完成：Gate 0、Gate 1、Gate 2、Gate 3、Gate 4、Gate 5、Gate 6、Gate 7
 - 待外部执行：无
 
 ## 入口文档
+- GA 稳定窗口：`docs/release/community-v1-ga-stabilization.md`
+- 反馈收集：`docs/release/community-v1-feedback-intake.md`
+- `v1.1` 规划：`docs/release/community-v1-v1.1-plan.md`
 - 外部执行：`docs/release/external-execution-checklist.md`
 - 失败分诊：`docs/release/external-failure-triage.md`
 - Gate 回填：`docs/release/gate-backfill-template.md`
@@ -21,9 +25,9 @@
 - 最终签收：`docs/release/community-v1-final-signoff.md`
 
 ## 当前允许
-- RC1 最终签收
-- 发布候选确认
-- release-blocking regression 分诊
+- release-blocking regression 分诊与最小修复
+- 自托管反馈分流
+- `v1.1` backlog 整理
 - 已批准的 freeze exception
 
 ## 当前禁止
