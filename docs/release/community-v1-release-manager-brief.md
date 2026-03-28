@@ -15,8 +15,11 @@
 
 ## 入口文档
 - GA 稳定窗口：`docs/release/community-v1-ga-stabilization.md`
+- GA 正式发布清单：`docs/release/community-v1-ga-release-checklist.md`
 - 反馈收集：`docs/release/community-v1-feedback-intake.md`
 - `v1.1` 规划：`docs/release/community-v1-v1.1-plan.md`
+- 自托管反馈模板：`.github/ISSUE_TEMPLATE/self-hosting-feedback.md`
+- release-blocking 模板：`.github/ISSUE_TEMPLATE/release-blocking-regression.md`
 - 外部执行：`docs/release/external-execution-checklist.md`
 - 失败分诊：`docs/release/external-failure-triage.md`
 - Gate 回填：`docs/release/gate-backfill-template.md`

@@ -2,7 +2,7 @@
 name: Release-blocking regression
 about: 报告阻塞 Community Edition v1.0.0 发布的回归问题
 title: "[Release Blocker] "
-labels: bug
+labels: bug,release-blocking,ga-stabilization
 assignees: ""
 ---
 

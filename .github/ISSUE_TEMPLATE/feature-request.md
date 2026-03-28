@@ -2,7 +2,7 @@
 name: Feature request
 about: 提交功能请求或首发后 backlog
 title: "[Feature] "
-labels: enhancement
+labels: enhancement,needs-triage
 assignees: ""
 ---
 

@@ -33,6 +33,14 @@
   - `Beta` 缺陷
   - 文档错误
 
+### 自托管反馈
+- 使用模板：`.github/ISSUE_TEMPLATE/self-hosting-feedback.md`
+- 适用场景：
+  - Docker Compose 安装
+  - 升级 / 恢复
+  - 运维与部署拓扑反馈
+  - 文档与脚本之间的不一致
+
 ### 需求与 backlog
 - 使用模板：`.github/ISSUE_TEMPLATE/feature-request.md`
 - 适用场景：
@@ -68,3 +76,4 @@
 - `v1.0.0` 只接收 release-blocking 修复。
 - 非阻塞问题不混入当前发布窗口。
 - 无法证明影响 `GA` 主路径的问题，不升级为 release-blocking。
+- 自托管反馈优先使用专用模板，避免与功能缺陷、功能需求混在一起。

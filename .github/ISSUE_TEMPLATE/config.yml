@@ -6,3 +6,9 @@ contact_links:
   - name: RC feedback intake
     url: https://github.com/IMG-LTD/MMMail/blob/dev/community-v1/docs/release/community-v1-feedback-intake.md
     about: 查看 RC1 反馈收集、分流与所需证据
+  - name: GA release checklist
+    url: https://github.com/IMG-LTD/MMMail/blob/dev/community-v1/docs/release/community-v1-ga-release-checklist.md
+    about: 查看 v1.0.0 正式发布前的最终检查项
+  - name: v1.1 planning baseline
+    url: https://github.com/IMG-LTD/MMMail/blob/dev/community-v1/docs/release/community-v1-v1.1-plan.md
+    about: 查看 v1.1 仅允许推进的范围

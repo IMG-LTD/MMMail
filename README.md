@@ -14,6 +14,7 @@
 - `v1.1`：聚焦 `Docs / Sheets` 稳定性、国际化治理、Community / Hosted 边界继续收敛。
 - 不在当前版本节奏中推进 `VPN / Meet / Wallet / Lumo` 等 `Preview` 模块。
 - GA 稳定窗口：`docs/release/community-v1-ga-stabilization.md`
+- GA 正式发布清单：`docs/release/community-v1-ga-release-checklist.md`
 - 反馈收集：`docs/release/community-v1-feedback-intake.md`
 - `v1.1` 规划基线：`docs/release/community-v1-v1.1-plan.md`
 

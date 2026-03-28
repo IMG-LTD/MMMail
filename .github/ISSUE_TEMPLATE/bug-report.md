@@ -2,7 +2,7 @@
 name: Bug report
 about: 报告 Community Edition v1.0 范围内的缺陷
 title: "[Bug] "
-labels: bug
+labels: bug,needs-triage
 assignees: ""
 ---
 
