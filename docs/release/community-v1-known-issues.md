@@ -5,15 +5,16 @@
 **作者**: `Codex`
 
 ## 当前状态
-- 当前正式状态：`RC1_READY_PENDING_EXTERNAL`
-- 已无本机实现阻塞；剩余问题全部属于外部执行与回填
+- 当前正式状态：`RC1_READY`
+- 已无发布门禁阻塞；当前仅剩发布候选确认与签收动作
 
 ## 发布阻塞外的已知问题
-- 远端 GitHub Actions 官方回执尚未生成：
-  - 当前环境无 Git remote
-  - 当前环境无 `gh` CLI
-- 本机无法执行 Docker-backed cold start / restore 验证：
-  - `scripts/validate-rc1-container.sh` 需在 Docker-capable runner 执行
+- Flyway 在 MySQL `8.4` 上会输出“高于已验证版本 8.1”的警告：
+  - 当前 RC1 验证已通过，不构成首发阻塞
+  - 后续升级 Flyway 时应复核该告警是否消失
+- GitHub Actions 当前仍有 Node.js 20 deprecation warning：
+  - 来自 `actions/checkout@v4`、`actions/setup-node@v4`、`actions/setup-java@v4`、`pnpm/action-setup@v4`
+  - 当前 workflow 已成功，不构成 RC1 阻塞
 - `dependency-check` 在无 `MMMAIL_NVD_API_KEY` 时更新较慢：
   - 本机长时间运行可能超时
   - 建议在 CI 中配置 secret 并依赖 cache

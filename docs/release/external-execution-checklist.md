@@ -5,10 +5,10 @@
 **作者**: `Codex`
 
 ## 当前状态
-- 当前仓库正式状态：`RC1_READY_PENDING_EXTERNAL`
+- 当前仓库正式状态：`RC1_READY`
 - 解释：
-  - 本机可完成的验证、文档、门禁、交接模板已完成
-  - 仅剩 Docker-capable 远端执行与官方 CI 回执
+  - 外部执行与官方 CI 回执已完成
+  - 本清单保留为执行记录与后续复用模板
 
 ## 执行前检查
 - [ ] 仓库已连接 Git remote，且可触发 GitHub Actions

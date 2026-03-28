@@ -11,8 +11,8 @@
 ## 回执登记表
 | 日期 | 执行项 | 状态 | workflow / job / runner | 证据路径或链接 | 已回填 Gate | 已解除阻塞 | 执行人 | 备注 |
 |---|---|---|---|---|---|---|---|---|
-| 待执行 | `MMMail CI / validate` | `PENDING` | `MMMail CI / validate` | `artifacts/security/dependency-check/` | `Gate 5 / Gate 6` | `NO` | 待定 | 需要 Docker-capable runner 与 GitHub Actions |
-| 待执行 | `validate-rc1-container.sh` | `PENDING` | `manual runner or CI` | `artifacts/release/rc1-container/` | `Gate 4` | `NO` | 待定 | 需要容器化 install / restore / rollback 回执 |
+| 2026-03-28 | `MMMail CI / validate` | `PASS` | `MMMail CI / validate` run `23661060407` | `https://github.com/IMG-LTD/MMMail/actions/runs/23661060407`、`artifacts/security/dependency-check/`、`artifacts/ci-logs/` | `Gate 5 / Gate 6` | `YES` | `Codex` | `frontend` / `backend` / `validate` 全绿，dependency-check `html/json` 已归档 |
+| 2026-03-28 | `validate-rc1-container.sh` | `PASS` | `MMMail CI / validate` run `23661060407`（Docker-capable runner） | `artifacts/release/rc1-container/community-v1-rc1-container-evidence.md`、`artifacts/release/rc1-container/backups/` | `Gate 1 / Gate 3 / Gate 4` | `YES` | `Codex` | fresh install、init/seed、upgrade、backup、restore、rollback 全为 `PASS` |
 
 ## 完成后的更新要求
 - 将 `状态` 改为 `PASS` 或 `FAIL`

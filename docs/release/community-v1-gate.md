@@ -5,8 +5,8 @@
 **作者**: `Codex`
 
 ## 当前 RC1 状态
-- 正式状态值：`RC1_READY_PENDING_EXTERNAL`
-- 依据：本机可完成项已全部收口，剩余均为外部 Docker-capable / GitHub Actions 官方回执
+- 正式状态值：`RC1_READY`
+- 依据：GitHub Actions run `23661060407` 已完成官方 CI 回执、dependency-check 报告归档与容器化 RC1 证据链
 - 状态判定文档：`docs/release/community-v1-rc-status.md`
 
 ## Gate 状态总览
@@ -14,12 +14,12 @@
 | Gate | 状态 | 证据 | 剩余阻塞 |
 |---|---|---|---|
 | Gate 0 - 范围冻结 | `PASS` | `docs/release/community-v1-scope.md`、`docs/open-source/module-maturity-matrix.md` | 无 |
-| Gate 1 - 安装与部署 | `IN_PROGRESS` | `docs/ops/install.md`、`docker-compose.yml`、`scripts/validate-runtime-env.sh`、`scripts/validate-rc1-local.sh`、`artifacts/release/rc1-local/community-v1-rc1-local-evidence.md` | 缺少 Docker-capable fresh install / init 官方回执 |
+| Gate 1 - 安装与部署 | `PASS` | `docs/ops/install.md`、`docker-compose.yml`、`scripts/validate-runtime-env.sh`、`artifacts/release/rc1-container/community-v1-rc1-container-evidence.md`、GitHub Actions run `23661060407` | 无 |
 | Gate 2 - 核心功能 | `PASS` | Mail 5A、Calendar 5B、Drive 5C release-blocking 集合已进入默认门禁 | 无 |
-| Gate 3 - 数据安全 | `IN_PROGRESS` | Flyway、`docs/ops/upgrade.md`、`docs/ops/backup-restore.md`、`scripts/validate-batch3.sh`、`artifacts/release/rc1-local/community-v1-rc1-local-evidence.md` | Docker-capable CI runner 的容器化迁移 / 恢复正式回执 |
-| Gate 4 - 质量稳定性 | `IN_PROGRESS` | `scripts/validate-local.sh`、`scripts/validate-all.sh`、`scripts/validate-rc1-local.sh`、`scripts/validate-rc1-container.sh`、`artifacts/release/rc1-local/community-v1-rc1-local-evidence.md` | 仅剩 Docker-capable install / upgrade / restore / rollback 正式回执 |
-| Gate 5 - 安全 | `PASS_CANDIDATE` | `scripts/validate-security.sh`、`scripts/security-secret-scan.sh`、`scripts/security-backend-dependency-scan.sh`、`docs/security/threat-model.md`、`SecurityBaselineIntegrationTest` | 等待 CI 执行后端 dependency scan 并归档正式报告 |
-| Gate 6 - 可运维性 | `BLOCKED_EXTERNAL` | system-health、Prometheus、error tracking、Runbook、`.github/workflows/ci.yml` artifact/summary | 当前环境无 Git remote / `gh`，无法直接产出远端 Actions 正式回执 |
+| Gate 3 - 数据安全 | `PASS` | Flyway、`docs/ops/upgrade.md`、`docs/ops/backup-restore.md`、`scripts/validate-batch3.sh`、`artifacts/release/rc1-container/community-v1-rc1-container-evidence.md`、GitHub Actions run `23661060407` | 无 |
+| Gate 4 - 质量稳定性 | `PASS` | `scripts/validate-local.sh`、`scripts/validate-all.sh`、`scripts/validate-rc1-container.sh`、`artifacts/release/rc1-container/community-v1-rc1-container-evidence.md`、GitHub Actions run `23661060407` | 无 |
+| Gate 5 - 安全 | `PASS` | `scripts/validate-security.sh`、`scripts/security-secret-scan.sh`、`scripts/security-backend-dependency-scan.sh`、`docs/security/threat-model.md`、`artifacts/security/dependency-check/dependency-check-report.{html,json}`、GitHub Actions run `23661060407` | 无 |
+| Gate 6 - 可运维性 | `PASS` | system-health、Prometheus、error tracking、Runbook、`.github/workflows/ci.yml`、artifact `mmmail-validate-artifacts`、GitHub Actions run `23661060407` | 无 |
 | Gate 7 - 开源治理 | `PASS` | `LICENSE`、`CONTRIBUTING.md`、`README.md`、`docs/release/community-v1-roadmap.md`、issue / PR 模板 | 无 |
 
 ## Gate 5 - 安全基线
@@ -46,8 +46,21 @@
 - `bash scripts/validate-all.sh`
 
 ### 当前状态
-- secrets 防回归、本地安全回归、threat model、CI 接线均已落地
-- 依赖漏洞扫描的“正式报告归档”仍等待远端 CI workflow 产出 artifact
+- secrets 防回归、本地安全回归、threat model、CI 接线与 dependency-check 正式报告归档均已完成
+
+### 外部回填
+- 执行日期：`2026-03-28`
+- 执行人：`Codex`
+- workflow / job：`MMMail CI / validate`
+- workflow run：`https://github.com/IMG-LTD/MMMail/actions/runs/23661060407`
+- 证据：
+  - `artifacts/security/dependency-check/dependency-check-report.html`
+  - `artifacts/security/dependency-check/dependency-check-report.json`
+  - `artifacts/security/secret-scan.txt`
+- 结果：
+  - dependency-check：`PASS`
+  - secrets scan：`PASS`
+  - security regression：`PASS`
 
 ### CI 目标回执
 - workflow: `.github/workflows/ci.yml`
@@ -71,15 +84,20 @@
   - `.tools/dependency-check-data`
 - `MMMAIL_NVD_API_KEY` 若在 CI secret 中存在，会自动用于加速 NVD 更新
 
-### 当前外部阻塞
-- 当前仓库未配置 Git remote
-- 当前环境无 `gh` CLI
-- 因此无法从本机直接触发 GitHub Actions 形成“官方 CI 回执”
-
-### 结论
-- CI 链路定义已落地
-- 本地与统一门禁可执行
-- 官方回执仍依赖远端仓库连接后的首次 workflow 运行；在此之前 Gate 6 保持 `BLOCKED_EXTERNAL`
+### 外部回填
+- 执行日期：`2026-03-28`
+- 执行人：`Codex`
+- workflow / job：`MMMail CI / validate`
+- workflow run：`https://github.com/IMG-LTD/MMMail/actions/runs/23661060407`
+- 证据：
+  - artifact：`mmmail-validate-artifacts`
+  - logs：`artifacts/ci-logs/`
+  - surefire：`backend/mmmail-server/target/surefire-reports/`
+  - gate summary：`MMMail CI > validate > Publish gate summary`
+- 结果：
+  - validate-ci：`PASS`
+  - docker-capable runner：`YES`
+  - 回执完整性：`PASS`
 
 ## Gate 4 - RC1 安装 / 升级证据
 
@@ -96,24 +114,28 @@
   - `artifacts/release/rc1-local/validate-local.log`
   - `artifacts/release/rc1-local/validate-all.log`
 
-### 本机未完成项（仅因外部环境）
-- Docker daemon 不可用，无法在当前宿主执行：
-  - `scripts/validate-rc1-container.sh`
-  - fresh install / init / seed live 回执
-  - upgrade / backup / restore / rollback 容器化回执
-
-### 外部待执行
-- `scripts/validate-rc1-container.sh`
-  - fresh install
-  - init / seed 校验
-  - upgrade
-  - backup
-  - restore
-  - rollback strategy
-- 外部交接：`docs/release/external-ci-handoff.md`
-- 期望归档：
+### 外部回填
+- 执行日期：`2026-03-28`
+- 执行人：`Codex`
+- workflow / job：`MMMail CI / validate`
+- workflow run：`https://github.com/IMG-LTD/MMMail/actions/runs/23661060407`
+- 证据：
   - `artifacts/release/rc1-container/community-v1-rc1-container-evidence.md`
   - `artifacts/release/rc1-container/backups/`
+  - `artifacts/release/rc1-container/compose.log`
+  - `artifacts/release/rc1-container/db-info.log`
+  - `artifacts/release/rc1-container/db-validate.log`
+  - `artifacts/release/rc1-container/db-upgrade.log`
+  - `artifacts/release/rc1-container/db-backup.log`
+  - `artifacts/release/rc1-container/db-restore.log`
+  - `artifacts/release/rc1-container/db-rollback.log`
+- 结果：
+  - fresh install：`PASS`
+  - init / seed：`PASS`
+  - upgrade：`PASS`
+  - backup：`PASS`
+  - restore：`PASS`
+  - rollback strategy：`PASS`
 
 ## Gate 7 - 开源治理
 
@@ -139,7 +161,5 @@
 - `bash scripts/validate-all.sh`
 
 ## 当前最小剩余任务
-1. 在 Docker-capable 远端 runner 上运行一次 `MMMail CI` workflow，收集 Gate 3 / 5 / 6 正式回执与 dependency-check artifact
-2. 在同一 runner 执行 `scripts/validate-rc1-container.sh`，记录 Gate 1 / Gate 4 install / restore 回执
-3. 将 CI artifact 与 gate 状态回填到本文件和 `docs/release/community-v1-rc-checklist.md`
-4. 更新 `docs/release/community-v1-external-receipt-log.md` 与 `docs/release/community-v1-final-signoff.md`
+- 无发布门禁阻塞；当前版本已满足 `RC1_READY`
+- 后续仅剩发布负责人签收、RC 说明确认与正式发布候选操作

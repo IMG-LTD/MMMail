@@ -26,37 +26,40 @@
 - 即使外部回执完成，仍存在新的 release-blocking 缺陷或证据冲突
 
 ## 当前正式判定
-- **当前状态：`RC1_READY_PENDING_EXTERNAL`**
+- **当前状态：`RC1_READY`**
 
 ## 冻结规则
-- 在未收到外部回执前，不得切换为 `RC1_READY`
+- 外部回执已完成；当前可进入 RC1 最终签收与发布候选确认
 - 在未获得 freeze exception 批准前，不得继续改动产品或工程实现
 - 当前仅允许：
-  - 外部执行支持
+  - 最终签收
+  - 发布候选确认
   - 失败分诊
-  - Gate 回填
-  - 最终签收待命
+  - 已批准的 freeze exception
 
 ## 判定依据
 - 已完成：
   - Gate 0 = `PASS`
+  - Gate 1 = `PASS`
   - Gate 2 = `PASS`
+  - Gate 3 = `PASS`
+  - Gate 4 = `PASS`
+  - Gate 5 = `PASS`
+  - Gate 6 = `PASS`
   - Gate 7 = `PASS`
-  - Gate 5 = `PASS_CANDIDATE`
-  - 本机 RC1 证据链 = 已归档
-- 未完成但均为外部项：
-  - Gate 4 需要 Docker-capable install / upgrade / restore / rollback 回执
-  - Gate 5 需要 dependency-check 官方归档报告
-  - Gate 6 需要 GitHub Actions 官方 workflow run 回执
+  - 官方 workflow run：`https://github.com/IMG-LTD/MMMail/actions/runs/23661060407`
+  - dependency-check 报告：`artifacts/security/dependency-check/dependency-check-report.{html,json}`
+  - RC1 容器证据：`artifacts/release/rc1-container/community-v1-rc1-container-evidence.md`
+  - 外部回执登记：`docs/release/community-v1-external-receipt-log.md`
 
-## 距离 `RC1_READY` 的最小动作
+## 已完成的外部动作
 1. 执行 `MMMail CI / validate`
-2. 执行 `bash scripts/validate-rc1-container.sh`
+2. 在同一 Docker-capable runner 内完成 `scripts/validate-rc1-container.sh`
 3. 回填 `docs/release/community-v1-gate.md`
 4. 更新 `docs/release/community-v1-rc-checklist.md`
 5. 更新 `docs/release/community-v1-pre-release-checklist.md`
 6. 更新 `docs/release/community-v1-external-receipt-log.md`
-7. 勾选 `docs/release/community-v1-final-signoff.md`
+7. 更新 `docs/release/community-v1-final-signoff.md`
 
 ## 状态迁移条件
 ### `RC1_READY_PENDING_EXTERNAL` -> `RC1_READY`

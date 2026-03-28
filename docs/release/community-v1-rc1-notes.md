@@ -34,21 +34,22 @@
 - `Lumo`
 
 ## Gate 状态
-- 当前正式状态：`RC1_READY_PENDING_EXTERNAL`
+- 当前正式状态：`RC1_READY`
 - 已完成：
   - Gate 0
-  - Gate 2
-  - Gate 7
-- 本机已完成，等待外部回执：
-  - Gate 5（`PASS_CANDIDATE`）
-- 仍需外部 / 容器环境补证：
   - Gate 1
+  - Gate 2
   - Gate 3
   - Gate 4
-  - Gate 6（`BLOCKED_EXTERNAL`）
+  - Gate 5
+  - Gate 6
+  - Gate 7
+- 官方回执：
+  - GitHub Actions run `23661060407`
+  - `artifacts/security/dependency-check/dependency-check-report.{html,json}`
+  - `artifacts/release/rc1-container/community-v1-rc1-container-evidence.md`
 
 ## 已知限制
-- 当前环境无 Git remote 与 `gh` CLI，无法直接产出 GitHub Actions 官方回执。
 - Preview 模块仅通过 `Labs` 进入，不纳入首发支持承诺。
 - Community 版不承诺 Hosted / Billing 真支付链路。
 

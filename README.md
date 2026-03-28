@@ -3,10 +3,10 @@
 隐私优先、模块化、可自托管的协作套件。当前首发交付聚焦 `Mail / Calendar / Drive / Admin / Workspace Shell`，并通过 `Labs` 隔离预览模块。
 
 ## 当前发布状态
-- 当前正式状态：`RC1_READY_PENDING_EXTERNAL`
-- 状态说明：本机实现、门禁、文档、交接模板已完成；剩余仅为 Docker-capable 远端执行与 GitHub Actions 官方回执
+- 当前正式状态：`RC1_READY`
+- 状态说明：GitHub Actions run `23661060407` 已完成远端 CI 与 Docker-capable RC1 证据链回填；当前版本已满足 RC1 候选发布条件
 - 状态文档：`docs/release/community-v1-rc-status.md`
-- 当前已进入发布冻结；未收到外部回执前不得切换为 `RC1_READY`
+- 当前仍处于发布冻结；除最终签收、release-blocking regression 修复或已批准的 freeze exception 外，不再接受产品或工程改动
 
 ## 快速启动
 1. 准备运行时环境：

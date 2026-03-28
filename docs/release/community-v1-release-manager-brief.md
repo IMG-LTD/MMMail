@@ -5,12 +5,12 @@
 **作者**: `Codex`
 
 ## 当前状态
-- 正式状态：`RC1_READY_PENDING_EXTERNAL`
-- 含义：本机实现、门禁、文档、交接模板已冻结并完成；剩余仅是外部回执
+- 正式状态：`RC1_READY`
+- 含义：Gate 0 ~ Gate 7 已全部通过，官方 CI 与容器化 RC1 证据链已完成回填；当前可进入发布候选确认
 
 ## Gate 概览
-- 已完成：Gate 0、Gate 2、Gate 7
-- 待外部执行：Gate 4、Gate 5、Gate 6
+- 已完成：Gate 0、Gate 1、Gate 2、Gate 3、Gate 4、Gate 5、Gate 6、Gate 7
+- 待外部执行：无
 
 ## 入口文档
 - 外部执行：`docs/release/external-execution-checklist.md`
@@ -21,11 +21,9 @@
 - 最终签收：`docs/release/community-v1-final-signoff.md`
 
 ## 当前允许
-- 外部执行包的小幅修正
-- 外部执行失败分诊
-- Gate 回填支持
-- RC1 最终签收准备
-- 外部回执后的最小状态切换
+- RC1 最终签收
+- 发布候选确认
+- release-blocking regression 分诊
 - 已批准的 freeze exception
 
 ## 当前禁止
