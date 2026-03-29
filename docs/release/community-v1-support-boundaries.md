@@ -4,9 +4,10 @@
 **日期**: `2026-03-15`  
 **作者**: `Codex`
 
-## 当前发布状态
-- 当前正式状态：`RC1_READY`
-- 含义：Community 首发候选已完成本机与外部官方回执收口，可进入发布候选确认
+## 当前分支状态
+- `release/v1.0`：`RC1_READY`
+- `dev/community-v1`：`v1.1` 集成中
+- 含义：`v1.0` 发布线继续承接正式发版与 backport；当前开发主线已转入 `v1.1`
 
 ## 支持范围
 ### GA
@@ -29,12 +30,19 @@
 - Community：
   - 自托管
   - 单仓库部署、升级、备份恢复
-  - 不承诺真实 Billing 闭环
+  - `Billing center` 仅承载报价、草稿、账单状态展示，不承诺真实 Billing / 支付闭环
 - Hosted / Commercial（当前不在首发范围）：
-  - 真实支付
-  - 订阅生命周期
-  - 税费 / 发票 / 对账
+  - 真实支付 / 扣款
+  - 商业订阅生命周期
+  - 税费 / 发票下载 / 财务对账
   - 商业 SLA
+
+## 前端入口
+- `/suite`
+  - `Billing center`：可见 Community 范围内的报价、付款方式占位与账单状态
+  - `Release boundary map`：统一展示 `GA / Beta / Preview` 模块、Hosted-only 承诺与自托管责任
+- `/labs`
+  - 仅暴露 `Preview` 模块，不承载 `Community` 支持承诺
 
 ## 自托管责任边界
 - 维护者负责：
@@ -44,7 +52,7 @@
   - TLS / 反向代理
   - 数据库 / Redis / Nacos / Docker 运行环境
   - 备份保留策略
-  - 远端 CI secrets 与 runner 能力
+  - 远端 CI secrets 与 Docker-capable runner 能力
 
 ## 不支持项
 - Preview 模块生产承诺

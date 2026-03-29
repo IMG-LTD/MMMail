@@ -10,6 +10,7 @@ import SuitePlanCatalogPanel from '~/components/suite/SuitePlanCatalogPanel.vue'
 import SuitePlansHero from '~/components/suite/SuitePlansHero.vue'
 import SuitePricingComparePanel from '~/components/suite/SuitePricingComparePanel.vue'
 import SuiteProductHubPanel from '~/components/suite/SuiteProductHubPanel.vue'
+import SuiteReleaseBoundaryPanel from '~/components/suite/SuiteReleaseBoundaryPanel.vue'
 import SuiteReadinessSecurityPanel from '~/components/suite/SuiteReadinessSecurityPanel.vue'
 import SuiteRemediationPanel from '~/components/suite/SuiteRemediationPanel.vue'
 import { useI18n } from '~/composables/useI18n'
@@ -155,6 +156,8 @@ function onRollbackReasonChange(value: string): void {
         :set-default-payment-method="billingCenterWorkspace.setDefaultPaymentMethod"
         :execute-subscription-action="billingCenterWorkspace.executeSubscriptionAction"
       />
+
+      <SuiteReleaseBoundaryPanel />
 
       <SuitePlanCatalogPanel
         :sections="plansWorkspace.planSections.value"

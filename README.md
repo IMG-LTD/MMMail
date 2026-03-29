@@ -3,8 +3,9 @@
 隐私优先、模块化、可自托管的协作套件。当前首发交付聚焦 `Mail / Calendar / Drive / Admin / Workspace Shell`，并通过 `Labs` 隔离预览模块。
 
 ## 当前发布状态
-- 当前正式状态：`RC1_READY`
-- 状态说明：`v1.0.0-rc1` prerelease 已发布；`release/v1.0` 已从 `6f86864` 切出，作为 `v1.0.0` / `v1.0.x` 发布与维护线；`dev/community-v1` 继续作为 `v1.1` 集成分支
+- `release/v1.0`：`RC1_READY`，承载 `v1.0.0` / `v1.0.x`
+- `dev/community-v1`：`v1.1` 集成分支，当前按 `Docs → i18n → Community / Hosted → Sheets` 顺序推进
+- 状态说明：`v1.0.0-rc1` prerelease 已发布；`release/v1.0` 已从 `6f86864` 切出，`dev/community-v1` 不再作为 `v1.0.0` 直接发布基线
 - 状态文档：`docs/release/community-v1-rc-status.md`
 - 当前发布冻结仅适用于 `release/v1.0`；`dev/community-v1` 仅允许推进已批准的 `v1.1` 范围
 
@@ -59,6 +60,7 @@
 - RC1 说明：`docs/release/community-v1-rc1-notes.md`
 - 已知问题：`docs/release/community-v1-known-issues.md`
 - 支持边界：`docs/release/community-v1-support-boundaries.md`
+- Community / Hosted 边界入口：`/suite` 中的 `Release boundary map`
 - 预发布清单：`docs/release/community-v1-pre-release-checklist.md`
 - 外部执行清单：`docs/release/external-execution-checklist.md`
 - 发布负责人摘要：`docs/release/community-v1-release-manager-brief.md`

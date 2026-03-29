@@ -169,6 +169,19 @@
 ### 目标
 - 继续把 Community 和 Hosted 的支持边界写死。
 
+### 当前批次
+- 已新增 `frontend/utils/community-boundary.ts`，把 Community `GA / Beta / Preview` 模块、Hosted-only 能力与自托管责任整理为前端可消费的数据模型。
+- 已新增 `frontend/components/suite/SuiteReleaseBoundaryPanel.vue`，在 `/suite` 中直接展示：
+  - Community 默认导航与 Labs 的模块边界
+  - Hosted-only 能力清单
+  - 自托管责任边界
+  - README / Support Boundaries / Roadmap / Module Maturity Matrix 的权威文档入口
+- 已新增 `frontend/tests/community-boundary.spec.ts`，并将 `tests/community-navigation.spec.ts + tests/community-boundary.spec.ts` 接入 `scripts/validate-local.sh` 默认门禁。
+- 已同步 `README.md` 与 `docs/release/community-v1-support-boundaries.md`，明确：
+  - `release/v1.0` 继续承载 `RC1_READY`
+  - `dev/community-v1` 已转入 `v1.1`
+  - Community 中的 `Billing center` 只承载报价 / 草稿 / 状态展示，不承诺真实支付闭环
+
 ### 范围
 - `Billing` 边界说明
 - Hosted 才承诺的能力清单

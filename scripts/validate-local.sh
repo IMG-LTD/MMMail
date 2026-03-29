@@ -19,6 +19,7 @@ BACKEND_DRIVE_GA_TESTS="DriveReleaseBlockingIntegrationTest,DriveCollaboratorSha
 FRONTEND_DRIVE_GA_TESTS="tests/drive-smoke.spec.ts tests/drive-batch-share.spec.ts tests/drive-collaborator-sharing.spec.ts"
 BACKEND_OBSERVABILITY_TESTS="ObservabilityIntegrationTest,JobRunMonitorServiceTest,GlobalExceptionHandlerUnitTest"
 FRONTEND_OBSERVABILITY_TESTS="tests/system-health.spec.ts tests/error-tracking.spec.ts"
+FRONTEND_COMMUNITY_BOUNDARY_TESTS="tests/community-navigation.spec.ts tests/community-boundary.spec.ts"
 
 echo "[validate-local] frontend tests"
 env -u http_proxy -u https_proxy -u HTTP_PROXY -u HTTPS_PROXY -u ALL_PROXY -u all_proxy \
@@ -43,6 +44,10 @@ env -u http_proxy -u https_proxy -u HTTP_PROXY -u HTTPS_PROXY -u ALL_PROXY -u al
 echo "[validate-local] frontend observability regression"
 env -u http_proxy -u https_proxy -u HTTP_PROXY -u HTTPS_PROXY -u ALL_PROXY -u all_proxy \
   pnpm --dir frontend exec vitest run $FRONTEND_OBSERVABILITY_TESTS >/tmp/mmmail-frontend-observability.log 2>&1
+
+echo "[validate-local] frontend community boundary regression"
+env -u http_proxy -u https_proxy -u HTTP_PROXY -u HTTPS_PROXY -u ALL_PROXY -u all_proxy \
+  pnpm --dir frontend exec vitest run $FRONTEND_COMMUNITY_BOUNDARY_TESTS >/tmp/mmmail-frontend-community-boundary.log 2>&1
 
 echo "[validate-local] frontend i18n governance"
 env -u http_proxy -u https_proxy -u HTTP_PROXY -u HTTPS_PROXY -u ALL_PROXY -u all_proxy \
