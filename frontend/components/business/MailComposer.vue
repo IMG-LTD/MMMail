@@ -2,6 +2,7 @@
 import { computed, onBeforeUnmount, reactive, watch } from 'vue'
 import type { DraftRequest, LabelItem, MailAttachment, MailSenderIdentity, SendMailRequest } from '~/types/api'
 import MailAttachmentPanel, { type FailedMailAttachmentUpload } from '~/components/business/MailAttachmentPanel.vue'
+import { useI18n } from '~/composables/useI18n'
 import { formatMailSenderLabel } from '~/utils/mail-identities'
 
 interface SuggestionItem {
@@ -61,6 +62,7 @@ const form = reactive({
 })
 
 const senderDisabled = computed(() => props.senderOptions.length <= 1)
+const { t } = useI18n()
 let draftTimer: ReturnType<typeof setTimeout> | null = null
 
 function buildIdempotencyKey(): string {
@@ -183,10 +185,15 @@ onBeforeUnmount(() => {
 
 <template>
   <section class="mm-card composer">
-    <h2 class="mm-section-title">Compose</h2>
+    <h2 class="mm-section-title">{{ t('mailCompose.form.title') }}</h2>
     <el-form label-position="top">
-      <el-form-item label="From">
-        <el-select v-model="form.fromEmail" style="width: 100%" :disabled="senderDisabled" placeholder="Select sender identity">
+      <el-form-item :label="t('mailCompose.form.from')">
+        <el-select
+          v-model="form.fromEmail"
+          style="width: 100%"
+          :disabled="senderDisabled"
+          :placeholder="t('mailCompose.form.fromPlaceholder')"
+        >
           <el-option
             v-for="identity in props.senderOptions"
             :key="identity.identityId || identity.emailAddress"
@@ -195,20 +202,27 @@ onBeforeUnmount(() => {
           />
         </el-select>
       </el-form-item>
-      <el-form-item label="To">
+      <el-form-item :label="t('mailCompose.form.to')">
         <el-autocomplete
           v-model="form.toEmail"
-          placeholder="recipient@example.com"
+          :placeholder="t('mailCompose.form.toPlaceholder')"
           clearable
           style="width: 100%"
           :fetch-suggestions="queryRecipientSuggestions"
         />
       </el-form-item>
-      <el-form-item label="Subject">
-        <el-input v-model="form.subject" placeholder="Subject" />
+      <el-form-item :label="t('mailCompose.form.subject')">
+        <el-input v-model="form.subject" :placeholder="t('mailCompose.form.subjectPlaceholder')" />
       </el-form-item>
-      <el-form-item label="Labels">
-        <el-select v-model="form.labels" multiple filterable collapse-tags placeholder="Optional labels" style="width: 100%">
+      <el-form-item :label="t('mailCompose.form.labels')">
+        <el-select
+          v-model="form.labels"
+          multiple
+          filterable
+          collapse-tags
+          :placeholder="t('mailCompose.form.labelsPlaceholder')"
+          style="width: 100%"
+        >
           <el-option
             v-for="label in props.availableLabels"
             :key="label.id"
@@ -217,17 +231,17 @@ onBeforeUnmount(() => {
           />
         </el-select>
       </el-form-item>
-      <el-form-item label="Schedule Send (Optional)">
+      <el-form-item :label="t('mailCompose.form.schedule')">
         <el-date-picker
           v-model="form.scheduledAt"
           type="datetime"
           value-format="YYYY-MM-DDTHH:mm:ss"
-          placeholder="Send now if empty"
+          :placeholder="t('mailCompose.form.schedulePlaceholder')"
           style="width: 100%"
         />
       </el-form-item>
-      <el-form-item label="Body">
-        <el-input v-model="form.body" type="textarea" :rows="12" placeholder="Write your message" />
+      <el-form-item :label="t('mailCompose.form.body')">
+        <el-input v-model="form.body" type="textarea" :rows="12" :placeholder="t('mailCompose.form.bodyPlaceholder')" />
       </el-form-item>
       <MailAttachmentPanel
         :attachments="props.attachments"
@@ -240,10 +254,10 @@ onBeforeUnmount(() => {
         @download="emit('downloadAttachment', $event)"
       />
       <div class="actions">
-        <el-button type="primary" @click="onSend">Send</el-button>
-        <el-button @click="onSaveDraft">Save Draft</el-button>
+        <el-button type="primary" @click="onSend">{{ t('mailCompose.actions.send') }}</el-button>
+        <el-button @click="onSaveDraft">{{ t('mailCompose.actions.saveDraft') }}</el-button>
       </div>
-      <p class="hint">Auto-save is enabled every {{ props.autoSaveSeconds }} seconds.</p>
+      <p class="hint">{{ t('mailCompose.hint.autoSave', { seconds: props.autoSaveSeconds }) }}</p>
     </el-form>
   </section>
 </template>

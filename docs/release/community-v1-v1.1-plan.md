@@ -136,8 +136,13 @@
   - `artifacts/i18n-page-coverage-report.json`
   - `artifacts/i18n-page-coverage-report.md`
 - 已新增 `frontend/tests/i18n-coverage.spec.ts`，保证 `Docs / Sheets / Drive / Calendar / Organizations / Settings` 等关键页面继续保留 `useI18n` 接线与静态 key 覆盖。
+- 已补齐 Mail compose 这一条页面级国际化链：
+  - `frontend/locales/mail-compose.ts` 收口 compose / attachment 面板的文案、错误态与成功提示
+  - `frontend/components/business/MailComposer.vue`、`frontend/components/business/MailAttachmentPanel.vue` 已改为使用 `useI18n`
+  - `frontend/pages/compose.vue` 已补页标题与异常路径 fallback 文案
+  - `frontend/tests/mail-compose-i18n.spec.ts` 已并入默认 i18n 门禁
 - 已将 i18n 专项纳入默认门禁：
-  - `pnpm --dir frontend exec vitest run tests/i18n.spec.ts tests/i18n-governance.spec.ts tests/i18n-coverage.spec.ts`
+  - `pnpm --dir frontend exec vitest run tests/i18n.spec.ts tests/i18n-governance.spec.ts tests/i18n-coverage.spec.ts tests/mail-compose-i18n.spec.ts`
   - `node --experimental-strip-types frontend/scripts/i18n-report.mjs`
   - `node --experimental-strip-types frontend/scripts/i18n-coverage-report.mjs`
   - `bash scripts/validate-local.sh`

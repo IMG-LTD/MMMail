@@ -11,7 +11,7 @@
 
 ## 默认门禁
 - 本地：
-  - `pnpm --dir frontend exec vitest run tests/i18n.spec.ts tests/i18n-governance.spec.ts tests/i18n-coverage.spec.ts`
+  - `pnpm --dir frontend exec vitest run tests/i18n.spec.ts tests/i18n-governance.spec.ts tests/i18n-coverage.spec.ts tests/mail-compose-i18n.spec.ts`
   - `node --experimental-strip-types frontend/scripts/i18n-report.mjs`
   - `node --experimental-strip-types frontend/scripts/i18n-coverage-report.mjs`
 - 统一门禁：
@@ -22,6 +22,7 @@
 - 新增 locale key 时，必须同步补齐三套翻译。
 - 发现缺失 key 时，默认门禁直接失败，不允许静默 fallback 掩盖问题。
 - 页面覆盖统计会输出 `frontend/pages` 的 `useI18n` 使用率、静态 key 数量与前缀分布，用于收敛后续页面级国际化批次。
+- 覆盖统计会把静态 `title-key` 这类翻译绑定也视为已本地化页面，避免把纯路由壳层误判为未接线。
 
 ## 术语表种子
 | English | 简体中文 | 繁體中文 |

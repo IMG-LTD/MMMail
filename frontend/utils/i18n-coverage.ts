@@ -5,11 +5,15 @@ const PAGE_EXTENSION = '.vue'
 const INDEX_BASENAME = 'index'
 const PERCENT_SCALE = 10
 const EMPTY_ROUTE = '/'
+const TRANSLATION_BINDING_PATTERNS = [
+  /\btitle-key\s*=\s*(['"`])([^'"`]+)\1/g
+] as const
 
 export interface I18nPageCoverageEntry {
   route: string
   filePath: string
   usesI18n: boolean
+  hasTranslationBinding: boolean
   staticKeyCount: number
   staticKeys: string[]
   keyPrefixes: string[]
@@ -20,6 +24,7 @@ export interface I18nPageCoverageReport {
   pagesDir: string
   totalPages: number
   pagesUsingI18n: number
+  localizedPages: number
   pagesWithStaticKeys: number
   coveragePercent: number
   pagesWithoutI18n: string[]
@@ -63,7 +68,12 @@ function resolveRouteFromFile(pagesDir: string, filePath: string): string {
 
 function extractStaticTranslationKeys(source: string): string[] {
   const matches = source.matchAll(/\bt\(\s*(['"`])([^'"`$\\]+)\1/g)
-  return [...new Set([...matches].map((match) => match[2]).filter(Boolean))].sort()
+  const boundKeys = TRANSLATION_BINDING_PATTERNS
+    .flatMap((pattern) => [...source.matchAll(pattern)].map((match) => match[2]))
+  return [...new Set([
+    ...[...matches].map((match) => match[2]).filter(Boolean),
+    ...boundKeys.filter(Boolean)
+  ])].sort()
 }
 
 function extractKeyPrefixes(keys: string[]): string[] {
@@ -83,6 +93,7 @@ export async function collectI18nPageCoverageReport(pagesDir: string): Promise<I
       route: resolveRouteFromFile(pagesDir, filePath),
       filePath,
       usesI18n: /useI18n\s*\(/.test(source),
+      hasTranslationBinding: staticKeys.length > 0,
       staticKeyCount: staticKeys.length,
       staticKeys,
       keyPrefixes: extractKeyPrefixes(staticKeys)
@@ -90,9 +101,10 @@ export async function collectI18nPageCoverageReport(pagesDir: string): Promise<I
   }
 
   const pagesUsingI18n = pageReports.filter((item) => item.usesI18n).length
+  const localizedPages = pageReports.filter((item) => item.hasTranslationBinding).length
   const pagesWithStaticKeys = pageReports.filter((item) => item.staticKeyCount > 0).length
   const coveragePercent = pageReports.length
-    ? roundPercent((pagesUsingI18n / pageReports.length) * 100)
+    ? roundPercent((localizedPages / pageReports.length) * 100)
     : 0
 
   return {
@@ -100,6 +112,7 @@ export async function collectI18nPageCoverageReport(pagesDir: string): Promise<I
     pagesDir,
     totalPages: pageReports.length,
     pagesUsingI18n,
+    localizedPages,
     pagesWithStaticKeys,
     coveragePercent,
     pagesWithoutI18n: pageReports.filter((item) => !item.usesI18n).map((item) => item.route),
@@ -116,17 +129,18 @@ export function formatI18nPageCoverageMarkdown(report: I18nPageCoverageReport): 
     `- Pages dir: \`${report.pagesDir}\``,
     `- Total pages: \`${report.totalPages}\``,
     `- Pages using i18n: \`${report.pagesUsingI18n}\``,
+    `- Localized pages: \`${report.localizedPages}\``,
     `- Pages with static translation keys: \`${report.pagesWithStaticKeys}\``,
     `- Coverage: \`${report.coveragePercent}%\``,
     `- Pages without i18n: \`${report.pagesWithoutI18n.length}\``,
     `- Pages without static keys: \`${report.pagesWithoutStaticKeys.length}\``,
     '',
-    '| Route | useI18n | Static keys | Prefixes |',
-    '| --- | --- | ---: | --- |'
+    '| Route | useI18n | Localized | Static keys | Prefixes |',
+    '| --- | --- | --- | ---: | --- |'
   ]
 
   for (const item of report.pageReports) {
-    lines.push(`| ${item.route} | ${item.usesI18n ? 'yes' : 'no'} | ${item.staticKeyCount} | ${item.keyPrefixes.join(', ') || 'None'} |`)
+    lines.push(`| ${item.route} | ${item.usesI18n ? 'yes' : 'no'} | ${item.hasTranslationBinding ? 'yes' : 'no'} | ${item.staticKeyCount} | ${item.keyPrefixes.join(', ') || 'None'} |`)
   }
 
   if (report.pagesWithoutI18n.length > 0) {

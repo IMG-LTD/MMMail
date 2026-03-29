@@ -8,6 +8,7 @@ import { useLabelApi } from '~/composables/useLabelApi'
 import { useSettingsApi } from '~/composables/useSettingsApi'
 import { useContactApi } from '~/composables/useContactApi'
 import { usePassApi } from '~/composables/usePassApi'
+import { useI18n } from '~/composables/useI18n'
 import { useAuthStore } from '~/stores/auth'
 import { useMailStore } from '~/stores/mail'
 import {
@@ -44,6 +45,7 @@ const authStore = useAuthStore()
 const mailStore = useMailStore()
 const route = useRoute()
 const router = useRouter()
+const { t } = useI18n()
 const labels = ref<LabelItem[]>([])
 const senderOptions = ref<MailSenderIdentity[]>([])
 const autoSaveSeconds = ref(15)
@@ -77,6 +79,10 @@ const aliasSenderEmails = computed(() => new Set(
     .filter(item => item.source === 'PASS_ALIAS')
     .map(item => item.emailAddress.toLowerCase())
 ))
+
+useHead(() => ({
+  title: t('mailCompose.pageTitle')
+}))
 
 function readRouteQueryValue(value: unknown): string {
   if (Array.isArray(value)) {
@@ -140,7 +146,7 @@ async function loadDraft(draftId: string): Promise<void> {
   try {
     const detail = await fetchMailDetail(draftId)
     if (!detail.isDraft) {
-      throw new Error('Selected mail is not a draft')
+      throw new Error(t('mailCompose.messages.loadDraftFailed'))
     }
     applyComposerDefaults({
       to: detail.peerEmail,
@@ -152,7 +158,7 @@ async function loadDraft(draftId: string): Promise<void> {
     attachments.value = [...detail.attachments]
     failedUploads.value = []
   } catch (error) {
-    const message = error instanceof Error ? error.message : 'Failed to load draft'
+    const message = error instanceof Error ? error.message : t('mailCompose.messages.loadDraftFailed')
     composerError.value = message
     applyComposerDefaults(buildQueryDefaults())
     resetAttachmentState()
@@ -221,14 +227,14 @@ async function uploadFiles(files: File[], draft: DraftRequest): Promise<void> {
         attachments.value = upsertMailAttachment(attachments.value, attachment)
         clearFailure(file)
       } catch (error) {
-        const message = error instanceof Error ? error.message : 'Attachment upload failed'
+        const message = error instanceof Error ? error.message : t('mailCompose.messages.attachmentUploadFailed')
         composerError.value = message
         setFailure(file, message)
         ElMessage.error(message)
       }
     }
   } catch (error) {
-    const message = error instanceof Error ? error.message : 'Draft save failed before attachment upload'
+    const message = error instanceof Error ? error.message : t('mailCompose.messages.attachmentUploadDraftFailed')
     composerError.value = message
     for (const file of files) {
       setFailure(file, message)
@@ -244,19 +250,19 @@ async function onSend(payload: SendMailRequest): Promise<void> {
     await sendMail(payload)
     await syncMailboxStats()
     if (payload.scheduledAt) {
-      ElMessage.success('Mail scheduled')
+      ElMessage.success(t('mailCompose.messages.mailScheduled'))
       await navigateTo('/scheduled')
       return
     }
     if (undoSendSeconds.value > 0) {
-      ElMessage.success('Mail queued in outbox')
+      ElMessage.success(t('mailCompose.messages.mailQueued'))
       await navigateTo('/outbox')
       return
     }
-    ElMessage.success('Mail sent')
+    ElMessage.success(t('mailCompose.messages.mailSent'))
     await navigateTo('/sent')
   } catch (error) {
-    const message = error instanceof Error ? error.message : 'Send failed'
+    const message = error instanceof Error ? error.message : t('mailCompose.messages.sendFailed')
     composerError.value = message
     ElMessage.error(message)
   }
@@ -268,9 +274,12 @@ async function onSave(payload: DraftRequest): Promise<void> {
     applySavedDraft(payload, draftId)
     await syncMailboxStats()
     await replaceDraftRoute(draftId)
-    ElMessage.success(payload.draftId ? `Draft updated #${draftId}` : `Draft saved #${draftId}`)
+    ElMessage.success(t(
+      payload.draftId ? 'mailCompose.messages.draftUpdated' : 'mailCompose.messages.draftSaved',
+      { id: draftId }
+    ))
   } catch (error) {
-    const message = error instanceof Error ? error.message : 'Draft save failed'
+    const message = error instanceof Error ? error.message : t('mailCompose.messages.draftSaveFailed')
     composerError.value = message
     ElMessage.error(message)
   }
@@ -285,7 +294,7 @@ async function onAutoSave(payload: DraftRequest): Promise<void> {
       await replaceDraftRoute(draftId)
     }
   } catch (error) {
-    const message = error instanceof Error ? error.message : 'Draft autosave failed'
+    const message = error instanceof Error ? error.message : t('mailCompose.messages.draftAutosaveFailed')
     composerError.value = message
     ElMessage.error(message)
   }
@@ -313,7 +322,7 @@ async function onRemoveAttachment(payload: { attachmentId: string }): Promise<vo
     await deleteDraftAttachment(draftId, payload.attachmentId)
     attachments.value = attachments.value.filter(item => item.id !== payload.attachmentId)
   } catch (error) {
-    const message = error instanceof Error ? error.message : 'Attachment delete failed'
+    const message = error instanceof Error ? error.message : t('mailCompose.messages.attachmentDeleteFailed')
     composerError.value = message
     ElMessage.error(message)
   } finally {
@@ -335,7 +344,7 @@ async function onDownloadAttachment(payload: { attachmentId: string }): Promise<
     link.click()
     URL.revokeObjectURL(url)
   } catch (error) {
-    const message = error instanceof Error ? error.message : 'Attachment download failed'
+    const message = error instanceof Error ? error.message : t('mailCompose.messages.attachmentDownloadFailed')
     composerError.value = message
     ElMessage.error(message)
   }
@@ -367,14 +376,14 @@ onMounted(async () => {
     undoSendSeconds.value = profile.undoSendSeconds
   } catch (error) {
     labels.value = []
-    ElMessage.error(error instanceof Error ? error.message : 'Failed to load composer settings')
+    ElMessage.error(error instanceof Error ? error.message : t('mailCompose.messages.loadSettingsFailed'))
   }
 
   try {
     senderOptions.value = sortMailSenderIdentities(await listSenderIdentities())
   } catch (error) {
     senderOptions.value = buildPrimarySenderIdentity()
-    ElMessage.error(error instanceof Error ? error.message : 'Failed to load sender identities')
+    ElMessage.error(error instanceof Error ? error.message : t('mailCompose.messages.loadSenderIdentitiesFailed'))
   }
 })
 </script>

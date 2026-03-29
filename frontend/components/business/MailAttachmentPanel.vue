@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 import type { MailAttachment } from '~/types/api'
+import { useI18n } from '~/composables/useI18n'
 import { formatMailAttachmentSize } from '~/utils/mail-attachments'
 
 export interface FailedMailAttachmentUpload {
@@ -31,6 +32,7 @@ const emit = defineEmits<{
 }>()
 
 const activeAttachmentSet = computed(() => new Set(props.activeAttachmentIds))
+const { t } = useI18n()
 
 function onFileChange(event: Event): void {
   const input = event.target as HTMLInputElement
@@ -46,11 +48,11 @@ function onFileChange(event: Event): void {
   <section class="attachment-panel">
     <div class="attachment-panel__header">
       <div>
-        <h3 class="attachment-panel__title">Attachments</h3>
-        <p class="attachment-panel__hint">20MB max per file. Executable files are blocked.</p>
+        <h3 class="attachment-panel__title">{{ t('mailCompose.attachments.title') }}</h3>
+        <p class="attachment-panel__hint">{{ t('mailCompose.attachments.hint') }}</p>
       </div>
       <label v-if="!props.readOnly" class="attachment-panel__upload">
-        <span>{{ props.uploadLoading ? 'Uploading…' : 'Add files' }}</span>
+        <span>{{ props.uploadLoading ? t('mailCompose.attachments.uploading') : t('mailCompose.attachments.addFiles') }}</span>
         <input
           class="attachment-panel__input"
           type="file"
@@ -69,7 +71,7 @@ function onFileChange(event: Event): void {
           <span>{{ formatMailAttachmentSize(item.fileSize) }}</span>
         </div>
         <div class="attachment-panel__actions">
-          <el-button size="small" text @click="emit('download', { attachmentId: item.id })">Download</el-button>
+          <el-button size="small" text @click="emit('download', { attachmentId: item.id })">{{ t('mailCompose.attachments.download') }}</el-button>
           <el-button
             v-if="!props.readOnly"
             size="small"
@@ -78,12 +80,16 @@ function onFileChange(event: Event): void {
             :loading="activeAttachmentSet.has(item.id)"
             @click="emit('remove', { attachmentId: item.id })"
           >
-            Remove
+            {{ t('mailCompose.attachments.remove') }}
           </el-button>
         </div>
       </li>
     </ul>
-    <el-empty v-else :description="props.readOnly ? 'No attachments' : 'No attachments yet'" :image-size="64" />
+    <el-empty
+      v-else
+      :description="props.readOnly ? t('mailCompose.attachments.emptyReadOnly') : t('mailCompose.attachments.empty')"
+      :image-size="64"
+    />
 
     <div v-if="props.failedUploads.length > 0" class="attachment-panel__failures" data-testid="mail-attachment-failures">
       <el-alert
@@ -94,7 +100,7 @@ function onFileChange(event: Event): void {
         :title="`${failure.fileName}: ${failure.message}`"
       >
         <template #default>
-          <el-button size="small" @click="emit('retry', { failureId: failure.id })">Retry</el-button>
+          <el-button size="small" @click="emit('retry', { failureId: failure.id })">{{ t('mailCompose.attachments.retry') }}</el-button>
         </template>
       </el-alert>
     </div>

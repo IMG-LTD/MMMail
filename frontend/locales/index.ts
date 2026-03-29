@@ -31,6 +31,11 @@ import {
   mailListZhTW
 } from './mail-list'
 import {
+  mailComposeEn,
+  mailComposeZhCN,
+  mailComposeZhTW
+} from './mail-compose'
+import {
   organizationsEn,
   organizationsZhCN,
   organizationsZhTW
@@ -139,6 +144,7 @@ export const messages: TranslationCatalog = {
     ...mailEasySwitchEn,
     ...mailFiltersEn,
     ...mailFoldersEn,
+    ...mailComposeEn,
     ...mailListEn,
     ...meetEn,
     ...meetWorkspaceEn,
@@ -180,6 +186,7 @@ export const messages: TranslationCatalog = {
     ...mailEasySwitchZhCN,
     ...mailFiltersZhCN,
     ...mailFoldersZhCN,
+    ...mailComposeZhCN,
     ...mailListZhCN,
     ...meetZhCN,
     ...meetWorkspaceZhCN,
@@ -221,6 +228,7 @@ export const messages: TranslationCatalog = {
     ...mailEasySwitchZhTW,
     ...mailFiltersZhTW,
     ...mailFoldersZhTW,
+    ...mailComposeZhTW,
     ...mailListZhTW,
     ...meetZhTW,
     ...meetWorkspaceZhTW,
