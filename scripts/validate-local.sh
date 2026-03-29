@@ -46,7 +46,7 @@ env -u http_proxy -u https_proxy -u HTTP_PROXY -u HTTPS_PROXY -u ALL_PROXY -u al
 
 echo "[validate-local] frontend i18n governance"
 env -u http_proxy -u https_proxy -u HTTP_PROXY -u HTTPS_PROXY -u ALL_PROXY -u all_proxy \
-  pnpm --dir frontend exec vitest run tests/i18n.spec.ts tests/i18n-governance.spec.ts tests/i18n-coverage.spec.ts tests/mail-compose-i18n.spec.ts tests/mail-workspace-i18n.spec.ts >/tmp/mmmail-frontend-i18n.log 2>&1
+  pnpm --dir frontend exec vitest run tests/i18n.spec.ts tests/i18n-governance.spec.ts tests/i18n-coverage.spec.ts tests/contacts-i18n.spec.ts tests/mail-compose-i18n.spec.ts tests/mail-workspace-i18n.spec.ts >/tmp/mmmail-frontend-i18n.log 2>&1
 
 echo "[validate-local] i18n consistency report"
 env -u http_proxy -u https_proxy -u HTTP_PROXY -u HTTPS_PROXY -u ALL_PROXY -u all_proxy \

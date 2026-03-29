@@ -146,8 +146,13 @@
   - `frontend/pages/mail/[id].vue`、`frontend/pages/conversations/index.vue`、`frontend/pages/conversations/[id].vue` 已改为使用 `useI18n`
   - `frontend/tests/mail-workspace-i18n.spec.ts` 已并入默认 i18n 门禁
   - 页面级国际化覆盖率已提升到 `95.9%`，当前剩余未本地化页面主要为 `contacts.vue`、根路由跳转页与少量纯壳层页面
+- 已补齐联系人工作区这一条页面级国际化链：
+  - 新增 `frontend/locales/contacts-workspace.ts`，收口联系人、分组、导入导出、重复联系人与确认提示文案
+  - `frontend/pages/contacts.vue` 已拆分为薄页入口，真实工作区迁移至 `frontend/components/contacts/ContactsWorkspace.vue`
+  - 新增 `frontend/composables/useContactsWorkspace.ts`，承接联系人页逻辑，避免继续在超长页面文件上叠加逻辑
+  - `frontend/tests/contacts-i18n.spec.ts` 已并入默认 i18n 门禁，`frontend/tests/i18n-coverage.spec.ts` 已将 `/contacts` 纳入关键页面覆盖断言
 - 已将 i18n 专项纳入默认门禁：
-  - `pnpm --dir frontend exec vitest run tests/i18n.spec.ts tests/i18n-governance.spec.ts tests/i18n-coverage.spec.ts tests/mail-compose-i18n.spec.ts tests/mail-workspace-i18n.spec.ts`
+  - `pnpm --dir frontend exec vitest run tests/i18n.spec.ts tests/i18n-governance.spec.ts tests/i18n-coverage.spec.ts tests/contacts-i18n.spec.ts tests/mail-compose-i18n.spec.ts tests/mail-workspace-i18n.spec.ts`
   - `node --experimental-strip-types frontend/scripts/i18n-report.mjs`
   - `node --experimental-strip-types frontend/scripts/i18n-coverage-report.mjs`
   - `bash scripts/validate-local.sh`

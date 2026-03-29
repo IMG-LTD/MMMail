@@ -6,6 +6,11 @@ import { calendarEn, calendarZhCN, calendarZhTW } from './calendar'
 import { authenticatorEn, authenticatorZhCN, authenticatorZhTW } from './authenticator'
 import { docsEn, docsZhCN, docsZhTW } from './docs'
 import {
+  contactsWorkspaceEn,
+  contactsWorkspaceZhCN,
+  contactsWorkspaceZhTW
+} from './contacts-workspace'
+import {
   driveCollaborationEn,
   driveCollaborationZhCN,
   driveCollaborationZhTW
@@ -143,6 +148,7 @@ export const messages: TranslationCatalog = {
     ...communityReleaseEn,
     ...collaborationShellEn,
     ...commandCenterEn,
+    ...contactsWorkspaceEn,
     ...docsEn,
     ...driveCollaborationEn,
     ...externalAccountEn,
@@ -186,6 +192,7 @@ export const messages: TranslationCatalog = {
     ...communityReleaseZhCN,
     ...collaborationShellZhCN,
     ...commandCenterZhCN,
+    ...contactsWorkspaceZhCN,
     ...docsZhCN,
     ...driveCollaborationZhCN,
     ...externalAccountZhCN,
@@ -229,6 +236,7 @@ export const messages: TranslationCatalog = {
     ...communityReleaseZhTW,
     ...collaborationShellZhTW,
     ...commandCenterZhTW,
+    ...contactsWorkspaceZhTW,
     ...docsZhTW,
     ...driveCollaborationZhTW,
     ...externalAccountZhTW,

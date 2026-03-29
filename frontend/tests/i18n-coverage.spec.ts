@@ -4,6 +4,7 @@ import { collectI18nPageCoverageReport } from '../utils/i18n-coverage'
 
 const EXPECTED_I18N_ROUTES = [
   '/calendar',
+  '/contacts',
   '/docs',
   '/drive',
   '/organizations',
@@ -33,6 +34,7 @@ describe('i18n page coverage', () => {
     expect(report.pageReports.find((item) => item.route === '/inbox')?.hasTranslationBinding).toBe(true)
     expect(report.pageReports.find((item) => item.route === '/archive')?.keyPrefixes).toContain('nav')
     expect(report.pageReports.find((item) => item.route === '/conversations')?.keyPrefixes).toContain('mailWorkspace')
+    expect(report.pageReports.find((item) => item.route === '/contacts')?.keyPrefixes).toContain('contacts')
     expect(report.pageReports.find((item) => item.route === '/mail/[id]')?.hasTranslationBinding).toBe(true)
   })
 })
