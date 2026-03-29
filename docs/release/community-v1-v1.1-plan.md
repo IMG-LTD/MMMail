@@ -132,9 +132,14 @@
   - `artifacts/i18n-consistency-report.json`
   - `artifacts/i18n-consistency-report.md`
 - 已新增 `frontend/tests/i18n-governance.spec.ts`，与既有 `frontend/tests/i18n.spec.ts` 一起构成当前 i18n 起步回归。
+- 已新增 `frontend/utils/i18n-coverage.ts` 与 `frontend/scripts/i18n-coverage-report.mjs`，输出 `frontend/pages` 的页面级国际化覆盖统计：
+  - `artifacts/i18n-page-coverage-report.json`
+  - `artifacts/i18n-page-coverage-report.md`
+- 已新增 `frontend/tests/i18n-coverage.spec.ts`，保证 `Docs / Sheets / Drive / Calendar / Organizations / Settings` 等关键页面继续保留 `useI18n` 接线与静态 key 覆盖。
 - 已将 i18n 专项纳入默认门禁：
-  - `pnpm --dir frontend exec vitest run tests/i18n.spec.ts tests/i18n-governance.spec.ts`
+  - `pnpm --dir frontend exec vitest run tests/i18n.spec.ts tests/i18n-governance.spec.ts tests/i18n-coverage.spec.ts`
   - `node --experimental-strip-types frontend/scripts/i18n-report.mjs`
+  - `node --experimental-strip-types frontend/scripts/i18n-coverage-report.mjs`
   - `bash scripts/validate-local.sh`
 - 已新增治理文档 `docs/open-source/i18n-governance.md`，明确三语 key 一致性规则、报告产物路径与术语表种子。
 

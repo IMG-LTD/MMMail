@@ -6,11 +6,14 @@
 - 当前报告产物：
   - `artifacts/i18n-consistency-report.json`
   - `artifacts/i18n-consistency-report.md`
+  - `artifacts/i18n-page-coverage-report.json`
+  - `artifacts/i18n-page-coverage-report.md`
 
 ## 默认门禁
 - 本地：
-  - `pnpm --dir frontend exec vitest run tests/i18n.spec.ts tests/i18n-governance.spec.ts`
+  - `pnpm --dir frontend exec vitest run tests/i18n.spec.ts tests/i18n-governance.spec.ts tests/i18n-coverage.spec.ts`
   - `node --experimental-strip-types frontend/scripts/i18n-report.mjs`
+  - `node --experimental-strip-types frontend/scripts/i18n-coverage-report.mjs`
 - 统一门禁：
   - `bash scripts/validate-local.sh`
 
@@ -18,6 +21,7 @@
 - `en`、`zh-CN`、`zh-TW` 三套 locale catalog 必须保持 key 对齐。
 - 新增 locale key 时，必须同步补齐三套翻译。
 - 发现缺失 key 时，默认门禁直接失败，不允许静默 fallback 掩盖问题。
+- 页面覆盖统计会输出 `frontend/pages` 的 `useI18n` 使用率、静态 key 数量与前缀分布，用于收敛后续页面级国际化批次。
 
 ## 术语表种子
 | English | 简体中文 | 繁體中文 |
