@@ -126,6 +126,18 @@
 ### 目标
 - 建立简体中文 / 繁体中文 / 英语的工程化治理。
 
+### 当前批次
+- 已新增 `frontend/utils/i18n-governance.ts`，静态扫描 `frontend/locales/*.ts` 并输出 locale catalog 对齐报告。
+- 已新增 `frontend/scripts/i18n-report.mjs`，产出：
+  - `artifacts/i18n-consistency-report.json`
+  - `artifacts/i18n-consistency-report.md`
+- 已新增 `frontend/tests/i18n-governance.spec.ts`，与既有 `frontend/tests/i18n.spec.ts` 一起构成当前 i18n 起步回归。
+- 已将 i18n 专项纳入默认门禁：
+  - `pnpm --dir frontend exec vitest run tests/i18n.spec.ts tests/i18n-governance.spec.ts`
+  - `node --experimental-strip-types frontend/scripts/i18n-report.mjs`
+  - `bash scripts/validate-local.sh`
+- 已新增治理文档 `docs/open-source/i18n-governance.md`，明确三语 key 一致性规则、报告产物路径与术语表种子。
+
 ### 范围
 - 文案抽取
 - 缺失检查

@@ -10,7 +10,7 @@ source "$ROOT_DIR/scripts/lib/java-common.sh"
 MVN_BIN="$(resolve_maven_bin "$ROOT_DIR")"
 BACKEND_AUTH_RBAC_TESTS="AuthFlowIntegrationTest,OrgAuthenticationSecurityIntegrationTest,OrgAdminConsoleIntegrationTest,OrgMemberGovernanceIntegrationTest"
 BACKEND_DOCS_TESTS="DocsCollaborationIntegrationTest,DocsSuggestionWorkflowIntegrationTest,DocsOrgAccessIntegrationTest"
-FRONTEND_DOCS_TESTS="tests/docs-smoke.spec.ts tests/docs-panels.smoke.spec.ts tests/docs-comments.smoke.spec.ts tests/docs-presentation.spec.ts tests/docs-transfer.spec.ts tests/docs-draft.spec.ts tests/docs-route.spec.ts tests/i18n.spec.ts"
+FRONTEND_DOCS_TESTS="tests/docs-smoke.spec.ts tests/docs-panels.smoke.spec.ts tests/docs-comments.smoke.spec.ts tests/docs-presentation.spec.ts tests/docs-transfer.spec.ts tests/docs-draft.spec.ts tests/docs-route.spec.ts"
 BACKEND_MAIL_GA_TESTS="MailGaIntegrationTest,MailAttachmentIntegrationTest,MailReleaseBlockingIntegrationTest"
 FRONTEND_MAIL_GA_TESTS="tests/mail-compose.spec.ts tests/mail-attachments.spec.ts tests/mail-smoke.spec.ts"
 BACKEND_CALENDAR_GA_TESTS="CalendarSharingAvailabilityIntegrationTest,CalendarReleaseBlockingIntegrationTest,CalendarIcsImportIntegrationTest"
@@ -43,6 +43,14 @@ env -u http_proxy -u https_proxy -u HTTP_PROXY -u HTTPS_PROXY -u ALL_PROXY -u al
 echo "[validate-local] frontend observability regression"
 env -u http_proxy -u https_proxy -u HTTP_PROXY -u HTTPS_PROXY -u ALL_PROXY -u all_proxy \
   pnpm --dir frontend exec vitest run $FRONTEND_OBSERVABILITY_TESTS >/tmp/mmmail-frontend-observability.log 2>&1
+
+echo "[validate-local] frontend i18n governance"
+env -u http_proxy -u https_proxy -u HTTP_PROXY -u HTTPS_PROXY -u ALL_PROXY -u all_proxy \
+  pnpm --dir frontend exec vitest run tests/i18n.spec.ts tests/i18n-governance.spec.ts >/tmp/mmmail-frontend-i18n.log 2>&1
+
+echo "[validate-local] i18n consistency report"
+env -u http_proxy -u https_proxy -u HTTP_PROXY -u HTTPS_PROXY -u ALL_PROXY -u all_proxy \
+  node --experimental-strip-types frontend/scripts/i18n-report.mjs >/tmp/mmmail-i18n-report.log 2>&1
 
 echo "[validate-local] security gates"
 bash scripts/validate-security.sh >/tmp/mmmail-security.log 2>&1
@@ -84,6 +92,7 @@ required=(
   docs/release/community-v1-known-issues.md
   docs/release/community-v1-support-boundaries.md
   docs/release/community-v1-pre-release-checklist.md
+  docs/open-source/i18n-governance.md
   docs/release/external-ci-handoff.md
   docs/release/external-execution-checklist.md
   docs/release/community-v1-release-manager-brief.md
