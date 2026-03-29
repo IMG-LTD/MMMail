@@ -9,6 +9,8 @@ source "$ROOT_DIR/scripts/lib/java-common.sh"
 
 MVN_BIN="$(resolve_maven_bin "$ROOT_DIR")"
 BACKEND_AUTH_RBAC_TESTS="AuthFlowIntegrationTest,OrgAuthenticationSecurityIntegrationTest,OrgAdminConsoleIntegrationTest,OrgMemberGovernanceIntegrationTest"
+BACKEND_DOCS_TESTS="DocsCollaborationIntegrationTest,DocsSuggestionWorkflowIntegrationTest,DocsOrgAccessIntegrationTest"
+FRONTEND_DOCS_TESTS="tests/docs-smoke.spec.ts tests/docs-panels.smoke.spec.ts tests/docs-comments.smoke.spec.ts tests/docs-presentation.spec.ts tests/docs-transfer.spec.ts tests/docs-draft.spec.ts tests/docs-route.spec.ts tests/i18n.spec.ts"
 BACKEND_MAIL_GA_TESTS="MailGaIntegrationTest,MailAttachmentIntegrationTest,MailReleaseBlockingIntegrationTest"
 FRONTEND_MAIL_GA_TESTS="tests/mail-compose.spec.ts tests/mail-attachments.spec.ts tests/mail-smoke.spec.ts"
 BACKEND_CALENDAR_GA_TESTS="CalendarSharingAvailabilityIntegrationTest,CalendarReleaseBlockingIntegrationTest,CalendarIcsImportIntegrationTest"
@@ -21,6 +23,10 @@ FRONTEND_OBSERVABILITY_TESTS="tests/system-health.spec.ts tests/error-tracking.s
 echo "[validate-local] frontend tests"
 env -u http_proxy -u https_proxy -u HTTP_PROXY -u HTTPS_PROXY -u ALL_PROXY -u all_proxy \
   pnpm --dir frontend test >/tmp/mmmail-frontend-test.log 2>&1
+
+echo "[validate-local] frontend docs regression"
+env -u http_proxy -u https_proxy -u HTTP_PROXY -u HTTPS_PROXY -u ALL_PROXY -u all_proxy \
+  pnpm --dir frontend exec vitest run $FRONTEND_DOCS_TESTS >/tmp/mmmail-frontend-docs.log 2>&1
 
 echo "[validate-local] frontend mail ga regression"
 env -u http_proxy -u https_proxy -u HTTP_PROXY -u HTTPS_PROXY -u ALL_PROXY -u all_proxy \
@@ -107,6 +113,7 @@ required=(
   scripts/security-backend-dependency-scan.sh
   scripts/validate-security.sh
   scripts/validate-runtime-env.sh
+  scripts/validate-backend-test-env.sh
   scripts/validate-batch3.sh
   scripts/validate-local.sh
   scripts/validate-ci.sh
@@ -116,6 +123,7 @@ required=(
   scripts/db-backup.sh
   scripts/db-restore.sh
   scripts/db-rollback.sh
+  config/backend.test.env.example
 )
 for file in "${required[@]}"; do
   if [[ ! -f "$file" ]]; then
@@ -202,52 +210,32 @@ env -u http_proxy -u https_proxy -u HTTP_PROXY -u HTTPS_PROXY -u ALL_PROXY -u al
   "$MVN_BIN" -f backend/pom.xml -pl mmmail-server -am -DskipTests compile >/tmp/mmmail-backend-compile.log 2>&1
 
 echo "[validate-local] backend auth/rbac regression"
-timeout 60s env \
-  SPRING_DATASOURCE_PASSWORD=test-password \
-  MMMAIL_JWT_SECRET=0123456789abcdef0123456789abcdef \
-  NACOS_USERNAME=test-nacos-user \
-  NACOS_PASSWORD=test-nacos-password \
-  "$MVN_BIN" -f backend/pom.xml -pl mmmail-server -am \
+timeout 60s "$MVN_BIN" -f backend/pom.xml -pl mmmail-server -am \
   -Dtest="$BACKEND_AUTH_RBAC_TESTS" -Dsurefire.failIfNoSpecifiedTests=false test \
   >/tmp/mmmail-backend-auth-rbac.log 2>&1
 
+echo "[validate-local] backend docs regression"
+timeout 60s "$MVN_BIN" -f backend/pom.xml -pl mmmail-server -am \
+  -Dtest="$BACKEND_DOCS_TESTS" -Dsurefire.failIfNoSpecifiedTests=false test \
+  >/tmp/mmmail-backend-docs.log 2>&1
+
 echo "[validate-local] backend mail ga regression"
-timeout 60s env \
-  SPRING_DATASOURCE_PASSWORD=test-password \
-  MMMAIL_JWT_SECRET=0123456789abcdef0123456789abcdef \
-  NACOS_USERNAME=test-nacos-user \
-  NACOS_PASSWORD=test-nacos-password \
-  "$MVN_BIN" -f backend/pom.xml -pl mmmail-server -am \
+timeout 60s "$MVN_BIN" -f backend/pom.xml -pl mmmail-server -am \
   -Dtest="$BACKEND_MAIL_GA_TESTS" -Dsurefire.failIfNoSpecifiedTests=false test \
   >/tmp/mmmail-backend-mail-ga.log 2>&1
 
 echo "[validate-local] backend calendar ga regression"
-timeout 60s env \
-  SPRING_DATASOURCE_PASSWORD=test-password \
-  MMMAIL_JWT_SECRET=0123456789abcdef0123456789abcdef \
-  NACOS_USERNAME=test-nacos-user \
-  NACOS_PASSWORD=test-nacos-password \
-  "$MVN_BIN" -f backend/pom.xml -pl mmmail-server -am \
+timeout 60s "$MVN_BIN" -f backend/pom.xml -pl mmmail-server -am \
   -Dtest="$BACKEND_CALENDAR_GA_TESTS" -Dsurefire.failIfNoSpecifiedTests=false test \
   >/tmp/mmmail-backend-calendar-ga.log 2>&1
 
 echo "[validate-local] backend drive ga regression"
-timeout 60s env \
-  SPRING_DATASOURCE_PASSWORD=test-password \
-  MMMAIL_JWT_SECRET=0123456789abcdef0123456789abcdef \
-  NACOS_USERNAME=test-nacos-user \
-  NACOS_PASSWORD=test-nacos-password \
-  "$MVN_BIN" -f backend/pom.xml -pl mmmail-server -am \
+timeout 60s "$MVN_BIN" -f backend/pom.xml -pl mmmail-server -am \
   -Dtest="$BACKEND_DRIVE_GA_TESTS" -Dsurefire.failIfNoSpecifiedTests=false test \
   >/tmp/mmmail-backend-drive-ga.log 2>&1
 
 echo "[validate-local] backend observability regression"
-timeout 60s env \
-  SPRING_DATASOURCE_PASSWORD=test-password \
-  MMMAIL_JWT_SECRET=0123456789abcdef0123456789abcdef \
-  NACOS_USERNAME=test-nacos-user \
-  NACOS_PASSWORD=test-nacos-password \
-  "$MVN_BIN" -f backend/pom.xml -pl mmmail-server -am \
+timeout 60s "$MVN_BIN" -f backend/pom.xml -pl mmmail-server -am \
   -Dtest="$BACKEND_OBSERVABILITY_TESTS" -Dsurefire.failIfNoSpecifiedTests=false test \
   >/tmp/mmmail-backend-observability.log 2>&1
 

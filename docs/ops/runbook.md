@@ -20,6 +20,18 @@
 - 系统健康页：
   - 使用管理员账号登录后访问 `/settings/system-health`
 
+### 本地后端门禁环境
+- 默认 `validate-local.sh` 现在使用后端 `test` profile 回归，不再依赖本机 MySQL / Redis / Nacos 实例或真实密钥。
+- 如需单独验证 Docs 后端专项回归，可直接执行：
+  - `timeout 60s $(bash -lc 'source scripts/lib/java-common.sh; resolve_maven_bin "$PWD"') -f backend/pom.xml -pl mmmail-server -am -Dtest='DocsCollaborationIntegrationTest,DocsSuggestionWorkflowIntegrationTest,DocsOrgAccessIntegrationTest' -Dsurefire.failIfNoSpecifiedTests=false test`
+- `DocsOrgAccessIntegrationTest` 会验证 org scope 下 `POST /api/v1/docs/notes`、`POST /api/v1/docs/notes/{id}/comments`、`GET /api/v1/docs/notes/{id}/collaboration` 在产品禁用与强制 2FA 策略下都被统一拒绝。
+- 若需要额外验证“本机 live-stack 配置是否完整”，可选执行：
+  - 复制 `config/backend.test.env.example` 为 `config/backend.test.env.local`
+  - 填入本机实际值
+  - 执行 `export MMMAIL_BACKEND_TEST_ENV_FILE=config/backend.test.env.local`
+  - 再执行 `bash scripts/validate-backend-test-env.sh`
+- 这条可选检查只用于 live-stack 验证，不再阻塞默认本地门禁。
+
 ### 日志
 - 后端日志为结构化 JSON，包含：
   - `requestId`

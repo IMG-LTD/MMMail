@@ -11,17 +11,47 @@ import type {
   DocsPermission
 } from '~/types/api'
 import type { DocsNoteSuggestion, DocsReviewMode } from '~/types/docs'
+import type { DocsRouteState, DocsScopeFilter } from '~/utils/docs-route'
 import { useDocsApi } from '~/composables/useDocsApi'
 import { useI18n } from '~/composables/useI18n'
 import { useDocsSyncStream } from '~/composables/useDocsSyncStream'
 import { useAuthStore } from '~/stores/auth'
 import { resolveSessionIdFromAccessToken } from '~/utils/auth-session'
-import { buildDocsRouteQuery, extractDocsNoteIdFromRouteQuery, upsertDocsNoteSummary } from '~/utils/docs-route'
+import {
+  buildDocsRouteQuery,
+  extractDocsRouteState,
+  filterDocsNoteSummaries,
+  resolveDocsVisibleNoteId,
+  upsertDocsNoteSummary
+} from '~/utils/docs-route'
+import {
+  clearDocsDraftSnapshot,
+  hasDocsDraftDiff,
+  readDocsDraftSnapshot,
+  writeDocsDraftSnapshot
+} from '~/utils/docs-draft'
+import type { DocsDraftSnapshot } from '~/utils/docs-draft'
+import {
+  resolveDocsPermissionLabelKey,
+  resolveDocsScopeLabelKey,
+  resolveDocsScopeTagType,
+  shouldConfirmDocsUnsavedChange
+} from '~/utils/docs-presentation'
+import { downloadDocsExport, parseDocsImportFile } from '~/utils/docs-transfer'
 import { extractSelectedExcerpt } from '~/utils/docs-selection'
 import { needsDocsDetailRefresh } from '~/utils/docs-suggestions'
 
 interface TextareaInputRef {
   textarea?: HTMLTextAreaElement
+}
+
+interface DocsSelectResult {
+  selected: boolean
+  cancelled: boolean
+}
+
+interface DocsLoadNotesResult {
+  cancelled: boolean
 }
 
 const PRESENCE_HEARTBEAT_MS = 20000
@@ -30,6 +60,7 @@ const authStore = useAuthStore()
 const route = useRoute()
 const router = useRouter()
 const { t } = useI18n()
+const initialRouteState = extractDocsRouteState(route.query)
 const {
   listNotes,
   createNote,
@@ -50,8 +81,8 @@ const {
   listPresence
 } = useDocsApi()
 
-const keyword = ref('')
-const scopeFilter = ref<'ALL' | 'OWNED' | 'SHARED'>('ALL')
+const keyword = ref(initialRouteState.keyword)
+const scopeFilter = ref<DocsScopeFilter>(initialRouteState.scope)
 const loadingList = ref(false)
 const loadingDetail = ref(false)
 const creating = ref(false)
@@ -78,7 +109,9 @@ const selectedRangeStart = ref(0)
 const selectedRangeEnd = ref(0)
 const noteDeleted = ref(false)
 const editorInputRef = ref<TextareaInputRef | null>(null)
+const importInputRef = ref<HTMLInputElement | null>(null)
 const presenceTicker = ref<ReturnType<typeof setInterval> | null>(null)
+const draftRecoverySnapshot = ref<DocsDraftSnapshot | null>(null)
 
 const editor = reactive({
   title: '',
@@ -97,6 +130,11 @@ const commentDraft = reactive({
 })
 
 const reviewMode = ref<DocsReviewMode>('EDIT')
+const persistedEditorState = reactive({
+  title: '',
+  content: '',
+  currentVersion: 1
+})
 
 const {
   status: syncStatus,
@@ -115,13 +153,25 @@ const canEdit = computed(() => editor.permission === 'OWNER' || editor.permissio
 const canShare = computed(() => editor.permission === 'OWNER')
 const canResolveSuggestions = computed(() => editor.permission === 'OWNER')
 const editorWritable = computed(() => canEdit.value && reviewMode.value === 'EDIT')
-const filteredNotes = computed(() => notes.value.filter((note) => scopeFilter.value === 'ALL' || note.scope === scopeFilter.value))
+const filteredNotes = computed(() => filterDocsNoteSummaries(notes.value, scopeFilter.value))
 const activeCommentCount = computed(() => comments.value.filter((item) => !item.resolved).length)
+const hasUnsavedChanges = computed(() => hasActiveNote.value && canEdit.value && hasDocsDraftDiff(editor, persistedEditorState))
+const notesEmptyDescription = computed(() => {
+  if (keyword.value.trim()) {
+    return t('docs.empty.search', { keyword: keyword.value.trim() })
+  }
+  if (scopeFilter.value !== 'ALL') {
+    return t('docs.empty.scope', { scope: t(`docs.search.scopes.${scopeFilter.value.toLowerCase()}`) })
+  }
+  return t('docs.empty.notes')
+})
 const sharedBadge = computed(() => {
   if (editor.permission === 'OWNER') return t('docs.badges.owner')
   if (editor.permission === 'EDIT') return t('docs.badges.sharedEdit')
   return t('docs.badges.sharedView')
 })
+const editorTitle = computed(() => editor.title || t('docs.common.untitled'))
+const dirtyStateLabel = computed(() => hasUnsavedChanges.value ? t('docs.dirty.unsaved') : t('docs.dirty.saved'))
 const reviewModeLabel = computed(() => {
   return reviewMode.value === 'EDIT' ? t('docs.review.edit') : t('docs.review.suggest')
 })
@@ -158,37 +208,152 @@ function isExternalEvent(event: DocsNoteSyncEvent): boolean {
   return Boolean(currentSessionId.value && event.sessionId && event.sessionId !== currentSessionId.value)
 }
 
-async function loadNotes(keepSelection = true): Promise<void> {
+function markPersistedEditorState(detail: { title: string; content: string; currentVersion: number }): void {
+  persistedEditorState.title = detail.title
+  persistedEditorState.content = detail.content
+  persistedEditorState.currentVersion = detail.currentVersion
+}
+
+function syncDraftRecoverySnapshot(): void {
+  if (!activeNoteId.value) {
+    draftRecoverySnapshot.value = null
+    return
+  }
+  const snapshot = readDocsDraftSnapshot(activeNoteId.value)
+  if (!snapshot || !hasDocsDraftDiff(snapshot, editor)) {
+    draftRecoverySnapshot.value = null
+    return
+  }
+  draftRecoverySnapshot.value = snapshot
+}
+
+function persistLocalDraftSnapshot(): void {
+  if (!activeNoteId.value || !hasActiveNote.value || !canEdit.value) {
+    return
+  }
+  if (!hasDocsDraftDiff(editor, persistedEditorState)) {
+    if (!draftRecoverySnapshot.value) {
+      clearDocsDraftSnapshot(activeNoteId.value)
+    }
+    return
+  }
+  writeDocsDraftSnapshot({
+    noteId: activeNoteId.value,
+    title: editor.title,
+    content: editor.content,
+    baseVersion: persistedEditorState.currentVersion,
+    savedAt: new Date().toISOString()
+  })
+}
+
+function captureAppliedDocsViewState(): DocsRouteState {
+  const routeState = resolveRouteState()
+  return {
+    noteId: activeNoteId.value || routeState.noteId,
+    keyword: routeState.keyword,
+    scope: routeState.scope
+  }
+}
+
+async function restoreDocsViewState(state: DocsRouteState): Promise<void> {
+  keyword.value = state.keyword
+  scopeFilter.value = state.scope
+  await syncRoute(state.noteId)
+}
+
+async function clearDocsSelection(nextNotes: DocsNoteSummary[]): Promise<DocsLoadNotesResult> {
+  if (!(await confirmDiscardUnsavedChanges(null))) {
+    return { cancelled: true }
+  }
+  notes.value = nextNotes
+  resetEditor()
+  await syncRoute(null)
+  return { cancelled: false }
+}
+
+async function loadNotes(keepSelection = true): Promise<DocsLoadNotesResult> {
   loadingList.value = true
   try {
     const next = await listNotes(keyword.value.trim(), 200)
-    notes.value = next
-    if (!next.length) {
-      resetEditor()
-      await syncRoute(null)
-      return
+    const visibleNotes = filterDocsNoteSummaries(next, scopeFilter.value)
+    if (!visibleNotes.length) {
+      return await clearDocsSelection(next)
     }
+    let unavailableNoteId: string | null = null
     const routeNoteId = resolveRouteNoteId()
-    if (routeNoteId && routeNoteId !== activeNoteId.value) {
-      const selected = await selectNote(routeNoteId, false)
-      if (selected) {
-        return
+    if (routeNoteId && routeNoteId !== activeNoteId.value && visibleNotes.some((note) => note.id === routeNoteId)) {
+      const result = await selectNote(routeNoteId, { syncRouteAfterLoad: false })
+      if (result.selected || result.cancelled) {
+        if (result.selected) {
+          notes.value = next
+        }
+        return { cancelled: result.cancelled }
       }
-      ElMessage.warning(t('docs.messages.noteUnavailable'))
+      if (noteDeleted.value) {
+        unavailableNoteId = routeNoteId
+        ElMessage.warning(t('docs.messages.noteUnavailable'))
+      }
     }
-    if (keepSelection && activeNoteId.value && next.some((note) => note.id === activeNoteId.value)) {
+    const fallbackVisibleNotes = unavailableNoteId
+      ? visibleNotes.filter((note) => note.id !== unavailableNoteId)
+      : visibleNotes
+    if (!fallbackVisibleNotes.length) {
+      return await clearDocsSelection(next)
+    }
+    if (keepSelection && activeNoteId.value && fallbackVisibleNotes.some((note) => note.id === activeNoteId.value)) {
+      notes.value = next
       await syncRoute(activeNoteId.value)
-      return
+      return { cancelled: false }
     }
-    await selectNote(next[0].id)
+    const nextVisibleNoteId = resolveDocsVisibleNoteId(fallbackVisibleNotes, activeNoteId.value)
+    if (!nextVisibleNoteId) {
+      return await clearDocsSelection(next)
+    }
+    const result = await selectNote(nextVisibleNoteId)
+    if (result.selected) {
+      notes.value = next
+    }
+    return { cancelled: result.cancelled }
   } catch (error) {
     ElMessage.error((error as Error).message || t('docs.messages.loadNotesFailed'))
+    return { cancelled: false }
   } finally {
     loadingList.value = false
   }
 }
 
-async function selectNote(noteId: string, syncRouteAfterLoad = true): Promise<boolean> {
+async function confirmDiscardUnsavedChanges(targetNoteId?: string | null): Promise<boolean> {
+  if (!shouldConfirmDocsUnsavedChange(hasUnsavedChanges.value, activeNoteId.value, targetNoteId)) {
+    return true
+  }
+  try {
+    await ElMessageBox.confirm(
+      t('docs.unsaved.description'),
+      t('docs.unsaved.title'),
+      {
+        type: 'warning',
+        confirmButtonText: t('docs.unsaved.leave'),
+        cancelButtonText: t('common.actions.cancel')
+      }
+    )
+    return true
+  } catch {
+    return false
+  }
+}
+
+async function selectNote(
+  noteId: string,
+  options: { syncRouteAfterLoad?: boolean; confirmUnsaved?: boolean } = {}
+): Promise<DocsSelectResult> {
+  const syncRouteAfterLoad = options.syncRouteAfterLoad ?? true
+  const confirmUnsaved = options.confirmUnsaved ?? true
+  if (noteId === activeNoteId.value) {
+    return { selected: true, cancelled: false }
+  }
+  if (confirmUnsaved && !(await confirmDiscardUnsavedChanges(noteId))) {
+    return { selected: false, cancelled: true }
+  }
   stopPresenceTicker()
   disconnectSync()
   noteDeleted.value = false
@@ -199,7 +364,7 @@ async function selectNote(noteId: string, syncRouteAfterLoad = true): Promise<bo
   selectedRangeEnd.value = 0
   const loaded = await loadActiveNote()
   if (!loaded) {
-    return false
+    return { selected: false, cancelled: false }
   }
   await Promise.all([loadCollaboration(), loadSuggestions()])
   await sendPresence(true)
@@ -209,7 +374,7 @@ async function selectNote(noteId: string, syncRouteAfterLoad = true): Promise<bo
     await syncRoute(noteId)
   }
   void connectSync(editor.syncCursor || undefined)
-  return true
+  return { selected: true, cancelled: false }
 }
 
 async function loadActiveNote(): Promise<boolean> {
@@ -220,23 +385,19 @@ async function loadActiveNote(): Promise<boolean> {
   try {
     const detail = await getNote(activeNoteId.value)
     noteDeleted.value = false
-    editor.title = detail.title
-    editor.content = detail.content || ''
-    editor.updatedAt = detail.updatedAt
-    editor.currentVersion = detail.currentVersion
-    editor.permission = detail.permission
-    editor.ownerDisplayName = detail.ownerDisplayName
-    editor.ownerEmail = detail.ownerEmail
-    editor.syncCursor = detail.syncCursor
-    editor.syncVersion = detail.syncVersion
-    syncCursor.value = detail.syncCursor
+    applyDetail(detail)
+    markPersistedEditorState({
+      title: detail.title,
+      content: detail.content || '',
+      currentVersion: detail.currentVersion
+    })
+    syncDraftRecoverySnapshot()
     notes.value = upsertDocsNoteSummary(notes.value, detail)
     return true
   } catch (error) {
     const normalized = error as ApiClientError
     if (normalized.status === 404) {
-      noteDeleted.value = true
-      syncConflictMessage.value = t('docs.messages.noteUnavailableInline')
+      markUnavailableNoteState()
       return false
     }
     ElMessage.error(normalized.message || t('docs.messages.loadNoteFailed'))
@@ -275,14 +436,19 @@ async function loadSuggestions(): Promise<void> {
 }
 
 async function onCreate(): Promise<void> {
+  if (!(await confirmDiscardUnsavedChanges())) {
+    return
+  }
   creating.value = true
   try {
     const suffix = new Date().toISOString().slice(0, 16).replace('T', ' ')
     const created = await createNote({ title: `${t('docs.defaultNoteTitle')} ${suffix}`, content: '' })
+    if (scopeFilter.value === 'SHARED') {
+      scopeFilter.value = 'OWNED'
+    }
     ElMessage.success(t('docs.messages.noteCreated'))
     await loadNotes(false)
-    activeNoteId.value = created.id
-    await selectNote(created.id)
+    await selectNote(created.id, { confirmUnsaved: false })
   } catch (error) {
     ElMessage.error((error as Error).message || t('docs.messages.createFailed'))
   } finally {
@@ -307,6 +473,13 @@ async function onSave(): Promise<void> {
       currentVersion: editor.currentVersion
     })
     applyDetail(updated)
+    markPersistedEditorState({
+      title: updated.title,
+      content: updated.content || '',
+      currentVersion: updated.currentVersion
+    })
+    clearDocsDraftSnapshot(activeNoteId.value)
+    draftRecoverySnapshot.value = null
     syncConflictMessage.value = ''
     ElMessage.success(t('docs.messages.noteSaved'))
     await loadNotes(true)
@@ -338,7 +511,10 @@ async function onDelete(): Promise<void> {
   }
   deleting.value = true
   try {
+    const deletedNoteId = activeNoteId.value
     await deleteNote(activeNoteId.value)
+    clearDocsDraftSnapshot(deletedNoteId)
+    draftRecoverySnapshot.value = null
     ElMessage.success(t('docs.messages.noteDeleted'))
     await loadNotes(false)
   } catch (error) {
@@ -348,8 +524,76 @@ async function onDelete(): Promise<void> {
   }
 }
 
+function onExport(format: 'MARKDOWN' | 'TEXT'): void {
+  if (!activeNoteId.value) {
+    ElMessage.warning(t('docs.messages.selectNote'))
+    return
+  }
+  downloadDocsExport(editor.title || t('docs.defaultNoteTitle'), editor.content, format)
+  ElMessage.success(t('docs.messages.exported', { format: format === 'MARKDOWN' ? 'Markdown' : 'TXT' }))
+}
+
+function onImportTrigger(): void {
+  if (!canEdit.value) {
+    ElMessage.warning(t('docs.messages.readOnly'))
+    return
+  }
+  importInputRef.value?.click()
+}
+
+async function onImportFileChange(event: Event): Promise<void> {
+  const target = event.target as HTMLInputElement | null
+  const file = target?.files?.[0]
+  if (!file) {
+    return
+  }
+  if (!activeNoteId.value) {
+    ElMessage.warning(t('docs.messages.selectNote'))
+    if (target) {
+      target.value = ''
+    }
+    return
+  }
+  if (!canEdit.value) {
+    ElMessage.warning(t('docs.messages.readOnly'))
+    if (target) {
+      target.value = ''
+    }
+    return
+  }
+  if (!(await confirmDiscardUnsavedChanges())) {
+    if (target) {
+      target.value = ''
+    }
+    return
+  }
+  try {
+    const parsed = await parseDocsImportFile(file)
+    editor.title = parsed.title
+    editor.content = parsed.content
+    syncConflictMessage.value = t('docs.messages.importApplied')
+    ElMessage.success(t('docs.messages.importReady', { format: parsed.format }))
+  } catch (error) {
+    const message = error instanceof Error ? error.message : ''
+    if (message === 'UNSUPPORTED_DOCS_IMPORT_FORMAT') {
+      ElMessage.error(t('docs.messages.importUnsupported'))
+    } else if (message === 'EMPTY_DOCS_IMPORT_FILE') {
+      ElMessage.error(t('docs.messages.importEmpty'))
+    } else {
+      ElMessage.error(t('docs.messages.importFailed'))
+    }
+  } finally {
+    if (target) {
+      target.value = ''
+    }
+  }
+}
+
 async function onRefreshWorkspace(): Promise<void> {
   if (!activeNoteId.value) {
+    return
+  }
+  if (!(await confirmDiscardUnsavedChanges())) {
     return
   }
   refreshing.value = true
@@ -595,7 +839,7 @@ async function handleSyncPayload(payload: { syncCursor: number; syncVersion: str
   await loadCollaboration()
   await loadSuggestions()
   if (needsDocsDetailRefresh(latestSyncEvent.value.eventType) && external) {
-    syncConflictMessage.value = 'Another session updated this note. Refresh to load the latest content.'
+    syncConflictMessage.value = t('docs.messages.syncRefreshRequired')
     await loadActiveNote()
     return
   }
@@ -604,7 +848,9 @@ async function handleSyncPayload(payload: { syncCursor: number; syncVersion: str
     return
   }
   if (external) {
-    syncConflictMessage.value = `Collaboration activity detected from ${latestSyncEvent.value.actorEmail}.`
+    syncConflictMessage.value = t('docs.messages.externalActivity', {
+      actor: latestSyncEvent.value.actorEmail || t('docs.sync.systemActor')
+    })
   }
 }
 
@@ -631,9 +877,10 @@ function applyDetail(detail: {
   syncCursor.value = detail.syncCursor
 }
 
-function resetEditor(): void {
+function markUnavailableNoteState(): void {
   activeNoteId.value = ''
-  noteDeleted.value = false
+  noteDeleted.value = true
+  draftRecoverySnapshot.value = null
   editor.title = ''
   editor.content = ''
   editor.updatedAt = ''
@@ -643,6 +890,37 @@ function resetEditor(): void {
   editor.ownerEmail = ''
   editor.syncCursor = 0
   editor.syncVersion = 'DOC-0'
+  persistedEditorState.title = ''
+  persistedEditorState.content = ''
+  persistedEditorState.currentVersion = 1
+  collaborators.value = []
+  comments.value = []
+  suggestions.value = []
+  activeSessions.value = []
+  latestSyncEvent.value = null
+  syncConflictMessage.value = t('docs.messages.noteUnavailableInline')
+  selectedExcerpt.value = ''
+  selectedRangeStart.value = 0
+  selectedRangeEnd.value = 0
+  reviewMode.value = 'EDIT'
+}
+
+function resetEditor(): void {
+  activeNoteId.value = ''
+  noteDeleted.value = false
+  draftRecoverySnapshot.value = null
+  editor.title = ''
+  editor.content = ''
+  editor.updatedAt = ''
+  editor.currentVersion = 1
+  editor.permission = 'OWNER'
+  editor.ownerDisplayName = ''
+  editor.ownerEmail = ''
+  editor.syncCursor = 0
+  editor.syncVersion = 'DOC-0'
+  persistedEditorState.title = ''
+  persistedEditorState.content = ''
+  persistedEditorState.currentVersion = 1
   collaborators.value = []
   comments.value = []
   suggestions.value = []
@@ -655,42 +933,168 @@ function resetEditor(): void {
   reviewMode.value = 'EDIT'
 }
 
+function onRestoreLocalDraft(): void {
+  if (!draftRecoverySnapshot.value) {
+    return
+  }
+  editor.title = draftRecoverySnapshot.value.title
+  editor.content = draftRecoverySnapshot.value.content
+  syncConflictMessage.value = t('docs.messages.localDraftRestored')
+  draftRecoverySnapshot.value = null
+}
+
+function onDiscardLocalDraft(): void {
+  if (!activeNoteId.value) {
+    return
+  }
+  clearDocsDraftSnapshot(activeNoteId.value)
+  draftRecoverySnapshot.value = null
+  ElMessage.success(t('docs.messages.localDraftDiscarded'))
+}
+
+async function recoverUnavailableNote(unavailableNoteId: string): Promise<void> {
+  ElMessage.warning(t('docs.messages.noteUnavailable'))
+  const fallbackVisibleNotes = filterDocsNoteSummaries(notes.value, scopeFilter.value)
+    .filter((note) => note.id !== unavailableNoteId)
+  const nextVisibleNoteId = resolveDocsVisibleNoteId(fallbackVisibleNotes, null)
+  if (!nextVisibleNoteId) {
+    await syncRoute(null)
+    return
+  }
+  await selectNote(nextVisibleNoteId, { confirmUnsaved: false })
+}
+
+async function onSelectNote(noteId: string): Promise<void> {
+  const result = await selectNote(noteId)
+  if (result.selected || result.cancelled || !noteDeleted.value) {
+    return
+  }
+  await recoverUnavailableNote(noteId)
+}
+
+function onWindowBeforeUnload(event: BeforeUnloadEvent): void {
+  if (!hasUnsavedChanges.value) {
+    return
+  }
+  event.preventDefault()
+  event.returnValue = ''
+}
+
+function resolveRouteState(): DocsRouteState {
+  return extractDocsRouteState(route.query)
+}
+
 function resolveRouteNoteId(): string | null {
-  return extractDocsNoteIdFromRouteQuery(route.query.noteId)
+  return resolveRouteState().noteId
 }
 
 async function syncRoute(noteId: string | null): Promise<void> {
-  const currentRouteNoteId = resolveRouteNoteId()
-  if (currentRouteNoteId === noteId) {
+  const currentRouteState = resolveRouteState()
+  const nextRouteState: DocsRouteState = {
+    noteId,
+    keyword: keyword.value.trim(),
+    scope: scopeFilter.value
+  }
+  if (
+    currentRouteState.noteId === nextRouteState.noteId
+    && currentRouteState.keyword === nextRouteState.keyword
+    && currentRouteState.scope === nextRouteState.scope
+  ) {
     return
   }
   await router.replace({
     path: '/docs',
-    query: buildDocsRouteQuery(route.query, noteId)
+    query: buildDocsRouteQuery(route.query, nextRouteState)
   })
+}
+
+async function onScopeFilterChange(): Promise<void> {
+  const previousState = captureAppliedDocsViewState()
+  const nextVisibleNoteId = resolveDocsVisibleNoteId(filteredNotes.value, activeNoteId.value)
+  if (!nextVisibleNoteId) {
+    const result = await clearDocsSelection(notes.value)
+    if (result.cancelled) {
+      await restoreDocsViewState(previousState)
+    }
+    return
+  }
+  if (nextVisibleNoteId === activeNoteId.value) {
+    await syncRoute(activeNoteId.value)
+    return
+  }
+  const result = await selectNote(nextVisibleNoteId)
+  if (result.cancelled) {
+    await restoreDocsViewState(previousState)
+  }
+}
+
+async function onApplyFilters(): Promise<void> {
+  const previousState = captureAppliedDocsViewState()
+  const result = await loadNotes(false)
+  if (result.cancelled) {
+    await restoreDocsViewState(previousState)
+  }
 }
 
 watch(() => authStore.accessToken, (token) => {
   currentSessionId.value = resolveSessionIdFromAccessToken(token || '')
 }, { immediate: true })
 
-watch(() => route.query.noteId, async (value) => {
-  const routeNoteId = extractDocsNoteIdFromRouteQuery(value)
-  if (!routeNoteId || routeNoteId === activeNoteId.value) {
+watch(() => [activeNoteId.value, editor.title, editor.content], () => {
+  if (loadingDetail.value) {
     return
   }
-  const selected = await selectNote(routeNoteId, false)
-  if (!selected) {
+  persistLocalDraftSnapshot()
+}, { flush: 'post' })
+
+watch(() => [route.query.noteId, route.query.keyword, route.query.scope], async () => {
+  const previousState: DocsRouteState = {
+    noteId: activeNoteId.value || null,
+    keyword: keyword.value.trim(),
+    scope: scopeFilter.value
+  }
+  const routeState = resolveRouteState()
+  if (routeState.keyword !== keyword.value || routeState.scope !== scopeFilter.value) {
+    keyword.value = routeState.keyword
+    scopeFilter.value = routeState.scope
+    const result = await loadNotes(false)
+    if (result.cancelled) {
+      await restoreDocsViewState(previousState)
+    }
+    return
+  }
+  if (!routeState.noteId || routeState.noteId === activeNoteId.value) {
+    return
+  }
+  const result = await selectNote(routeState.noteId, { syncRouteAfterLoad: false })
+  if (result.cancelled) {
+    await syncRoute(activeNoteId.value || null)
+    return
+  }
+  if (!result.selected) {
     ElMessage.warning(t('docs.messages.noteUnavailable'))
     await loadNotes(false)
   }
 })
 
 onMounted(() => {
+  if (typeof window !== 'undefined') {
+    window.addEventListener('beforeunload', onWindowBeforeUnload)
+  }
   void loadNotes(false)
 })
 
+onBeforeRouteLeave(async () => {
+  if (await confirmDiscardUnsavedChanges()) {
+    return true
+  }
+  return false
+})
+
 onBeforeUnmount(() => {
+  if (typeof window !== 'undefined') {
+    window.removeEventListener('beforeunload', onWindowBeforeUnload)
+  }
   stopPresenceTicker()
   disconnectSync()
 })
@@ -698,15 +1102,22 @@ onBeforeUnmount(() => {
 
 <template>
   <section class="docs-workbench">
+    <input
+      ref="importInputRef"
+      type="file"
+      class="hidden-file-input"
+      accept=".md,.markdown,.txt,text/plain,text/markdown"
+      @change="onImportFileChange"
+    >
     <header class="docs-topbar mm-card">
       <div class="docs-search-row">
-        <el-input v-model="keyword" :placeholder="t('docs.search.placeholder')" @keyup.enter="loadNotes(false)" />
-        <el-select v-model="scopeFilter" class="scope-select">
+        <el-input v-model="keyword" :placeholder="t('docs.search.placeholder')" @keyup.enter="onApplyFilters" />
+        <el-select v-model="scopeFilter" class="scope-select" @change="onScopeFilterChange">
           <el-option :label="t('docs.search.scopes.all')" value="ALL" />
           <el-option :label="t('docs.search.scopes.owned')" value="OWNED" />
           <el-option :label="t('docs.search.scopes.shared')" value="SHARED" />
         </el-select>
-        <el-button :loading="loadingList" @click="loadNotes(false)">{{ t('docs.search.action') }}</el-button>
+        <el-button :loading="loadingList" @click="onApplyFilters">{{ t('docs.search.action') }}</el-button>
         <el-button type="primary" :loading="creating" @click="onCreate">{{ t('docs.actions.newNote') }}</el-button>
         <el-button :loading="refreshing" @click="onRefreshWorkspace">{{ t('docs.actions.refreshWorkspace') }}</el-button>
       </div>
@@ -716,8 +1127,8 @@ onBeforeUnmount(() => {
       <aside class="docs-panel navigator-panel mm-card">
         <div class="panel-heading">
           <div>
-            <div class="panel-title">Note Navigator</div>
-            <div class="panel-subtitle">{{ filteredNotes.length }} visible notes</div>
+            <div class="panel-title">{{ t('docs.navigator.title') }}</div>
+            <div class="panel-subtitle">{{ t('docs.navigator.subtitle', { visible: filteredNotes.length, total: notes.length }) }}</div>
           </div>
         </div>
         <button
@@ -726,14 +1137,14 @@ onBeforeUnmount(() => {
           type="button"
           class="note-tile"
           :class="{ active: note.id === activeNoteId }"
-          @click="selectNote(note.id)"
+          @click="onSelectNote(note.id)"
         >
           <div class="note-tile-head">
             <span class="note-title">{{ note.title }}</span>
-            <el-tag size="small" :type="note.scope === 'SHARED' ? 'warning' : 'info'">{{ note.scope }}</el-tag>
+            <el-tag size="small" :type="resolveDocsScopeTagType(note.scope)">{{ t(resolveDocsScopeLabelKey(note.scope)) }}</el-tag>
           </div>
           <div class="note-meta-row">
-            <span>{{ note.permission }}</span>
+            <span>{{ t(resolveDocsPermissionLabelKey(note.permission)) }}</span>
             <span>v{{ note.currentVersion }}</span>
           </div>
           <div class="note-meta-row muted">
@@ -741,20 +1152,21 @@ onBeforeUnmount(() => {
             <span>{{ formatTime(note.updatedAt) }}</span>
           </div>
         </button>
-        <el-empty v-if="!filteredNotes.length" :description="t('docs.empty.notes')" />
+        <el-empty v-if="!filteredNotes.length" :description="notesEmptyDescription" />
       </aside>
 
       <section class="docs-panel editor-panel mm-card">
         <template v-if="hasActiveNote">
           <div class="panel-heading editor-header">
             <div>
-              <div class="panel-title">{{ editor.title || 'Untitled note' }}</div>
+              <div class="panel-title">{{ editorTitle }}</div>
               <div class="panel-subtitle">
                 {{ editor.ownerDisplayName || editor.ownerEmail }} · {{ sharedBadge }} · Updated {{ formatTime(editor.updatedAt) }}
               </div>
             </div>
             <div class="editor-badges">
-              <el-tag>{{ editor.permission }}</el-tag>
+              <el-tag :type="hasUnsavedChanges ? 'warning' : 'success'">{{ dirtyStateLabel }}</el-tag>
+              <el-tag>{{ t(resolveDocsPermissionLabelKey(editor.permission)) }}</el-tag>
               <el-tag type="info">v{{ editor.currentVersion }}</el-tag>
               <el-tag type="warning">{{ editor.syncVersion }}</el-tag>
             </div>
@@ -767,6 +1179,23 @@ onBeforeUnmount(() => {
             :closable="false"
             :title="syncConflictMessage"
           />
+          <el-alert
+            v-if="draftRecoverySnapshot"
+            class="alert-block"
+            type="info"
+            :closable="false"
+            :title="t('docs.draftRecovery.title', { value: formatTime(draftRecoverySnapshot.savedAt) })"
+          >
+            <template #default>
+              <div class="draft-recovery-alert">
+                <span>{{ t('docs.draftRecovery.description') }}</span>
+                <div class="draft-recovery-actions">
+                  <el-button size="small" type="primary" @click="onRestoreLocalDraft">{{ t('docs.draftRecovery.restore') }}</el-button>
+                  <el-button size="small" @click="onDiscardLocalDraft">{{ t('docs.draftRecovery.discard') }}</el-button>
+                </div>
+              </div>
+            </template>
+          </el-alert>
 
           <div class="editor-fields">
             <el-input v-model="editor.title" maxlength="128" :placeholder="t('docs.editor.titlePlaceholder')" :disabled="!canEdit" />
@@ -789,6 +1218,9 @@ onBeforeUnmount(() => {
             <div class="selection-pill">{{ t('docs.editor.selection', { value: selectedExcerpt || t('docs.common.none') }) }}</div>
             <div class="editor-actions">
               <el-button @click="captureSelection">{{ t('docs.actions.quoteSelection') }}</el-button>
+              <el-button :disabled="!canEdit" @click="onImportTrigger">{{ t('docs.actions.import') }}</el-button>
+              <el-button @click="onExport('MARKDOWN')">{{ t('docs.actions.exportMarkdown') }}</el-button>
+              <el-button @click="onExport('TEXT')">{{ t('docs.actions.exportText') }}</el-button>
               <el-button type="primary" :disabled="!editorWritable" :loading="saving" @click="onSave">{{ t('common.actions.save') }}</el-button>
               <el-button :loading="refreshing" @click="onRefreshWorkspace">{{ t('common.actions.refresh') }}</el-button>
               <el-button type="danger" :disabled="editor.permission !== 'OWNER'" :loading="deleting" @click="onDelete">{{ t('common.actions.delete') }}</el-button>
@@ -913,6 +1345,23 @@ onBeforeUnmount(() => {
   display: flex;
   flex-direction: column;
   gap: 16px;
+}
+
+.hidden-file-input {
+  display: none;
+}
+
+.draft-recovery-alert {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.draft-recovery-actions {
+  display: flex;
+  gap: 8px;
 }
 
 .docs-topbar,
