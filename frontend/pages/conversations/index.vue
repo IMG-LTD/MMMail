@@ -2,6 +2,7 @@
 import { onMounted, ref } from 'vue'
 import type { ConversationSummary, SystemMailFolder } from '~/types/api'
 import { useConversationApi } from '~/composables/useConversationApi'
+import { useI18n } from '~/composables/useI18n'
 
 const loading = ref(false)
 const keyword = ref('')
@@ -12,6 +13,11 @@ const page = ref(1)
 const size = ref(20)
 
 const { fetchConversations } = useConversationApi()
+const { t } = useI18n()
+
+useHead(() => ({
+  title: t('mailWorkspace.conversations.pageTitle')
+}))
 
 async function loadConversations(): Promise<void> {
   loading.value = true
@@ -46,36 +52,36 @@ onMounted(() => {
 <template>
   <div class="mm-page">
     <section class="mm-card panel">
-      <h1 class="mm-section-title">Conversations</h1>
+      <h1 class="mm-section-title">{{ t('mailWorkspace.conversations.pageTitle') }}</h1>
       <div class="filters">
-        <el-input v-model="keyword" placeholder="Search conversations" clearable @keyup.enter="onSearch" />
-        <el-select v-model="folder" clearable placeholder="Folder">
-          <el-option label="Inbox" value="INBOX" />
-          <el-option label="Sent" value="SENT" />
-          <el-option label="Outbox" value="OUTBOX" />
-          <el-option label="Archive" value="ARCHIVE" />
-          <el-option label="Spam" value="SPAM" />
-          <el-option label="Snoozed" value="SNOOZED" />
-          <el-option label="Scheduled" value="SCHEDULED" />
+        <el-input v-model="keyword" :placeholder="t('mailWorkspace.conversations.searchPlaceholder')" clearable @keyup.enter="onSearch" />
+        <el-select v-model="folder" clearable :placeholder="t('mailWorkspace.conversations.folderPlaceholder')">
+          <el-option :label="t('nav.inbox')" value="INBOX" />
+          <el-option :label="t('nav.sent')" value="SENT" />
+          <el-option :label="t('nav.outbox')" value="OUTBOX" />
+          <el-option :label="t('nav.archive')" value="ARCHIVE" />
+          <el-option :label="t('nav.spam')" value="SPAM" />
+          <el-option :label="t('nav.snoozed')" value="SNOOZED" />
+          <el-option :label="t('nav.scheduled')" value="SCHEDULED" />
         </el-select>
-        <el-button type="primary" @click="onSearch">Search</el-button>
+        <el-button type="primary" @click="onSearch">{{ t('mailbox.actions.search') }}</el-button>
       </div>
     </section>
 
     <section class="mm-card list">
-      <el-table :data="items" v-loading="loading" empty-text="No conversations">
-        <el-table-column prop="subject" label="Subject" min-width="260" />
-        <el-table-column label="Participants" min-width="220">
+      <el-table :data="items" v-loading="loading" :empty-text="t('mailWorkspace.conversations.empty')">
+        <el-table-column prop="subject" :label="t('mailWorkspace.conversations.columns.subject')" min-width="260" />
+        <el-table-column :label="t('mailWorkspace.conversations.columns.participants')" min-width="220">
           <template #default="{ row }">
             <div class="participants">{{ row.participants.join(', ') || '-' }}</div>
           </template>
         </el-table-column>
-        <el-table-column prop="messageCount" label="Messages" width="100" />
-        <el-table-column prop="unreadCount" label="Unread" width="100" />
-        <el-table-column prop="latestAt" label="Latest" min-width="180" />
-        <el-table-column label="Actions" width="120" fixed="right">
+        <el-table-column prop="messageCount" :label="t('mailWorkspace.conversations.columns.messages')" width="100" />
+        <el-table-column prop="unreadCount" :label="t('mailWorkspace.conversations.columns.unread')" width="100" />
+        <el-table-column prop="latestAt" :label="t('mailWorkspace.conversations.columns.latest')" min-width="180" />
+        <el-table-column :label="t('mailWorkspace.conversations.columns.actions')" width="120" fixed="right">
           <template #default="{ row }">
-            <el-button type="primary" link @click="openConversation(row.conversationId)">Open</el-button>
+            <el-button type="primary" link @click="openConversation(row.conversationId)">{{ t('mailWorkspace.conversations.actions.open') }}</el-button>
           </template>
         </el-table-column>
       </el-table>

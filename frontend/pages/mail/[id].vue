@@ -5,6 +5,7 @@ import type { LabelItem, MailDetail } from '~/types/api'
 import { useMailApi } from '~/composables/useMailApi'
 import { useLabelApi } from '~/composables/useLabelApi'
 import { useContactApi } from '~/composables/useContactApi'
+import { useI18n } from '~/composables/useI18n'
 import { useMailStore } from '~/stores/mail'
 import { formatMailAttachmentSize } from '~/utils/mail-attachments'
 import { buildMailComposeQuery } from '~/utils/mail-compose'
@@ -17,12 +18,17 @@ const labels = ref<LabelItem[]>([])
 const selectedLabels = ref<string[]>([])
 
 const mailStore = useMailStore()
+const { t } = useI18n()
 const { fetchMailDetail, applyAction, updateLabels, fetchStats, downloadMailAttachment } = useMailApi()
 const { listLabels } = useLabelApi()
 const { quickAddContact } = useContactApi()
 const canEditDraft = computed(() => Boolean(mail.value?.isDraft))
 const canReply = computed(() => Boolean(mail.value && !mail.value.isDraft))
 const canForward = computed(() => Boolean(mail.value && !mail.value.isDraft))
+
+useHead(() => ({
+  title: mail.value?.subject || t('mailWorkspace.detail.pageTitle')
+}))
 
 async function loadDetail(): Promise<void> {
   const id = String(route.params.id || '')
@@ -58,7 +64,7 @@ async function saveLabels(): Promise<void> {
     await updateLabels(mail.value.id, selectedLabels.value)
     const stats = await fetchStats()
     mailStore.updateStats(stats)
-    ElMessage.success('Labels updated')
+    ElMessage.success(t('mailWorkspace.detail.messages.labelsUpdated'))
     await loadDetail()
   } finally {
     labelSaving.value = false
@@ -67,11 +73,11 @@ async function saveLabels(): Promise<void> {
 
 async function addContactFromMail(): Promise<void> {
   if (!mail.value?.peerEmail) {
-    ElMessage.warning('No sender email available')
+    ElMessage.warning(t('mailWorkspace.detail.messages.noSenderEmail'))
     return
   }
   await quickAddContact(mail.value.peerEmail)
-  ElMessage.success('Contact saved')
+  ElMessage.success(t('mailWorkspace.detail.messages.contactSaved'))
 }
 
 async function openCompose(mode: 'reply' | 'forward' | 'draft'): Promise<void> {
@@ -97,7 +103,7 @@ async function downloadAttachment(attachmentId: string): Promise<void> {
     link.click()
     URL.revokeObjectURL(url)
   } catch (error) {
-    ElMessage.error(error instanceof Error ? error.message : 'Attachment download failed')
+    ElMessage.error(error instanceof Error ? error.message : t('mailWorkspace.detail.messages.attachmentDownloadFailed'))
   }
 }
 
@@ -112,36 +118,36 @@ onMounted(() => {
       <el-skeleton v-if="loading" :rows="8" animated />
       <template v-else-if="mail">
         <div class="head">
-          <h1 class="mm-section-title">{{ mail.subject || '(no subject)' }}</h1>
+          <h1 class="mm-section-title">{{ mail.subject || t('mailWorkspace.detail.fallbackSubject') }}</h1>
           <div class="actions">
-            <el-button v-if="canReply" data-testid="mail-reply-button" type="primary" size="small" @click="openCompose('reply')">Reply</el-button>
-            <el-button v-if="canForward" data-testid="mail-forward-button" size="small" @click="openCompose('forward')">Forward</el-button>
-            <el-button v-if="canEditDraft" data-testid="mail-edit-draft-button" type="primary" plain size="small" @click="openCompose('draft')">Edit Draft</el-button>
+            <el-button v-if="canReply" data-testid="mail-reply-button" type="primary" size="small" @click="openCompose('reply')">{{ t('mailWorkspace.detail.actions.reply') }}</el-button>
+            <el-button v-if="canForward" data-testid="mail-forward-button" size="small" @click="openCompose('forward')">{{ t('mailWorkspace.detail.actions.forward') }}</el-button>
+            <el-button v-if="canEditDraft" data-testid="mail-edit-draft-button" type="primary" plain size="small" @click="openCompose('draft')">{{ t('mailWorkspace.detail.actions.editDraft') }}</el-button>
             <el-button size="small" @click="runAction(mail.isRead ? 'MARK_UNREAD' : 'MARK_READ')">
-              {{ mail.isRead ? 'Mark Unread' : 'Mark Read' }}
+              {{ t(mail.isRead ? 'mailList.actions.markUnread' : 'mailList.actions.markRead') }}
             </el-button>
             <el-button size="small" @click="runAction(mail.isStarred ? 'UNSTAR' : 'STAR')">
-              {{ mail.isStarred ? 'Unstar' : 'Star' }}
+              {{ t(mail.isStarred ? 'mailList.actions.unstar' : 'mailList.actions.star') }}
             </el-button>
-            <el-button size="small" @click="runAction('SNOOZE_24H')">Snooze 24h</el-button>
-            <el-button size="small" @click="runAction('SNOOZE_7D')">Snooze 7d</el-button>
-            <el-button size="small" @click="runAction('UNSNOOZE')">Unsnooze</el-button>
-            <el-button size="small" @click="runAction('MOVE_ARCHIVE')">Archive</el-button>
-            <el-button size="small" @click="runAction('MOVE_SPAM')">Spam</el-button>
-            <el-button size="small" @click="runAction('MOVE_TRASH')">Trash</el-button>
-            <el-button size="small" @click="runAction('MOVE_INBOX')">Move to Inbox</el-button>
-            <el-button size="small" @click="addContactFromMail">Add Contact</el-button>
+            <el-button size="small" @click="runAction('SNOOZE_24H')">{{ t('mailList.actions.snooze24h') }}</el-button>
+            <el-button size="small" @click="runAction('SNOOZE_7D')">{{ t('mailList.actions.snooze7d') }}</el-button>
+            <el-button size="small" @click="runAction('UNSNOOZE')">{{ t('mailList.actions.unsnooze') }}</el-button>
+            <el-button size="small" @click="runAction('MOVE_ARCHIVE')">{{ t('mailList.actions.archive') }}</el-button>
+            <el-button size="small" @click="runAction('MOVE_SPAM')">{{ t('mailList.actions.spam') }}</el-button>
+            <el-button size="small" @click="runAction('MOVE_TRASH')">{{ t('mailList.actions.trash') }}</el-button>
+            <el-button size="small" @click="runAction('MOVE_INBOX')">{{ t('mailWorkspace.detail.actions.moveInbox') }}</el-button>
+            <el-button size="small" @click="addContactFromMail">{{ t('mailWorkspace.detail.actions.addContact') }}</el-button>
           </div>
         </div>
         <p class="meta">{{ mail.peerEmail }} · {{ new Date(mail.sentAt).toLocaleString() }}</p>
 
         <el-form label-position="top" class="label-editor">
-          <el-form-item label="Labels">
+          <el-form-item :label="t('mailCompose.form.labels')">
             <el-select v-model="selectedLabels" multiple collapse-tags filterable style="width: 100%">
               <el-option v-for="label in labels" :key="label.id" :label="label.name" :value="label.name" />
             </el-select>
           </el-form-item>
-          <el-button size="small" :loading="labelSaving" @click="saveLabels">Save Labels</el-button>
+          <el-button size="small" :loading="labelSaving" @click="saveLabels">{{ t('mailWorkspace.detail.actions.saveLabels') }}</el-button>
         </el-form>
 
         <section v-if="mail.attachments.length > 0" class="attachment-list" data-testid="mail-detail-attachments">
@@ -150,13 +156,13 @@ onMounted(() => {
               <strong>{{ attachment.fileName }}</strong>
               <p>{{ formatMailAttachmentSize(attachment.fileSize) }}</p>
             </div>
-            <el-button data-testid="mail-attachment-download-button" size="small" text @click="downloadAttachment(attachment.id)">Download</el-button>
+            <el-button data-testid="mail-attachment-download-button" size="small" text @click="downloadAttachment(attachment.id)">{{ t('mailCompose.attachments.download') }}</el-button>
           </div>
         </section>
 
         <article class="body">{{ mail.body }}</article>
       </template>
-      <el-empty v-else description="Mail not found" />
+      <el-empty v-else :description="t('mailWorkspace.detail.empty')" />
     </section>
   </div>
 </template>

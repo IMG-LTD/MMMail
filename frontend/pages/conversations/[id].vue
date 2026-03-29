@@ -3,6 +3,7 @@ import { onMounted, ref } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import type { ConversationAction, ConversationDetail } from '~/types/api'
 import { useConversationApi } from '~/composables/useConversationApi'
+import { useI18n } from '~/composables/useI18n'
 import { useMailApi } from '~/composables/useMailApi'
 import { useMailStore } from '~/stores/mail'
 
@@ -13,6 +14,11 @@ const detail = ref<ConversationDetail | null>(null)
 const { fetchConversationDetail } = useConversationApi()
 const { applyConversationAction } = useMailApi()
 const mailStore = useMailStore()
+const { t } = useI18n()
+
+useHead(() => ({
+  title: detail.value?.subject || t('mailWorkspace.conversationDetail.pageTitle')
+}))
 
 async function loadDetail(): Promise<void> {
   const conversationId = String(route.params.id || '')
@@ -41,11 +47,11 @@ async function runConversationAction(action: ConversationAction): Promise<void> 
   if (action === 'MOVE_TRASH') {
     try {
       await ElMessageBox.confirm(
-        'Move all mails in this conversation to Trash?',
-        'Confirm Conversation Action',
+        t('mailWorkspace.conversationDetail.confirmTrashMessage'),
+        t('mailWorkspace.conversationDetail.confirmTrashTitle'),
         {
-          confirmButtonText: 'Move to Trash',
-          cancelButtonText: 'Cancel',
+          confirmButtonText: t('mailWorkspace.conversationDetail.confirmTrash'),
+          cancelButtonText: t('mailbox.customSnooze.cancel'),
           type: 'warning'
         }
       )
@@ -56,10 +62,10 @@ async function runConversationAction(action: ConversationAction): Promise<void> 
   try {
     const result = await applyConversationAction(conversationId, action)
     mailStore.updateStats(result.stats)
-    ElMessage.success(`${result.affected} mails updated in conversation`)
+    ElMessage.success(t('mailWorkspace.conversationDetail.messages.updated', { count: result.affected }))
     await loadDetail()
   } catch (error) {
-    const message = error instanceof Error ? error.message : 'Conversation action failed'
+    const message = error instanceof Error ? error.message : t('mailWorkspace.conversationDetail.messages.actionFailed')
     ElMessage.error(message)
   }
 }
@@ -72,26 +78,26 @@ onMounted(() => {
 <template>
   <div class="mm-page" v-loading="loading">
     <section class="mm-card header">
-      <el-button link type="primary" @click="navigateTo('/conversations')">Back</el-button>
-      <h1 class="mm-section-title">{{ detail?.subject || 'Conversation' }}</h1>
-      <p class="meta">{{ detail?.messages.length || 0 }} messages</p>
+      <el-button link type="primary" @click="navigateTo('/conversations')">{{ t('mailWorkspace.conversationDetail.back') }}</el-button>
+      <h1 class="mm-section-title">{{ detail?.subject || t('mailWorkspace.conversationDetail.pageTitle') }}</h1>
+      <p class="meta">{{ t('mailWorkspace.conversationDetail.messagesCount', { count: detail?.messages.length || 0 }) }}</p>
       <div class="conversation-actions" v-if="detail">
-        <el-button size="small" @click="runConversationAction('MARK_READ')">Mark all read</el-button>
-        <el-button size="small" @click="runConversationAction('MARK_UNREAD')">Mark all unread</el-button>
-        <el-button size="small" @click="runConversationAction('MOVE_ARCHIVE')">Archive all</el-button>
-        <el-button size="small" type="danger" plain @click="runConversationAction('MOVE_TRASH')">Trash all</el-button>
+        <el-button size="small" @click="runConversationAction('MARK_READ')">{{ t('mailWorkspace.conversationDetail.actions.markRead') }}</el-button>
+        <el-button size="small" @click="runConversationAction('MARK_UNREAD')">{{ t('mailWorkspace.conversationDetail.actions.markUnread') }}</el-button>
+        <el-button size="small" @click="runConversationAction('MOVE_ARCHIVE')">{{ t('mailWorkspace.conversationDetail.actions.archive') }}</el-button>
+        <el-button size="small" type="danger" plain @click="runConversationAction('MOVE_TRASH')">{{ t('mailWorkspace.conversationDetail.actions.trash') }}</el-button>
       </div>
     </section>
 
     <section class="mm-card timeline" v-if="detail">
       <article v-for="mail in detail.messages" :key="mail.id" class="message-item">
         <div class="top-row">
-          <strong>{{ mail.subject || '(No subject)' }}</strong>
+          <strong>{{ mail.subject || t('mailWorkspace.detail.fallbackSubject') }}</strong>
           <span>{{ mail.sentAt }}</span>
         </div>
         <p class="peer">{{ mail.peerEmail }}</p>
         <p class="preview">{{ mail.preview }}</p>
-        <el-button link type="primary" @click="openMail(mail.id)">Open Mail</el-button>
+        <el-button link type="primary" @click="openMail(mail.id)">{{ t('mailWorkspace.conversationDetail.actions.openMail') }}</el-button>
       </article>
     </section>
   </div>

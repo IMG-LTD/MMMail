@@ -141,8 +141,13 @@
   - `frontend/components/business/MailComposer.vue`、`frontend/components/business/MailAttachmentPanel.vue` 已改为使用 `useI18n`
   - `frontend/pages/compose.vue` 已补页标题与异常路径 fallback 文案
   - `frontend/tests/mail-compose-i18n.spec.ts` 已并入默认 i18n 门禁
+- 已补齐 Mail detail / Conversations 这一条页面级国际化链：
+  - `frontend/locales/mail-workspace.ts` 收口邮件详情页、会话列表页、会话详情页文案
+  - `frontend/pages/mail/[id].vue`、`frontend/pages/conversations/index.vue`、`frontend/pages/conversations/[id].vue` 已改为使用 `useI18n`
+  - `frontend/tests/mail-workspace-i18n.spec.ts` 已并入默认 i18n 门禁
+  - 页面级国际化覆盖率已提升到 `95.9%`，当前剩余未本地化页面主要为 `contacts.vue`、根路由跳转页与少量纯壳层页面
 - 已将 i18n 专项纳入默认门禁：
-  - `pnpm --dir frontend exec vitest run tests/i18n.spec.ts tests/i18n-governance.spec.ts tests/i18n-coverage.spec.ts tests/mail-compose-i18n.spec.ts`
+  - `pnpm --dir frontend exec vitest run tests/i18n.spec.ts tests/i18n-governance.spec.ts tests/i18n-coverage.spec.ts tests/mail-compose-i18n.spec.ts tests/mail-workspace-i18n.spec.ts`
   - `node --experimental-strip-types frontend/scripts/i18n-report.mjs`
   - `node --experimental-strip-types frontend/scripts/i18n-coverage-report.mjs`
   - `bash scripts/validate-local.sh`

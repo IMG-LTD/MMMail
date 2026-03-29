@@ -17,8 +17,8 @@ describe('i18n page coverage', () => {
 
     expect(report.totalPages).toBeGreaterThan(30)
     expect(report.pagesUsingI18n).toBeGreaterThan(20)
-    expect(report.localizedPages).toBeGreaterThan(40)
-    expect(report.coveragePercent).toBeGreaterThan(80)
+    expect(report.localizedPages).toBeGreaterThan(45)
+    expect(report.coveragePercent).toBeGreaterThan(90)
 
     for (const route of EXPECTED_I18N_ROUTES) {
       const page = report.pageReports.find((item) => item.route === route)
@@ -32,5 +32,7 @@ describe('i18n page coverage', () => {
     expect(report.pageReports.find((item) => item.route === '/calendar')?.keyPrefixes).toContain('calendar')
     expect(report.pageReports.find((item) => item.route === '/inbox')?.hasTranslationBinding).toBe(true)
     expect(report.pageReports.find((item) => item.route === '/archive')?.keyPrefixes).toContain('nav')
+    expect(report.pageReports.find((item) => item.route === '/conversations')?.keyPrefixes).toContain('mailWorkspace')
+    expect(report.pageReports.find((item) => item.route === '/mail/[id]')?.hasTranslationBinding).toBe(true)
   })
 })
