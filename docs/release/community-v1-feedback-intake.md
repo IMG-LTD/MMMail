@@ -16,6 +16,8 @@
 - Tag：`v1.0.0-rc1`
 - Release：`https://github.com/IMG-LTD/MMMail/releases/tag/v1.0.0-rc1`
 - 候选提交：`6cd3bbc`
+- 正式发布分支：`release/v1.0`
+- `v1.1` 集成分支：`dev/community-v1`
 
 ## GitHub milestones
 - `v1.0.0`：`release-blocking` 与自托管阻断项
@@ -29,7 +31,7 @@
   - `GA` 主路径失败
   - 安装 / 升级 / 恢复阻断
   - 安全或越权回归
-  - 最新 green head 变红且影响发布
+  - `release/v1.0` 最新 green head 变红且影响发布
 
 ### 一般缺陷
 - 使用模板：`.github/ISSUE_TEMPLATE/bug-report.md`

@@ -8,14 +8,16 @@
 - 候选标签：`v1.0.0-rc1`
 - 候选说明：`https://github.com/IMG-LTD/MMMail/releases/tag/v1.0.0-rc1`
 - 候选基线提交：`6cd3bbc`
-- 当前规划分支：`dev/community-v1`
-- 当前最新 green head：以 GitHub Actions 上 `dev/community-v1` 的最新成功 run 为准
+- 当前 GA 发布分支：`release/v1.0`
+- 当前 GA 最新 green head：以 GitHub Actions 上 `release/v1.0` 的最新成功 run 为准
+- `v1.1` 集成分支：`dev/community-v1`
 
 ## 当前阶段目标
-- 保持 `dev/community-v1` 最新 head 持续绿灯。
+- 保持 `release/v1.0` 最新待发布 head 持续绿灯。
 - 使用 `v1.0.0-rc1` 收集真实自托管反馈。
 - 在 `v1.0.0` 只接收 release-blocking 修复。
 - 不再扩展首发功能或调整首发范围。
+- `dev/community-v1` 继续承载 `v1.1`，不作为 `v1.0.0` 直接发布基线。
 
 ## 允许进入 `v1.0.0` 的改动
 ### `release-blocking`
@@ -64,7 +66,7 @@
 
 ## 收口标准
 `v1.0.0` 发布前必须满足：
-1. `dev/community-v1` 最新 head 的 `MMMail CI` 为绿色。
+1. `release/v1.0` 最新待发布 head 的 `MMMail CI` 为绿色。
 2. 无未关闭的 release-blocking regression。
 3. `community-v1-final-signoff.md` 保持有效。
 4. `v1.0.0-rc1` 反馈已完成分流。

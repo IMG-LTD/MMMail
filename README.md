@@ -3,15 +3,17 @@
 隐私优先、模块化、可自托管的协作套件。当前首发交付聚焦 `Mail / Calendar / Drive / Admin / Workspace Shell`，并通过 `Labs` 隔离预览模块。
 
 ## 当前发布状态
-- 当前正式状态：`RC1_READY`
-- 状态说明：`v1.0.0-rc1` prerelease 已发布；`dev/community-v1` 必须持续保持最新 head 绿灯；当前版本处于 `v1.0.0` GA 稳定窗口
+- `release/v1.0`：`RC1_READY`，承载 `v1.0.0` / `v1.0.x`
+- `dev/community-v1`：`v1.1` 集成分支，当前按 `Docs → i18n → Community / Hosted → Sheets` 顺序推进
+- 状态说明：`v1.0.0-rc1` prerelease 已发布；`release/v1.0` 已从 `6f86864` 切出，`dev/community-v1` 不再作为 `v1.0.0` 直接发布基线
 - 状态文档：`docs/release/community-v1-rc-status.md`
-- 当前仍处于发布冻结；除最终签收、release-blocking regression 修复或已批准的 freeze exception 外，不再接受产品或工程改动
+- 当前发布冻结仅适用于 `release/v1.0`；`dev/community-v1` 仅允许推进已批准的 `v1.1` 范围
 
 ## 下一步版本节奏
-- `v1.0.0-rc1`：保持 `dev/community-v1` 最新 head CI 全绿，完成 tag 与 GitHub Release 候选发布。
-- `v1.0.0`：进入短周期稳定窗口，只处理 release-blocking 缺陷与自托管反馈。
-- `v1.1`：聚焦 `Docs / Sheets` 稳定性、国际化治理、Community / Hosted 边界继续收敛。
+- `v1.0.0-rc1`：已发布，作为首发候选基线。
+- `v1.0.0`：由 `release/v1.0` 承载，只处理 release-blocking 缺陷、自托管阻断和最小文档勘误。
+- `v1.0.x`：正式发布后继续沿 `release/v1.0` 维护线承接安全修复和 release-blocking backport。
+- `v1.1`：由 `dev/community-v1` 承载，按 `Docs → i18n → Community / Hosted → Sheets` 的顺序推进。
 - GitHub milestones：`v1.0.0`、`v1.1`、`post-v1.1`
 - 不在当前版本节奏中推进 `VPN / Meet / Wallet / Lumo` 等 `Preview` 模块。
 - GA 稳定窗口：`docs/release/community-v1-ga-stabilization.md`
@@ -56,8 +58,10 @@
 - 发布门禁：`docs/release/community-v1-gate.md`
 - RC 检查清单：`docs/release/community-v1-rc-checklist.md`
 - RC1 说明：`docs/release/community-v1-rc1-notes.md`
+- `v1.0.0` release notes 草稿：`docs/release/community-v1-v1.0.0-release-notes.md`
 - 已知问题：`docs/release/community-v1-known-issues.md`
 - 支持边界：`docs/release/community-v1-support-boundaries.md`
+- Community / Hosted 边界入口：`/suite` 中的 `Release boundary map`
 - 预发布清单：`docs/release/community-v1-pre-release-checklist.md`
 - 外部执行清单：`docs/release/external-execution-checklist.md`
 - 发布负责人摘要：`docs/release/community-v1-release-manager-brief.md`
