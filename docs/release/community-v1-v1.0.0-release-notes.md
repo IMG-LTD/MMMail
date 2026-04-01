@@ -1,15 +1,14 @@
-# Community Edition v1.0.0 Release Notes Draft
+# Community Edition v1.0.0 Release Notes
 
-**版本**: `v1.0.0-release-draft`  
-**日期**: `2026-03-31`  
+**版本**: `v1.0.0-release`
+**日期**: `2026-03-31`
 **作者**: `Codex`
 
 ## 当前状态
-- 当前文档为正式 `v1.0.0` release notes 草稿。
-- 仅在 `release/v1.0` 最新待发布 head 完成最终签收后，才可作为正式发布说明使用。
-- 正式发布日期：`待发布`
-- 正式 tag / commit：`待发布（以 release/v1.0 最新已验证 head 为准）`
-- Release owner：`待填写`
+- 正式发布日期：`2026-03-31`
+- 正式 tag / commit：`v1.0.0` / `829c60b99d15c331949a12e45be564da51ec3791`
+- Release owner：`青衫墨痕 (@codecodeing)`
+- GitHub Release：`https://github.com/IMG-LTD/MMMail/releases/tag/v1.0.0`
 
 ## Summary
 - `MMMail Community Edition v1.0.0` 是首个公开的 Community 正式版。
@@ -27,8 +26,17 @@
 - Gate 7：`PASS`
 - 证据：
   - GitHub Actions run `23661060407`
+  - GitHub Actions run `23799189119`
   - `artifacts/security/dependency-check/dependency-check-report.{html,json}`
   - `artifacts/release/rc1-container/community-v1-rc1-container-evidence.md`
+
+## Since `v1.0.0-rc1`
+- `v1.0.0` 正式版改为从 `release/v1.0` 发布，而不是直接从 `dev/community-v1` 发布。
+- `v1.0.0-rc1` 到正式版的差异仅包含发布治理与门禁收口：
+  - `GA stabilization / release checklist / feedback intake / triage playbook`
+  - `issue templates`
+  - `release/v1.0` 独立 CI 触发
+- 正式版未引入新的产品范围扩展。
 
 ## Included
 - 核心功能：
@@ -46,7 +54,7 @@
   - 发布门禁、签收、反馈分流、支持边界、开源协作入口
 
 ## Security
-- 安全修复：当前草稿未单列新增安全修复；以正式发布时 `release/v1.0` 待发布 head 的变更为准
+- 安全修复：正式版未额外引入超出 `v1.0.0-rc1` 范围的新安全功能；以 `829c60b` 对应发布制品为准
 - 扫描结果：
   - `dependency-check` 报告已归档到 `artifacts/security/dependency-check/`
   - 当前已知安全基线门禁已通过
@@ -61,7 +69,7 @@
   - 复核 `.env` 中全部 secrets 与运行时配置
 - 迁移步骤：
   - 以 `docs/ops/upgrade.md` 为准执行升级
-  - 以 `release/v1.0` 的待发布镜像 / 源码基线为准验证迁移
+  - 以 `v1.0.0` 发布镜像 / 源码基线为准验证迁移
 - 回滚策略：
   - 默认不提供 down migration
   - 使用前滚修复，或通过 `scripts/db-rollback.sh` 触发备份恢复
@@ -110,8 +118,6 @@
 - `Preview` 模块成熟度提升
 - `VPN / Meet / Wallet / Lumo` 进入正式版范围
 
-## 发布前待补最后信息
-- `release/v1.0` 最新待发布 head 对应的 workflow run 链接
-- 最终 `v1.0.0` tag / commit
-- Release owner / 审核人 / 正式发布日期
-- 若 `release/v1.0` 待发布提交已偏离 `v1.0.0-rc1`，需同步补最终差异说明
+## 发布后维护说明
+- `release/v1.0` 继续作为 `v1.0.x` 维护线。
+- `dev/community-v1` 继续承载 `v1.1`，按 `Docs → i18n → Community / Hosted → Sheets` 推进。

@@ -1,12 +1,12 @@
 # Community Edition v1.0 Support Boundaries
 
-**版本**: `v1.0-rc1-draft`  
-**日期**: `2026-03-15`  
+**版本**: `v1.0-support-boundaries`
+**日期**: `2026-03-31`
 **作者**: `Codex`
 
 ## 当前发布状态
-- 当前正式状态：`RC1_READY`
-- 含义：Community 首发候选已完成本机与外部官方回执收口，可进入发布候选确认
+- 当前正式状态：`GA_RELEASED`
+- 含义：Community 首发正式版 `v1.0.0` 已发布；`release/v1.0` 当前作为 `v1.0.x` 维护线
 
 ## 支持范围
 ### GA

@@ -1,23 +1,25 @@
 # Community Edition v1.0 GA Stabilization Window
 
-**版本**: `v1.0-ga-window`
-**日期**: `2026-03-28`
+**版本**: `v1.0-ga-closed`
+**日期**: `2026-03-31`
 **作者**: `Codex`
 
-## 当前基线
+## 发布结果
 - 候选标签：`v1.0.0-rc1`
 - 候选说明：`https://github.com/IMG-LTD/MMMail/releases/tag/v1.0.0-rc1`
 - 候选基线提交：`6cd3bbc`
-- 当前 GA 发布分支：`release/v1.0`
-- 当前 GA 最新 green head：以 GitHub Actions 上 `release/v1.0` 的最新成功 run 为准
+- 正式标签：`v1.0.0`
+- 正式发布说明：`https://github.com/IMG-LTD/MMMail/releases/tag/v1.0.0`
+- 正式发布提交：`829c60b`
+- 发布校验 workflow：`23799189119`
+- 当前维护分支：`release/v1.0`
 - `v1.1` 集成分支：`dev/community-v1`
 
 ## 当前阶段目标
-- 保持 `release/v1.0` 最新待发布 head 持续绿灯。
-- 使用 `v1.0.0-rc1` 收集真实自托管反馈。
-- 在 `v1.0.0` 只接收 release-blocking 修复。
+- `v1.0.0` 已正式发布，当前目标切换为 `v1.0.x` 维护。
+- `release/v1.0` 仅接收 release-blocking / 安全修复 / 最小文档勘误。
+- `dev/community-v1` 继续承载 `v1.1`，不作为 `v1.0.x` 直接发布基线。
 - 不再扩展首发功能或调整首发范围。
-- `dev/community-v1` 继续承载 `v1.1`，不作为 `v1.0.0` 直接发布基线。
 
 ## 允许进入 `v1.0.0` 的改动
 ### `release-blocking`
@@ -64,13 +66,13 @@
 | Community / Hosted 边界不清 | `v1.1` backlog | 否 |
 | `Preview` 模块建议 | `post-v1.1` backlog | 否 |
 
-## 收口标准
-`v1.0.0` 发布前必须满足：
+## 收口结果
+`v1.0.0` 已于 `2026-03-31` 完成发布，发布前条件均已满足：
 1. `release/v1.0` 最新待发布 head 的 `MMMail CI` 为绿色。
 2. 无未关闭的 release-blocking regression。
 3. `community-v1-final-signoff.md` 保持有效。
 4. `v1.0.0-rc1` 反馈已完成分流。
-5. `README`、`support boundaries`、`known issues` 与 release notes 口径一致。
+5. `README`、`support boundaries`、`known issues` 与 release notes 已对齐到正式发布口径。
 
 ## 执行入口
 - 反馈收集：`docs/release/community-v1-feedback-intake.md`

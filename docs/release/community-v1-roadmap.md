@@ -5,8 +5,8 @@
 **作者**: `Codex`
 
 ## 当前阶段
-- 当前正式状态为 `RC1_READY`，首发范围、门禁、交接材料已经收口。
-- 当前主线不再扩产品面，只推进发布、签收和首批自托管反馈闭环。
+- 当前正式状态为 `GA_RELEASED`，`v1.0.0` 已发布。
+- `release/v1.0` 进入 `v1.0.x` 维护线，`dev/community-v1` 继续推进 `v1.1`。
 
 ## `v1.0.0-rc1`
 - 完成 Gate 0 ~ Gate 7 的 release closeout。
@@ -14,11 +14,10 @@
 - 保持 `GA` 范围冻结，不再扩 `Mail / Calendar / Drive / Admin` 功能。
 
 ## `v1.0.0`
-- 保持 `dev/community-v1` 最新 head 的 `MMMail CI` 全绿。
-- 发布 `v1.0.0-rc1` tag 与 GitHub Release 候选说明。
-- 进入短周期 GA 稳定窗口，只处理 release-blocking regression。
-- 收敛首批自托管安装、升级、备份恢复、运维反馈。
-- 输出首个公开 `v1.0.0` release notes。
+- 已完成 `release/v1.0` 独立 `MMMail CI` 绿灯。
+- 已完成 `v1.0.0` tag 与 GitHub Release 正式发布。
+- 已完成 GA 稳定窗口收口。
+- 已进入 `v1.0.x` 维护阶段。
 
 ## `v1.1`
 - `Docs / Sheets` 从当前 `BETA` 提升到稳定的单人编辑 / 轻协作能力。

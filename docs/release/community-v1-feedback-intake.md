@@ -1,22 +1,24 @@
 # Community Edition v1.0 Feedback Intake
 
 **版本**: `v1.0-feedback-intake`
-**日期**: `2026-03-28`
+**日期**: `2026-03-31`
 **作者**: `Codex`
 
 ## 目标
-- 以 `v1.0.0-rc1` 为候选基线收集真实反馈。
+- 以 `v1.0.0` 正式版为当前反馈入口。
 - 将反馈严格分流到：
   - `release-blocking`
-  - `v1.0.0` 文档 / 安装勘误
+  - `v1.0.x` 文档 / 安装勘误
   - `v1.1`
   - `post-v1.1`
 
-## 候选基线
-- Tag：`v1.0.0-rc1`
-- Release：`https://github.com/IMG-LTD/MMMail/releases/tag/v1.0.0-rc1`
-- 候选提交：`6cd3bbc`
-- 正式发布分支：`release/v1.0`
+## 当前发布基线
+- 当前 tag：`v1.0.0`
+- 当前 Release：`https://github.com/IMG-LTD/MMMail/releases/tag/v1.0.0`
+- 当前发布提交：`829c60b`
+- 历史候选 tag：`v1.0.0-rc1`
+- 历史候选提交：`6cd3bbc`
+- 维护分支：`release/v1.0`
 - `v1.1` 集成分支：`dev/community-v1`
 
 ## GitHub milestones
@@ -31,7 +33,7 @@
   - `GA` 主路径失败
   - 安装 / 升级 / 恢复阻断
   - 安全或越权回归
-  - `release/v1.0` 最新 green head 变红且影响发布
+  - `release/v1.0` 最新维护 head 变红且影响 `v1.0.x`
 
 ### 一般缺陷
 - 使用模板：`.github/ISSUE_TEMPLATE/bug-report.md`
@@ -61,16 +63,16 @@
 ## 分流矩阵
 | 反馈 | 归类 | 动作 |
 |---|---|---|
-| `Mail / Calendar / Drive / Auth / RBAC` 主路径断裂 | `release-blocking` | 进入 `v1.0.0` |
+| `Mail / Calendar / Drive / Auth / RBAC` 主路径断裂 | `release-blocking` | 进入 `v1.0.x` |
 | Docker Compose / install / upgrade / backup / restore 无法按文档完成 | `release-blocking` 或文档勘误 | 先判定是否阻断 |
 | `Docs / Sheets` 编辑体验不足 | `v1.1` | 不阻塞 |
 | 简繁英缺失、术语不统一 | `v1.1` | 不阻塞 |
-| `Billing` 真实支付需求 | `Hosted backlog` | 不进入 Community `v1.0.0` |
+| `Billing` 真实支付需求 | `Hosted backlog` | 不进入 Community `v1.0.x` |
 | `VPN / Meet / Wallet / Lumo` 建议 | `post-v1.1` | 不阻塞 |
 
 ## 必要信息
 提交 issue 时至少提供：
-- 版本：`v1.0.0-rc1` 或具体 commit
+- 版本：`v1.0.0` / `v1.0.0-rc1` 或具体 commit
 - 部署方式：Docker Compose / 本地开发 / CI
 - 环境信息：浏览器、OS、数据库版本
 - 复现步骤
@@ -82,7 +84,7 @@
   - 对应 workflow run 链接
 
 ## 当前处理原则
-- `v1.0.0` 只接收 release-blocking 修复。
+- `v1.0.x` 只接收 release-blocking 修复与最小文档勘误。
 - 非阻塞问题不混入当前发布窗口。
 - 无法证明影响 `GA` 主路径的问题，不升级为 release-blocking。
 - 自托管反馈优先使用专用模板，避免与功能缺陷、功能需求混在一起。

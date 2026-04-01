@@ -1,7 +1,7 @@
 # Community Edition v1.0 RC Status
 
-**版本**: `v1.0-rc1-draft`  
-**日期**: `2026-03-15`  
+**版本**: `v1.0-release-status`
+**日期**: `2026-03-31`
 **作者**: `Codex`
 
 ## 状态枚举
@@ -22,20 +22,21 @@
 - RC1 材料、gate、checklist、receipt log、signoff 已同步
 - 可以进入正式发布候选确认
 
+### `GA_RELEASED`
+- `v1.0.0` 正式 tag 与 GitHub Release 已发布
+- 正式发布所依据的 `release/v1.0` head 已完成独立 CI 校验
+- `release/v1.0` 从“待发布基线”切换为 `v1.0.x` 维护线
+
 ### `RELEASE_BLOCKED`
 - 即使外部回执完成，仍存在新的 release-blocking 缺陷或证据冲突
 
 ## 当前正式判定
-- **当前状态：`RC1_READY`**
+- **当前状态：`GA_RELEASED`**
 
-## 冻结规则
-- 外部回执已完成；当前可进入 RC1 最终签收与发布候选确认
-- 在未获得 freeze exception 批准前，不得继续改动产品或工程实现
-- 当前仅允许：
-  - 最终签收
-  - 发布候选确认
-  - 失败分诊
-  - 已批准的 freeze exception
+## 当前规则
+- `release/v1.0` 只允许进入 `v1.0.x` 的 release-blocking / 安全修复 / 最小文档勘误
+- `dev/community-v1` 继续承载 `v1.1`
+- 不得将 `Docs / Sheets / i18n / Community / Hosted` 的 `v1.1` 开发改动回灌到 `release/v1.0`
 
 ## 判定依据
 - 已完成：
@@ -51,6 +52,9 @@
   - dependency-check 报告：`artifacts/security/dependency-check/dependency-check-report.{html,json}`
   - RC1 容器证据：`artifacts/release/rc1-container/community-v1-rc1-container-evidence.md`
   - 外部回执登记：`docs/release/community-v1-external-receipt-log.md`
+  - `release/v1.0` 独立 workflow run：`https://github.com/IMG-LTD/MMMail/actions/runs/23799189119`
+  - 正式 tag：`v1.0.0`
+  - 正式 release：`https://github.com/IMG-LTD/MMMail/releases/tag/v1.0.0`
 
 ## 已完成的外部动作
 1. 执行 `MMMail CI / validate`
@@ -60,6 +64,7 @@
 5. 更新 `docs/release/community-v1-pre-release-checklist.md`
 6. 更新 `docs/release/community-v1-external-receipt-log.md`
 7. 更新 `docs/release/community-v1-final-signoff.md`
+8. 在 `release/v1.0` 上发布 `v1.0.0`
 
 ## 状态迁移条件
 ### `RC1_READY_PENDING_EXTERNAL` -> `RC1_READY`
@@ -69,13 +74,12 @@
 - 外部回执登记表已更新
 - 最终签收模板已完成
 
-### `RC1_READY` -> 正式发布候选确认
-- `dev/community-v1` 最新 head 的 `MMMail CI` 必须为绿色
+### `RC1_READY` -> `GA_RELEASED`
+- `release/v1.0` 最新待发布 head 的 `MMMail CI` 必须为绿色
 - 发布负责人确认 `community-v1-final-signoff.md`
-- `community-v1-rc1-notes.md` 审核通过
-- 创建 `v1.0.0-rc1` tag
-- 发布 GitHub Release 候选说明
-- 进入仅允许 release-blocking 修复的 GA 稳定窗口
+- `community-v1-v1.0.0-release-notes.md` 审核通过
+- 创建 `v1.0.0` tag
+- 发布 GitHub Release 正式说明
 
 ### 任意状态 -> `RELEASE_BLOCKED`
 - 出现新的 release-blocking regression
@@ -83,10 +87,7 @@
 - 关键 artifact 缺失或无法追溯
 - freeze exception 未批准却发生实现改动
 
-## `RC1_READY` 后的执行顺序
-1. 确认 `dev/community-v1` 最新 head workflow 全绿。
-2. 复核 `docs/release/community-v1-final-signoff.md`。
-3. 复核 `docs/release/community-v1-rc1-notes.md` 与已知问题说明。
-4. 创建 `v1.0.0-rc1` tag 并推送。
-5. 发布 GitHub Release 候选说明。
-6. 进入 `v1.0.0` GA 稳定窗口，只接收 release-blocking 缺陷。
+## `GA_RELEASED` 后的执行顺序
+1. 在 `release/v1.0` 只接受 `v1.0.x` 的 release-blocking / 安全修复 / 最小文档勘误。
+2. 将新增反馈按 `docs/release/community-v1-feedback-intake.md` 分流。
+3. `dev/community-v1` 继续按 `Docs → i18n → Community / Hosted → Sheets` 推进 `v1.1`。

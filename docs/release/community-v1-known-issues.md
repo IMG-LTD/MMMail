@@ -1,20 +1,20 @@
 # Community Edition v1.0 Known Issues
 
-**版本**: `v1.0-rc1-draft`  
-**日期**: `2026-03-15`  
+**版本**: `v1.0-known-issues`
+**日期**: `2026-03-31`
 **作者**: `Codex`
 
 ## 当前状态
-- 当前正式状态：`RC1_READY`
-- 已无发布门禁阻塞；当前仅剩发布候选确认与签收动作
+- 当前正式状态：`GA_RELEASED`
+- `v1.0.0` 已正式发布；以下问题不阻塞当前首发正式版，但需要在 `v1.0.x` / `v1.1` 中持续跟踪
 
 ## 发布阻塞外的已知问题
 - Flyway 在 MySQL `8.4` 上会输出“高于已验证版本 8.1”的警告：
-  - 当前 RC1 验证已通过，不构成首发阻塞
+  - 当前 GA 验证已通过，不构成首发阻塞
   - 后续升级 Flyway 时应复核该告警是否消失
 - GitHub Actions 当前仍有 Node.js 20 deprecation warning：
   - 来自 `actions/checkout@v4`、`actions/setup-node@v4`、`actions/setup-java@v4`、`pnpm/action-setup@v4`
-  - 当前 workflow 已成功，不构成 RC1 阻塞
+  - 当前 workflow 已成功，不构成 `v1.0.0` 阻塞
 - `dependency-check` 在无 `MMMAIL_NVD_API_KEY` 时更新较慢：
   - 本机长时间运行可能超时
   - 建议在 CI 中配置 secret 并依赖 cache
