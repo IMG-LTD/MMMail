@@ -46,6 +46,7 @@ function onCommand(sheet: SheetsWorkbookSheet, command: string | number | object
         :class="{ 'sheet-tab--active': sheet.id === workbook.activeSheetId }"
       >
         <button
+          :data-testid="`sheets-sheet-${sheet.id}`"
           class="sheet-tab__main"
           type="button"
           :disabled="busy"
@@ -70,7 +71,14 @@ function onCommand(sheet: SheetsWorkbookSheet, command: string | number | object
         </el-dropdown>
       </article>
 
-      <button v-if="canManageSheets" class="sheet-create" type="button" :disabled="busy" @click="emit('createSheet')">
+      <button
+        v-if="canManageSheets"
+        data-testid="sheets-sheet-create"
+        class="sheet-create"
+        type="button"
+        :disabled="busy"
+        @click="emit('createSheet')"
+      >
         <span>＋</span>
         <span>{{ t('sheets.tabs.new') }}</span>
       </button>

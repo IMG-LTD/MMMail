@@ -1,12 +1,12 @@
 # Community Edition v1.0 Release Manager Brief
 
-**版本**: `v1.0-ga-window`
+**版本**: `v1.0-released-v1.1-active`
 **日期**: `2026-03-28`
 **作者**: `Codex`
 
 ## 当前状态
-- 正式状态：`RC1_READY`
-- 含义：Gate 0 ~ Gate 7 已全部通过，`v1.0.0-rc1` prerelease 已发布；`release/v1.0` 已从 `6f86864` 切出，承接 `v1.0.0` 与后续 `v1.0.x`
+- 正式状态：`v1.0.0_RELEASED`
+- 含义：`v1.0.0` 已从 `release/v1.0` 正式发布，tag / commit 为 `v1.0.0` / `829c60b99d15c331949a12e45be564da51ec3791`；`release/v1.0` 后续仅承接 `v1.0.x`
 - `v1.0` 最新 green head：以 GitHub Actions 上 `release/v1.0` 的最新成功 run 为准
 - `v1.1` 集成分支：`dev/community-v1`
 
@@ -39,10 +39,12 @@
 - 回执登记：`docs/release/community-v1-external-receipt-log.md`
 - 状态判定：`docs/release/community-v1-rc-status.md`
 - 最终签收：`docs/release/community-v1-final-signoff.md`
+- 正式 release notes：`docs/release/community-v1-v1.0.0-release-notes.md`
 
 ## 当前允许
 - `release/v1.0` 上的 release-blocking regression 分诊与最小修复
 - 自托管反馈分流
+- `v1.0.0` 发布文档与历史材料复核
 - `v1.1` backlog 整理与已批准范围开发
 - 已批准的 freeze exception
 

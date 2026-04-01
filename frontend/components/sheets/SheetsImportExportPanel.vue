@@ -89,10 +89,28 @@ function onExport(): void {
         <strong>{{ t('sheets.trade.importTitle') }}</strong>
         <p>{{ t('sheets.trade.importDescription') }}</p>
       </div>
-      <el-input v-model="importTitle" :placeholder="t('sheets.trade.importPlaceholder')" />
-      <el-button type="primary" :loading="importing" @click="openFilePicker">{{ t('sheets.trade.chooseFile') }}</el-button>
-      <input ref="fileInputRef" class="file-input" type="file" accept=".csv,.tsv,.xlsx" @change="onFileSelected" />
-      <div v-if="lastImported" class="meta-grid">
+      <el-input
+        v-model="importTitle"
+        data-testid="sheets-import-title"
+        :placeholder="t('sheets.trade.importPlaceholder')"
+      />
+      <el-button
+        data-testid="sheets-import-choose"
+        type="primary"
+        :loading="importing"
+        @click="openFilePicker"
+      >
+        {{ t('sheets.trade.chooseFile') }}
+      </el-button>
+      <input
+        ref="fileInputRef"
+        data-testid="sheets-import-file-input"
+        class="file-input"
+        type="file"
+        accept=".csv,.tsv,.xlsx"
+        @change="onFileSelected"
+      />
+      <div v-if="lastImported" data-testid="sheets-import-meta" class="meta-grid">
         <span class="pill accent">{{ lastImported.title }}</span>
         <span class="pill accent">{{ formatSheetsFormatLabel(lastImported.sourceFormat) }}</span>
         <span class="pill accent">{{ summarizeGridFootprint(lastImported.rowCount, lastImported.colCount) }}</span>
@@ -107,7 +125,11 @@ function onExport(): void {
         <p>{{ t('sheets.trade.exportDescription') }}</p>
       </div>
       <div class="export-row">
-        <el-select v-model="exportFormat" :disabled="!workbook || exporting">
+        <el-select
+          v-model="exportFormat"
+          data-testid="sheets-export-format"
+          :disabled="!workbook || exporting"
+        >
           <el-option
             v-for="format in supportedExportFormats"
             :key="format"
@@ -115,9 +137,18 @@ function onExport(): void {
             :value="format"
           />
         </el-select>
-        <el-button type="success" plain :disabled="!workbook" :loading="exporting" @click="onExport">{{ t('common.actions.export') }}</el-button>
+        <el-button
+          data-testid="sheets-export-submit"
+          type="success"
+          plain
+          :disabled="!workbook"
+          :loading="exporting"
+          @click="onExport"
+        >
+          {{ t('common.actions.export') }}
+        </el-button>
       </div>
-      <div v-if="workbook" class="meta-grid">
+      <div v-if="workbook" data-testid="sheets-export-meta" class="meta-grid">
         <span class="pill">{{ workbook.title }}</span>
         <span class="pill">{{ t('sheets.trade.sheetCount', { count: workbook.sheetCount }) }}</span>
         <span class="pill">{{ t('sheets.trade.activeSheet', { value: activeSheet?.name || t('common.none') }) }}</span>
@@ -125,7 +156,7 @@ function onExport(): void {
         <span class="pill">{{ t('sheets.trade.formulas', { count: workbook.formulaCellCount }) }}</span>
         <span class="pill">{{ t('sheets.trade.errors', { count: workbook.computedErrorCount }) }}</span>
       </div>
-      <div v-if="lastExport" class="meta-grid">
+      <div v-if="lastExport" data-testid="sheets-last-export-meta" class="meta-grid">
         <span class="pill accent">{{ lastExport.fileName }}</span>
         <span class="pill accent">{{ formatSheetsFormatLabel(lastExport.format) }}</span>
         <span class="pill accent">{{ formatSheetsTime(lastExport.exportedAt) }}</span>

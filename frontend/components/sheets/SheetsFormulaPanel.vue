@@ -21,6 +21,18 @@ const emit = defineEmits<{
 
 const { t } = useI18n()
 
+const selectionLabel = computed(() => {
+  return props.hasSelection ? props.activeCellLabel : t('sheets.formula.noCell')
+})
+const previewValue = computed(() => {
+  if (!props.hasSelection) {
+    return '—'
+  }
+  return props.computedValue || t('sheets.formula.blank')
+})
+const statusHint = computed(() => {
+  return props.dirty ? t('sheets.formula.dirtyHint') : t('sheets.formula.savedHint')
+})
 const statusCards = computed(() => {
   return [
     { label: t('sheets.formula.metrics.formulaCells'), value: String(props.formulaCellCount) },
@@ -36,7 +48,7 @@ const statusCards = computed(() => {
         <p>{{ t('sheets.formula.eyebrow') }}</p>
         <h2>{{ t('sheets.formula.title') }}</h2>
       </div>
-      <span class="cell-pill">{{ hasSelection ? activeCellLabel : t('sheets.formula.noCell') }}</span>
+      <span data-testid="sheets-formula-cell-pill" class="cell-pill">{{ selectionLabel }}</span>
     </header>
 
     <div class="formula-layout">
@@ -44,18 +56,19 @@ const statusCards = computed(() => {
         <label class="formula-label" for="sheets-formula-input">{{ t('sheets.formula.barLabel') }}</label>
         <el-input
           id="sheets-formula-input"
+          data-testid="sheets-formula-input"
           :model-value="rawValue"
           :disabled="!hasSelection || saving || readonly"
           :placeholder="t('sheets.formula.placeholder')"
           @update:model-value="emit('update', String($event ?? ''))"
         />
-        <p class="formula-help">{{ previewHint }}</p>
+        <p data-testid="sheets-formula-help" class="formula-help">{{ previewHint }}</p>
       </div>
 
       <div class="preview-card" :class="{ 'preview-card--dirty': dirty }">
         <span class="preview-label">{{ t('sheets.formula.previewLabel') }}</span>
-        <strong>{{ hasSelection ? (computedValue || t('sheets.formula.blank')) : '—' }}</strong>
-        <small>{{ dirty ? t('sheets.formula.dirtyHint') : t('sheets.formula.savedHint') }}</small>
+        <strong data-testid="sheets-formula-preview-value">{{ previewValue }}</strong>
+        <small data-testid="sheets-formula-status-hint">{{ statusHint }}</small>
       </div>
 
       <div class="status-grid">

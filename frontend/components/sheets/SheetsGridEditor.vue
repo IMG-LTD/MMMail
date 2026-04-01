@@ -106,9 +106,9 @@ function buildCellStyle(rowIndex: number, colIndex: number): CSSProperties {
       <span>{{ t('sheets.grid.description') }}</span>
     </header>
 
-    <el-skeleton v-if="loading" :rows="8" animated />
+    <el-skeleton v-if="loading" data-testid="sheets-grid-loading" :rows="8" animated />
 
-    <div v-else-if="!grid.length" class="editor-empty">
+    <div v-else-if="!grid.length" data-testid="sheets-grid-empty" class="editor-empty">
       <strong>{{ t('sheets.grid.emptyTitle') }}</strong>
       <p>{{ t('sheets.grid.emptyDescription') }}</p>
     </div>
@@ -146,6 +146,7 @@ function buildCellStyle(rowIndex: number, colIndex: number): CSSProperties {
             >
               <el-input
                 v-if="isActiveCell(rowIndex, colIndex)"
+                :data-testid="`sheets-cell-input-${rowIndex}-${colIndex}`"
                 :model-value="presentationGrid[rowIndex][colIndex].rawValue"
                 size="small"
                 :disabled="saving || readonly"
@@ -153,6 +154,7 @@ function buildCellStyle(rowIndex: number, colIndex: number): CSSProperties {
               />
               <button
                 v-else
+                :data-testid="`sheets-cell-button-${rowIndex}-${colIndex}`"
                 class="cell-button"
                 type="button"
                 :disabled="saving"

@@ -10,6 +10,7 @@ const props = defineProps<{
   workbook: SheetsWorkbookDetail | null
   items: SheetsWorkbookVersion[]
   loading: boolean
+  errorMessage: string
   mutationId: string
   canRestore: boolean
 }>()
@@ -29,6 +30,10 @@ const drawerVisible = computed({
 function isCurrentVersion(item: SheetsWorkbookVersion): boolean {
   return item.versionNo === props.workbook?.currentVersion
 }
+
+function restoreDisabled(item: SheetsWorkbookVersion): boolean {
+  return !props.workbook || !props.canRestore || isCurrentVersion(item)
+}
 </script>
 
 <template>
@@ -42,9 +47,22 @@ function isCurrentVersion(item: SheetsWorkbookVersion): boolean {
         <el-tag effect="dark">v{{ workbook.currentVersion }}</el-tag>
       </div>
 
-      <el-empty v-if="!loading && items.length === 0" :description="t('sheets.versions.empty')" :image-size="72" />
+      <el-alert
+        v-if="errorMessage"
+        :title="errorMessage"
+        type="error"
+        show-icon
+        :closable="false"
+      />
 
-      <div v-else class="versions-list" v-loading="loading">
+      <el-empty
+        v-if="!loading && items.length === 0"
+        data-testid="sheets-version-empty"
+        :description="t('sheets.versions.empty')"
+        :image-size="72"
+      />
+
+      <div v-else data-testid="sheets-version-list" class="versions-list" v-loading="loading">
         <article v-for="item in items" :key="item.versionId" class="version-item">
           <div class="version-item__header">
             <div>
@@ -66,9 +84,10 @@ function isCurrentVersion(item: SheetsWorkbookVersion): boolean {
 
           <div class="version-item__actions">
             <el-button
+              :data-testid="`sheets-version-restore-${item.versionId}`"
               type="warning"
               plain
-              :disabled="!canRestore || isCurrentVersion(item)"
+              :disabled="restoreDisabled(item)"
               :loading="mutationId === item.versionId"
               @click="emit('restore', item.versionId)"
             >

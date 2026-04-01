@@ -7,6 +7,7 @@ import { formatSheetsTime } from '~/utils/sheets'
 const props = defineProps<{
   items: SheetsIncomingShare[]
   loading: boolean
+  errorMessage: string
   mutationId: string
 }>()
 
@@ -54,31 +55,46 @@ function getStatusLabel(status: SheetsShareResponseStatus): string {
       <div class="incoming-hero__metrics">
         <article class="incoming-metric">
           <span>{{ t('sheets.incoming.metrics.total') }}</span>
-          <strong>{{ totalCount }}</strong>
+          <strong data-testid="sheets-incoming-total">{{ totalCount }}</strong>
         </article>
         <article class="incoming-metric">
           <span>{{ t('sheets.incoming.metrics.pending') }}</span>
-          <strong>{{ pendingCount }}</strong>
+          <strong data-testid="sheets-incoming-pending">{{ pendingCount }}</strong>
         </article>
         <article class="incoming-metric">
           <span>{{ t('sheets.incoming.metrics.accepted') }}</span>
-          <strong>{{ acceptedCount }}</strong>
+          <strong data-testid="sheets-incoming-accepted">{{ acceptedCount }}</strong>
         </article>
       </div>
     </div>
 
-    <section class="incoming-list mm-card" v-loading="loading">
+    <section data-testid="sheets-incoming-list" class="incoming-list mm-card" v-loading="loading">
       <header class="incoming-list__header">
         <div>
           <h3>{{ t('sheets.filters.incoming') }}</h3>
           <p>{{ t('sheets.incoming.description') }}</p>
         </div>
-        <el-button plain @click="emit('refresh')">{{ t('common.actions.refresh') }}</el-button>
+        <el-button data-testid="sheets-incoming-refresh" plain @click="emit('refresh')">
+          {{ t('common.actions.refresh') }}
+        </el-button>
       </header>
 
-      <el-empty v-if="!loading && items.length === 0" :description="t('sheets.incoming.empty')" :image-size="72" />
+      <el-alert
+        v-if="errorMessage"
+        :title="errorMessage"
+        type="error"
+        show-icon
+        :closable="false"
+      />
 
-      <div v-else class="incoming-list__body">
+      <el-empty
+        v-if="!loading && items.length === 0"
+        data-testid="sheets-incoming-empty"
+        :description="t('sheets.incoming.empty')"
+        :image-size="72"
+      />
+
+      <div v-else data-testid="sheets-incoming-body" class="incoming-list__body">
         <article v-for="item in items" :key="item.shareId" class="incoming-item">
           <div class="incoming-item__meta">
             <div class="incoming-item__title">
@@ -100,6 +116,7 @@ function getStatusLabel(status: SheetsShareResponseStatus): string {
           <div class="incoming-item__actions">
             <template v-if="item.responseStatus === 'NEEDS_ACTION'">
               <el-button
+                :data-testid="`sheets-incoming-accept-${item.shareId}`"
                 type="primary"
                 :loading="mutationId === item.shareId"
                 @click="emit('respond', item.shareId, 'ACCEPT')"
@@ -107,6 +124,7 @@ function getStatusLabel(status: SheetsShareResponseStatus): string {
                 {{ t('sheets.incoming.accept') }}
               </el-button>
               <el-button
+                :data-testid="`sheets-incoming-decline-${item.shareId}`"
                 plain
                 :loading="mutationId === item.shareId"
                 @click="emit('respond', item.shareId, 'DECLINE')"
@@ -115,6 +133,7 @@ function getStatusLabel(status: SheetsShareResponseStatus): string {
               </el-button>
             </template>
             <el-button
+              :data-testid="`sheets-incoming-open-${item.shareId}`"
               v-else-if="item.responseStatus === 'ACCEPTED'"
               type="primary"
               plain

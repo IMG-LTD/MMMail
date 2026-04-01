@@ -43,32 +43,43 @@ const readinessNotes = computed(() => {
 </script>
 
 <template>
-  <aside class="knowledge-rail">
-    <article class="rail-card">
+  <aside
+    class="knowledge-rail"
+    data-testid="sheets-insight-rail"
+    :data-state="workbook ? 'workbook' : 'empty'"
+  >
+    <article class="rail-card" data-testid="sheets-insight-scope">
       <p class="rail-eyebrow">{{ t('sheets.insight.scopeEyebrow') }}</p>
       <h3>{{ t('sheets.insight.scopeTitle') }}</h3>
       <ul>
-        <li>{{ t('sheets.insight.scopeItems.tabs') }}</li>
-        <li>{{ t('sheets.insight.scopeItems.formulas') }}</li>
-        <li>{{ t('sheets.insight.scopeItems.import', { value: summarizeSupportedFormats(supportedImportFormats) }) }}</li>
-        <li>{{ t('sheets.insight.scopeItems.export', { value: summarizeSupportedFormats(supportedExportFormats) }) }}</li>
-        <li>{{ t('sheets.insight.scopeItems.readiness') }}</li>
+        <li data-testid="sheets-insight-scope-tabs">{{ t('sheets.insight.scopeItems.tabs') }}</li>
+        <li data-testid="sheets-insight-scope-formulas">{{ t('sheets.insight.scopeItems.formulas') }}</li>
+        <li data-testid="sheets-insight-scope-import">{{ t('sheets.insight.scopeItems.import', { value: summarizeSupportedFormats(supportedImportFormats) }) }}</li>
+        <li data-testid="sheets-insight-scope-export">{{ t('sheets.insight.scopeItems.export', { value: summarizeSupportedFormats(supportedExportFormats) }) }}</li>
+        <li data-testid="sheets-insight-scope-readiness">{{ t('sheets.insight.scopeItems.readiness') }}</li>
       </ul>
     </article>
 
-    <article class="rail-card accent">
+    <article class="rail-card accent" data-testid="sheets-insight-health">
       <p class="rail-eyebrow">{{ t('sheets.insight.healthEyebrow') }}</p>
-      <div class="chips">
-        <span v-for="note in readinessNotes" :key="note" class="chip">{{ note }}</span>
+      <div class="chips" data-testid="sheets-insight-health-chips">
+        <span
+          v-for="(note, index) in readinessNotes"
+          :key="note"
+          class="chip"
+          :data-testid="`sheets-insight-health-chip-${index}`"
+        >
+          {{ note }}
+        </span>
       </div>
     </article>
 
-    <article class="rail-card">
+    <article class="rail-card" data-testid="sheets-insight-limits">
       <p class="rail-eyebrow">{{ t('sheets.insight.limitsEyebrow') }}</p>
       <ul>
-        <li>{{ t('sheets.insight.limitItems.tabs') }}</li>
-        <li>{{ t('sheets.insight.limitItems.realtime') }}</li>
-        <li>{{ t('sheets.insight.limitItems.charts') }}</li>
+        <li data-testid="sheets-insight-limit-tabs">{{ t('sheets.insight.limitItems.tabs') }}</li>
+        <li data-testid="sheets-insight-limit-realtime">{{ t('sheets.insight.limitItems.realtime') }}</li>
+        <li data-testid="sheets-insight-limit-charts">{{ t('sheets.insight.limitItems.charts') }}</li>
       </ul>
     </article>
   </aside>

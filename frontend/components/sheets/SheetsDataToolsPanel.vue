@@ -36,6 +36,16 @@ const selectedCellLabel = computed(() => {
   return `${selectedColLabel.value}${selectedRowLabel.value}`
 })
 const actionsDisabled = computed(() => props.busy || props.loading || !props.activeCell || !props.canManage)
+const clearFreezeDisabled = computed(() => props.busy || props.loading || !props.canManage)
+const footerHint = computed(() => {
+  if (props.dirtyCount > 0) {
+    return t('sheets.dataTools.dirtyHint', { count: props.dirtyCount })
+  }
+  if (!props.canManage) {
+    return t('sheets.messages.ownerOnlyStructureAction')
+  }
+  return ''
+})
 
 function onSearchChange(value: string | number): void {
   emit('update:search-query', String(value ?? ''))
@@ -60,6 +70,7 @@ function onSort(direction: SheetsSortDirection): void {
       <label class="data-tools__label">{{ t('sheets.dataTools.searchLabel') }}</label>
       <div class="data-tools__search-row">
         <el-input
+          data-testid="sheets-search-input"
           :model-value="searchQuery"
           clearable
           :placeholder="t('sheets.dataTools.searchPlaceholder')"
@@ -74,14 +85,26 @@ function onSort(direction: SheetsSortDirection): void {
       <article class="data-tools__block">
         <div class="data-tools__block-head">
           <strong>{{ t('sheets.dataTools.sortLabel') }}</strong>
-          <el-switch v-model="includeHeader" :disabled="busy || loading" />
+          <el-switch
+            v-model="includeHeader"
+            data-testid="sheets-sort-include-header"
+            :disabled="busy || loading"
+          />
         </div>
         <p class="data-tools__helper">{{ t('sheets.dataTools.includeHeader') }}</p>
         <div class="data-tools__actions">
-          <el-button :disabled="actionsDisabled" @click="onSort('ASC')">
+          <el-button
+            data-testid="sheets-sort-asc"
+            :disabled="actionsDisabled"
+            @click="onSort('ASC')"
+          >
             {{ t('sheets.dataTools.sortAsc', { value: selectedColLabel }) }}
           </el-button>
-          <el-button :disabled="actionsDisabled" @click="onSort('DESC')">
+          <el-button
+            data-testid="sheets-sort-desc"
+            :disabled="actionsDisabled"
+            @click="onSort('DESC')"
+          >
             {{ t('sheets.dataTools.sortDesc', { value: selectedColLabel }) }}
           </el-button>
         </div>
@@ -90,16 +113,31 @@ function onSort(direction: SheetsSortDirection): void {
       <article class="data-tools__block">
         <div class="data-tools__block-head">
           <strong>{{ t('sheets.dataTools.freezeLabel') }}</strong>
-          <span class="data-tools__subtle">{{ t('sheets.dataTools.selectionLabel', { value: selectedCellLabel }) }}</span>
+          <span data-testid="sheets-data-tools-selection" class="data-tools__subtle">
+            {{ t('sheets.dataTools.selectionLabel', { value: selectedCellLabel }) }}
+          </span>
         </div>
         <div class="data-tools__actions data-tools__actions--stacked">
-          <el-button :disabled="actionsDisabled" @click="emit('freezeRows')">
+          <el-button
+            data-testid="sheets-freeze-rows"
+            :disabled="actionsDisabled"
+            @click="emit('freezeRows')"
+          >
             {{ t('sheets.dataTools.freezeRowsTo', { value: selectedRowLabel }) }}
           </el-button>
-          <el-button :disabled="actionsDisabled" @click="emit('freezeCols')">
+          <el-button
+            data-testid="sheets-freeze-cols"
+            :disabled="actionsDisabled"
+            @click="emit('freezeCols')"
+          >
             {{ t('sheets.dataTools.freezeColsTo', { value: selectedColLabel }) }}
           </el-button>
-          <el-button text :disabled="busy || loading" @click="emit('clearFreeze')">
+          <el-button
+            data-testid="sheets-clear-freeze"
+            text
+            :disabled="clearFreezeDisabled"
+            @click="emit('clearFreeze')"
+          >
             {{ t('sheets.dataTools.clearFreeze') }}
           </el-button>
         </div>
@@ -107,9 +145,12 @@ function onSort(direction: SheetsSortDirection): void {
     </div>
 
     <footer class="data-tools__footer">
-      <span class="data-tools__chip">{{ t('sheets.dataTools.freezeStatus', { rows: frozenRowCount, cols: frozenColCount }) }}</span>
-      <span v-if="dirtyCount > 0" class="data-tools__hint">{{ t('sheets.dataTools.dirtyHint', { count: dirtyCount }) }}</span>
-      <span v-else-if="!canManage" class="data-tools__hint">{{ t('sheets.messages.ownerOnlyStructureAction') }}</span>
+      <span data-testid="sheets-data-tools-freeze-status" class="data-tools__chip">
+        {{ t('sheets.dataTools.freezeStatus', { rows: frozenRowCount, cols: frozenColCount }) }}
+      </span>
+      <span v-if="footerHint" data-testid="sheets-data-tools-hint" class="data-tools__hint">
+        {{ footerHint }}
+      </span>
     </footer>
   </section>
 </template>

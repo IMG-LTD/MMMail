@@ -63,6 +63,9 @@ const {
   sharesLoading,
   incomingLoading,
   versionsLoading,
+  sharesErrorMessage,
+  incomingErrorMessage,
+  versionsErrorMessage,
   shareSubmitting,
   shareMutationId,
   incomingMutationId,
@@ -138,7 +141,10 @@ async function openCollaborationEvent(item: SuiteCollaborationEvent): Promise<vo
 
 async function onCreateTemplate(template: SheetsTemplatePreset): Promise<void> {
   try {
-    await createWorkbookFromTemplate(template, t(template.presetTitleKey))
+    const created = await createWorkbookFromTemplate(template, t(template.presetTitleKey))
+    if (!created) {
+      return
+    }
     ElMessage.success(t('sheets.messages.templateCreated'))
   } catch (error) {
     ElMessage.error((error as Error).message || t('sheets.messages.templateCreateFailed'))
@@ -167,6 +173,7 @@ async function onOpenIncomingWorkbook(item: SheetsIncomingShare): Promise<void> 
 
     <el-alert
       v-if="conflictMessage"
+      data-testid="sheets-conflict-alert"
       class="sheets-alert"
       type="warning"
       :closable="false"
@@ -180,14 +187,21 @@ async function onOpenIncomingWorkbook(item: SheetsIncomingShare): Promise<void> 
         <h2>{{ t('sheets.share.title') }}</h2>
       </div>
       <div class="workspace-toolbar__controls">
-        <el-segmented v-model="workspaceView" :options="workspaceViewOptions" />
+        <el-segmented
+          v-model="workspaceView"
+          data-testid="sheets-workspace-view"
+          :options="workspaceViewOptions"
+        />
         <el-segmented
           v-if="workspaceView === 'WORKBOOKS'"
           v-model="scopeFilter"
+          data-testid="sheets-scope-filter"
           :options="scopeFilterOptions"
         />
         <el-badge :value="pendingIncomingCount" :hidden="pendingIncomingCount === 0">
-          <el-button plain @click="refreshIncomingShares">{{ t('sheets.meta.refreshIncoming') }}</el-button>
+          <el-button data-testid="sheets-refresh-incoming" plain @click="refreshIncomingShares">
+            {{ t('sheets.meta.refreshIncoming') }}
+          </el-button>
         </el-badge>
       </div>
     </section>
@@ -209,6 +223,7 @@ async function onOpenIncomingWorkbook(item: SheetsIncomingShare): Promise<void> 
         v-else
         :items="incomingShares"
         :loading="incomingLoading"
+        :error-message="incomingErrorMessage"
         :mutation-id="incomingMutationId"
         @refresh="refreshIncomingShares"
         @respond="respondIncomingShare"
@@ -314,6 +329,7 @@ async function onOpenIncomingWorkbook(item: SheetsIncomingShare): Promise<void> 
               :workbook="activeWorkbook"
               :shares="shares"
               :loading="sharesLoading"
+              :error-message="sharesErrorMessage"
               :submitting="shareSubmitting"
               :mutation-id="shareMutationId"
               :can-manage="canManageShares"
@@ -363,6 +379,7 @@ async function onOpenIncomingWorkbook(item: SheetsIncomingShare): Promise<void> 
       :workbook="activeWorkbook"
       :items="versions"
       :loading="versionsLoading"
+      :error-message="versionsErrorMessage"
       :mutation-id="versionMutationId"
       :can-restore="canRestoreVersions"
       @restore="restoreVersion"

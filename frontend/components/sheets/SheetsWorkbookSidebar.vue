@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { computed, ref } from 'vue'
 import { useI18n } from '~/composables/useI18n'
 import type { SheetsWorkbookSummary } from '~/types/sheets'
 import { formatSheetsTime, summarizeGridFootprint } from '~/utils/sheets'
@@ -18,6 +19,32 @@ const emit = defineEmits<{
 }>()
 
 const { t } = useI18n()
+const searchQuery = ref('')
+
+function normalizeSearchValue(value: string): string {
+  return value.trim().toLowerCase()
+}
+
+function matchesWorkbookSearch(workbook: SheetsWorkbookSummary, searchValue: string): boolean {
+  if (!searchValue) {
+    return true
+  }
+  const haystack = [
+    workbook.title,
+    workbook.ownerDisplayName,
+    workbook.ownerEmail
+  ].join(' ').toLowerCase()
+  return haystack.includes(searchValue)
+}
+
+const normalizedSearchQuery = computed(() => normalizeSearchValue(searchQuery.value))
+const filteredWorkbooks = computed(() => {
+  return props.workbooks.filter((workbook) => matchesWorkbookSearch(workbook, normalizedSearchQuery.value))
+})
+const hasSearchResults = computed(() => filteredWorkbooks.value.length > 0)
+const showFilterEmptyState = computed(() => {
+  return props.workbooks.length > 0 && normalizedSearchQuery.value.length > 0 && !hasSearchResults.value
+})
 </script>
 
 <template>
@@ -27,20 +54,43 @@ const { t } = useI18n()
         <p>{{ t('sheets.sidebar.eyebrow') }}</p>
         <h2>{{ t('sheets.sidebar.title') }}</h2>
       </div>
-      <el-button type="primary" plain size="small" @click="emit('create')">{{ t('common.actions.create') }}</el-button>
+      <el-button
+        data-testid="sheets-sidebar-create"
+        type="primary"
+        plain
+        size="small"
+        @click="emit('create')"
+      >
+        {{ t('common.actions.create') }}
+      </el-button>
     </header>
 
-    <el-skeleton v-if="loading" :rows="5" animated />
+    <div v-if="workbooks.length" class="sidebar-search">
+      <el-input
+        v-model="searchQuery"
+        data-testid="sheets-sidebar-search"
+        :placeholder="t('sheets.sidebar.searchPlaceholder')"
+        clearable
+      />
+    </div>
 
-    <div v-else-if="!workbooks.length" class="sidebar-empty">
+    <el-skeleton v-if="loading" data-testid="sheets-sidebar-loading" :rows="5" animated />
+
+    <div v-else-if="!workbooks.length" data-testid="sheets-sidebar-empty" class="sidebar-empty">
       <strong>{{ t('sheets.sidebar.emptyTitle') }}</strong>
       <p>{{ t('sheets.sidebar.emptyDescription') }}</p>
     </div>
 
+    <div v-else-if="showFilterEmptyState" data-testid="sheets-sidebar-filter-empty" class="sidebar-empty">
+      <strong>{{ t('sheets.sidebar.filteredEmptyTitle', { keyword: searchQuery.trim() }) }}</strong>
+      <p>{{ t('sheets.sidebar.filteredEmptyDescription', { keyword: searchQuery.trim() }) }}</p>
+    </div>
+
     <div v-else class="sidebar-list">
       <div
-        v-for="workbook in workbooks"
+        v-for="workbook in filteredWorkbooks"
         :key="workbook.id"
+        :data-testid="`sheets-workbook-${workbook.id}`"
         class="sidebar-item"
         :class="{ 'sidebar-item--active': workbook.id === activeWorkbookId }"
         role="button"
@@ -77,8 +127,25 @@ const { t } = useI18n()
         <div class="sidebar-item__meta">
           <span>v{{ workbook.currentVersion }}</span>
           <div v-if="workbook.permission === 'OWNER'" class="sidebar-item__actions">
-            <el-button link size="small" :disabled="busyWorkbookId === workbook.id" @click.stop="emit('rename', workbook)">{{ t('common.actions.rename') }}</el-button>
-            <el-button link type="danger" size="small" :disabled="busyWorkbookId === workbook.id" @click.stop="emit('delete', workbook)">{{ t('common.actions.delete') }}</el-button>
+            <el-button
+              :data-testid="`sheets-workbook-rename-${workbook.id}`"
+              link
+              size="small"
+              :disabled="busyWorkbookId === workbook.id"
+              @click.stop="emit('rename', workbook)"
+            >
+              {{ t('common.actions.rename') }}
+            </el-button>
+            <el-button
+              :data-testid="`sheets-workbook-delete-${workbook.id}`"
+              link
+              type="danger"
+              size="small"
+              :disabled="busyWorkbookId === workbook.id"
+              @click.stop="emit('delete', workbook)"
+            >
+              {{ t('common.actions.delete') }}
+            </el-button>
           </div>
         </div>
       </div>
@@ -113,6 +180,10 @@ const { t } = useI18n()
 .sidebar-header h2 {
   margin: 6px 0 0;
   font-size: 24px;
+}
+
+.sidebar-search {
+  display: flex;
 }
 
 .sidebar-empty {

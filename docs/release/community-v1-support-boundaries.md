@@ -1,11 +1,11 @@
 # Community Edition v1.0 Support Boundaries
 
-**版本**: `v1.0-rc1-draft`  
+**版本**: `v1.0-release`
 **日期**: `2026-03-15`  
 **作者**: `Codex`
 
 ## 当前分支状态
-- `release/v1.0`：`RC1_READY`
+- `release/v1.0`：`v1.0.0 RELEASED`
 - `dev/community-v1`：`v1.1` 集成中
 - 含义：`v1.0` 发布线继续承接正式发版与 backport；当前开发主线已转入 `v1.1`
 
@@ -40,6 +40,7 @@
 ## 前端入口
 - `/suite`
   - `Billing center`：可见 Community 范围内的报价、付款方式占位与账单状态
+  - `Billing center` 属于 `BETA` 且仅作为 `Suite` 子入口显示，不属于默认导航独立模块
   - `Release boundary map`：统一展示 `GA / Beta / Preview` 模块、Hosted-only 承诺与自托管责任
 - `/labs`
   - 仅暴露 `Preview` 模块，不承载 `Community` 支持承诺

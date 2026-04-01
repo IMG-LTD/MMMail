@@ -14,6 +14,7 @@ const { t } = useI18n()
 
 const sections = computed(() => buildCommunityBoundarySections())
 const defaultNavCount = computed(() => countCommunityModulesBySurface('DEFAULT_NAV'))
+const suiteEntryCount = computed(() => countCommunityModulesBySurface('SUITE'))
 const labsCount = computed(() => countCommunityModulesBySurface('LABS'))
 const gaCount = computed(() => countCommunityModulesByMaturity('GA'))
 const betaCount = computed(() => countCommunityModulesByMaturity('BETA'))
@@ -41,7 +42,11 @@ const previewCount = computed(() => countCommunityModulesByMaturity('PREVIEW'))
           <div>
             <h3 class="card-title">{{ t('community.boundary.sections.community') }}</h3>
             <p class="mm-muted">
-              {{ t('community.boundary.communitySummary', { defaultNav: defaultNavCount, labs: labsCount }) }}
+              {{ t('community.boundary.communitySummary', {
+                defaultNav: defaultNavCount,
+                suite: suiteEntryCount,
+                labs: labsCount
+              }) }}
             </p>
           </div>
         </div>

@@ -37,6 +37,10 @@ import {
   resolveDocsScopeTagType,
   shouldConfirmDocsUnsavedChange
 } from '~/utils/docs-presentation'
+import {
+  createDocsRouteLeaveGuard,
+  registerDocsBeforeUnloadGuard
+} from '~/utils/docs-leave-guard'
 import { downloadDocsExport, parseDocsImportFile } from '~/utils/docs-transfer'
 import { extractSelectedExcerpt } from '~/utils/docs-selection'
 import { needsDocsDetailRefresh } from '~/utils/docs-suggestions'
@@ -172,6 +176,7 @@ const sharedBadge = computed(() => {
 })
 const editorTitle = computed(() => editor.title || t('docs.common.untitled'))
 const dirtyStateLabel = computed(() => hasUnsavedChanges.value ? t('docs.dirty.unsaved') : t('docs.dirty.saved'))
+const removeBeforeUnloadGuard = registerDocsBeforeUnloadGuard({ hasUnsavedChanges })
 const reviewModeLabel = computed(() => {
   return reviewMode.value === 'EDIT' ? t('docs.review.edit') : t('docs.review.suggest')
 })
@@ -972,14 +977,6 @@ async function onSelectNote(noteId: string): Promise<void> {
   await recoverUnavailableNote(noteId)
 }
 
-function onWindowBeforeUnload(event: BeforeUnloadEvent): void {
-  if (!hasUnsavedChanges.value) {
-    return
-  }
-  event.preventDefault()
-  event.returnValue = ''
-}
-
 function resolveRouteState(): DocsRouteState {
   return extractDocsRouteState(route.query)
 }
@@ -1078,23 +1075,13 @@ watch(() => [route.query.noteId, route.query.keyword, route.query.scope], async 
 })
 
 onMounted(() => {
-  if (typeof window !== 'undefined') {
-    window.addEventListener('beforeunload', onWindowBeforeUnload)
-  }
   void loadNotes(false)
 })
 
-onBeforeRouteLeave(async () => {
-  if (await confirmDiscardUnsavedChanges()) {
-    return true
-  }
-  return false
-})
+onBeforeRouteLeave(createDocsRouteLeaveGuard(confirmDiscardUnsavedChanges))
 
 onBeforeUnmount(() => {
-  if (typeof window !== 'undefined') {
-    window.removeEventListener('beforeunload', onWindowBeforeUnload)
-  }
+  removeBeforeUnloadGuard()
   stopPresenceTicker()
   disconnectSync()
 })

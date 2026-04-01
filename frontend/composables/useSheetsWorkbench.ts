@@ -22,6 +22,7 @@ export function useSheetsWorkbench() {
   const collaborationEvents = ref<SuiteCollaborationEvent[]>([])
   const collaborationError = ref('')
   const creatingTemplateCode = ref<string | null>(null)
+  let collaborationRequestId = 0
   const dataTools = useSheetsDataTools({
     workbooks: workspace.workbooks,
     activeWorkbook: workspace.activeWorkbook,
@@ -37,7 +38,8 @@ export function useSheetsWorkbench() {
     activeWorkbook: workspace.activeWorkbook,
     activeWorkbookId: workspace.activeWorkbookId,
     selectWorkbook: workspace.selectWorkbook,
-    refreshCollaboration
+    refreshCollaboration,
+    confirmDiscardChangesIfNeeded: workspace.confirmDiscardChangesIfNeeded
   })
 
   const templatePresets = computed<SheetsTemplatePreset[]>(() => SHEETS_TEMPLATE_PRESETS)
@@ -47,67 +49,83 @@ export function useSheetsWorkbench() {
   const collaborationEventCount = computed(() => workbookEvents.value.length)
 
   async function refreshCollaboration(): Promise<void> {
+    collaborationRequestId += 1
+    const requestId = collaborationRequestId
     collaborationLoading.value = true
     collaborationError.value = ''
     try {
       const center = await suiteApi.getCollaborationCenter(48)
+      if (requestId !== collaborationRequestId) {
+        return
+      }
       collaborationEvents.value = center.items
     } catch (error) {
+      if (requestId !== collaborationRequestId) {
+        return
+      }
       collaborationError.value = (error as Error).message || t('sheets.messages.loadCollaborationFailed')
     } finally {
-      collaborationLoading.value = false
+      if (requestId === collaborationRequestId) {
+        collaborationLoading.value = false
+      }
     }
   }
 
-  async function createWorkbookFromTemplate(template: SheetsTemplatePreset, title: string): Promise<void> {
+  async function refreshCollaborationOnSuccess(action: () => Promise<boolean>): Promise<void> {
+    if (!await action()) {
+      return
+    }
+    await refreshCollaboration()
+  }
+
+  async function createWorkbookFromTemplate(template: SheetsTemplatePreset, title: string): Promise<boolean> {
+    if (!await workspace.confirmDiscardChangesIfNeeded()) {
+      return false
+    }
     creatingTemplateCode.value = template.code
     try {
       const detail = await sheetsApi.createWorkbook({ title })
-      await workspace.selectWorkbook(detail.id, true)
+      const selected = await workspace.selectWorkbook(detail.id, true, { skipDiscardConfirm: true })
+      if (!selected) {
+        return false
+      }
       await refreshCollaboration()
+      return true
     } finally {
       creatingTemplateCode.value = null
     }
   }
 
   async function onCreateWorkbook(): Promise<void> {
-    await workspace.onCreateWorkbook()
-    await refreshCollaboration()
+    await refreshCollaborationOnSuccess(() => workspace.onCreateWorkbook())
   }
 
   async function onImportWorkbook(payload: { file: File; title: string }): Promise<void> {
-    await workspace.onImportWorkbook(payload)
-    await refreshCollaboration()
+    await refreshCollaborationOnSuccess(() => workspace.onImportWorkbook(payload))
   }
 
   async function onExportWorkbook(format: Parameters<typeof workspace.onExportWorkbook>[0]): Promise<void> {
     await workspace.onExportWorkbook(format)
-    await refreshCollaboration()
   }
 
   async function onRenameWorkbook(workbook: Parameters<typeof workspace.onRenameWorkbook>[0]): Promise<void> {
-    await workspace.onRenameWorkbook(workbook)
-    await refreshCollaboration()
+    await refreshCollaborationOnSuccess(() => workspace.onRenameWorkbook(workbook))
   }
 
   async function onDeleteWorkbook(workbook: Parameters<typeof workspace.onDeleteWorkbook>[0]): Promise<void> {
-    await workspace.onDeleteWorkbook(workbook)
-    await refreshCollaboration()
+    await refreshCollaborationOnSuccess(() => workspace.onDeleteWorkbook(workbook))
   }
 
   async function onCreateSheet(): Promise<void> {
-    await workspace.onCreateSheet()
-    await refreshCollaboration()
+    await refreshCollaborationOnSuccess(() => workspace.onCreateSheet())
   }
 
   async function onRenameSheet(sheet: Parameters<typeof workspace.onRenameSheet>[0]): Promise<void> {
-    await workspace.onRenameSheet(sheet)
-    await refreshCollaboration()
+    await refreshCollaborationOnSuccess(() => workspace.onRenameSheet(sheet))
   }
 
   async function onDeleteSheet(sheet: Parameters<typeof workspace.onDeleteSheet>[0]): Promise<void> {
-    await workspace.onDeleteSheet(sheet)
-    await refreshCollaboration()
+    await refreshCollaborationOnSuccess(() => workspace.onDeleteSheet(sheet))
   }
 
   async function onSelectSheet(sheetId: string): Promise<void> {
@@ -118,8 +136,7 @@ export function useSheetsWorkbench() {
   }
 
   async function onSaveWorkbook(): Promise<void> {
-    await workspace.onSaveWorkbook()
-    await refreshCollaboration()
+    await refreshCollaborationOnSuccess(() => workspace.onSaveWorkbook())
   }
 
   async function onSortSheet(payload: Parameters<typeof dataTools.onSortSheet>[0]): Promise<void> {
@@ -147,9 +164,16 @@ export function useSheetsWorkbench() {
   }
 
   async function onRefreshWorkspace(): Promise<void> {
-    await workspace.onRefreshWorkspace()
-    await sharingVersion.refreshIncomingShares()
-    await sharingVersion.refreshShares()
+    const refreshed = await workspace.onRefreshWorkspace()
+    if (!refreshed) {
+      return
+    }
+    if (!await sharingVersion.refreshIncomingShares()) {
+      return
+    }
+    if (!await sharingVersion.refreshShares()) {
+      return
+    }
     await refreshCollaboration()
   }
 

@@ -3,13 +3,23 @@ import { resolve } from 'node:path'
 import { collectI18nPageCoverageReport } from '../utils/i18n-coverage'
 
 const EXPECTED_I18N_ROUTES = [
+  '/',
+  '/archive',
   '/calendar',
   '/contacts',
   '/docs',
+  '/drafts',
   '/drive',
+  '/inbox',
+  '/outbox',
   '/organizations',
+  '/scheduled',
+  '/sent',
   '/settings',
-  '/sheets'
+  '/sheets',
+  '/snoozed',
+  '/spam',
+  '/trash'
 ] as const
 
 describe('i18n page coverage', () => {
@@ -17,9 +27,11 @@ describe('i18n page coverage', () => {
     const report = await collectI18nPageCoverageReport(resolve(process.cwd(), 'pages'))
 
     expect(report.totalPages).toBeGreaterThan(30)
-    expect(report.pagesUsingI18n).toBeGreaterThan(20)
-    expect(report.localizedPages).toBeGreaterThan(45)
-    expect(report.coveragePercent).toBeGreaterThan(90)
+    expect(report.pagesUsingI18n).toBe(report.totalPages)
+    expect(report.localizedPages).toBe(report.totalPages)
+    expect(report.coveragePercent).toBe(100)
+    expect(report.pagesWithoutI18n).toEqual([])
+    expect(report.pagesWithoutStaticKeys).toEqual([])
 
     for (const route of EXPECTED_I18N_ROUTES) {
       const page = report.pageReports.find((item) => item.route === route)
@@ -33,6 +45,7 @@ describe('i18n page coverage', () => {
     expect(report.pageReports.find((item) => item.route === '/calendar')?.keyPrefixes).toContain('calendar')
     expect(report.pageReports.find((item) => item.route === '/inbox')?.hasTranslationBinding).toBe(true)
     expect(report.pageReports.find((item) => item.route === '/archive')?.keyPrefixes).toContain('nav')
+    expect(report.pageReports.find((item) => item.route === '/')?.keyPrefixes).toContain('page')
     expect(report.pageReports.find((item) => item.route === '/conversations')?.keyPrefixes).toContain('mailWorkspace')
     expect(report.pageReports.find((item) => item.route === '/contacts')?.keyPrefixes).toContain('contacts')
     expect(report.pageReports.find((item) => item.route === '/mail/[id]')?.hasTranslationBinding).toBe(true)

@@ -10,16 +10,18 @@
 
 ## 发布基线
 - 候选 tag：`v1.0.0-rc1`
-- 当前维护分支：`dev/community-v1`
+- 候选提交：`6cd3bbc`
+- 正式发布分支：`release/v1.0`
+- `v1.1` 集成分支：`dev/community-v1`
 - 当前策略：`docs/release/community-v1-ga-stabilization.md`
 
 ## 发布前必须满足
-- [ ] `dev/community-v1` 最新 head 的 `MMMail CI` 为绿色
+- [ ] `release/v1.0` 最新待发布 head 的 `MMMail CI` 为绿色
 - [ ] 不存在打开状态的 `release-blocking` issue
 - [ ] `community-v1-final-signoff.md` 仍有效
 - [ ] `community-v1-known-issues.md` 已按最新状态复核
 - [ ] `community-v1-support-boundaries.md` 已按最新状态复核
-- [ ] `community-v1-rc1-notes.md` 已整理为正式 `v1.0.0` release notes
+- [ ] `docs/release/community-v1-v1.0.0-release-notes.md` 已按 `release/v1.0` 待发布 head 复核完成
 - [ ] 自托管反馈已完成分流：
   - [ ] `release-blocking`
   - [ ] `v1.0.0` 文档勘误
@@ -27,9 +29,9 @@
   - [ ] `post-v1.1`
 
 ## 正式发布动作
-1. 确认最新 head 对应 workflow 为绿色。
-2. 若有必要，更新正式 release notes。
-3. 从最新 head 创建 `v1.0.0` tag。
+1. 确认 `release/v1.0` 待发布 head 对应 workflow 为绿色。
+2. 若 `release/v1.0` 待发布提交已偏离 `v1.0.0-rc1`，先更新正式 release notes、known issues 与 signoff 引用。
+3. 从 `release/v1.0` 的最新已验证 head 创建 `v1.0.0` tag。
 4. 发布 GitHub Release。
 5. 在 `README` 与发布文档中将当前阶段切换到 `v1.0.0`。
 

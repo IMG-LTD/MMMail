@@ -8,6 +8,7 @@ const props = defineProps<{
   workbook: SheetsWorkbookDetail | null
   shares: SheetsWorkbookShare[]
   loading: boolean
+  errorMessage: string
   submitting: boolean
   mutationId: string
   canManage: boolean
@@ -29,6 +30,14 @@ const permissionOptions = computed(() => [
   { label: t('sheets.share.permission.view'), value: 'VIEW' },
   { label: t('sheets.share.permission.edit'), value: 'EDIT' }
 ])
+const showShareCreate = computed(() => props.canManage && Boolean(props.workbook))
+const showShareReadonly = computed(() => !props.canManage && Boolean(props.workbook))
+const showShareEmpty = computed(() => !props.loading && props.canManage && Boolean(props.workbook) && props.shares.length === 0)
+const showShareList = computed(() => props.loading || props.shares.length > 0)
+const readonlyOwnerLabel = computed(() => props.workbook?.ownerDisplayName || props.workbook?.ownerEmail || '')
+const readonlyPermissionLabel = computed(() => {
+  return props.workbook?.canEdit ? t('sheets.share.permission.edit') : t('sheets.share.permission.view')
+})
 
 function getResponseTagType(status: SheetsShareResponseStatus): 'warning' | 'success' | 'info' {
   if (status === 'NEEDS_ACTION') {
@@ -75,7 +84,15 @@ function onInvitePermissionChange(value: string): void {
       {{ canManage ? t('sheets.share.descriptionOwner') : t('sheets.share.descriptionShared') }}
     </p>
 
-    <div v-if="canManage" class="share-create">
+    <el-alert
+      v-if="errorMessage"
+      :title="errorMessage"
+      type="error"
+      show-icon
+      :closable="false"
+    />
+
+    <div v-if="showShareCreate" data-testid="sheets-share-create" class="share-create">
       <el-input
         :model-value="inviteEmail"
         :placeholder="t('sheets.share.invitePlaceholder')"
@@ -99,18 +116,19 @@ function onInvitePermissionChange(value: string): void {
       </el-button>
     </div>
 
-    <div v-else-if="workbook" class="share-readonly">
-      <span>{{ t('sheets.share.readonlyOwner', { value: workbook.ownerDisplayName || workbook.ownerEmail }) }}</span>
-      <el-tag size="small" effect="plain">{{ workbook.canEdit ? t('sheets.share.permission.edit') : t('sheets.share.permission.view') }}</el-tag>
+    <div v-else-if="showShareReadonly" data-testid="sheets-share-readonly" class="share-readonly">
+      <span>{{ t('sheets.share.readonlyOwner', { value: readonlyOwnerLabel }) }}</span>
+      <el-tag size="small" effect="plain">{{ readonlyPermissionLabel }}</el-tag>
     </div>
 
     <el-empty
-      v-if="!loading && canManage && shares.length === 0"
+      v-if="showShareEmpty"
+      data-testid="sheets-share-empty"
       :description="t('sheets.share.empty')"
       :image-size="72"
     />
 
-    <div v-else class="share-list" v-loading="loading">
+    <div v-else-if="showShareList" data-testid="sheets-share-list" class="share-list" v-loading="loading">
       <article v-for="share in shares" :key="share.shareId" class="share-item">
         <div class="share-item__meta">
           <div class="share-item__title">
@@ -128,8 +146,9 @@ function onInvitePermissionChange(value: string): void {
           <small>{{ t('sheets.share.updatedAt', { value: formatSheetsTime(share.updatedAt) }) }}</small>
         </div>
 
-        <div class="share-item__actions">
+        <div v-if="canManage" class="share-item__actions">
           <el-select
+            :data-testid="`sheets-share-permission-${share.shareId}`"
             size="small"
             :model-value="share.permission"
             :disabled="mutationId === share.shareId"
@@ -143,6 +162,7 @@ function onInvitePermissionChange(value: string): void {
             />
           </el-select>
           <el-button
+            :data-testid="`sheets-share-revoke-${share.shareId}`"
             type="danger"
             text
             :loading="mutationId === share.shareId"

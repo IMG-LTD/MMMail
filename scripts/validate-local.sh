@@ -10,7 +10,7 @@ source "$ROOT_DIR/scripts/lib/java-common.sh"
 MVN_BIN="$(resolve_maven_bin "$ROOT_DIR")"
 BACKEND_AUTH_RBAC_TESTS="AuthFlowIntegrationTest,OrgAuthenticationSecurityIntegrationTest,OrgAdminConsoleIntegrationTest,OrgMemberGovernanceIntegrationTest"
 BACKEND_DOCS_TESTS="DocsCollaborationIntegrationTest,DocsSuggestionWorkflowIntegrationTest,DocsOrgAccessIntegrationTest"
-FRONTEND_DOCS_TESTS="tests/docs-smoke.spec.ts tests/docs-panels.smoke.spec.ts tests/docs-comments.smoke.spec.ts tests/docs-presentation.spec.ts tests/docs-transfer.spec.ts tests/docs-draft.spec.ts tests/docs-route.spec.ts"
+FRONTEND_DOCS_TESTS="tests/docs-smoke.spec.ts tests/docs-panels.smoke.spec.ts tests/docs-comments.smoke.spec.ts tests/docs-presentation.spec.ts tests/docs-transfer.spec.ts tests/docs-draft.spec.ts tests/docs-route.spec.ts tests/docs-leave-guard.spec.ts"
 BACKEND_MAIL_GA_TESTS="MailGaIntegrationTest,MailAttachmentIntegrationTest,MailReleaseBlockingIntegrationTest"
 FRONTEND_MAIL_GA_TESTS="tests/mail-compose.spec.ts tests/mail-attachments.spec.ts tests/mail-smoke.spec.ts"
 BACKEND_CALENDAR_GA_TESTS="CalendarSharingAvailabilityIntegrationTest,CalendarReleaseBlockingIntegrationTest,CalendarIcsImportIntegrationTest"
@@ -20,6 +20,8 @@ FRONTEND_DRIVE_GA_TESTS="tests/drive-smoke.spec.ts tests/drive-batch-share.spec.
 BACKEND_OBSERVABILITY_TESTS="ObservabilityIntegrationTest,JobRunMonitorServiceTest,GlobalExceptionHandlerUnitTest"
 FRONTEND_OBSERVABILITY_TESTS="tests/system-health.spec.ts tests/error-tracking.spec.ts"
 FRONTEND_COMMUNITY_BOUNDARY_TESTS="tests/community-navigation.spec.ts tests/community-boundary.spec.ts"
+BACKEND_SHEETS_TESTS="SheetsWorkbookIntegrationTest,SheetsWorkbookDataManagementIntegrationTest,SheetsSharingVersionIntegrationTest,SheetsWorkbookMultiSheetIntegrationTest"
+FRONTEND_SHEETS_TESTS="tests/sheets-business.spec.ts tests/sheets-sharing-version.spec.ts tests/sheets-refresh-regression.spec.ts tests/sheets-sidebar.spec.ts tests/sheets-workspace-route.spec.ts tests/sheets-workspace.spec.ts tests/sheets-mutation-state.spec.ts tests/sheets-collaboration-state.spec.ts tests/sheets-visible-workbooks-state.spec.ts tests/sheets-panels.smoke.spec.ts tests/sheets-trade-collaboration.smoke.spec.ts tests/sheets-structure.smoke.spec.ts tests/sheets-tools-formula.smoke.spec.ts tests/sheets-grid.smoke.spec.ts tests/sheets-state-boundary.smoke.spec.ts tests/sheets-toolbar-empty.smoke.spec.ts tests/sheets-sharing-boundary.smoke.spec.ts tests/sheets-trade-boundary.smoke.spec.ts tests/sheets-panel-safety.smoke.spec.ts tests/sheets-incoming-boundary.smoke.spec.ts tests/sheets-insight-boundary.smoke.spec.ts"
 
 echo "[validate-local] frontend tests"
 env -u http_proxy -u https_proxy -u HTTP_PROXY -u HTTPS_PROXY -u ALL_PROXY -u all_proxy \
@@ -48,6 +50,10 @@ env -u http_proxy -u https_proxy -u HTTP_PROXY -u HTTPS_PROXY -u ALL_PROXY -u al
 echo "[validate-local] frontend community boundary regression"
 env -u http_proxy -u https_proxy -u HTTP_PROXY -u HTTPS_PROXY -u ALL_PROXY -u all_proxy \
   pnpm --dir frontend exec vitest run $FRONTEND_COMMUNITY_BOUNDARY_TESTS >/tmp/mmmail-frontend-community-boundary.log 2>&1
+
+echo "[validate-local] frontend sheets regression"
+env -u http_proxy -u https_proxy -u HTTP_PROXY -u HTTPS_PROXY -u ALL_PROXY -u all_proxy \
+  pnpm --dir frontend exec vitest run $FRONTEND_SHEETS_TESTS >/tmp/mmmail-frontend-sheets.log 2>&1
 
 echo "[validate-local] frontend i18n governance"
 env -u http_proxy -u https_proxy -u HTTP_PROXY -u HTTPS_PROXY -u ALL_PROXY -u all_proxy \
@@ -256,6 +262,11 @@ echo "[validate-local] backend observability regression"
 timeout 60s "$MVN_BIN" -f backend/pom.xml -pl mmmail-server -am \
   -Dtest="$BACKEND_OBSERVABILITY_TESTS" -Dsurefire.failIfNoSpecifiedTests=false test \
   >/tmp/mmmail-backend-observability.log 2>&1
+
+echo "[validate-local] backend sheets regression"
+SPRING_PROFILES_ACTIVE=test timeout 60s "$MVN_BIN" -f backend/pom.xml -pl mmmail-server -am \
+  -Dtest="$BACKEND_SHEETS_TESTS" -Dsurefire.failIfNoSpecifiedTests=false test \
+  >/tmp/mmmail-backend-sheets.log 2>&1
 
 echo "[validate-local] Batch 3 migration gates"
 env -u http_proxy -u https_proxy -u HTTP_PROXY -u HTTPS_PROXY -u ALL_PROXY -u all_proxy \

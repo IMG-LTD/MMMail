@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import {
   COMMUNITY_V1_HOME_ROUTE_CANDIDATES,
+  COMMUNITY_V1_MODULES,
   COMMUNITY_V1_PREVIEW_MODULES
 } from '../constants/module-maturity'
 import { DEFAULT_NAV_ITEMS } from '../utils/default-nav'
@@ -23,5 +24,14 @@ describe('community v1 navigation', () => {
     expect(COMMUNITY_V1_HOME_ROUTE_CANDIDATES.some(item => item.to === '/inbox')).toBe(true)
     expect(COMMUNITY_V1_HOME_ROUTE_CANDIDATES.some(item => item.to === '/pass')).toBe(false)
     expect(resolveHomeRoute(productKey => productKey === 'PASS')).toBe('/suite')
+  })
+
+  it('keeps suite-only beta entries out of default nav', () => {
+    const navRoutes = new Set(DEFAULT_NAV_ITEMS.map(item => item.to))
+    const billingModule = COMMUNITY_V1_MODULES.find(item => item.code === 'BILLING_CENTER')
+
+    expect(billingModule?.surface).toBe('SUITE')
+    expect(navRoutes.has('/suite')).toBe(true)
+    expect(DEFAULT_NAV_ITEMS.filter(item => item.to === '/suite')).toHaveLength(1)
   })
 })

@@ -1,6 +1,7 @@
 import type {
   SheetsIncomingShare,
   SheetsScopeFilter,
+  SheetsWorkbookShare,
   SheetsWorkbookSummary
 } from '~/types/sheets'
 
@@ -16,6 +17,10 @@ export function filterSheetsWorkbooksByScope(
 
 export function countPendingIncomingShares(items: SheetsIncomingShare[]): number {
   return items.filter((item) => item.responseStatus === 'NEEDS_ACTION').length
+}
+
+export function countActiveWorkbookCollaborators(items: SheetsWorkbookShare[]): number {
+  return items.filter((item) => item.responseStatus !== 'DECLINED').length
 }
 
 export function resolveSheetsVersionSourceI18nKey(sourceEvent: string): string {

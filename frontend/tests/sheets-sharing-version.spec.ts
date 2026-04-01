@@ -1,6 +1,11 @@
 import { describe, expect, it } from 'vitest'
-import type { SheetsIncomingShare, SheetsWorkbookSummary } from '../types/sheets'
-import { countPendingIncomingShares, filterSheetsWorkbooksByScope, resolveSheetsVersionSourceI18nKey } from '../utils/sheets-sharing-version'
+import type { SheetsIncomingShare, SheetsWorkbookShare, SheetsWorkbookSummary } from '../types/sheets'
+import {
+  countActiveWorkbookCollaborators,
+  countPendingIncomingShares,
+  filterSheetsWorkbooksByScope,
+  resolveSheetsVersionSourceI18nKey
+} from '../utils/sheets-sharing-version'
 
 describe('sheets sharing/version utils', () => {
   const workbookBase: Omit<SheetsWorkbookSummary, 'scope' | 'permission'> = {
@@ -41,5 +46,42 @@ describe('sheets sharing/version utils', () => {
     expect(resolveSheetsVersionSourceI18nKey('SHEETS_WORKBOOK_CREATE')).toBe('sheets.versions.sources.create')
     expect(resolveSheetsVersionSourceI18nKey('SHEETS_WORKBOOK_VERSION_RESTORE')).toBe('sheets.versions.sources.restore')
     expect(resolveSheetsVersionSourceI18nKey('UNKNOWN')).toBe('sheets.versions.sources.unknown')
+  })
+
+  it('excludes declined shares from collaborator count', () => {
+    const shares: SheetsWorkbookShare[] = [
+      {
+        shareId: 'share-1',
+        collaboratorUserId: 'user-1',
+        collaboratorEmail: 'accepted@mmmail.local',
+        collaboratorDisplayName: 'Accepted',
+        permission: 'EDIT',
+        responseStatus: 'ACCEPTED',
+        createdAt: '2026-03-09T12:00:00',
+        updatedAt: '2026-03-09T12:00:00'
+      },
+      {
+        shareId: 'share-2',
+        collaboratorUserId: 'user-2',
+        collaboratorEmail: 'pending@mmmail.local',
+        collaboratorDisplayName: 'Pending',
+        permission: 'VIEW',
+        responseStatus: 'NEEDS_ACTION',
+        createdAt: '2026-03-09T12:01:00',
+        updatedAt: '2026-03-09T12:01:00'
+      },
+      {
+        shareId: 'share-3',
+        collaboratorUserId: 'user-3',
+        collaboratorEmail: 'declined@mmmail.local',
+        collaboratorDisplayName: 'Declined',
+        permission: 'VIEW',
+        responseStatus: 'DECLINED',
+        createdAt: '2026-03-09T12:02:00',
+        updatedAt: '2026-03-09T12:02:00'
+      }
+    ]
+
+    expect(countActiveWorkbookCollaborators(shares)).toBe(2)
   })
 })

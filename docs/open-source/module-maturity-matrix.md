@@ -15,7 +15,7 @@
 | Settings / Security / System Health | `/settings` `/security` | `GA` | 是 | 包含可观测性、安全与个人设置。 |
 | Docs | `/docs` | `BETA` | 是 | 保留为单人 / 轻协作，不阻塞首发。 |
 | Sheets | `/sheets` | `BETA` | 是 | 保留为单人 / 轻协作，不阻塞首发。 |
-| Billing | `Suite > Billing center` | `BETA` | 否 | Community 仅承载报价 / 草稿 / 账单状态，不承诺真实支付闭环。 |
+| Billing | `Suite > Billing center` | `BETA` | 否 | Community 仅承载报价 / 草稿 / 账单状态，作为 `Suite` 子入口暴露，不承诺真实支付闭环。 |
 | Pass | `/pass` | `PREVIEW` | 否 | 仅通过 `Labs` 暴露。 |
 | Authenticator | `/authenticator` | `PREVIEW` | 否 | 仍保留恢复链路，不做独立首发产品。 |
 | SimpleLogin | `/simplelogin` | `PREVIEW` | 否 | `Labs`。 |

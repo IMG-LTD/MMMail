@@ -1,7 +1,7 @@
 import type { OrgProductKey } from '~/types/organization-admin'
 
 export type ModuleMaturity = 'GA' | 'BETA' | 'PREVIEW'
-export type ModuleSurface = 'DEFAULT_NAV' | 'LABS'
+export type ModuleSurface = 'DEFAULT_NAV' | 'SUITE' | 'LABS'
 
 export interface CommunityModuleDefinition {
   code: string
@@ -23,6 +23,7 @@ export const COMMUNITY_V1_MODULES: ReadonlyArray<CommunityModuleDefinition> = [
   { code: 'SECURITY', route: '/security', labelKey: 'nav.security', maturity: 'GA', surface: 'DEFAULT_NAV' },
   { code: 'DOCS', route: '/docs', labelKey: 'nav.docs', maturity: 'BETA', surface: 'DEFAULT_NAV', productKey: 'DOCS' },
   { code: 'SHEETS', route: '/sheets', labelKey: 'nav.sheets', maturity: 'BETA', surface: 'DEFAULT_NAV', productKey: 'SHEETS' },
+  { code: 'BILLING_CENTER', route: '/suite', labelKey: 'suite.billing.center.badge', maturity: 'BETA', surface: 'SUITE' },
   { code: 'PASS', route: '/pass', labelKey: 'nav.pass', maturity: 'PREVIEW', surface: 'LABS', productKey: 'PASS' },
   { code: 'AUTHENTICATOR', route: '/authenticator', labelKey: 'nav.authenticator', maturity: 'PREVIEW', surface: 'LABS', productKey: 'AUTHENTICATOR' },
   { code: 'SIMPLELOGIN', route: '/simplelogin', labelKey: 'nav.simpleLogin', maturity: 'PREVIEW', surface: 'LABS', productKey: 'SIMPLELOGIN' },

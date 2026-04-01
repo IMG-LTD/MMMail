@@ -77,8 +77,8 @@ const metricCards = computed(() => {
   <section class="hero-shell mm-card">
     <div class="hero-copy">
       <span class="hero-badge">{{ t('sheets.hero.badge') }}</span>
-      <h1>{{ workbook ? workbook.title : t('sheets.hero.emptyTitle') }}</h1>
-      <p>
+      <h1 data-testid="sheets-hero-title">{{ workbook ? workbook.title : t('sheets.hero.emptyTitle') }}</h1>
+      <p data-testid="sheets-hero-description">
         {{ workbook
           ? t('sheets.hero.activeDescription')
           : t('sheets.hero.emptyDescription') }}
@@ -100,9 +100,23 @@ const metricCards = computed(() => {
         </article>
       </div>
       <div class="hero-actions">
-        <el-button type="primary" :loading="creating" @click="emit('create')">{{ t('sheets.actions.newWorkbook') }}</el-button>
-        <el-button :loading="refreshing" @click="emit('refresh')">{{ t('common.actions.refresh') }}</el-button>
         <el-button
+          data-testid="sheets-hero-create"
+          type="primary"
+          :loading="creating"
+          @click="emit('create')"
+        >
+          {{ t('sheets.actions.newWorkbook') }}
+        </el-button>
+        <el-button
+          data-testid="sheets-hero-refresh"
+          :loading="refreshing"
+          @click="emit('refresh')"
+        >
+          {{ t('common.actions.refresh') }}
+        </el-button>
+        <el-button
+          data-testid="sheets-hero-save"
           type="success"
           plain
           :disabled="!workbook || dirtyCount === 0 || !workbook.canEdit"

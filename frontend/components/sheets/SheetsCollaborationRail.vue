@@ -38,10 +38,11 @@ function formatTime(value: string): string {
           <h3>{{ t('sheets.collaboration.templatesTitle') }}</h3>
         </div>
       </div>
-      <div class="template-list">
+      <div data-testid="sheets-template-list" class="template-list">
         <button
           v-for="template in templates"
           :key="template.code"
+          :data-testid="`sheets-template-${template.code}`"
           class="template-card"
           type="button"
           :disabled="creatingTemplateCode === template.code"
@@ -60,16 +61,29 @@ function formatTime(value: string): string {
           <p class="rail-eyebrow">{{ t('sheets.collaboration.eventsEyebrow') }}</p>
           <h3>{{ t('sheets.collaboration.eventsTitle') }}</h3>
         </div>
-        <span class="event-count">{{ events.length }}</span>
+        <span data-testid="sheets-collaboration-event-count" class="event-count">{{ events.length }}</span>
       </div>
 
-      <el-skeleton v-if="loading" :rows="4" animated />
-      <el-alert v-else-if="errorMessage" :title="errorMessage" type="error" show-icon :closable="false" />
-      <el-empty v-else-if="events.length === 0" :description="t('sheets.collaboration.empty')" :image-size="72" />
+      <el-skeleton v-if="loading" data-testid="sheets-collaboration-loading" :rows="4" animated />
+      <el-alert
+        v-else-if="errorMessage"
+        data-testid="sheets-collaboration-error"
+        :title="errorMessage"
+        type="error"
+        show-icon
+        :closable="false"
+      />
+      <el-empty
+        v-else-if="events.length === 0"
+        data-testid="sheets-collaboration-empty"
+        :description="t('sheets.collaboration.empty')"
+        :image-size="72"
+      />
       <div v-else class="event-list">
         <button
           v-for="item in events.slice(0, 5)"
           :key="item.eventId"
+          :data-testid="`sheets-event-${item.eventId}`"
           class="event-item"
           type="button"
           @click="emit('openEvent', item)"

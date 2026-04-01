@@ -9,7 +9,8 @@ import {
   COMMUNITY_BOUNDARY_DOC_PATHS,
   COMMUNITY_HOSTED_ONLY_ITEM_KEYS,
   COMMUNITY_SELF_HOSTED_ITEM_KEYS,
-  countCommunityModulesByMaturity
+  countCommunityModulesByMaturity,
+  countCommunityModulesBySurface
 } from '../utils/community-boundary'
 
 vi.mock('~/composables/useI18n', () => ({
@@ -35,8 +36,11 @@ describe('community boundary helpers', () => {
     expect(sections[1].maturity).toBe('BETA')
     expect(sections[2].maturity).toBe('PREVIEW')
     expect(countCommunityModulesByMaturity('GA')).toBe(8)
-    expect(countCommunityModulesByMaturity('BETA')).toBe(2)
+    expect(countCommunityModulesByMaturity('BETA')).toBe(3)
     expect(countCommunityModulesByMaturity('PREVIEW')).toBe(11)
+    expect(countCommunityModulesBySurface('DEFAULT_NAV')).toBe(10)
+    expect(countCommunityModulesBySurface('SUITE')).toBe(1)
+    expect(sections[1].modules.some((item) => item.code === 'BILLING_CENTER')).toBe(true)
   })
 
   it('keeps hosted-only and self-hosted boundary registries non-empty', () => {
@@ -58,6 +62,8 @@ describe('suite release boundary panel', () => {
     expect(wrapper.text()).toContain('Self-hosting responsibilities')
     expect(wrapper.text()).toContain('Canonical docs')
     expect(wrapper.text()).toContain('Real billing / payment capture stays out of Community.')
+    expect(wrapper.text()).toContain('Billing center')
+    expect(wrapper.text()).toContain('Suite workspace')
     expect(wrapper.text()).toContain('Docs')
     expect(wrapper.text()).toContain('Pass')
     expect(wrapper.text()).toContain('Labs only')
