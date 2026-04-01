@@ -1,16 +1,18 @@
-# Community Edition v1.1.0 Release Notes Draft
+# Community Edition v1.1.0 Release Notes
 
-**版本**: `v1.1.0-release-draft`
+**版本**: `v1.1.0-release-notes`
 **日期**: `2026-04-01`
 **作者**: `Codex`
 
 ## 当前状态
-- 当前文档为 `v1.1.0` 正式 release notes 草稿。
+- 当前文档为 `v1.1.0` 正式 release notes。
 - 发布分支：`release/v1.1`
-- 候选提交：`a6bdda20cfbf6c2f040a4141c220f5426ae3d7b2`
-- 来源 CI：`https://github.com/IMG-LTD/MMMail/actions/runs/23834450221`
-- 正式发布日期：`待发布`
-- 正式 tag / commit：`待发布`
+- 发布前验证提交：`98b0fa844ef8109bd2a25a8841e8d8cb6efe3fae`
+- 来源 CI：`https://github.com/IMG-LTD/MMMail/actions/runs/23834759633`
+- 发布分支 CI：`https://github.com/IMG-LTD/MMMail/actions/runs/23834771915`
+- 正式发布日期：`2026-04-01 14:29 +0800`
+- 正式 tag / commit：`v1.1.0` / `400dc764ca2d9cd57e179a0a4e0fe13bfcb120cb`
+- GitHub Release：`https://github.com/IMG-LTD/MMMail/releases/tag/v1.1.0`
 
 ## Summary
 - `MMMail Community Edition v1.1.0` 在 `v1.0.0` 正式版基础上，完成了 `Docs / Sheets / i18n / Community / Hosted` 四条线的第一阶段收口。
@@ -18,7 +20,7 @@
 - `Docs` 与 `Sheets` 继续保持 `BETA`，但已从“可用”提升到“稳定的单人编辑 / 轻协作”运行态。
 
 ## Since `v1.0.0`
-- `v1.0.0..a6bdda2` 的提交只包含以下 9 个批次，没有引入额外产品扩面：
+- `v1.0.0..400dc76` 共包含以下 `12` 个批次；前 `10` 个为产品 / i18n / 边界收口，后 `2` 个为 release 文档与 CI 发布门禁收口：
   - `6b01ae6` `feat: stabilize docs route selection`
   - `241b656` `docs: split v1.0 release line from v1.1 development`
   - `eb03389` `feat: harden docs beta stability gates`
@@ -29,6 +31,8 @@
   - `1596c17` `feat: localize contacts workspace`
   - `8f34286` `feat: add community hosted boundary panel`
   - `a6bdda2` `feat(frontend): complete v1.1 phase-one hardening`
+  - `652e3b7` `docs(release): bootstrap v1.1 release materials`
+  - `400dc76` `ci: run workflow on release branches`
 
 ## Included
 - `Docs`
@@ -45,8 +49,9 @@
 
 ## Validation Evidence
 - 本地默认门禁：`bash scripts/validate-local.sh`
-- 来源分支 CI：`https://github.com/IMG-LTD/MMMail/actions/runs/23834450221`
-- `release/v1.1` 分支 CI：待补
+- 来源分支 CI：`https://github.com/IMG-LTD/MMMail/actions/runs/23834759633`
+- `release/v1.1` 分支 CI：`https://github.com/IMG-LTD/MMMail/actions/runs/23834771915`
+- GitHub Release：`https://github.com/IMG-LTD/MMMail/releases/tag/v1.1.0`
 
 ## Support Boundaries
 - `GA`
@@ -75,8 +80,3 @@
 - 复杂公式引擎
 - 真实 Billing 支付 / 税费 / 发票闭环
 - `VPN / Meet / Wallet / Lumo` 的成熟度提升
-
-## 发布前待补
-- `release/v1.1` 对应 workflow run 链接
-- 最终 `v1.1.0` tag / commit
-- Release owner / 审核人 / 正式发布日期

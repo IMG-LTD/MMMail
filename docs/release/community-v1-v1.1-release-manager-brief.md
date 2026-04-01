@@ -1,18 +1,23 @@
 # Community Edition v1.1 Release Manager Brief
 
-**版本**: `v1.1-release-branch-draft`
+**版本**: `v1.1-release-manager-brief-final`
 **日期**: `2026-04-01`
 **作者**: `Codex`
 
 ## 当前状态
-- 当前状态：`RELEASE_BRANCH_PREPARED`
+- 当前状态：`RELEASED`
 - 发布分支：`release/v1.1`
-- 候选提交：`a6bdda20cfbf6c2f040a4141c220f5426ae3d7b2`
-- 来源分支：`dev/community-v1`
-- 当前准入条件：
+- 正式 tag：`v1.1.0`
+- 正式发布 commit：`400dc764ca2d9cd57e179a0a4e0fe13bfcb120cb`
+- GitHub Release：`https://github.com/IMG-LTD/MMMail/releases/tag/v1.1.0`
+- 正式发布日期：`2026-04-01 14:29 +0800`
+- 发布前来源分支：`dev/community-v1`
+- 发布前验证提交：`98b0fa844ef8109bd2a25a8841e8d8cb6efe3fae`
+- 当前发布证据：
   - 本地默认门禁：`bash scripts/validate-local.sh` 已通过
-  - `dev/community-v1` 远端 CI：run `23834450221`
-  - 仅当上述 run 结论为 `success`，才允许继续推送 `release/v1.1`
+  - `dev/community-v1` 远端 CI：run `23834759633` = `success`
+  - `release/v1.1` 远端 CI：run `23834771915` = `success`
+  - open `release-blocking` / `v1.1` milestone issue：`0`
 
 ## 版本范围
 - `Docs`
@@ -35,18 +40,19 @@
 - 模块成熟度：`docs/open-source/module-maturity-matrix.md`
 
 ## 当前允许
-- 在 `release/v1.1` 上只接收 `release-blocking` 修复
-- release notes / checklist / signoff / README 的事实性对齐
-- tag / GitHub Release 元数据收口
+- 在 `release/v1.1` 上只接收 `v1.1.x` 的 `release-blocking` / 安全 / 元数据修正
+- release notes / checklist / signoff / support boundary 的事实性回填
+- `dev/community-v1` 继续承接后续集成开发
 
 ## 当前禁止
 - 扩大 `v1.1` 范围
 - 新增 `Preview` 模块或提升其成熟度
 - 回灌 `v1.1` 改动到 `release/v1.0`
+- 改写 `v1.1.0` tag 或 GitHub Release 指向
 - 在 `release/v1.1` 上继续开发第二阶段功能
 
 ## 发布判断标准
-- `release/v1.1` 最新 head 的 `MMMail CI` 为绿色
-- 不存在已知的 `v1.1 release-blocking` 缺陷
-- `Docs / Sheets / i18n / Community-Hosted` 四条线的变更、测试、文档已同步
-- `community-v1-v1.1-final-signoff.md` 可签收
+- [x] `release/v1.1` 发布 commit 的 `MMMail CI` 为绿色
+- [x] 不存在已知的 `v1.1 release-blocking` 缺陷
+- [x] `Docs / Sheets / i18n / Community-Hosted` 四条线的变更、测试、文档已同步
+- [x] `community-v1-v1.1-final-signoff.md` 已签收
