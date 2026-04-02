@@ -1,0 +1,58 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>MMMail Community v1.2 Runbook</title>
+  <style>
+    :root { color-scheme: light; }
+    body { margin: 0; font-family: Inter, Arial, sans-serif; background: #f6f8fb; color: #102a43; }
+    main { max-width: 860px; margin: 0 auto; padding: 40px 20px 64px; }
+    section { background: #fff; border: 1px solid #d9e2ec; border-radius: 18px; padding: 20px; margin-top: 16px; }
+    h1, h2 { margin: 0 0 12px; }
+    p, li { line-height: 1.7; }
+    code { font-family: "SFMono-Regular", Consolas, monospace; background: #f0f4f8; padding: 2px 6px; border-radius: 6px; }
+    ul { margin: 0; padding-left: 20px; }
+  </style>
+</head>
+<body>
+<main>
+  <h1>MMMail Community v1.2 运维 Runbook / Operations Runbook</h1>
+  <section>
+    <h2>入口 / Entry Points</h2>
+    <ul>
+      <li>健康检查 / Health: <code>GET /actuator/health</code></li>
+      <li>Prometheus: <code>GET /actuator/prometheus</code></li>
+      <li>管理页 / Admin UI: <code>/settings/system-health</code></li>
+      <li>API docs: <code>/swagger-ui.html</code> and <code>/v3/api-docs</code></li>
+      <li>本地门禁 / Local gate: <code>bash scripts/validate-local.sh</code></li>
+    </ul>
+  </section>
+  <section>
+    <h2>日常检查 / Daily Checks</h2>
+    <ul>
+      <li>确认前端可访问，且 <code>/manifest.webmanifest</code> 返回正常。</li>
+      <li>Confirm the frontend is reachable and <code>/manifest.webmanifest</code> resolves.</li>
+      <li>管理员登录后检查设置页中的 PWA、Mail E2EE foundation、Adoption readiness 面板。</li>
+      <li>As an admin, review the PWA, Mail E2EE foundation, and Adoption readiness panels from Settings.</li>
+      <li>如需接口排查，先打开 Swagger UI，再结合 OpenAPI JSON 进行请求比对。</li>
+      <li>For API debugging, inspect Swagger UI first and compare payloads against the raw OpenAPI JSON.</li>
+    </ul>
+  </section>
+  <section>
+    <h2>边界 / Boundary</h2>
+    <ul>
+      <li>当前 Mail E2EE 只覆盖 key profile foundation、READY 内部路由正文加密与详情本地解密。</li>
+      <li>Current Mail E2EE only covers the key profile foundation, READY internal-route message-body encryption, and local decryption on detail view.</li>
+      <li>Web Push、零知识架构、SMTP / IMAP / Bridge 仍不属于当前主线已交付能力。</li>
+      <li>Web Push delivery, zero-knowledge architecture, and SMTP / IMAP / Bridge remain outside the currently shipped scope.</li>
+    </ul>
+  </section>
+  <section>
+    <h2>权威文档 / Authoritative Docs</h2>
+    <p>仓库运维权威文档位于 <code>docs/ops/runbook.md</code> 与 <code>docs/ops/install.md</code>。本页用于浏览器内快速查阅。</p>
+    <p>The authoritative operations docs live in <code>docs/ops/runbook.md</code> and <code>docs/ops/install.md</code>. This page is a bundled browser quick reference.</p>
+  </section>
+</main>
+</body>
+</html>

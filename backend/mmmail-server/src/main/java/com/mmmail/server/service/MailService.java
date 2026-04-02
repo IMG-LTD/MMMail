@@ -22,6 +22,7 @@ import com.mmmail.server.model.entity.UserAccount;
 import com.mmmail.server.model.entity.UserPreference;
 import com.mmmail.server.model.vo.DraftSaveVo;
 import com.mmmail.server.model.vo.MailFilterPreviewVo;
+import com.mmmail.server.model.vo.MailBodyE2eeVo;
 import com.mmmail.server.model.vo.ConversationDetailVo;
 import com.mmmail.server.model.vo.ConversationPageVo;
 import com.mmmail.server.model.vo.ConversationSummaryVo;
@@ -29,6 +30,7 @@ import com.mmmail.server.model.vo.MailActionResultVo;
 import com.mmmail.server.model.vo.MailAttachmentDownloadVo;
 import com.mmmail.server.model.vo.MailAttachmentUploadVo;
 import com.mmmail.server.model.vo.MailDetailVo;
+import com.mmmail.server.model.vo.MailE2eeRecipientStatusVo;
 import com.mmmail.server.model.vo.MailPageVo;
 import com.mmmail.server.model.vo.MailSenderIdentityVo;
 import com.mmmail.server.model.vo.RuleResolutionVo;
@@ -102,6 +104,8 @@ public class MailService {
     private final MailSenderIdentityService mailSenderIdentityService;
     private final PassAliasContactService passAliasContactService;
     private final MailDeliveryRouteService mailDeliveryRouteService;
+    private final MailE2eeRecipientDiscoveryService mailE2eeRecipientDiscoveryService;
+    private final MailE2eeMessageService mailE2eeMessageService;
     private final MailAttachmentService mailAttachmentService;
     private final AuditService auditService;
     private final ObjectMapper objectMapper;
@@ -121,6 +125,8 @@ public class MailService {
             MailSenderIdentityService mailSenderIdentityService,
             PassAliasContactService passAliasContactService,
             MailDeliveryRouteService mailDeliveryRouteService,
+            MailE2eeRecipientDiscoveryService mailE2eeRecipientDiscoveryService,
+            MailE2eeMessageService mailE2eeMessageService,
             MailAttachmentService mailAttachmentService,
             AuditService auditService,
             ObjectMapper objectMapper
@@ -139,6 +145,8 @@ public class MailService {
         this.mailSenderIdentityService = mailSenderIdentityService;
         this.passAliasContactService = passAliasContactService;
         this.mailDeliveryRouteService = mailDeliveryRouteService;
+        this.mailE2eeRecipientDiscoveryService = mailE2eeRecipientDiscoveryService;
+        this.mailE2eeMessageService = mailE2eeMessageService;
         this.mailAttachmentService = mailAttachmentService;
         this.auditService = auditService;
         this.objectMapper = objectMapper;
@@ -389,6 +397,7 @@ public class MailService {
         }
 
         MailFolderService.MailFolderReference folderRef = resolveCustomFolderRef(userId, mail.getCustomFolderId());
+        MailBodyE2eeVo e2ee = mailE2eeMessageService.toDetailVo(mail);
 
         return new MailDetailVo(
                 String.valueOf(mail.getId()),
@@ -405,7 +414,8 @@ public class MailService {
                 mail.getIsDraft() != null && mail.getIsDraft() == 1,
                 mail.getSentAt(),
                 parseLabels(mail.getLabelsJson()),
-                mailAttachmentService.listForMail(userId, mail.getId())
+                mailAttachmentService.listForMail(userId, mail.getId()),
+                e2ee
         );
     }
 
@@ -443,6 +453,7 @@ public class MailService {
         boolean useOutbox = !scheduled && undoSeconds > 0;
         LocalDateTime deliveryAt = scheduled ? scheduledAt : (useOutbox ? now.plusSeconds(undoSeconds) : now);
         MailDeliveryTarget primaryTarget = deliveryTargets.get(0);
+        MailE2eeMessageService.OutboundBody outboundBody = mailE2eeMessageService.resolveOutboundBody(userId, senderEmail, request);
 
         MailMessage sent = resolveOutboundMail(userId, request.draftId(), now);
         sent.setOwnerId(userId);
@@ -452,7 +463,10 @@ public class MailService {
         sent.setDirection("OUT");
         sent.setFolderType(scheduled ? "SCHEDULED" : (useOutbox ? "OUTBOX" : "SENT"));
         sent.setSubject(request.subject());
-        sent.setBodyCiphertext(request.body());
+        sent.setBodyCiphertext(outboundBody.bodyCiphertext());
+        sent.setBodyE2eeEnabled(outboundBody.bodyE2eeEnabled());
+        sent.setBodyE2eeAlgorithm(outboundBody.bodyE2eeAlgorithm());
+        sent.setBodyE2eeFingerprintsJson(outboundBody.bodyE2eeFingerprintsJson());
         sent.setIsRead(1);
         sent.setIsStarred(0);
         sent.setIsDraft(0);
@@ -526,6 +540,9 @@ public class MailService {
 
         draft.setSubject(request.subject());
         draft.setBodyCiphertext(request.body());
+        draft.setBodyE2eeEnabled(0);
+        draft.setBodyE2eeAlgorithm(null);
+        draft.setBodyE2eeFingerprintsJson(null);
         draft.setPeerEmail(draftPeerEmail);
         draft.setSenderEmail(senderEmail);
         draft.setSentAt(now);
@@ -695,6 +712,10 @@ public class MailService {
 
     public List<MailSenderIdentityVo> listSenderIdentities(Long userId, String ipAddress) {
         return mailSenderIdentityService.listSenderIdentities(userId, ipAddress);
+    }
+
+    public MailE2eeRecipientStatusVo previewRecipientE2eeStatus(Long userId, String toEmail, String fromEmail) {
+        return mailE2eeRecipientDiscoveryService.preview(userId, toEmail, fromEmail);
     }
 
     public RuleResolutionVo resolveRuleResolution(Long userId, String senderEmail, String ipAddress) {
@@ -1323,6 +1344,9 @@ public class MailService {
             inbox.setCustomFolderId(resolution.customFolderId());
             inbox.setSubject(outbound.getSubject());
             inbox.setBodyCiphertext(outbound.getBodyCiphertext());
+            inbox.setBodyE2eeEnabled(outbound.getBodyE2eeEnabled());
+            inbox.setBodyE2eeAlgorithm(outbound.getBodyE2eeAlgorithm());
+            inbox.setBodyE2eeFingerprintsJson(outbound.getBodyE2eeFingerprintsJson());
             inbox.setIsRead(resolution.markRead() ? 1 : 0);
             inbox.setIsStarred(0);
             inbox.setIsDraft(0);
@@ -1509,8 +1533,7 @@ public class MailService {
     }
 
     private MailSummaryVo toSummary(MailMessage message, MailFolderService.MailFolderReference folderRef) {
-        String body = message.getBodyCiphertext() == null ? "" : message.getBodyCiphertext();
-        String preview = body.length() > 80 ? body.substring(0, 80) + "..." : body;
+        String preview = mailE2eeMessageService.resolvePreview(message);
 
         return new MailSummaryVo(
                 String.valueOf(message.getId()),

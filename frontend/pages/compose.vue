@@ -8,6 +8,8 @@ import { useLabelApi } from '~/composables/useLabelApi'
 import { useSettingsApi } from '~/composables/useSettingsApi'
 import { useContactApi } from '~/composables/useContactApi'
 import { usePassApi } from '~/composables/usePassApi'
+import { useMailComposeE2ee } from '~/composables/useMailComposeE2ee'
+import { useMailComposeMessageE2ee } from '~/composables/useMailComposeMessageE2ee'
 import { useI18n } from '~/composables/useI18n'
 import { useAuthStore } from '~/stores/auth'
 import { useMailStore } from '~/stores/mail'
@@ -57,6 +59,14 @@ const attachments = ref<MailAttachment[]>([])
 const attachmentUploading = ref(false)
 const activeAttachmentIds = ref<string[]>([])
 const failedUploads = ref<FailedUploadState[]>([])
+const {
+  recipientE2eeLoading,
+  recipientE2eeStatus,
+  recipientE2eeError,
+  scheduleRecipientE2eeRefresh,
+  ensureRecipientE2eeStatus
+} = useMailComposeE2ee()
+const { buildSendPayload } = useMailComposeMessageE2ee()
 
 const {
   sendMail,
@@ -247,9 +257,11 @@ async function uploadFiles(files: File[], draft: DraftRequest): Promise<void> {
 
 async function onSend(payload: SendMailRequest): Promise<void> {
   try {
-    await sendMail(payload)
+    const recipientStatus = await ensureRecipientE2eeStatus(payload.toEmail, payload.fromEmail || '')
+    const outboundPayload = await buildSendPayload(payload, recipientStatus)
+    await sendMail(outboundPayload)
     await syncMailboxStats()
-    if (payload.scheduledAt) {
+    if (outboundPayload.scheduledAt) {
       ElMessage.success(t('mailCompose.messages.mailScheduled'))
       await navigateTo('/scheduled')
       return
@@ -360,6 +372,13 @@ async function fetchRecipientSuggestions(keyword: string, senderEmail: string): 
   return suggestions.map(item => item.email)
 }
 
+function onRouteContextChange(payload: { toEmail: string, fromEmail: string }): void {
+  if (draftLoading.value) {
+    return
+  }
+  scheduleRecipientE2eeRefresh(payload.toEmail, payload.fromEmail)
+}
+
 watch(
   () => [route.query.to, route.query.subject, route.query.body, route.query.from, route.query.draftId],
   () => {
@@ -413,10 +432,14 @@ onMounted(async () => {
       :active-attachment-ids="activeAttachmentIds"
       :auto-save-seconds="autoSaveSeconds"
       :sender-options="senderOptions"
+      :recipient-e2ee-loading="recipientE2eeLoading"
+      :recipient-e2ee-status="recipientE2eeStatus"
+      :recipient-e2ee-error="recipientE2eeError"
       :fetch-recipient-suggestions="fetchRecipientSuggestions"
       @send="onSend"
       @save="onSave"
       @autosave="onAutoSave"
+      @route-context-change="onRouteContextChange"
       @upload-attachments="onUploadAttachments"
       @retry-attachment="onRetryAttachment"
       @remove-attachment="onRemoveAttachment"

@@ -22,6 +22,9 @@ create table if not exists mail_message (
     folder_type varchar(16) not null,
     subject varchar(255),
     body_ciphertext text,
+    body_e2ee_enabled tinyint not null default 0,
+    body_e2ee_algorithm varchar(64),
+    body_e2ee_fingerprints_json text,
     is_read tinyint not null,
     is_starred tinyint not null default 0,
     is_draft tinyint not null,
@@ -37,6 +40,9 @@ create index idx_mail_owner_folder_sent on mail_message(owner_id, folder_type, s
 create unique index uk_mail_idempotency on mail_message(owner_id, idempotency_key);
 alter table mail_message add column sender_email varchar(254);
 alter table mail_message add column if not exists delivery_targets_json text;
+alter table mail_message add column if not exists body_e2ee_enabled tinyint not null default 0;
+alter table mail_message add column if not exists body_e2ee_algorithm varchar(64);
+alter table mail_message add column if not exists body_e2ee_fingerprints_json text;
 create index idx_mail_owner_sender_sent on mail_message(owner_id, sender_email, sent_at);
 
 create table if not exists mail_attachment (
@@ -289,6 +295,12 @@ create table if not exists user_preference (
     vpn_kill_switch_enabled tinyint not null default 0,
     vpn_default_connection_mode varchar(32) not null default 'FASTEST',
     vpn_default_profile_id bigint,
+    mail_e2ee_enabled tinyint not null default 0,
+    mail_e2ee_key_fingerprint varchar(64),
+    mail_e2ee_public_key_armored longtext,
+    mail_e2ee_private_key_encrypted longtext,
+    mail_e2ee_key_algorithm varchar(64),
+    mail_e2ee_key_created_at timestamp,
     created_at timestamp not null,
     updated_at timestamp not null,
     deleted tinyint not null default 0
@@ -309,6 +321,12 @@ alter table user_preference add column if not exists vpn_netshield_mode varchar(
 alter table user_preference add column if not exists vpn_kill_switch_enabled tinyint not null default 0;
 alter table user_preference add column if not exists vpn_default_connection_mode varchar(32) not null default 'FASTEST';
 alter table user_preference add column if not exists vpn_default_profile_id bigint;
+alter table user_preference add column if not exists mail_e2ee_enabled tinyint not null default 0;
+alter table user_preference add column if not exists mail_e2ee_key_fingerprint varchar(64);
+alter table user_preference add column if not exists mail_e2ee_public_key_armored longtext;
+alter table user_preference add column if not exists mail_e2ee_private_key_encrypted longtext;
+alter table user_preference add column if not exists mail_e2ee_key_algorithm varchar(64);
+alter table user_preference add column if not exists mail_e2ee_key_created_at timestamp;
 
 create unique index uk_user_preference_owner on user_preference(owner_id);
 

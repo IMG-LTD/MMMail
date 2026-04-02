@@ -59,8 +59,11 @@ const stubs = {
   }),
   ElAlert: defineComponent({
     name: 'ElAlert',
-    props: { title: { type: String, default: '' } },
-    template: '<div class="el-alert">{{ title }}<slot /></div>'
+    props: {
+      title: { type: String, default: '' },
+      description: { type: String, default: '' }
+    },
+    template: '<div class="el-alert">{{ title }} {{ description }}<slot /></div>'
   })
 }
 
@@ -69,6 +72,22 @@ describe('mail compose i18n', () => {
     const wrapper = mount(MailComposer, {
       props: {
         autoSaveSeconds: 15,
+        recipientE2eeStatus: {
+          toEmail: 'alice@example.com',
+          fromEmail: 'owner@mmmail.local',
+          deliverable: true,
+          encryptionReady: true,
+          readiness: 'READY',
+          routeCount: 1,
+          routes: [{
+            targetEmail: 'alice@example.com',
+            forwardToEmail: 'alice@example.com',
+            keyAvailable: true,
+            fingerprint: 'ABCD',
+            algorithm: 'curve25519Legacy',
+            publicKeyArmored: 'PUBLIC_KEY'
+          }]
+        },
         senderOptions: [{
           identityId: null,
           orgId: null,
@@ -90,6 +109,8 @@ describe('mail compose i18n', () => {
     expect(wrapper.text()).toContain('Send')
     expect(wrapper.text()).toContain('Save Draft')
     expect(wrapper.text()).toContain('Auto-save is enabled every 15 seconds.')
+    expect(wrapper.text()).toContain('Recipient route is encryption-ready')
+    expect(wrapper.text()).toContain('the message body is encrypted automatically on send.')
   })
 
   it('renders localized attachment panel states', () => {

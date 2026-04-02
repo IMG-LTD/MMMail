@@ -24,6 +24,9 @@ public class MailMessage {
     private Long customFolderId;
     private String subject;
     private String bodyCiphertext;
+    private Integer bodyE2eeEnabled;
+    private String bodyE2eeAlgorithm;
+    private String bodyE2eeFingerprintsJson;
     private Integer isRead;
     private Integer isStarred;
     private Integer isDraft;
@@ -114,6 +117,30 @@ public class MailMessage {
 
     public void setBodyCiphertext(String bodyCiphertext) {
         this.bodyCiphertext = bodyCiphertext;
+    }
+
+    public Integer getBodyE2eeEnabled() {
+        return bodyE2eeEnabled;
+    }
+
+    public void setBodyE2eeEnabled(Integer bodyE2eeEnabled) {
+        this.bodyE2eeEnabled = bodyE2eeEnabled;
+    }
+
+    public String getBodyE2eeAlgorithm() {
+        return bodyE2eeAlgorithm;
+    }
+
+    public void setBodyE2eeAlgorithm(String bodyE2eeAlgorithm) {
+        this.bodyE2eeAlgorithm = bodyE2eeAlgorithm;
+    }
+
+    public String getBodyE2eeFingerprintsJson() {
+        return bodyE2eeFingerprintsJson;
+    }
+
+    public void setBodyE2eeFingerprintsJson(String bodyE2eeFingerprintsJson) {
+        this.bodyE2eeFingerprintsJson = bodyE2eeFingerprintsJson;
     }
 
     public Integer getIsRead() {

@@ -8,6 +8,7 @@
 - `release/v1.0`：`v1.0.0 RELEASED`
 - `dev/community-v1`：`v1.1` 集成中
 - 含义：`v1.0` 发布线继续承接正式发版与 backport；当前开发主线已转入 `v1.1`
+- 当前开发主线的最新边界说明见：`docs/release/community-v1-v1.2-capability-boundaries.md`
 
 ## 支持范围
 ### GA

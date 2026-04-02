@@ -32,6 +32,12 @@ public class UserPreference {
     private Integer vpnKillSwitchEnabled;
     private String vpnDefaultConnectionMode;
     private Long vpnDefaultProfileId;
+    private Integer mailE2eeEnabled;
+    private String mailE2eeKeyFingerprint;
+    private String mailE2eePublicKeyArmored;
+    private String mailE2eePrivateKeyEncrypted;
+    private String mailE2eeKeyAlgorithm;
+    private LocalDateTime mailE2eeKeyCreatedAt;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
     @TableLogic(value = "0", delval = "1")
@@ -203,6 +209,54 @@ public class UserPreference {
 
     public void setVpnDefaultProfileId(Long vpnDefaultProfileId) {
         this.vpnDefaultProfileId = vpnDefaultProfileId;
+    }
+
+    public Integer getMailE2eeEnabled() {
+        return mailE2eeEnabled;
+    }
+
+    public void setMailE2eeEnabled(Integer mailE2eeEnabled) {
+        this.mailE2eeEnabled = mailE2eeEnabled;
+    }
+
+    public String getMailE2eeKeyFingerprint() {
+        return mailE2eeKeyFingerprint;
+    }
+
+    public void setMailE2eeKeyFingerprint(String mailE2eeKeyFingerprint) {
+        this.mailE2eeKeyFingerprint = mailE2eeKeyFingerprint;
+    }
+
+    public String getMailE2eePublicKeyArmored() {
+        return mailE2eePublicKeyArmored;
+    }
+
+    public void setMailE2eePublicKeyArmored(String mailE2eePublicKeyArmored) {
+        this.mailE2eePublicKeyArmored = mailE2eePublicKeyArmored;
+    }
+
+    public String getMailE2eePrivateKeyEncrypted() {
+        return mailE2eePrivateKeyEncrypted;
+    }
+
+    public void setMailE2eePrivateKeyEncrypted(String mailE2eePrivateKeyEncrypted) {
+        this.mailE2eePrivateKeyEncrypted = mailE2eePrivateKeyEncrypted;
+    }
+
+    public String getMailE2eeKeyAlgorithm() {
+        return mailE2eeKeyAlgorithm;
+    }
+
+    public void setMailE2eeKeyAlgorithm(String mailE2eeKeyAlgorithm) {
+        this.mailE2eeKeyAlgorithm = mailE2eeKeyAlgorithm;
+    }
+
+    public LocalDateTime getMailE2eeKeyCreatedAt() {
+        return mailE2eeKeyCreatedAt;
+    }
+
+    public void setMailE2eeKeyCreatedAt(LocalDateTime mailE2eeKeyCreatedAt) {
+        this.mailE2eeKeyCreatedAt = mailE2eeKeyCreatedAt;
     }
 
     public LocalDateTime getCreatedAt() {

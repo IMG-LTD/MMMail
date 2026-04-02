@@ -777,6 +777,13 @@ export interface MailSummary {
 export interface MailDetail extends MailSummary {
   body: string
   attachments: MailAttachment[]
+  e2ee?: MailBodyE2ee | null
+}
+
+export interface MailBodyE2ee {
+  enabled: boolean
+  algorithm: string | null
+  recipientFingerprints: string[]
 }
 
 export interface MailAttachment {
@@ -1867,15 +1874,43 @@ export interface MailSenderIdentity {
   defaultIdentity: boolean
 }
 
+export type MailE2eeRecipientReadiness = 'READY' | 'NOT_READY' | 'UNDELIVERABLE'
+
+export interface MailE2eeRecipientRouteStatus {
+  targetEmail: string
+  forwardToEmail: string
+  keyAvailable: boolean
+  fingerprint: string | null
+  algorithm: string | null
+  publicKeyArmored: string | null
+}
+
+export interface MailE2eeRecipientStatus {
+  toEmail: string
+  fromEmail: string
+  deliverable: boolean
+  encryptionReady: boolean
+  readiness: MailE2eeRecipientReadiness
+  routeCount: number
+  routes: MailE2eeRecipientRouteStatus[]
+}
+
 export interface SendMailRequest {
   draftId?: MailId
   toEmail: string
   fromEmail?: string
   subject: string
-  body: string
+  body?: string
   idempotencyKey: string
   labels: string[]
   scheduledAt?: string
+  e2ee?: MailBodyE2eePayload
+}
+
+export interface MailBodyE2eePayload {
+  encryptedBody: string
+  algorithm: string
+  recipientFingerprints: string[]
 }
 
 export interface DraftRequest {
@@ -1974,6 +2009,24 @@ export interface UpdateUserPreferenceRequest {
   undoSendSeconds: number
   driveVersionRetentionCount?: number
   driveVersionRetentionDays?: number
+}
+
+export interface MailE2eeKeyProfile {
+  enabled: boolean
+  fingerprint: string | null
+  algorithm: string | null
+  publicKeyArmored: string | null
+  encryptedPrivateKeyArmored: string | null
+  keyCreatedAt: string | null
+}
+
+export interface UpdateMailE2eeKeyProfileRequest {
+  enabled: boolean
+  publicKeyArmored?: string
+  encryptedPrivateKeyArmored?: string
+  fingerprint?: string
+  algorithm?: string
+  keyCreatedAt?: string
 }
 
 export interface AuditEvent {

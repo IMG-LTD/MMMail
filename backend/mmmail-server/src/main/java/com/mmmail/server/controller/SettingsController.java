@@ -5,15 +5,18 @@ import com.mmmail.server.model.dto.CreateBlockedSenderRequest;
 import com.mmmail.server.model.dto.CreateBlockedDomainRequest;
 import com.mmmail.server.model.dto.CreateTrustedSenderRequest;
 import com.mmmail.server.model.dto.CreateTrustedDomainRequest;
+import com.mmmail.server.model.dto.UpdateMailE2eeKeyProfileRequest;
 import com.mmmail.server.model.dto.UpdateProfileRequest;
 import com.mmmail.server.model.vo.BlockedSenderVo;
 import com.mmmail.server.model.vo.BlockedDomainVo;
+import com.mmmail.server.model.vo.MailE2eeKeyProfileVo;
 import com.mmmail.server.model.vo.TrustedSenderVo;
 import com.mmmail.server.model.vo.TrustedDomainVo;
 import com.mmmail.server.model.vo.RuleResolutionVo;
 import com.mmmail.server.model.vo.UserPreferenceVo;
 import com.mmmail.server.service.BlockedSenderService;
 import com.mmmail.server.service.BlockedDomainService;
+import com.mmmail.server.service.MailE2eeKeyProfileService;
 import com.mmmail.server.service.MailService;
 import com.mmmail.server.service.TrustedSenderService;
 import com.mmmail.server.service.TrustedDomainService;
@@ -42,6 +45,7 @@ import java.util.List;
 public class SettingsController {
 
     private final UserPreferenceService userPreferenceService;
+    private final MailE2eeKeyProfileService mailE2eeKeyProfileService;
     private final BlockedSenderService blockedSenderService;
     private final TrustedSenderService trustedSenderService;
     private final BlockedDomainService blockedDomainService;
@@ -50,6 +54,7 @@ public class SettingsController {
 
     public SettingsController(
             UserPreferenceService userPreferenceService,
+            MailE2eeKeyProfileService mailE2eeKeyProfileService,
             BlockedSenderService blockedSenderService,
             TrustedSenderService trustedSenderService,
             BlockedDomainService blockedDomainService,
@@ -57,6 +62,7 @@ public class SettingsController {
             MailService mailService
     ) {
         this.userPreferenceService = userPreferenceService;
+        this.mailE2eeKeyProfileService = mailE2eeKeyProfileService;
         this.blockedSenderService = blockedSenderService;
         this.trustedSenderService = trustedSenderService;
         this.blockedDomainService = blockedDomainService;
@@ -75,6 +81,23 @@ public class SettingsController {
             HttpServletRequest httpRequest
     ) {
         return Result.success(userPreferenceService.updateProfile(SecurityUtils.currentUserId(), request, httpRequest.getRemoteAddr()));
+    }
+
+    @GetMapping("/mail-e2ee")
+    public Result<MailE2eeKeyProfileVo> mailE2ee(HttpServletRequest httpRequest) {
+        return Result.success(mailE2eeKeyProfileService.get(SecurityUtils.currentUserId(), httpRequest.getRemoteAddr()));
+    }
+
+    @PutMapping("/mail-e2ee")
+    public Result<MailE2eeKeyProfileVo> updateMailE2ee(
+            @Valid @RequestBody UpdateMailE2eeKeyProfileRequest request,
+            HttpServletRequest httpRequest
+    ) {
+        return Result.success(mailE2eeKeyProfileService.update(
+                SecurityUtils.currentUserId(),
+                request,
+                httpRequest.getRemoteAddr()
+        ));
     }
 
     @GetMapping("/blocked-senders")

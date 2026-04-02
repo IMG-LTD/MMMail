@@ -3,11 +3,14 @@ import { computed } from 'vue'
 import { useI18n } from '~/composables/useI18n'
 import {
   buildCommunityBoundarySections,
+  COMMUNITY_CAPABILITY_STATUS,
   COMMUNITY_BOUNDARY_DOC_PATHS,
   COMMUNITY_HOSTED_ONLY_ITEM_KEYS,
   COMMUNITY_SELF_HOSTED_ITEM_KEYS,
+  countCommunityCapabilitiesByStatus,
   countCommunityModulesByMaturity,
-  countCommunityModulesBySurface
+  countCommunityModulesBySurface,
+  resolveCommunityCapabilityTagType
 } from '~/utils/community-boundary'
 
 const { t } = useI18n()
@@ -19,6 +22,11 @@ const labsCount = computed(() => countCommunityModulesBySurface('LABS'))
 const gaCount = computed(() => countCommunityModulesByMaturity('GA'))
 const betaCount = computed(() => countCommunityModulesByMaturity('BETA'))
 const previewCount = computed(() => countCommunityModulesByMaturity('PREVIEW'))
+const implementedCapabilityCount = computed(() => countCommunityCapabilitiesByStatus('IMPLEMENTED'))
+const limitedCapabilityCount = computed(() => countCommunityCapabilitiesByStatus('LIMITED'))
+const discoveryCapabilityCount = computed(() => countCommunityCapabilitiesByStatus('DISCOVERY'))
+const notShippedCapabilityCount = computed(() => countCommunityCapabilitiesByStatus('NOT_SHIPPED'))
+const hostedOnlyCapabilityCount = computed(() => countCommunityCapabilitiesByStatus('HOSTED_ONLY'))
 </script>
 
 <template>
@@ -89,6 +97,43 @@ const previewCount = computed(() => countCommunityModulesByMaturity('PREVIEW'))
         </div>
         <ul class="bullet-list">
           <li v-for="itemKey in COMMUNITY_SELF_HOSTED_ITEM_KEYS" :key="itemKey">{{ t(itemKey) }}</li>
+        </ul>
+      </article>
+
+      <article class="boundary-card">
+        <div class="card-head">
+          <div>
+            <h3 class="card-title">{{ t('community.boundary.sections.capabilities') }}</h3>
+            <p class="mm-muted">{{ t('community.boundary.capabilitiesSummary') }}</p>
+          </div>
+        </div>
+        <div class="boundary-metrics boundary-metrics-compact">
+          <el-tag effect="plain" type="success">
+            {{ t('community.boundary.capabilityStatus.IMPLEMENTED') }} {{ implementedCapabilityCount }}
+          </el-tag>
+          <el-tag effect="plain" type="warning">
+            {{ t('community.boundary.capabilityStatus.LIMITED') }} {{ limitedCapabilityCount }}
+          </el-tag>
+          <el-tag effect="plain" type="info">
+            {{ t('community.boundary.capabilityStatus.DISCOVERY') }} {{ discoveryCapabilityCount }}
+          </el-tag>
+          <el-tag effect="plain" type="info">
+            {{ t('community.boundary.capabilityStatus.NOT_SHIPPED') }} {{ notShippedCapabilityCount }}
+          </el-tag>
+          <el-tag effect="plain" type="danger">
+            {{ t('community.boundary.capabilityStatus.HOSTED_ONLY') }} {{ hostedOnlyCapabilityCount }}
+          </el-tag>
+        </div>
+        <ul class="module-list capability-list">
+          <li v-for="item in COMMUNITY_CAPABILITY_STATUS" :key="item.code">
+            <div class="capability-head">
+              <strong>{{ t(item.labelKey) }}</strong>
+              <el-tag :type="resolveCommunityCapabilityTagType(item.status)" effect="plain">
+                {{ t(`community.boundary.capabilityStatus.${item.status}`) }}
+              </el-tag>
+            </div>
+            <span class="mm-muted">{{ t(item.summaryKey) }}</span>
+          </li>
         </ul>
       </article>
 
@@ -179,5 +224,21 @@ const previewCount = computed(() => countCommunityModulesByMaturity('PREVIEW'))
   display: flex;
   flex-direction: column;
   gap: 4px;
+}
+
+.boundary-metrics-compact {
+  margin-top: 12px;
+}
+
+.capability-list {
+  padding-left: 0;
+  list-style: none;
+}
+
+.capability-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
 }
 </style>

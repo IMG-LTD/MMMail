@@ -4,6 +4,7 @@ import type {
   DraftRequest,
   MailAttachment,
   MailActionResult,
+  MailE2eeRecipientStatus,
   MailId,
   MailPage,
   MailDetail,
@@ -65,6 +66,16 @@ export function useMailApi() {
 
   async function listSenderIdentities(): Promise<MailSenderIdentity[]> {
     const response = await $apiClient.get<ApiResponse<MailSenderIdentity[]>>('/api/v1/mails/identities')
+    return response.data.data
+  }
+
+  async function fetchRecipientE2eeStatus(toEmail: string, fromEmail?: string): Promise<MailE2eeRecipientStatus> {
+    const response = await $apiClient.get<ApiResponse<MailE2eeRecipientStatus>>('/api/v1/mails/e2ee-recipient-status', {
+      params: {
+        toEmail,
+        fromEmail
+      }
+    })
     return response.data.data
   }
 
@@ -169,6 +180,7 @@ export function useMailApi() {
     fetchStats,
     fetchMailDetail,
     listSenderIdentities,
+    fetchRecipientE2eeStatus,
     sendMail,
     undoSend,
     saveDraft,

@@ -2,9 +2,11 @@ import type {
   ApiResponse,
   BlockedDomain,
   BlockedSender,
+  MailE2eeKeyProfile,
   RuleResolution,
   TrustedDomain,
   TrustedSender,
+  UpdateMailE2eeKeyProfileRequest,
   UpdateUserPreferenceRequest,
   UserPreference
 } from '~/types/api'
@@ -19,6 +21,16 @@ export function useSettingsApi() {
 
   async function updateProfile(payload: UpdateUserPreferenceRequest): Promise<UserPreference> {
     const response = await $apiClient.put<ApiResponse<UserPreference>>('/api/v1/settings/profile', payload)
+    return response.data.data
+  }
+
+  async function fetchMailE2eeKeyProfile(): Promise<MailE2eeKeyProfile> {
+    const response = await $apiClient.get<ApiResponse<MailE2eeKeyProfile>>('/api/v1/settings/mail-e2ee')
+    return response.data.data
+  }
+
+  async function updateMailE2eeKeyProfile(payload: UpdateMailE2eeKeyProfileRequest): Promise<MailE2eeKeyProfile> {
+    const response = await $apiClient.put<ApiResponse<MailE2eeKeyProfile>>('/api/v1/settings/mail-e2ee', payload)
     return response.data.data
   }
 
@@ -88,6 +100,8 @@ export function useSettingsApi() {
   return {
     fetchProfile,
     updateProfile,
+    fetchMailE2eeKeyProfile,
+    updateMailE2eeKeyProfile,
     listBlockedSenders,
     addBlockedSender,
     removeBlockedSender,

@@ -5,7 +5,6 @@ import com.mmmail.common.exception.BizException;
 import com.mmmail.common.exception.ErrorCode;
 import com.mmmail.server.mapper.UserAccountMapper;
 import com.mmmail.server.model.entity.PassMailAlias;
-import com.mmmail.server.model.entity.PassMailbox;
 import com.mmmail.server.model.entity.UserAccount;
 import com.mmmail.server.model.vo.MailDeliveryTarget;
 import org.springframework.stereotype.Service;
@@ -13,6 +12,7 @@ import org.springframework.util.StringUtils;
 
 import java.util.List;
 import java.util.Locale;
+import java.util.Optional;
 
 @Service
 public class MailDeliveryRouteService {
@@ -38,31 +38,47 @@ public class MailDeliveryRouteService {
     }
 
     public List<MailDeliveryTarget> resolveDeliveryTargets(Long senderUserId, String senderEmail, String toEmail, String ipAddress) {
-        String normalizedTarget = normalizeEmail(toEmail);
-        if (passAliasContactService.isOwnedEnabledAlias(senderUserId, senderEmail)) {
-            var reverseAliasTarget = passAliasContactService.requireReverseAliasTarget(senderUserId, senderEmail, normalizedTarget);
-            auditService.record(
-                    senderUserId,
-                    "MAIL_ALIAS_REVERSE_ROUTE",
-                    "alias=" + senderEmail + ",reverseAlias=" + reverseAliasTarget.reverseAliasEmail() + ",target=" + reverseAliasTarget.targetEmail(),
-                    ipAddress
-            );
-            return resolveDirectOrAliasDeliveryTargets(reverseAliasTarget.targetEmail(), reverseAliasTarget.reverseAliasEmail(), ipAddress, senderUserId);
-        }
-        return resolveDirectOrAliasDeliveryTargets(normalizedTarget, normalizedTarget, ipAddress, senderUserId);
+        DeliveryResolutionContext context = new DeliveryResolutionContext(senderUserId, senderEmail, ipAddress, true);
+        return resolveTargets(toEmail, context)
+                .orElseThrow(() -> rejectUndeliverable(senderUserId, toEmail, ipAddress));
     }
 
-    private List<MailDeliveryTarget> resolveDirectOrAliasDeliveryTargets(
+    public List<MailDeliveryTarget> previewDeliveryTargets(Long senderUserId, String senderEmail, String toEmail) {
+        DeliveryResolutionContext context = new DeliveryResolutionContext(senderUserId, senderEmail, null, false);
+        return resolveTargets(toEmail, context).orElse(List.of());
+    }
+
+    private Optional<List<MailDeliveryTarget>> resolveTargets(String toEmail, DeliveryResolutionContext context) {
+        String normalizedTarget = normalizeEmail(toEmail);
+        if (!StringUtils.hasText(normalizedTarget)) {
+            return Optional.empty();
+        }
+        if (passAliasContactService.isOwnedEnabledAlias(context.senderUserId(), context.senderUserEmail())) {
+            var reverseAliasTarget = passAliasContactService.requireReverseAliasTarget(
+                    context.senderUserId(),
+                    context.senderUserEmail(),
+                    normalizedTarget
+            );
+            recordReverseAliasRoute(context, reverseAliasTarget.reverseAliasEmail(), reverseAliasTarget.targetEmail());
+            return resolveDirectOrAliasDeliveryTargets(
+                    reverseAliasTarget.targetEmail(),
+                    reverseAliasTarget.reverseAliasEmail(),
+                    context
+            );
+        }
+        return resolveDirectOrAliasDeliveryTargets(normalizedTarget, normalizedTarget, context);
+    }
+
+    private Optional<List<MailDeliveryTarget>> resolveDirectOrAliasDeliveryTargets(
             String resolvedEmail,
             String displayEmail,
-            String ipAddress,
-            Long senderUserId
+            DeliveryResolutionContext context
     ) {
         UserAccount recipient = userAccountMapper.selectOne(new LambdaQueryWrapper<UserAccount>()
                 .eq(UserAccount::getEmail, resolvedEmail)
                 .last("limit 1"));
         if (recipient != null) {
-            return List.of(new MailDeliveryTarget(recipient.getId(), displayEmail, recipient.getEmail()));
+            return Optional.of(List.of(new MailDeliveryTarget(recipient.getId(), displayEmail, recipient.getEmail())));
         }
         PassMailAlias alias = passAliasService.loadEnabledAliasByEmail(resolvedEmail);
         if (alias != null) {
@@ -75,17 +91,48 @@ public class MailDeliveryRouteService {
                     .map(mailbox -> new MailDeliveryTarget(mailbox.getMailboxUserId(), alias.getAliasEmail(), mailbox.getMailboxEmail()))
                     .toList();
             String detail = "alias=" + alias.getAliasEmail() + ",routeCount=" + targets.size() + ",routes=" + String.join(",", routeEmails);
-            auditService.record(senderUserId, "MAIL_ALIAS_RELAY", detail, ipAddress);
-            if (!alias.getOwnerId().equals(senderUserId)) {
-                auditService.record(alias.getOwnerId(), "MAIL_ALIAS_RELAY", detail, ipAddress);
-            }
-            return targets;
+            recordAliasRelay(context, alias.getOwnerId(), detail);
+            return Optional.of(targets);
         }
+        return Optional.empty();
+    }
+
+    private void recordReverseAliasRoute(DeliveryResolutionContext context, String reverseAliasEmail, String targetEmail) {
+        if (!context.auditEnabled()) {
+            return;
+        }
+        auditService.record(
+                context.senderUserId(),
+                "MAIL_ALIAS_REVERSE_ROUTE",
+                "alias=" + context.senderUserEmail() + ",reverseAlias=" + reverseAliasEmail + ",target=" + targetEmail,
+                context.ipAddress()
+        );
+    }
+
+    private void recordAliasRelay(DeliveryResolutionContext context, Long aliasOwnerId, String detail) {
+        if (!context.auditEnabled()) {
+            return;
+        }
+        auditService.record(context.senderUserId(), "MAIL_ALIAS_RELAY", detail, context.ipAddress());
+        if (!aliasOwnerId.equals(context.senderUserId())) {
+            auditService.record(aliasOwnerId, "MAIL_ALIAS_RELAY", detail, context.ipAddress());
+        }
+    }
+
+    private BizException rejectUndeliverable(Long senderUserId, String displayEmail, String ipAddress) {
         auditService.record(senderUserId, "MAIL_SEND_REJECTED", "recipient not found: " + displayEmail, ipAddress);
-        throw new BizException(ErrorCode.INVALID_ARGUMENT, "Unable to deliver mail");
+        return new BizException(ErrorCode.INVALID_ARGUMENT, "Unable to deliver mail");
     }
 
     private String normalizeEmail(String emailAddress) {
         return StringUtils.hasText(emailAddress) ? emailAddress.trim().toLowerCase(Locale.ROOT) : null;
+    }
+
+    private record DeliveryResolutionContext(
+            Long senderUserId,
+            String senderUserEmail,
+            String ipAddress,
+            boolean auditEnabled
+    ) {
     }
 }

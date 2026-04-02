@@ -15,6 +15,7 @@ import com.mmmail.server.model.vo.MailActionResultVo;
 import com.mmmail.server.model.vo.MailAttachmentDownloadVo;
 import com.mmmail.server.model.vo.MailAttachmentUploadVo;
 import com.mmmail.server.model.vo.MailDetailVo;
+import com.mmmail.server.model.vo.MailE2eeRecipientStatusVo;
 import com.mmmail.server.model.vo.MailPageVo;
 import com.mmmail.server.model.vo.MailSenderIdentityVo;
 import com.mmmail.server.model.vo.MailboxStatsVo;
@@ -26,6 +27,8 @@ import org.springframework.http.ResponseEntity;
 import com.mmmail.server.service.MailService;
 import com.mmmail.server.util.SecurityUtils;
 import jakarta.servlet.http.HttpServletRequest;
+import jakarta.validation.constraints.Email;
+import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.Valid;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -215,6 +218,14 @@ public class MailController {
     @GetMapping("/identities")
     public Result<List<MailSenderIdentityVo>> identities(HttpServletRequest httpRequest) {
         return Result.success(mailService.listSenderIdentities(SecurityUtils.currentUserId(), httpRequest.getRemoteAddr()));
+    }
+
+    @GetMapping("/e2ee-recipient-status")
+    public Result<MailE2eeRecipientStatusVo> e2eeRecipientStatus(
+            @RequestParam @Email @NotBlank String toEmail,
+            @RequestParam(required = false) @Email String fromEmail
+    ) {
+        return Result.success(mailService.previewRecipientE2eeStatus(SecurityUtils.currentUserId(), toEmail, fromEmail));
     }
 
     @GetMapping("/{mailId}")

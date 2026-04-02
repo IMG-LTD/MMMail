@@ -1,13 +1,18 @@
-# Community Edition v1.0 运维 Runbook
+# Community Edition v1.2 运维 Runbook
 
-**版本**: `v1.0-draft`  
-**日期**: `2026-03-13`  
+**版本**: `v1.2-mainline`  
+**日期**: `2026-04-02`  
 **作者**: `Codex`
 
 ## 1. 入口清单
 - 健康检查：`GET /actuator/health`
 - Prometheus 导出：`GET /actuator/prometheus`
 - 管理页：`/settings/system-health`
+- API 文档：
+  - `GET /v3/api-docs`
+  - `/swagger-ui.html`
+- 设置页采用入口：
+  - `/settings`
 - 本地门禁：`bash scripts/validate-local.sh`
 - CI 门禁：`MMMAIL_VALIDATE_CONTAINER_TESTS=true bash scripts/validate-ci.sh`
 
@@ -17,8 +22,27 @@
   - `curl -sf http://127.0.0.1:8080/actuator/health`
 - Frontend：
   - 访问 `http://127.0.0.1:3001`
+- Frontend PWA：
+  - `curl -sf http://127.0.0.1:3001/manifest.webmanifest`
 - 系统健康页：
   - 使用管理员账号登录后访问 `/settings/system-health`
+- Adoption readiness：
+  - 使用管理员账号登录后访问 `/settings`
+  - 确认可打开：
+    - `Swagger UI`
+    - `OpenAPI JSON`
+    - 自托管安装说明 / Runbook 快速页
+
+### Mail E2EE foundation
+- 当前只验证已交付主路径：
+  - 设置页可以生成并保存 `key profile`
+  - `READY` 内部路由发信会对正文加密
+  - 邮件详情页可在浏览器内解密正文
+- 不要把以下事项当作当前 Runbook 成功条件：
+  - 附件加密
+  - 草稿加密
+  - 外部收件人公钥发现
+  - 零知识架构
 
 ### 本地后端门禁环境
 - 默认 `validate-local.sh` 现在使用后端 `test` profile 回归，不再依赖本机 MySQL / Redis / Nacos 实例或真实密钥。
@@ -64,6 +88,15 @@
 ### `/actuator/prometheus` 返回 `403`
 - 该接口仅管理员可访问。
 - 先重新登录管理员，再确认请求带 `Authorization: Bearer <token>`。
+
+### `Swagger UI` 或 `OpenAPI JSON` 无法打开
+- 先确认后端容器健康：
+  - `curl -sf http://127.0.0.1:8080/actuator/health`
+- 再检查：
+  - `backend/mmmail-server/src/main/resources/application.yml`
+  - `backend/mmmail-server/src/main/java/com/mmmail/server/config/WebMvcConfig.java`
+  - `backend/mmmail-server/src/main/java/com/mmmail/server/config/SecurityConfig.java`
+- 若前端设置页中的文档链接指向错误 origin，检查部署时的 `NUXT_PUBLIC_API_BASE`。
 
 ### 前端 runtime error 未上报
 - 只在已登录会话下上报。

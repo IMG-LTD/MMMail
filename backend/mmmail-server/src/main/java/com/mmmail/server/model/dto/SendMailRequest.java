@@ -12,9 +12,10 @@ public record SendMailRequest(
         @Email @NotBlank String toEmail,
         @Email String fromEmail,
         @NotBlank @Size(max = 255) String subject,
-        @NotBlank @Size(max = 20000) String body,
+        @Size(max = 20000) String body,
         @NotBlank String idempotencyKey,
         List<String> labels,
-        LocalDateTime scheduledAt
+        LocalDateTime scheduledAt,
+        MailBodyE2eePayloadRequest e2ee
 ) {
 }

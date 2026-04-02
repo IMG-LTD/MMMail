@@ -173,7 +173,7 @@ public class SuitePricingCatalogService {
         return new OfferDefinition(
                 DRIVE_PLUS,
                 "Drive Plus",
-                "Single-product secure storage checkout aligned to Proton public pricing",
+                "Single-product Drive add-on aligned to Proton-style public checkout",
                 SEGMENT_CONSUMER,
                 DRIVE_PLUS,
                 CHECKOUT_MODE_SELF_SERVE,
@@ -185,7 +185,7 @@ public class SuitePricingCatalogService {
                 false,
                 false,
                 "20% OFF",
-                List.of("200 GB encrypted storage", "Version history and secure sharing", "Desktop sync and backup posture"),
+                List.of("200 GB storage quota", "Version history and share-link baseline", "Browser-first access and export posture"),
                 List.of("DRIVE", "DOCS"),
                 new PriceSnapshot(
                         CURRENCY_USD,

@@ -2,6 +2,7 @@
 import { computed, onMounted, ref } from 'vue'
 import { ElMessage } from 'element-plus'
 import type { LabelItem, MailDetail } from '~/types/api'
+import MailE2eeEncryptedBody from '~/components/mail/MailE2eeEncryptedBody.vue'
 import { useMailApi } from '~/composables/useMailApi'
 import { useLabelApi } from '~/composables/useLabelApi'
 import { useContactApi } from '~/composables/useContactApi'
@@ -160,7 +161,12 @@ onMounted(() => {
           </div>
         </section>
 
-        <article class="body">{{ mail.body }}</article>
+        <MailE2eeEncryptedBody
+          v-if="mail.e2ee?.enabled"
+          :ciphertext="mail.body"
+          :metadata="mail.e2ee"
+        />
+        <article v-else class="body">{{ mail.body }}</article>
       </template>
       <el-empty v-else :description="t('mailWorkspace.detail.empty')" />
     </section>

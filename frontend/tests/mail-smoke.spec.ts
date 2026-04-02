@@ -97,7 +97,16 @@ const mailApiMock = {
   saveDraft: vi.fn(),
   uploadDraftAttachment: vi.fn(),
   deleteDraftAttachment: vi.fn(),
-  listSenderIdentities: vi.fn()
+  listSenderIdentities: vi.fn(),
+  fetchRecipientE2eeStatus: vi.fn(async () => ({
+    toEmail: 'alice@example.com',
+    fromEmail: 'owner@mmmail.local',
+    deliverable: false,
+    encryptionReady: false,
+    readiness: 'UNDELIVERABLE',
+    routeCount: 0,
+    routes: []
+  }))
 }
 
 vi.mock('~/composables/useMailApi', () => ({
@@ -118,6 +127,14 @@ vi.mock('~/composables/useSettingsApi', () => ({
     fetchProfile: vi.fn(async () => ({
       autoSaveSeconds: 15,
       undoSendSeconds: 0
+    })),
+    fetchMailE2eeKeyProfile: vi.fn(async () => ({
+      enabled: false,
+      fingerprint: null,
+      algorithm: null,
+      publicKeyArmored: null,
+      encryptedPrivateKeyArmored: null,
+      keyCreatedAt: null
     }))
   })
 }))

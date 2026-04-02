@@ -18,6 +18,7 @@ public record MailDetailVo(
         boolean isDraft,
         LocalDateTime sentAt,
         List<String> labels,
-        List<MailAttachmentVo> attachments
+        List<MailAttachmentVo> attachments,
+        MailBodyE2eeVo e2ee
 ) {
 }

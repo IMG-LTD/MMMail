@@ -135,6 +135,9 @@ import {
   systemHealthZhCN,
   systemHealthZhTW
 } from './system-health'
+import { mailE2eeEn, mailE2eeZhCN, mailE2eeZhTW } from './mail-e2ee'
+import { adoptionEn, adoptionZhCN, adoptionZhTW } from './adoption'
+import { pwaEn, pwaZhCN, pwaZhTW } from './pwa'
 
 export type TranslationMessages = Record<string, string>
 export type TranslationCatalog = Record<SupportedLocale, TranslationMessages>
@@ -143,6 +146,7 @@ export const messages: TranslationCatalog = {
   en: {
     ...en,
     ...authenticatorEn,
+    ...adoptionEn,
     ...businessEn,
     ...calendarEn,
     ...communityReleaseEn,
@@ -168,6 +172,8 @@ export const messages: TranslationCatalog = {
     ...passBusinessEn,
     ...passMonitorEn,
     ...passWorkspaceEn,
+    ...mailE2eeEn,
+    ...pwaEn,
     ...sheetsSharingEn,
     ...shellEn,
     ...searchEn,
@@ -187,6 +193,7 @@ export const messages: TranslationCatalog = {
   'zh-CN': {
     ...zhCN,
     ...authenticatorZhCN,
+    ...adoptionZhCN,
     ...businessZhCN,
     ...calendarZhCN,
     ...communityReleaseZhCN,
@@ -212,6 +219,8 @@ export const messages: TranslationCatalog = {
     ...passBusinessZhCN,
     ...passMonitorZhCN,
     ...passWorkspaceZhCN,
+    ...mailE2eeZhCN,
+    ...pwaZhCN,
     ...sheetsSharingZhCN,
     ...shellZhCN,
     ...searchZhCN,
@@ -231,6 +240,7 @@ export const messages: TranslationCatalog = {
   'zh-TW': {
     ...zhTW,
     ...authenticatorZhTW,
+    ...adoptionZhTW,
     ...businessZhTW,
     ...calendarZhTW,
     ...communityReleaseZhTW,
@@ -256,6 +266,8 @@ export const messages: TranslationCatalog = {
     ...passBusinessZhTW,
     ...passMonitorZhTW,
     ...passWorkspaceZhTW,
+    ...mailE2eeZhTW,
+    ...pwaZhTW,
     ...sheetsSharingZhTW,
     ...shellZhTW,
     ...searchZhTW,

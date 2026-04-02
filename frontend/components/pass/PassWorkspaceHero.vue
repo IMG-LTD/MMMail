@@ -39,7 +39,7 @@ const selectedOrgName = computed(() => props.organizations.find(item => item.id 
 const modeLabel = computed(() => (props.workspaceMode === 'PERSONAL' ? 'Personal Vault' : 'Shared Vaults'))
 const statusChips = computed(() => {
   if (!props.overview) {
-    return ['Encrypted cockpit', 'Policy aware', 'Shared-ready']
+    return ['Workspace posture', 'Policy aware', 'Shared-ready']
   }
   return [
     props.overview.allowSecureLinks ? 'Secure links on' : 'Secure links off',
@@ -55,7 +55,7 @@ const statusChips = computed(() => {
     <div class="hero-copy">
       <p class="hero-eyebrow">Pass Workspace</p>
       <h1>{{ modeLabel }}</h1>
-      <p class="hero-subtitle">Personal secrets, shared vaults, and policy controls in one encrypted cockpit.</p>
+      <p class="hero-subtitle">Personal secrets, shared vaults, and policy controls in one workspace surface.</p>
       <div class="hero-meta">
         <span class="hero-pill">Org: {{ selectedOrgName }}</span>
         <span class="hero-pill">Vault: {{ selectedVaultName || 'No vault selected' }}</span>

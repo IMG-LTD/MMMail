@@ -828,6 +828,68 @@ describe('sheets sharing/version route sync', () => {
     mounted.unmount()
   })
 
+  it('excludes declined shares when syncing collaborator count after share creation', async () => {
+    routeState.query = {
+      workbookId: 'wb-1',
+      view: 'WORKBOOKS',
+      scope: 'ALL',
+      panel: 'meta'
+    }
+    const workbooks = ref([buildWorkbookSummary('wb-1')])
+    const activeWorkbook = ref(buildWorkbookDetail('wb-1'))
+    const refreshCollaboration = vi.fn(async () => undefined)
+    sheetsApiMock.createShare.mockResolvedValue({
+      shareId: 'share-3',
+      collaboratorUserId: 'user-4',
+      collaboratorEmail: 'new@mmmail.local',
+      collaboratorDisplayName: 'New user',
+      permission: 'EDIT',
+      responseStatus: 'NEEDS_ACTION',
+      createdAt: '2026-03-30T10:00:00',
+      updatedAt: '2026-03-30T10:00:00',
+    })
+    sheetsApiMock.listShares.mockResolvedValue([
+      {
+        shareId: 'share-1',
+        collaboratorUserId: 'user-2',
+        collaboratorEmail: 'declined@mmmail.local',
+        collaboratorDisplayName: 'Declined user',
+        permission: 'VIEW',
+        responseStatus: 'DECLINED',
+        createdAt: '2026-03-29T09:20:00',
+        updatedAt: '2026-03-29T09:25:00',
+      },
+      {
+        shareId: 'share-3',
+        collaboratorUserId: 'user-4',
+        collaboratorEmail: 'new@mmmail.local',
+        collaboratorDisplayName: 'New user',
+        permission: 'EDIT',
+        responseStatus: 'NEEDS_ACTION',
+        createdAt: '2026-03-30T10:00:00',
+        updatedAt: '2026-03-30T10:00:00',
+      }
+    ])
+    const mounted = await mountComposable(() => useSheetsSharingVersionWorkbench({
+      workbooks,
+      activeWorkbook,
+      activeWorkbookId: computed(() => 'wb-1'),
+      selectWorkbook: vi.fn(async () => true),
+      refreshCollaboration,
+      confirmDiscardChangesIfNeeded: vi.fn(async () => true)
+    }))
+    const sharingVersion = mounted.result
+
+    sharingVersion.inviteEmail.value = 'new@mmmail.local'
+    sharingVersion.invitePermission.value = 'EDIT'
+    await sharingVersion.submitShare()
+
+    expect(activeWorkbook.value.collaboratorCount).toBe(1)
+    expect(workbooks.value[0]?.collaboratorCount).toBe(1)
+    expect(messageSuccessMock).toHaveBeenCalledWith('sheets.messages.shareCreated')
+    mounted.unmount()
+  })
+
   it('ignores stale share create follow-through after workbook changes', async () => {
     const createShareRequest = createDeferred<{
       shareId: string

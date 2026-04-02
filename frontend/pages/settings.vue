@@ -202,6 +202,9 @@ onMounted(() => {
         <el-button type="primary" :loading="loading" @click="saveSettings">{{ t('settings.actions.save') }}</el-button>
       </el-form>
     </section>
+    <SettingsMailE2eePanel />
+    <SettingsAdoptionReadinessPanel />
+    <SettingsPwaPanel />
     <SettingsMailFiltersPanel />
     <SettingsMailEasySwitchPanel />
   </div>

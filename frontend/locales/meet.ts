@@ -1,8 +1,8 @@
 export const meetEn = {
   'meet.access.badge': 'Closed beta access',
-  'meet.access.title': 'Encrypted meetings are rolling out in controlled waves.',
-  'meet.access.description': 'Match Proton Meet public access semantics with plan eligibility, waitlist, activation, and enterprise contact before opening the room workspace.',
-  'meet.access.feature.e2ee': 'End-to-end encrypted meetings',
+  'meet.access.title': 'Meet access is rolling out in controlled waves.',
+  'meet.access.description': 'This phase only ships access gating, waitlist, activation, and guest lobby flows. Media transport and encryption posture are still outside the current baseline.',
+  'meet.access.feature.e2ee': 'Encryption posture still in discovery',
   'meet.access.feature.noTracking': 'No ads or tracking surface',
   'meet.access.feature.noInstall': 'Browser-first early access onboarding',
   'meet.access.planLabel': 'Current plan',
@@ -134,9 +134,9 @@ export const meetEn = {
 
 export const meetZhCN = {
   'meet.access.badge': '封闭测试访问',
-  'meet.access.title': '加密会议正在按批次开放。',
-  'meet.access.description': '先补齐 Proton Meet 公开页的计划资格、waitlist、激活和企业联系语义，再开放房间工作区。',
-  'meet.access.feature.e2ee': '端到端加密会议',
+  'meet.access.title': 'Meet 访问正在按批次开放。',
+  'meet.access.description': '当前阶段只交付访问门禁、waitlist、激活和访客候场流程；媒体传输与加密能力仍不在当前基线内。',
+  'meet.access.feature.e2ee': '加密能力仍在预研',
   'meet.access.feature.noTracking': '无广告、无追踪表面',
   'meet.access.feature.noInstall': '浏览器优先的 early access 开通',
   'meet.access.planLabel': '当前计划',
@@ -268,9 +268,9 @@ export const meetZhCN = {
 
 export const meetZhTW = {
   'meet.access.badge': '封閉測試存取',
-  'meet.access.title': '加密會議正分批開放。',
-  'meet.access.description': '先補齊 Proton Meet 公開頁的方案資格、waitlist、啟用與企業聯絡語義，再開放房間工作區。',
-  'meet.access.feature.e2ee': '端對端加密會議',
+  'meet.access.title': 'Meet 存取正分批開放。',
+  'meet.access.description': '目前階段只交付存取門檻、waitlist、啟用與訪客候場流程；媒體傳輸與加密能力仍不在目前基線內。',
+  'meet.access.feature.e2ee': '加密能力仍在預研',
   'meet.access.feature.noTracking': '無廣告、無追蹤表面',
   'meet.access.feature.noInstall': '瀏覽器優先的 early access 開通',
   'meet.access.planLabel': '目前方案',

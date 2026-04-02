@@ -20,6 +20,7 @@ FRONTEND_DRIVE_GA_TESTS="tests/drive-smoke.spec.ts tests/drive-batch-share.spec.
 BACKEND_OBSERVABILITY_TESTS="ObservabilityIntegrationTest,JobRunMonitorServiceTest,GlobalExceptionHandlerUnitTest"
 FRONTEND_OBSERVABILITY_TESTS="tests/system-health.spec.ts tests/error-tracking.spec.ts"
 FRONTEND_COMMUNITY_BOUNDARY_TESTS="tests/community-navigation.spec.ts tests/community-boundary.spec.ts"
+FRONTEND_PWA_TESTS="tests/pwa-install.spec.ts tests/pwa-settings-panel.spec.ts"
 BACKEND_SHEETS_TESTS="SheetsWorkbookIntegrationTest,SheetsWorkbookDataManagementIntegrationTest,SheetsSharingVersionIntegrationTest,SheetsWorkbookMultiSheetIntegrationTest"
 FRONTEND_SHEETS_TESTS="tests/sheets-business.spec.ts tests/sheets-sharing-version.spec.ts tests/sheets-refresh-regression.spec.ts tests/sheets-sidebar.spec.ts tests/sheets-workspace-route.spec.ts tests/sheets-workspace.spec.ts tests/sheets-mutation-state.spec.ts tests/sheets-collaboration-state.spec.ts tests/sheets-visible-workbooks-state.spec.ts tests/sheets-panels.smoke.spec.ts tests/sheets-trade-collaboration.smoke.spec.ts tests/sheets-structure.smoke.spec.ts tests/sheets-tools-formula.smoke.spec.ts tests/sheets-grid.smoke.spec.ts tests/sheets-state-boundary.smoke.spec.ts tests/sheets-toolbar-empty.smoke.spec.ts tests/sheets-sharing-boundary.smoke.spec.ts tests/sheets-trade-boundary.smoke.spec.ts tests/sheets-panel-safety.smoke.spec.ts tests/sheets-incoming-boundary.smoke.spec.ts tests/sheets-insight-boundary.smoke.spec.ts"
 
@@ -50,6 +51,10 @@ env -u http_proxy -u https_proxy -u HTTP_PROXY -u HTTPS_PROXY -u ALL_PROXY -u al
 echo "[validate-local] frontend community boundary regression"
 env -u http_proxy -u https_proxy -u HTTP_PROXY -u HTTPS_PROXY -u ALL_PROXY -u all_proxy \
   pnpm --dir frontend exec vitest run $FRONTEND_COMMUNITY_BOUNDARY_TESTS >/tmp/mmmail-frontend-community-boundary.log 2>&1
+
+echo "[validate-local] frontend pwa regression"
+env -u http_proxy -u https_proxy -u HTTP_PROXY -u HTTPS_PROXY -u ALL_PROXY -u all_proxy \
+  pnpm --dir frontend exec vitest run $FRONTEND_PWA_TESTS >/tmp/mmmail-frontend-pwa.log 2>&1
 
 echo "[validate-local] frontend sheets regression"
 env -u http_proxy -u https_proxy -u HTTP_PROXY -u HTTPS_PROXY -u ALL_PROXY -u all_proxy \
