@@ -1,56 +1,43 @@
-# Community Edition v1.0 Release Manager Brief
+# Community Edition Release Manager Brief
 
-**版本**: `v1.0-released-v1.1-active`
-**日期**: `2026-03-28`
+**版本**: `v1.2-released-post-v1.2-active`
+**日期**: `2026-04-02`
 **作者**: `Codex`
 
 ## 当前状态
-- 正式状态：`v1.0.0_RELEASED`
-- 含义：`v1.0.0` 已从 `release/v1.0` 正式发布，tag / commit 为 `v1.0.0` / `829c60b99d15c331949a12e45be564da51ec3791`；`release/v1.0` 后续仅承接 `v1.0.x`
-- `v1.0` 最新 green head：以 GitHub Actions 上 `release/v1.0` 的最新成功 run 为准
-- `v1.1` 集成分支：`dev/community-v1`
+- 当前正式版本：`v1.2.0`
+- 当前发布分支：`release/v1.2`
+- 正式 tag / commit：`v1.2.0` / `38e548a1baa56f70f29841d094fa8f927367b1d9`
+- GitHub Release：`https://github.com/IMG-LTD/MMMail/releases/tag/v1.2.0`
+- `release/v1.0` 继续承接 `v1.0.x`
+- `dev/community-v1` 已回到 `post-v1.2` 主线开发职责
 
-## Gate 概览
-- 已完成：Gate 0、Gate 1、Gate 2、Gate 3、Gate 4、Gate 5、Gate 6、Gate 7
-- 待外部执行：无
-
-## GitHub milestones
-- `v1.0.0`
-- `v1.1`
-- `post-v1.1`
-
-## 分支职责
-- `release/v1.0`：`v1.0.0` GA 候选、正式发布与 `v1.0.x` 维护线
-- `dev/community-v1`：`v1.1` 集成分支
-- `6b01ae6 feat: stabilize docs route selection` 保留在 `dev/community-v1`，不进入 `v1.0.0` GA 基线
+## 当前分支职责
+- `release/v1.2`
+  - 只接收 `v1.2.x` 的 `release-blocking / security / metadata` 修复
+- `release/v1.0`
+  - 继续维护 `v1.0.x`
+- `dev/community-v1`
+  - 承接 `post-v1.2` 已批准范围
+  - 保持与后续 `main` 的收敛关系
 
 ## 入口文档
-- GA 稳定窗口：`docs/release/community-v1-ga-stabilization.md`
-- GA 正式发布清单：`docs/release/community-v1-ga-release-checklist.md`
-- 反馈收集：`docs/release/community-v1-feedback-intake.md`
-- GA 分诊手册：`docs/release/community-v1-ga-triage-playbook.md`
-- `v1.1` 规划：`docs/release/community-v1-v1.1-plan.md`
-- `v1.1` backlog seed：`docs/release/community-v1-v1.1-backlog-seed.md`
-- 自托管反馈模板：`.github/ISSUE_TEMPLATE/self-hosting-feedback.md`
-- release-blocking 模板：`.github/ISSUE_TEMPLATE/release-blocking-regression.md`
-- 外部执行：`docs/release/external-execution-checklist.md`
-- 失败分诊：`docs/release/external-failure-triage.md`
-- Gate 回填：`docs/release/gate-backfill-template.md`
-- 回执登记：`docs/release/community-v1-external-receipt-log.md`
-- 状态判定：`docs/release/community-v1-rc-status.md`
-- 最终签收：`docs/release/community-v1-final-signoff.md`
-- 正式 release notes：`docs/release/community-v1-v1.0.0-release-notes.md`
+- `v1.2` 规划基线：`docs/release/community-v1-v1.2-plan.md`
+- `v1.2` 主线路线：`docs/release/community-v1-v1.2-mainline-roadmap.md`
+- `v1.2` 能力边界：`docs/release/community-v1-v1.2-capability-boundaries.md`
+- `v1.2` release checklist：`docs/release/community-v1-v1.2-release-checklist.md`
+- `v1.2` final signoff：`docs/release/community-v1-v1.2-final-signoff.md`
+- `v1.2.0` release notes：`docs/release/community-v1-v1.2.0-release-notes.md`
+- 支持边界：`docs/release/community-v1-support-boundaries.md`
+- 模块成熟度：`docs/open-source/module-maturity-matrix.md`
 
 ## 当前允许
-- `release/v1.0` 上的 release-blocking regression 分诊与最小修复
-- 自托管反馈分流
-- `v1.0.0` 发布文档与历史材料复核
-- `v1.1` backlog 整理与已批准范围开发
-- 已批准的 freeze exception
+- `release/v1.2` 上的 `release-blocking / security / metadata` 最小修复
+- release notes / checklist / signoff / support boundary 的事实性回填
+- `dev/community-v1` 继续承接 `post-v1.2` 范围
 
 ## 当前禁止
-- 新增任何产品功能
-- 新增非阻塞工程能力
-- 向 `release/v1.0` 回灌 `Docs / Sheets` Beta 功能改动
-- 调整首发范围、模块分级、GA / Beta / Preview
-- 大范围重构
+- 扩大 `v1.2` 范围
+- 在 `release/v1.2` 上继续开发下一阶段功能
+- 改写 `v1.2.0` tag 指向
+- 把 `Preview` 模块提升为正式发布承诺
