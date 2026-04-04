@@ -16,6 +16,7 @@ import type {
   DriveIncomingCollaboratorShare,
   DriveItem,
   DriveItemType,
+  DriveUploadE2eePayload,
   DriveSavedShare,
   DrivePreviewKind,
   DriveShareAccessLog,
@@ -26,6 +27,7 @@ import type {
 } from '~/types/api'
 import { useDocsApi } from '~/composables/useDocsApi'
 import { useDriveApi } from '~/composables/useDriveApi'
+import { useDriveFileE2ee } from '~/composables/useDriveFileE2ee'
 import { useI18n } from '~/composables/useI18n'
 import { useSheetsApi } from '~/composables/useSheetsApi'
 import { useSuiteApi } from '~/composables/useSuiteApi'
@@ -183,6 +185,7 @@ const {
 const { createNote } = useDocsApi()
 const { createWorkbook } = useSheetsApi()
 const { getCollaborationCenter } = useSuiteApi()
+const { decryptOwnedFile, encryptOwnedFile, isDriveFileEncryptionEnabled } = useDriveFileE2ee()
 
 const currentFolderLabel = computed(() => trail.value[trail.value.length - 1]?.name || t('drive.root'))
 const currentWorkspaceDescription = computed(() => {
@@ -231,6 +234,17 @@ interface DriveAlertState {
   title: string
   message: string
   retry: () => Promise<void>
+}
+
+interface DrivePreparedUpload {
+  file: File
+  e2ee?: DriveUploadE2eePayload
+}
+
+interface DriveLocalPreviewPayload {
+  blob: Blob
+  mimeType: string
+  truncated: boolean
 }
 
 const workspaceAlert = ref<DriveAlertState | null>(null)
@@ -581,6 +595,51 @@ function formatBytes(bytes: number): string {
 
 function formatTime(value: string | null): string {
   return value || '-'
+}
+
+function isDriveE2eeItem(item: { e2ee?: { enabled: boolean } | null }): boolean {
+  return Boolean(item.e2ee?.enabled)
+}
+
+async function prepareDriveUploadFile(file: File, forceEncryption = false): Promise<DrivePreparedUpload> {
+  if (!forceEncryption && !(await isDriveFileEncryptionEnabled())) {
+    return { file }
+  }
+  return encryptOwnedFile(file)
+}
+
+async function requestDriveE2eePassphrase(): Promise<string> {
+  const { value } = await ElMessageBox.prompt(
+    t('drive.messages.e2eePassphrasePromptInput'),
+    t('drive.messages.e2eePassphrasePromptTitle'),
+    {
+      confirmButtonText: t('common.actions.confirm'),
+      cancelButtonText: t('common.actions.cancel'),
+      inputType: 'password',
+      inputValidator: (rawValue: string) => {
+        if (rawValue.trim()) {
+          return true
+        }
+        return t('drive.messages.e2eePassphraseRequired')
+      }
+    }
+  )
+  return value.trim()
+}
+
+async function loadDecryptedOwnedDriveFile(item: DriveItem): Promise<{ blob: Blob; fileName: string }> {
+  const passphrase = await requestDriveE2eePassphrase()
+  const encryptedFile = await downloadFile(item.id)
+  return decryptOwnedFile(encryptedFile, item, passphrase)
+}
+
+async function buildLocalDrivePreview(item: DriveItem): Promise<DriveLocalPreviewPayload> {
+  const decryptedFile = await loadDecryptedOwnedDriveFile(item)
+  return {
+    blob: decryptedFile.blob,
+    mimeType: decryptedFile.blob.type || item.mimeType || 'application/octet-stream',
+    truncated: false
+  }
 }
 
 function buildCollaborativeTitle(kind: 'docs' | 'sheets'): string {
@@ -1015,7 +1074,12 @@ async function onUploadFile(): Promise<void> {
 
   uploading.value = true
   try {
-    await uploadFile(uploadFileRef.value, currentParentId.value)
+    const preparedUpload = await prepareDriveUploadFile(uploadFileRef.value)
+    if (preparedUpload.e2ee) {
+      await uploadFile(preparedUpload.file, currentParentId.value, preparedUpload.e2ee)
+    } else {
+      await uploadFile(preparedUpload.file, currentParentId.value)
+    }
     operationAlert.value = null
     ElMessage.success(t('drive.messages.fileUploaded'))
     clearUploadSelection()
@@ -1253,7 +1317,15 @@ async function onUploadNewVersion(): Promise<void> {
   }
   versionUploadLoading.value = true
   try {
-    await uploadFileVersion(activeVersionItem.value.id, versionUploadFileRef.value)
+    const preparedUpload = await prepareDriveUploadFile(
+      versionUploadFileRef.value,
+      isDriveE2eeItem(activeVersionItem.value)
+    )
+    if (preparedUpload.e2ee) {
+      await uploadFileVersion(activeVersionItem.value.id, preparedUpload.file, preparedUpload.e2ee)
+    } else {
+      await uploadFileVersion(activeVersionItem.value.id, preparedUpload.file)
+    }
     operationAlert.value = null
     ElMessage.success(t('drive.messages.versionUploaded'))
     clearVersionUploadSelection()
@@ -1359,7 +1431,7 @@ function onClosePreviewDrawer(): void {
 
 async function showPreview(
   item: DriveItem,
-  loader: () => Promise<{ blob: Blob; mimeType: string; truncated: boolean }>
+  loader: () => Promise<DriveLocalPreviewPayload>
 ): Promise<void> {
   clearPreviewState()
   previewTarget.value = item
@@ -1391,6 +1463,10 @@ async function onPreview(item: DriveItem): Promise<void> {
   if (item.itemType !== 'FILE') {
     return
   }
+  if (isDriveE2eeItem(item)) {
+    await showPreview(item, () => buildLocalDrivePreview(item))
+    return
+  }
   await showPreview(item, () => previewFile(item.id))
 }
 
@@ -1401,7 +1477,7 @@ async function onPreviewCollaboratorFile(item: DriveItem): Promise<void> {
   await showPreview(item, () => previewCollaboratorFile(activeCollaboratorShare.value!.shareId, item.id))
 }
 
-async function openShares(item: DriveItem): Promise<void> {
+function openShares(item: DriveItem): void {
   activeShareItem.value = item
   shareDrawerVisible.value = true
 }
@@ -1439,7 +1515,10 @@ async function onDownload(item: DriveItem): Promise<void> {
   if (item.itemType !== 'FILE') {
     return
   }
-  await downloadAndSave(() => downloadFile(item.id), downloadingItemId, item.id, () => onDownload(item))
+  const loader = isDriveE2eeItem(item)
+    ? () => loadDecryptedOwnedDriveFile(item)
+    : () => downloadFile(item.id)
+  await downloadAndSave(loader, downloadingItemId, item.id, () => onDownload(item))
 }
 
 async function onDownloadCollaboratorFile(item: DriveItem): Promise<void> {
@@ -1457,6 +1536,10 @@ async function onDownloadCollaboratorFile(item: DriveItem): Promise<void> {
 function onOpenBatchShare(): void {
   if (!hasSelectedItems.value) {
     ElMessage.warning(t('drive.messages.selectAtLeastOneItem'))
+    return
+  }
+  if (selectedItems.value.some(item => isDriveE2eeItem(item))) {
+    ElMessage.warning(t('drive.messages.e2eeShareUnavailable'))
     return
   }
   batchShareDialogVisible.value = true
@@ -1636,6 +1719,9 @@ onBeforeUnmount(() => {
             <div class="name-cell" @contextmenu.prevent="onRowContextMenu($event, scope.row)">
               <el-tag :type="scope.row.itemType === 'FOLDER' ? 'success' : 'info'" size="small">
                 {{ getItemTypeLabel(scope.row.itemType) }}
+              </el-tag>
+              <el-tag v-if="isDriveE2eeItem(scope.row)" type="warning" size="small">
+                {{ t('drive.table.badges.e2ee') }}
               </el-tag>
               <span>{{ scope.row.name }}</span>
             </div>
@@ -1950,6 +2036,9 @@ onBeforeUnmount(() => {
           <el-table-column prop="versionNo" :label="t('drive.versions.columns.version')" width="110">
             <template #default="scope">
               <el-tag type="info">#{{ scope.row.versionNo }}</el-tag>
+              <el-tag v-if="isDriveE2eeItem(scope.row)" type="warning" size="small">
+                {{ t('drive.table.badges.e2ee') }}
+              </el-tag>
             </template>
           </el-table-column>
           <el-table-column :label="t('drive.table.columns.size')" width="130">

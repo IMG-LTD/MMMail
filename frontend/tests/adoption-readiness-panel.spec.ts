@@ -29,6 +29,7 @@ describe('SettingsAdoptionReadinessPanel', () => {
   it('renders concrete API docs and self-hosted guide links', async () => {
     const panel = await mountPanel()
 
+    expect(panel.get('[data-testid="settings-adoption-api-guide-link"]').attributes('href')).toBe('/self-hosted/api.html?apiBase=http%3A%2F%2Flocalhost%3A8080')
     expect(panel.get('[data-testid="settings-adoption-swagger-link"]').attributes('href')).toBe('http://localhost:8080/swagger-ui.html')
     expect(panel.get('[data-testid="settings-adoption-openapi-link"]').attributes('href')).toBe('http://localhost:8080/v3/api-docs')
     expect(panel.get('[data-testid="settings-adoption-install-guide-link"]').attributes('href')).toBe('/self-hosted/install.html')

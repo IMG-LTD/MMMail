@@ -7,6 +7,7 @@ import com.mmmail.server.model.dto.MailActionRequest;
 import com.mmmail.server.model.dto.SaveDraftRequest;
 import com.mmmail.server.model.dto.SendMailRequest;
 import com.mmmail.server.model.dto.SnoozeUntilRequest;
+import com.mmmail.server.model.dto.UploadDraftAttachmentRequest;
 import com.mmmail.server.model.dto.UpdateMailLabelsRequest;
 import com.mmmail.server.model.vo.DraftSaveVo;
 import com.mmmail.server.model.vo.ConversationDetailVo;
@@ -33,6 +34,7 @@ import jakarta.validation.Valid;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
@@ -40,7 +42,6 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
-import org.springframework.web.multipart.MultipartFile;
 
 import java.nio.charset.StandardCharsets;
 import java.util.List;
@@ -247,10 +248,15 @@ public class MailController {
     @PostMapping("/drafts/{draftId}/attachments")
     public Result<MailAttachmentUploadVo> uploadDraftAttachment(
             @PathVariable Long draftId,
-            @RequestParam("file") MultipartFile file,
+            @Valid @ModelAttribute UploadDraftAttachmentRequest request,
             HttpServletRequest httpRequest
     ) {
-        return Result.success(mailService.uploadDraftAttachment(SecurityUtils.currentUserId(), draftId, file, httpRequest.getRemoteAddr()));
+        return Result.success(mailService.uploadDraftAttachment(
+                SecurityUtils.currentUserId(),
+                draftId,
+                request,
+                httpRequest.getRemoteAddr()
+        ));
     }
 
     @DeleteMapping("/drafts/{draftId}/attachments/{attachmentId}")

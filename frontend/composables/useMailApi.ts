@@ -12,7 +12,8 @@ import type {
   MailboxStats,
   SearchMailParams,
   SystemMailFolder,
-  SendMailRequest
+  SendMailRequest,
+  UploadDraftAttachmentOptions
 } from '~/types/api'
 
 const FOLDER_PATH_MAP: Record<Lowercase<SystemMailFolder>, string> = {
@@ -92,9 +93,17 @@ export function useMailApi() {
     return response.data.data.draftId
   }
 
-  async function uploadDraftAttachment(draftId: MailId, file: File): Promise<MailAttachment> {
+  async function uploadDraftAttachment(draftId: MailId, options: UploadDraftAttachmentOptions): Promise<MailAttachment> {
     const formData = new FormData()
-    formData.append('file', file)
+    formData.append('file', options.file, options.fileName)
+    formData.append('fileName', options.fileName)
+    formData.append('contentType', options.contentType)
+    formData.append('fileSize', String(options.fileSize))
+    if (options.e2ee) {
+      formData.append('e2eeEnabled', 'true')
+      formData.append('e2eeAlgorithm', options.e2ee.algorithm)
+      formData.append('e2eeRecipientFingerprintsJson', JSON.stringify(options.e2ee.recipientFingerprints))
+    }
     const response = await $apiClient.post<ApiResponse<{ draftId: MailId, attachment: MailAttachment }>>(
       `/api/v1/mails/drafts/${draftId}/attachments`,
       formData

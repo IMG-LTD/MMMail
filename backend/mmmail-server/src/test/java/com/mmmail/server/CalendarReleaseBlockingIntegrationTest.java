@@ -218,6 +218,96 @@ class CalendarReleaseBlockingIntegrationTest {
                 .andExpect(jsonPath("$.message").value("Timezone is invalid"));
     }
 
+    @Test
+    void internalAttendeeInvitationsShouldMaterializeSyncAndCleanUp() throws Exception {
+        String suffix = String.valueOf(System.nanoTime());
+        String ownerToken = register("calendar-invite-owner-" + suffix + "@mmmail.local", "Invite Owner");
+        String attendeeEmail = "calendar-invite-user-" + suffix + "@mmmail.local";
+        String attendeeToken = register(attendeeEmail, "Invite User");
+        String externalEmail = "calendar-invite-external-" + suffix + "@example.com";
+
+        String eventId = createEvent(
+                ownerToken,
+                """
+                {
+                  "title": "Invite sync",
+                  "description": "Internal orchestration",
+                  "location": "Room Sync",
+                  "startAt": "2026-04-12T10:00:00",
+                  "endAt": "2026-04-12T11:00:00",
+                  "timezone": "UTC",
+                  "reminderMinutes": 10,
+                  "attendees": [
+                    {"email": "%s", "displayName": "Invite User"},
+                    {"email": "%s", "displayName": "External Guest"}
+                  ]
+                }
+                """.formatted(attendeeEmail, externalEmail)
+        );
+
+        mockMvc.perform(get("/api/v1/calendar/events/" + eventId + "/shares")
+                        .header("Authorization", "Bearer " + ownerToken))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.length()").value(1))
+                .andExpect(jsonPath("$.data[0].targetEmail").value(attendeeEmail))
+                .andExpect(jsonPath("$.data[0].permission").value("VIEW"))
+                .andExpect(jsonPath("$.data[0].responseStatus").value("NEEDS_ACTION"));
+
+        MvcResult incomingResult = mockMvc.perform(get("/api/v1/calendar/shares/incoming")
+                        .header("Authorization", "Bearer " + attendeeToken))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.length()").value(1))
+                .andReturn();
+        String shareId = readJson(incomingResult).at("/data/0/shareId").asText();
+
+        mockMvc.perform(post("/api/v1/calendar/shares/" + shareId + "/response")
+                        .header("Authorization", "Bearer " + attendeeToken)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {
+                                  "response": "ACCEPT"
+                                }
+                                """))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.responseStatus").value("ACCEPTED"));
+
+        JsonNode attendees = readJson(mockMvc.perform(get("/api/v1/calendar/events/" + eventId)
+                        .header("Authorization", "Bearer " + ownerToken))
+                .andExpect(status().isOk())
+                .andReturn()).at("/data/attendees");
+        assertThat(findAttendeeResponse(attendees, attendeeEmail)).isEqualTo("ACCEPTED");
+        assertThat(findAttendeeResponse(attendees, externalEmail)).isEqualTo("NEEDS_ACTION");
+
+        mockMvc.perform(put("/api/v1/calendar/events/" + eventId)
+                        .header("Authorization", "Bearer " + ownerToken)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {
+                                  "title": "Invite sync",
+                                  "description": "Internal orchestration",
+                                  "location": "Room Sync",
+                                  "startAt": "2026-04-12T10:00:00",
+                                  "endAt": "2026-04-12T11:00:00",
+                                  "timezone": "UTC",
+                                  "reminderMinutes": 10,
+                                  "attendees": [
+                                    {"email": "%s", "displayName": "External Guest"}
+                                  ]
+                                }
+                                """.formatted(externalEmail)))
+                .andExpect(status().isOk());
+
+        mockMvc.perform(get("/api/v1/calendar/shares/incoming")
+                        .header("Authorization", "Bearer " + attendeeToken))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.length()").value(0));
+
+        mockMvc.perform(get("/api/v1/calendar/events/" + eventId + "/shares")
+                        .header("Authorization", "Bearer " + ownerToken))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.length()").value(0));
+    }
+
     private void acceptShare(String token, String shareId) throws Exception {
         mockMvc.perform(post("/api/v1/calendar/shares/" + shareId + "/response")
                         .header("Authorization", "Bearer " + token)
@@ -274,6 +364,15 @@ class CalendarReleaseBlockingIntegrationTest {
 
     private JsonNode readJson(MvcResult result) throws Exception {
         return objectMapper.readTree(result.getResponse().getContentAsString());
+    }
+
+    private String findAttendeeResponse(JsonNode attendees, String email) {
+        for (JsonNode attendee : attendees) {
+            if (email.equals(attendee.path("email").asText())) {
+                return attendee.path("responseStatus").asText();
+            }
+        }
+        return null;
     }
 
     private String updatePayload(String title, String timezone) {

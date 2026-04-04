@@ -5,10 +5,12 @@ import {
   confirmMock,
   docsApiMock,
   driveApiMock,
+  driveFileE2eeMock,
   messageErrorMock,
   messageSuccessMock,
   messageWarningMock,
   navigateToMock,
+  promptMock,
   resetDriveApiMocks,
   setupDrivePageGlobals,
   sheetsApiMock,
@@ -24,6 +26,7 @@ vi.mock('element-plus', () => ({
   },
   ElMessageBox: {
     confirm: confirmMock,
+    prompt: promptMock,
   },
 }))
 
@@ -33,6 +36,10 @@ vi.mock('~/composables/useDriveApi', () => ({
 
 vi.mock('~/composables/useDocsApi', () => ({
   useDocsApi: () => docsApiMock,
+}))
+
+vi.mock('~/composables/useDriveFileE2ee', () => ({
+  useDriveFileE2ee: () => driveFileE2eeMock,
 }))
 
 vi.mock('~/composables/useSheetsApi', () => ({

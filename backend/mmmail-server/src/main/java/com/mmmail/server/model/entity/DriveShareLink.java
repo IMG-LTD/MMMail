@@ -18,6 +18,10 @@ public class DriveShareLink {
     private String permission;
     private LocalDateTime expiresAt;
     private String passwordHash;
+    private Integer readableE2eeEnabled;
+    private String readableE2eeAlgorithm;
+    private String readableE2eeStoragePath;
+    private String readableE2eeChecksum;
     private String status;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
@@ -86,6 +90,38 @@ public class DriveShareLink {
 
     public void setStatus(String status) {
         this.status = status;
+    }
+
+    public Integer getReadableE2eeEnabled() {
+        return readableE2eeEnabled;
+    }
+
+    public void setReadableE2eeEnabled(Integer readableE2eeEnabled) {
+        this.readableE2eeEnabled = readableE2eeEnabled;
+    }
+
+    public String getReadableE2eeAlgorithm() {
+        return readableE2eeAlgorithm;
+    }
+
+    public void setReadableE2eeAlgorithm(String readableE2eeAlgorithm) {
+        this.readableE2eeAlgorithm = readableE2eeAlgorithm;
+    }
+
+    public String getReadableE2eeStoragePath() {
+        return readableE2eeStoragePath;
+    }
+
+    public void setReadableE2eeStoragePath(String readableE2eeStoragePath) {
+        this.readableE2eeStoragePath = readableE2eeStoragePath;
+    }
+
+    public String getReadableE2eeChecksum() {
+        return readableE2eeChecksum;
+    }
+
+    public void setReadableE2eeChecksum(String readableE2eeChecksum) {
+        this.readableE2eeChecksum = readableE2eeChecksum;
     }
 
     public LocalDateTime getCreatedAt() {

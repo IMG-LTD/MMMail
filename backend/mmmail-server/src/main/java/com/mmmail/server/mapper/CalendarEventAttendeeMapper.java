@@ -14,4 +14,7 @@ public interface CalendarEventAttendeeMapper extends BaseMapper<CalendarEventAtt
 
     @Delete("delete from calendar_event_attendee where event_id = #{eventId}")
     int purgeByEventId(@Param("eventId") Long eventId);
+
+    @Delete("delete from calendar_event_attendee where event_id = #{eventId} and email = #{email}")
+    int purgeByEventAndEmail(@Param("eventId") Long eventId, @Param("email") String email);
 }

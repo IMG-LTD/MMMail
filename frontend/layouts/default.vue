@@ -117,6 +117,7 @@ onMounted(async () => {
 
 <template>
   <div>
+    <a class="skip-link" href="#shell-main-content">{{ t('shell.a11y.skipToContent') }}</a>
     <header class="topbar">
       <div class="brand-block">
         <NuxtLink class="brand" :to="homeLink">MMMail</NuxtLink>
@@ -126,6 +127,7 @@ onMounted(async () => {
         <el-input
           v-model="quickKeyword"
           :disabled="!mailEnabled"
+          :aria-label="t('topbar.searchAriaLabel')"
           :placeholder="mailEnabled ? t('topbar.searchPlaceholder') : t('orgAccess.topbar.searchDisabled')"
           @keyup.enter="goSearch"
         />
@@ -144,41 +146,48 @@ onMounted(async () => {
     </header>
     <div class="shell">
       <aside class="sidebar mm-card">
-        <NuxtLink
-          v-for="item in localizedAccessibleNavItems"
-          :key="item.to"
-          :to="item.to"
-          class="nav-item"
-          active-class="active"
-        >
-          <span>{{ item.label }}</span>
-          <el-badge v-if="item.folder" :value="folderCount(item.folder)" :max="9999" class="badge" />
-          <el-badge v-else-if="item.unread" :value="unreadBadgeCount()" :max="9999" class="badge" />
-          <el-badge v-else-if="item.starred" :value="starredCount()" :max="9999" class="badge" />
-        </NuxtLink>
-        <div class="custom-folder-rail" v-if="mailEnabled && customFolderItems.length">
-          <div class="custom-folder-head">{{ t('mailFolders.sidebar.title') }}</div>
+        <nav class="sidebar-nav" :aria-label="t('shell.a11y.mainNavigation')">
           <NuxtLink
-            v-for="folder in customFolderItems"
-            :key="folder.id"
-            :to="`/folders/${folder.id}`"
-            class="nav-item nav-item--folder"
+            v-for="item in localizedAccessibleNavItems"
+            :key="item.to"
+            :to="item.to"
+            class="nav-item"
             active-class="active"
-            :style="{ paddingLeft: `${12 + folder.depth * 18}px` }"
           >
-            <span class="folder-label">
-              <span class="folder-swatch" :style="{ backgroundColor: folder.color }" />
-              {{ folder.name }}
-            </span>
-            <el-badge :value="folder.unreadCount" :hidden="folder.unreadCount === 0" :max="9999" class="badge" />
+            <span>{{ item.label }}</span>
+            <el-badge v-if="item.folder" :value="folderCount(item.folder)" :max="9999" class="badge" />
+            <el-badge v-else-if="item.unread" :value="unreadBadgeCount()" :max="9999" class="badge" />
+            <el-badge v-else-if="item.starred" :value="starredCount()" :max="9999" class="badge" />
           </NuxtLink>
-        </div>
+          <div class="custom-folder-rail" v-if="mailEnabled && customFolderItems.length">
+            <div class="custom-folder-head">{{ t('mailFolders.sidebar.title') }}</div>
+            <NuxtLink
+              v-for="folder in customFolderItems"
+              :key="folder.id"
+              :to="`/folders/${folder.id}`"
+              class="nav-item nav-item--folder"
+              active-class="active"
+              :style="{ paddingLeft: `${12 + folder.depth * 18}px` }"
+            >
+              <span class="folder-label">
+                <span class="folder-swatch" :style="{ backgroundColor: folder.color }" />
+                {{ folder.name }}
+              </span>
+              <el-badge :value="folder.unreadCount" :hidden="folder.unreadCount === 0" :max="9999" class="badge" />
+            </NuxtLink>
+          </div>
+        </nav>
       </aside>
-      <main class="content">
+      <main id="shell-main-content" class="content" tabindex="-1" :aria-label="t('shell.a11y.mainContent')">
         <slot />
       </main>
     </div>
-    <NuxtLink class="security-rail" :class="{ active: securityRailActive }" to="/security">
+    <NuxtLink
+      class="security-rail"
+      :class="{ active: securityRailActive }"
+      :aria-label="t('topbar.securityAriaLabel')"
+      to="/security"
+    >
       <span class="security-rail-badge">{{ t('topbar.securityBadge') }}</span>
       <strong>{{ t('topbar.securityTitle') }}</strong>
       <small>{{ t('topbar.securitySubtitle') }}</small>
@@ -188,6 +197,23 @@ onMounted(async () => {
 </template>
 
 <style scoped>
+.skip-link {
+  position: absolute;
+  left: 16px;
+  top: 12px;
+  z-index: 50;
+  padding: 8px 12px;
+  border-radius: 10px;
+  background: #ffffff;
+  color: #0f172a;
+  box-shadow: 0 10px 30px rgba(15, 23, 42, 0.16);
+  transform: translateY(-160%);
+}
+
+.skip-link:focus-visible {
+  transform: translateY(0);
+}
+
 .topbar {
   height: 64px;
   display: grid;
@@ -252,6 +278,9 @@ onMounted(async () => {
 .sidebar {
   width: 240px;
   padding: 12px;
+}
+
+.sidebar-nav {
   display: flex;
   flex-direction: column;
   gap: 8px;

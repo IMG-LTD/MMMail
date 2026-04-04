@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { computed } from 'vue'
-import { COMMUNITY_V1_PREVIEW_MODULES } from '~/constants/module-maturity'
+import type { ModuleMaturity } from '~/constants/module-maturity'
+import { COMMUNITY_V1_LABS_MODULES } from '~/constants/module-maturity'
 import { useI18n } from '~/composables/useI18n'
 
 definePageMeta({ layout: 'default' })
@@ -8,8 +9,18 @@ definePageMeta({ layout: 'default' })
 const { t } = useI18n()
 const runtimeConfig = useRuntimeConfig()
 
-const previewModulesEnabled = computed(() => runtimeConfig.public.enablePreviewModules === true)
-const previewModules = computed(() => COMMUNITY_V1_PREVIEW_MODULES)
+const labsModulesEnabled = computed(() => runtimeConfig.public.enablePreviewModules === true)
+const labsModules = computed(() => COMMUNITY_V1_LABS_MODULES)
+
+function resolveMaturityTagType(maturity: ModuleMaturity): 'success' | 'warning' | 'info' {
+  if (maturity === 'GA') {
+    return 'success'
+  }
+  if (maturity === 'BETA') {
+    return 'warning'
+  }
+  return 'info'
+}
 
 useHead(() => ({
   title: t('page.labs.title')
@@ -23,19 +34,21 @@ useHead(() => ({
         <p class="eyebrow">{{ t('labs.hero.badge') }}</p>
         <h1>{{ t('labs.hero.title') }}</h1>
         <p class="mm-muted">{{ t('labs.hero.description') }}</p>
-        <el-tag :type="previewModulesEnabled ? 'warning' : 'info'" effect="dark">
-          {{ previewModulesEnabled ? t('labs.flag.enabled') : t('labs.flag.disabled') }}
+        <el-tag :type="labsModulesEnabled ? 'warning' : 'info'" effect="dark">
+          {{ labsModulesEnabled ? t('labs.flag.enabled') : t('labs.flag.disabled') }}
         </el-tag>
       </section>
 
-      <section v-if="previewModules.length" class="labs-grid">
-        <article v-for="module in previewModules" :key="module.code" class="mm-card labs-card">
+      <section v-if="labsModules.length" class="labs-grid">
+        <article v-for="module in labsModules" :key="module.code" class="mm-card labs-card">
           <div class="labs-card__head">
             <div>
               <h2>{{ t(module.labelKey) }}</h2>
               <p class="mm-muted">{{ t('labs.card.description', { name: t(module.labelKey) }) }}</p>
             </div>
-            <el-tag type="info" effect="plain">{{ t('labs.maturity.PREVIEW') }}</el-tag>
+            <el-tag :type="resolveMaturityTagType(module.maturity)" effect="plain">
+              {{ t(`labs.maturity.${module.maturity}`) }}
+            </el-tag>
           </div>
           <dl class="labs-meta">
             <div>
@@ -44,7 +57,7 @@ useHead(() => ({
             </div>
             <div>
               <dt>{{ t('labs.card.flag') }}</dt>
-              <dd>{{ previewModulesEnabled ? t('labs.flag.enabled') : t('labs.flag.disabled') }}</dd>
+              <dd>{{ labsModulesEnabled ? t('labs.flag.enabled') : t('labs.flag.disabled') }}</dd>
             </div>
           </dl>
         </article>

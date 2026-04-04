@@ -19,6 +19,9 @@ public class DriveFileVersion {
     private Long sizeBytes;
     private String storagePath;
     private String checksum;
+    private Integer e2eeEnabled;
+    private String e2eeAlgorithm;
+    private String e2eeFingerprintsJson;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
     @TableLogic(value = "0", delval = "1")
@@ -86,6 +89,30 @@ public class DriveFileVersion {
 
     public void setChecksum(String checksum) {
         this.checksum = checksum;
+    }
+
+    public Integer getE2eeEnabled() {
+        return e2eeEnabled;
+    }
+
+    public void setE2eeEnabled(Integer e2eeEnabled) {
+        this.e2eeEnabled = e2eeEnabled;
+    }
+
+    public String getE2eeAlgorithm() {
+        return e2eeAlgorithm;
+    }
+
+    public void setE2eeAlgorithm(String e2eeAlgorithm) {
+        this.e2eeAlgorithm = e2eeAlgorithm;
+    }
+
+    public String getE2eeFingerprintsJson() {
+        return e2eeFingerprintsJson;
+    }
+
+    public void setE2eeFingerprintsJson(String e2eeFingerprintsJson) {
+        this.e2eeFingerprintsJson = e2eeFingerprintsJson;
     }
 
     public LocalDateTime getCreatedAt() {

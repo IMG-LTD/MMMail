@@ -44,7 +44,7 @@ export const COMMUNITY_CAPABILITY_STATUS: ReadonlyArray<CommunityCapabilityStatu
   },
   {
     code: 'WEB_PUSH',
-    status: 'NOT_SHIPPED',
+    status: 'LIMITED',
     labelKey: 'community.boundary.capabilities.webPush.label',
     summaryKey: 'community.boundary.capabilities.webPush.summary'
   },
@@ -62,7 +62,7 @@ export const COMMUNITY_CAPABILITY_STATUS: ReadonlyArray<CommunityCapabilityStatu
   },
   {
     code: 'DRIVE_E2EE',
-    status: 'DISCOVERY',
+    status: 'LIMITED',
     labelKey: 'community.boundary.capabilities.driveE2ee.label',
     summaryKey: 'community.boundary.capabilities.driveE2ee.summary'
   },
@@ -74,7 +74,7 @@ export const COMMUNITY_CAPABILITY_STATUS: ReadonlyArray<CommunityCapabilityStatu
   },
   {
     code: 'MAIL_PROTOCOLS',
-    status: 'DISCOVERY',
+    status: 'LIMITED',
     labelKey: 'community.boundary.capabilities.mailProtocols.label',
     summaryKey: 'community.boundary.capabilities.mailProtocols.summary'
   },
@@ -88,7 +88,7 @@ export const COMMUNITY_CAPABILITY_STATUS: ReadonlyArray<CommunityCapabilityStatu
 
 export const COMMUNITY_BOUNDARY_DOC_PATHS = [
   'README.md',
-  'docs/release/community-v1-v1.2-mainline-roadmap.md',
+  'docs/release/community-v1-v1.3-mainline-roadmap.md',
   'docs/release/community-v1-v1.2-capability-boundaries.md',
   'docs/architecture/mail-zero-knowledge-roadmap.md',
   'docs/architecture/mail-protocol-stack-discovery.md',

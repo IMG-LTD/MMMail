@@ -1,7 +1,8 @@
 <script setup lang="ts">
 import { computed, reactive, ref, watch } from 'vue'
-import { ElMessage } from 'element-plus'
+import { ElMessage, ElMessageBox } from 'element-plus'
 import { useDriveApi } from '~/composables/useDriveApi'
+import { useDriveFileE2ee } from '~/composables/useDriveFileE2ee'
 import { useI18n } from '~/composables/useI18n'
 import type { DriveCollaboratorShare, DriveItem, DriveShareLink, DriveSharePermission } from '~/types/api'
 import { getDriveCollaboratorStatusI18nKey } from '~/utils/drive-collaboration'
@@ -21,18 +22,32 @@ const { t } = useI18n()
 const {
   listShares,
   createShare,
+  createEncryptedPublicShare,
   updateShare,
   revokeShare,
+  downloadFile,
   listCollaboratorShares,
   createCollaboratorShare,
   updateCollaboratorShare,
   removeCollaboratorShare
 } = useDriveApi()
+const { encryptPublicShareFile } = useDriveFileE2ee()
 
 const drawerVisible = computed({
   get: () => props.modelValue,
   set: (value: boolean) => emit('update:modelValue', value)
 })
+const isEncryptedSingleFile = computed(() => Boolean(
+  props.item
+  && props.item.itemType === 'FILE'
+  && props.item.e2ee?.enabled,
+))
+const collaboratorSharingSupported = computed(() => !isEncryptedSingleFile.value)
+const publicShareHintKey = computed(() => (
+  isEncryptedSingleFile.value
+    ? 'drive.shareDrawer.e2ee.publicHint'
+    : 'drive.shareDrawer.passwordHint'
+))
 
 const publicSharesLoading = ref(false)
 const collaboratorLoading = ref(false)
@@ -76,6 +91,16 @@ watch(
     void loadAllShareData()
   },
   { immediate: true }
+)
+
+watch(
+  isEncryptedSingleFile,
+  (encrypted) => {
+    if (encrypted) {
+      shareForm.permission = 'VIEW'
+    }
+  },
+  { immediate: true },
 )
 
 function resetPublicShareForm(): void {
@@ -142,7 +167,12 @@ function getCollaboratorStatusTagType(status: string): 'warning' | 'success' | '
 }
 
 async function loadAllShareData(): Promise<void> {
-  await Promise.all([loadPublicShares(), loadCollaboratorShareList()])
+  await loadPublicShares()
+  if (collaboratorSharingSupported.value) {
+    await loadCollaboratorShareList()
+    return
+  }
+  collaboratorList.value = []
 }
 
 async function loadPublicShares(): Promise<void> {
@@ -188,6 +218,10 @@ async function copyToClipboard(value: string, successKey: string): Promise<void>
 
 async function onCreateCollaboratorInvite(): Promise<void> {
   if (!props.item || !collaboratorForm.email.trim()) {
+    return
+  }
+  if (!collaboratorSharingSupported.value) {
+    ElMessage.warning(t('drive.shareDrawer.e2ee.collaboratorUnavailable'))
     return
   }
   collaboratorSubmitting.value = true
@@ -242,6 +276,10 @@ async function onRemoveCollaboratorInvite(shareId: string): Promise<void> {
 }
 
 function openManageDialog(share: DriveShareLink): void {
+  if (isManageDisabled(share)) {
+    ElMessage.warning(t('drive.shareDrawer.e2ee.manageUnavailable'))
+    return
+  }
   manageForm.shareId = share.id
   manageForm.permission = share.permission
   manageForm.expiresAt = share.expiresAt || ''
@@ -250,22 +288,89 @@ function openManageDialog(share: DriveShareLink): void {
   manageDialogVisible.value = true
 }
 
+function isManageDisabled(share: DriveShareLink): boolean {
+  return share.status !== 'ACTIVE' || Boolean(share.e2ee?.enabled)
+}
+
+function normalizeSharePassword(): string {
+  const value = shareForm.password.trim()
+  if (!value) {
+    throw new Error(t('drive.shareDrawer.e2ee.passwordRequired'))
+  }
+  return value
+}
+
+function ensureEncryptedSharePermission(): void {
+  if (shareForm.permission !== 'VIEW') {
+    throw new Error(t('drive.shareDrawer.e2ee.onlyViewAllowed'))
+  }
+}
+
+async function requestOwnerPassphrase(): Promise<string> {
+  const { value } = await ElMessageBox.prompt(
+    t('drive.messages.e2eePassphrasePromptInput'),
+    t('drive.messages.e2eePassphrasePromptTitle'),
+    {
+      confirmButtonText: t('common.actions.confirm'),
+      cancelButtonText: t('common.actions.cancel'),
+      inputType: 'password',
+      inputValidator: (rawValue: string) => {
+        if (rawValue.trim()) {
+          return true
+        }
+        return t('drive.messages.e2eePassphraseRequired')
+      },
+    },
+  )
+  return value.trim()
+}
+
+function isPromptCancelled(error: unknown): boolean {
+  return error === 'cancel' || error === 'close'
+}
+
+async function createStandardPublicShare(itemId: string): Promise<void> {
+  await createShare(itemId, {
+    permission: shareForm.permission,
+    expiresAt: shareForm.expiresAt || undefined,
+    password: shareForm.password.trim() || undefined,
+  })
+}
+
+async function createEncryptedPublicShareLink(item: DriveItem): Promise<void> {
+  ensureEncryptedSharePermission()
+  const sharePassword = normalizeSharePassword()
+  const ownerPassphrase = await requestOwnerPassphrase()
+  const ownerCiphertext = await downloadFile(item.id)
+  const reEncryptedShare = await encryptPublicShareFile(ownerCiphertext, item, ownerPassphrase, sharePassword)
+  await createEncryptedPublicShare(item.id, {
+    permission: 'VIEW',
+    expiresAt: shareForm.expiresAt || undefined,
+    password: sharePassword,
+    encryptedFile: reEncryptedShare.file,
+    e2ee: reEncryptedShare.e2ee,
+  })
+}
+
 async function onCreatePublicShare(): Promise<void> {
   if (!props.item) {
     return
   }
   publicMutating.value = true
   try {
-    await createShare(props.item.id, {
-      permission: shareForm.permission,
-      expiresAt: shareForm.expiresAt || undefined,
-      password: shareForm.password.trim() || undefined
-    })
+    if (isEncryptedSingleFile.value) {
+      await createEncryptedPublicShareLink(props.item)
+    } else {
+      await createStandardPublicShare(props.item.id)
+    }
     resetPublicShareForm()
     ElMessage.success(t('drive.messages.shareCreated'))
     await loadPublicShares()
     emit('changed')
   } catch (error) {
+    if (isPromptCancelled(error)) {
+      return
+    }
     ElMessage.error((error as Error).message || t('drive.messages.shareCreateFailed'))
   } finally {
     publicMutating.value = false
@@ -274,6 +379,10 @@ async function onCreatePublicShare(): Promise<void> {
 
 async function onUpdatePublicShare(): Promise<void> {
   if (!manageForm.shareId) {
+    return
+  }
+  if (activeManageShare.value?.e2ee?.enabled) {
+    ElMessage.warning(t('drive.shareDrawer.e2ee.manageUnavailable'))
     return
   }
   publicMutating.value = true
@@ -340,7 +449,7 @@ function onDrawerClosed(): void {
         </div>
       </div>
 
-      <div class="share-create mm-card">
+      <div v-if="collaboratorSharingSupported" class="share-create mm-card">
         <div class="share-section__head">
           <div>
             <p class="share-section__eyebrow">{{ t('drive.collaboration.owner.badge') }}</p>
@@ -419,19 +528,42 @@ function onDrawerClosed(): void {
         </el-table>
       </div>
 
+      <div v-else class="share-create mm-card" data-testid="drive-share-collaborator-disabled">
+        <div class="share-section__head">
+          <div>
+            <p class="share-section__eyebrow">{{ t('drive.collaboration.owner.badge') }}</p>
+            <h4>{{ t('drive.collaboration.owner.title') }}</h4>
+          </div>
+          <el-tag type="warning" effect="plain">{{ t('drive.shareDrawer.e2ee.collaboratorBadge') }}</el-tag>
+        </div>
+        <el-alert
+          :title="t('drive.shareDrawer.e2ee.collaboratorUnavailable')"
+          type="warning"
+          :closable="false"
+          show-icon
+        />
+      </div>
+
       <div class="share-create mm-card">
         <div class="share-section__head">
           <div>
             <p class="share-section__eyebrow">{{ t('drive.shareDrawer.publicBadge') }}</p>
             <h4>{{ t('drive.shareDrawer.publicTitle') }}</h4>
-            <p class="share-create__hint">{{ t('drive.shareDrawer.passwordHint') }}</p>
+            <p class="share-create__hint">{{ t(publicShareHintKey) }}</p>
           </div>
         </div>
+        <el-alert
+          v-if="isEncryptedSingleFile"
+          :title="t('drive.shareDrawer.e2ee.onlyViewAllowed')"
+          type="info"
+          :closable="false"
+          show-icon
+        />
 
         <div class="share-create__fields">
           <el-select v-model="shareForm.permission">
             <el-option :label="t('docs.share.view')" value="VIEW" />
-            <el-option :label="t('docs.share.edit')" value="EDIT" />
+            <el-option :label="t('docs.share.edit')" value="EDIT" :disabled="isEncryptedSingleFile" />
           </el-select>
           <el-date-picker
             v-model="shareForm.expiresAt"
@@ -441,13 +573,14 @@ function onDrawerClosed(): void {
           />
           <el-input
             v-model.trim="shareForm.password"
+            data-testid="drive-share-password"
             show-password
-            :placeholder="t('drive.shareDrawer.passwordPlaceholder')"
+            :placeholder="t(isEncryptedSingleFile ? 'drive.shareDrawer.e2ee.passwordPlaceholder' : 'drive.shareDrawer.passwordPlaceholder')"
           >
             <template #prepend>{{ t('drive.shareDrawer.fields.password') }}</template>
           </el-input>
         </div>
-        <el-button type="primary" :loading="publicMutating" @click="onCreatePublicShare">
+        <el-button data-testid="drive-share-create-public" type="primary" :loading="publicMutating" @click="onCreatePublicShare">
           {{ t('drive.shareDrawer.createLink') }}
         </el-button>
       </div>
@@ -465,9 +598,14 @@ function onDrawerClosed(): void {
         </el-table-column>
         <el-table-column :label="t('drive.shareDrawer.columns.protection')" width="120">
           <template #default="scope">
-            <el-tag :type="getProtectionTagType(scope.row.passwordProtected)" effect="plain">
-              {{ getProtectionLabel(scope.row.passwordProtected) }}
-            </el-tag>
+            <div class="share-actions">
+              <el-tag :type="getProtectionTagType(scope.row.passwordProtected)" effect="plain">
+                {{ getProtectionLabel(scope.row.passwordProtected) }}
+              </el-tag>
+              <el-tag v-if="scope.row.e2ee?.enabled" type="info" effect="plain">
+                {{ t('drive.table.badges.e2ee') }}
+              </el-tag>
+            </div>
           </template>
         </el-table-column>
         <el-table-column prop="token" :label="t('drive.shareDrawer.columns.token')" min-width="200" />
@@ -491,9 +629,10 @@ function onDrawerClosed(): void {
                 {{ t('drive.shareDrawer.actions.copyLink') }}
               </el-button>
               <el-button
+                :data-testid="`drive-share-manage-${scope.row.id}`"
                 type="primary"
                 text
-                :disabled="scope.row.status !== 'ACTIVE'"
+                :disabled="isManageDisabled(scope.row)"
                 @click="openManageDialog(scope.row)"
               >
                 {{ t('drive.shareDrawer.actions.manage') }}
@@ -529,7 +668,7 @@ function onDrawerClosed(): void {
         <div class="manage-fields">
           <el-select v-model="manageForm.permission">
             <el-option :label="t('docs.share.view')" value="VIEW" />
-            <el-option :label="t('docs.share.edit')" value="EDIT" />
+            <el-option :label="t('docs.share.edit')" value="EDIT" :disabled="Boolean(activeManageShare?.e2ee?.enabled)" />
           </el-select>
           <el-date-picker
             v-model="manageForm.expiresAt"

@@ -24,7 +24,7 @@ export const COMMUNITY_V1_MODULES: ReadonlyArray<CommunityModuleDefinition> = [
   { code: 'DOCS', route: '/docs', labelKey: 'nav.docs', maturity: 'BETA', surface: 'DEFAULT_NAV', productKey: 'DOCS' },
   { code: 'SHEETS', route: '/sheets', labelKey: 'nav.sheets', maturity: 'BETA', surface: 'DEFAULT_NAV', productKey: 'SHEETS' },
   { code: 'BILLING_CENTER', route: '/suite', labelKey: 'suite.billing.center.badge', maturity: 'BETA', surface: 'SUITE' },
-  { code: 'PASS', route: '/pass', labelKey: 'nav.pass', maturity: 'PREVIEW', surface: 'LABS', productKey: 'PASS' },
+  { code: 'PASS', route: '/pass', labelKey: 'nav.pass', maturity: 'BETA', surface: 'LABS', productKey: 'PASS' },
   { code: 'AUTHENTICATOR', route: '/authenticator', labelKey: 'nav.authenticator', maturity: 'PREVIEW', surface: 'LABS', productKey: 'AUTHENTICATOR' },
   { code: 'SIMPLELOGIN', route: '/simplelogin', labelKey: 'nav.simpleLogin', maturity: 'PREVIEW', surface: 'LABS', productKey: 'SIMPLELOGIN' },
   { code: 'STANDARD_NOTES', route: '/standard-notes', labelKey: 'nav.standardNotes', maturity: 'PREVIEW', surface: 'LABS', productKey: 'STANDARD_NOTES' },
@@ -38,6 +38,7 @@ export const COMMUNITY_V1_MODULES: ReadonlyArray<CommunityModuleDefinition> = [
 ]
 
 export const COMMUNITY_V1_PREVIEW_MODULES = COMMUNITY_V1_MODULES.filter(item => item.maturity === 'PREVIEW')
+export const COMMUNITY_V1_LABS_MODULES = COMMUNITY_V1_MODULES.filter(item => item.surface === 'LABS')
 
 export const COMMUNITY_V1_HOME_ROUTE_CANDIDATES: ReadonlyArray<{ to: string; productKey?: OrgProductKey }> = [
   { to: '/inbox', productKey: 'MAIL' },

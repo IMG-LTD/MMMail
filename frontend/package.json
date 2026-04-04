@@ -7,6 +7,10 @@
     "dev": "node ./scripts/nuxt-command.mjs dev --host 127.0.0.1 --port 3001",
     "build": "node ./scripts/nuxt-command.mjs build",
     "preview": "node ./scripts/nuxt-command.mjs preview --host 127.0.0.1 --port 3001",
+    "i18n:test": "node ./scripts/nuxt-command.mjs prepare --logLevel silent && vitest run tests/i18n.spec.ts tests/i18n-governance.spec.ts tests/i18n-coverage.spec.ts tests/i18n-surface-governance.spec.ts tests/suite-operations-i18n.spec.ts tests/contacts-i18n.spec.ts tests/mail-compose-i18n.spec.ts tests/mail-workspace-i18n.spec.ts",
+    "i18n:catalog": "node --experimental-strip-types ./scripts/i18n-report.mjs",
+    "i18n:coverage": "node --experimental-strip-types ./scripts/i18n-coverage-report.mjs",
+    "i18n:check": "pnpm run i18n:test && pnpm run i18n:catalog && pnpm run i18n:coverage",
     "test": "node ./scripts/nuxt-command.mjs prepare --logLevel silent && vitest run",
     "test:watch": "vitest",
     "typecheck": "node ./scripts/nuxt-command.mjs typecheck"

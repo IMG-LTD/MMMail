@@ -110,6 +110,13 @@ function reminderLabel(value: number | null): string {
             <el-tag size="small" effect="plain">{{ attendee.responseStatus }}</el-tag>
           </li>
         </ul>
+        <p
+          v-if="detail.attendees.length > 0"
+          class="detail-attendees__hint"
+          data-testid="calendar-detail-attendees-hint"
+        >
+          {{ t('calendar.detail.attendeesHint') }}
+        </p>
       </section>
     </div>
   </section>
@@ -186,6 +193,12 @@ function reminderLabel(value: number | null): string {
 }
 
 .detail-attendees span {
+  color: #64748b;
+}
+
+.detail-attendees__hint {
+  margin: 10px 0 0;
+  font-size: 12px;
   color: #64748b;
 }
 

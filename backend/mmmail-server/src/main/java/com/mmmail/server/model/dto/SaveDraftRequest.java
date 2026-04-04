@@ -8,6 +8,7 @@ public record SaveDraftRequest(
         @Email String toEmail,
         @Email String fromEmail,
         @Size(max = 255) String subject,
-        @Size(max = 20000) String body
+        @Size(max = 20000) String body,
+        MailBodyE2eePayloadRequest e2ee
 ) {
 }

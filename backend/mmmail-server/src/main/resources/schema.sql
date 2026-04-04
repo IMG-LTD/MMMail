@@ -52,12 +52,18 @@ create table if not exists mail_attachment (
     file_name varchar(255) not null,
     content_type varchar(255) not null,
     file_size bigint not null,
+    e2ee_enabled tinyint not null default 0,
+    e2ee_algorithm varchar(64),
+    e2ee_fingerprints_json text,
     storage_path varchar(512) not null,
     created_at timestamp not null,
     updated_at timestamp not null,
     deleted tinyint not null default 0
 );
 
+alter table mail_attachment add column if not exists e2ee_enabled tinyint not null default 0;
+alter table mail_attachment add column if not exists e2ee_algorithm varchar(64);
+alter table mail_attachment add column if not exists e2ee_fingerprints_json text;
 create index idx_mail_attachment_owner_mail_created on mail_attachment(owner_id, mail_id, created_at);
 create index idx_mail_attachment_storage_path on mail_attachment(storage_path);
 
@@ -301,6 +307,8 @@ create table if not exists user_preference (
     mail_e2ee_private_key_encrypted longtext,
     mail_e2ee_key_algorithm varchar(64),
     mail_e2ee_key_created_at timestamp,
+    mail_e2ee_recovery_private_key_encrypted longtext,
+    mail_e2ee_recovery_updated_at timestamp,
     created_at timestamp not null,
     updated_at timestamp not null,
     deleted tinyint not null default 0
@@ -327,6 +335,8 @@ alter table user_preference add column if not exists mail_e2ee_public_key_armore
 alter table user_preference add column if not exists mail_e2ee_private_key_encrypted longtext;
 alter table user_preference add column if not exists mail_e2ee_key_algorithm varchar(64);
 alter table user_preference add column if not exists mail_e2ee_key_created_at timestamp;
+alter table user_preference add column if not exists mail_e2ee_recovery_private_key_encrypted longtext;
+alter table user_preference add column if not exists mail_e2ee_recovery_updated_at timestamp;
 
 create unique index uk_user_preference_owner on user_preference(owner_id);
 
@@ -557,6 +567,7 @@ create table if not exists calendar_event_share (
     target_email varchar(254) not null,
     permission varchar(16) not null,
     response_status varchar(32) not null,
+    source varchar(24) not null default 'MANUAL',
     created_at timestamp not null,
     updated_at timestamp not null,
     deleted tinyint not null default 0
@@ -565,6 +576,7 @@ create table if not exists calendar_event_share (
 create unique index uk_calendar_share_event_target on calendar_event_share(event_id, target_user_id);
 create index idx_calendar_share_target_status on calendar_event_share(target_user_id, response_status, updated_at);
 create index idx_calendar_share_owner_event on calendar_event_share(owner_id, event_id, updated_at);
+create index idx_calendar_share_owner_event_source on calendar_event_share(owner_id, event_id, source, updated_at);
 
 create table if not exists org_workspace (
     id bigint primary key,
@@ -707,6 +719,9 @@ create table if not exists drive_item (
     size_bytes bigint not null default 0,
     storage_path varchar(512),
     checksum varchar(128),
+    e2ee_enabled tinyint not null default 0,
+    e2ee_algorithm varchar(64),
+    e2ee_fingerprints_json text,
     trashed_at timestamp,
     purge_after_at timestamp,
     created_at timestamp not null,
@@ -718,6 +733,9 @@ alter table drive_item add column trashed_at timestamp;
 alter table drive_item add column purge_after_at timestamp;
 
 alter table drive_item add column team_space_id bigint;
+alter table drive_item add column if not exists e2ee_enabled tinyint not null default 0;
+alter table drive_item add column if not exists e2ee_algorithm varchar(64);
+alter table drive_item add column if not exists e2ee_fingerprints_json text;
 
 create unique index uk_drive_item_owner_parent_type_name on drive_item(owner_id, parent_id, item_type, name);
 create index idx_drive_item_owner_parent on drive_item(owner_id, parent_id, updated_at);
@@ -736,10 +754,17 @@ create table if not exists drive_file_version (
     size_bytes bigint not null default 0,
     storage_path varchar(512) not null,
     checksum varchar(128),
+    e2ee_enabled tinyint not null default 0,
+    e2ee_algorithm varchar(64),
+    e2ee_fingerprints_json text,
     created_at timestamp not null,
     updated_at timestamp not null,
     deleted tinyint not null default 0
 );
+
+alter table drive_file_version add column if not exists e2ee_enabled tinyint not null default 0;
+alter table drive_file_version add column if not exists e2ee_algorithm varchar(64);
+alter table drive_file_version add column if not exists e2ee_fingerprints_json text;
 
 create unique index uk_drive_file_version_item_version on drive_file_version(item_id, version_no);
 create index idx_drive_file_version_item_created on drive_file_version(item_id, created_at);
@@ -753,6 +778,10 @@ create table if not exists drive_share_link (
     permission varchar(16) not null,
     expires_at timestamp,
     password_hash varchar(255),
+    readable_e2ee_enabled tinyint not null default 0,
+    readable_e2ee_algorithm varchar(64),
+    readable_e2ee_storage_path varchar(512),
+    readable_e2ee_checksum varchar(128),
     status varchar(16) not null,
     created_at timestamp not null,
     updated_at timestamp not null,
@@ -941,10 +970,17 @@ create table if not exists pass_vault_item (
     shared_vault_id bigint,
     scope_type varchar(16) not null default 'PERSONAL',
     item_type varchar(16) not null default 'LOGIN',
+    monitor_excluded tinyint not null default 0,
     title varchar(128) not null,
     website varchar(255),
     username varchar(254),
     secret_ciphertext varchar(512),
+    two_factor_issuer varchar(128),
+    two_factor_account_name varchar(254),
+    two_factor_secret_ciphertext varchar(512),
+    two_factor_algorithm varchar(16),
+    two_factor_digits int,
+    two_factor_period_seconds int,
     note varchar(2000),
     favorite tinyint not null default 0,
     created_at timestamp not null,
@@ -1027,9 +1063,17 @@ alter table pass_vault_item add column if not exists org_id bigint null;
 alter table pass_vault_item add column if not exists shared_vault_id bigint null;
 alter table pass_vault_item add column if not exists scope_type varchar(16) not null default 'PERSONAL';
 alter table pass_vault_item add column if not exists item_type varchar(16) not null default 'LOGIN';
+alter table pass_vault_item add column if not exists monitor_excluded tinyint not null default 0;
+alter table pass_vault_item add column if not exists two_factor_issuer varchar(128) null;
+alter table pass_vault_item add column if not exists two_factor_account_name varchar(254) null;
+alter table pass_vault_item add column if not exists two_factor_secret_ciphertext varchar(512) null;
+alter table pass_vault_item add column if not exists two_factor_algorithm varchar(16) null;
+alter table pass_vault_item add column if not exists two_factor_digits int null;
+alter table pass_vault_item add column if not exists two_factor_period_seconds int null;
 alter table pass_vault_item modify column secret_ciphertext varchar(512) null;
 update pass_vault_item set scope_type = 'PERSONAL' where scope_type is null or scope_type = '';
 update pass_vault_item set item_type = 'LOGIN' where item_type is null or item_type = '';
+update pass_vault_item set monitor_excluded = 0 where monitor_excluded is null;
 
 create table if not exists authenticator_entry (
     id bigint primary key,
@@ -1435,6 +1479,28 @@ create index idx_suite_notification_state_owner_last_seen
     on suite_notification_state(owner_id, last_seen_at);
 create index idx_suite_notification_state_owner_workflow
     on suite_notification_state(owner_id, workflow_status, snoozed_until);
+
+create table if not exists web_push_subscription (
+    id bigint primary key,
+    owner_id bigint not null,
+    endpoint_hash varchar(64) not null,
+    endpoint varchar(1024) not null,
+    p256dh_key varchar(255) not null,
+    auth_key varchar(255) not null,
+    content_encoding varchar(32) not null,
+    user_agent varchar(255),
+    last_success_at timestamp,
+    last_failure_at timestamp,
+    last_error_message varchar(255),
+    created_at timestamp not null,
+    updated_at timestamp not null,
+    deleted tinyint not null default 0
+);
+
+create unique index uk_web_push_subscription_owner_endpoint_hash
+    on web_push_subscription(owner_id, endpoint_hash);
+create index idx_web_push_subscription_owner_updated
+    on web_push_subscription(owner_id, updated_at);
 
 create table if not exists suite_notification_operation_log (
     id bigint primary key,

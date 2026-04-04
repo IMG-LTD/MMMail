@@ -9,6 +9,7 @@ public record DriveFileVersionVo(
         String mimeType,
         long sizeBytes,
         String checksum,
+        DriveFileE2eeVo e2ee,
         LocalDateTime createdAt
 ) {
 }

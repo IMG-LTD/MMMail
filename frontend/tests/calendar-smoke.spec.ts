@@ -380,6 +380,7 @@ describe('calendar smoke', () => {
     await flushPromises()
     expect(calendarApiMock.getEvent).toHaveBeenCalledWith('evt-1')
     expect(wrapper.get('[data-testid="calendar-detail-title"]').text()).toContain('Team sync')
+    expect(wrapper.get('[data-testid="calendar-detail-attendees-hint"]').text()).toContain('calendar.detail.attendeesHint')
 
     await wrapper.get('[data-testid="calendar-edit-event"]').trigger('click')
     await flushPromises()

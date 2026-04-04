@@ -1,7 +1,15 @@
 <script setup lang="ts">
 import { computed, onMounted, ref, watch } from 'vue'
 import { ElMessage } from 'element-plus'
-import type { DraftRequest, LabelItem, MailAttachment, MailId, MailSenderIdentity, SendMailRequest } from '~/types/api'
+import type {
+  DraftRequest,
+  LabelItem,
+  MailAttachment,
+  MailId,
+  MailSenderIdentity,
+  SendMailRequest,
+  UploadDraftAttachmentOptions
+} from '~/types/api'
 import type { FailedMailAttachmentUpload } from '~/components/business/MailAttachmentPanel.vue'
 import { useMailApi } from '~/composables/useMailApi'
 import { useLabelApi } from '~/composables/useLabelApi'
@@ -10,6 +18,9 @@ import { useContactApi } from '~/composables/useContactApi'
 import { usePassApi } from '~/composables/usePassApi'
 import { useMailComposeE2ee } from '~/composables/useMailComposeE2ee'
 import { useMailComposeMessageE2ee } from '~/composables/useMailComposeMessageE2ee'
+import { useMailDraftE2ee } from '~/composables/useMailDraftE2ee'
+import { useMailDetailE2ee } from '~/composables/useMailDetailE2ee'
+import { useMailAttachmentE2ee } from '~/composables/useMailAttachmentE2ee'
 import { useI18n } from '~/composables/useI18n'
 import { useAuthStore } from '~/stores/auth'
 import { useMailStore } from '~/stores/mail'
@@ -19,6 +30,7 @@ import {
   validateMailAttachmentFile
 } from '~/utils/mail-attachments'
 import { resolveDefaultSenderEmail, sortMailSenderIdentities } from '~/utils/mail-identities'
+import type { MailBodyE2ee } from '~/types/api'
 
 interface ComposerDefaults {
   to: string
@@ -59,6 +71,7 @@ const attachments = ref<MailAttachment[]>([])
 const attachmentUploading = ref(false)
 const activeAttachmentIds = ref<string[]>([])
 const failedUploads = ref<FailedUploadState[]>([])
+const encryptedDraft = ref<{ ciphertext: string, metadata: MailBodyE2ee } | null>(null)
 const {
   recipientE2eeLoading,
   recipientE2eeStatus,
@@ -67,6 +80,19 @@ const {
   ensureRecipientE2eeStatus
 } = useMailComposeE2ee()
 const { buildSendPayload } = useMailComposeMessageE2ee()
+const { buildDraftPayload } = useMailDraftE2ee()
+const {
+  decrypting: draftDecrypting,
+  decryptError: draftDecryptError,
+  passphrase: draftPassphrase,
+  decryptEncryptedBody: decryptDraftBody,
+  resetDecryptedBody: resetDraftDecryptState
+} = useMailDetailE2ee()
+const {
+  isDraftAttachmentEncryptionEnabled,
+  encryptDraftAttachment,
+  decryptDownloadedAttachment
+} = useMailAttachmentE2ee()
 
 const {
   sendMail,
@@ -158,10 +184,14 @@ async function loadDraft(draftId: string): Promise<void> {
     if (!detail.isDraft) {
       throw new Error(t('mailCompose.messages.loadDraftFailed'))
     }
+    encryptedDraft.value = detail.e2ee?.enabled
+      ? { ciphertext: detail.body, metadata: detail.e2ee }
+      : null
+    resetDraftDecryptState()
     applyComposerDefaults({
       to: detail.peerEmail,
       subject: detail.subject,
-      body: detail.body,
+      body: detail.e2ee?.enabled ? '' : detail.body,
       sender: detail.senderEmail || '',
       draftId: detail.id
     })
@@ -171,6 +201,8 @@ async function loadDraft(draftId: string): Promise<void> {
     const message = error instanceof Error ? error.message : t('mailCompose.messages.loadDraftFailed')
     composerError.value = message
     applyComposerDefaults(buildQueryDefaults())
+    encryptedDraft.value = null
+    resetDraftDecryptState()
     resetAttachmentState()
     ElMessage.error(message)
   } finally {
@@ -187,6 +219,8 @@ async function syncComposerFromRoute(): Promise<void> {
     return
   }
   composerError.value = ''
+  encryptedDraft.value = null
+  resetDraftDecryptState()
   applyComposerDefaults(buildQueryDefaults())
   resetAttachmentState()
 }
@@ -195,7 +229,7 @@ function applySavedDraft(payload: DraftRequest, draftId: MailId): void {
   applyComposerDefaults({
     to: payload.toEmail,
     subject: payload.subject,
-    body: payload.body,
+    body: payload.body || '',
     sender: payload.fromEmail || '',
     draftId
   })
@@ -205,7 +239,8 @@ async function ensureDraftId(payload: DraftRequest): Promise<MailId> {
   if (composerDefaults.value.draftId) {
     return composerDefaults.value.draftId
   }
-  const draftId = await saveDraft(payload)
+  const outboundPayload = await buildDraftPayload(payload)
+  const draftId = await saveDraft(outboundPayload)
   applySavedDraft(payload, draftId)
   await syncMailboxStats()
   await replaceDraftRoute(draftId)
@@ -225,15 +260,40 @@ function clearFailure(file: File): void {
   failedUploads.value = failedUploads.value.filter(item => item.id !== failureId)
 }
 
+function buildPlainUploadOptions(file: File): UploadDraftAttachmentOptions {
+  return {
+    file,
+    fileName: file.name,
+    contentType: file.type || 'application/octet-stream',
+    fileSize: file.size
+  }
+}
+
+async function buildUploadOptions(file: File, attachmentE2eeEnabled: boolean): Promise<UploadDraftAttachmentOptions> {
+  if (!attachmentE2eeEnabled) {
+    return buildPlainUploadOptions(file)
+  }
+  const encrypted = await encryptDraftAttachment(file)
+  return {
+    file: encrypted.file,
+    fileName: encrypted.fileName,
+    contentType: encrypted.contentType,
+    fileSize: encrypted.fileSize,
+    e2ee: encrypted.e2ee
+  }
+}
+
 async function uploadFiles(files: File[], draft: DraftRequest): Promise<void> {
   attachmentUploading.value = true
   composerError.value = ''
   try {
     const draftId = await ensureDraftId(draft)
+    const attachmentE2eeEnabled = await isDraftAttachmentEncryptionEnabled()
     for (const file of files) {
       try {
         validateMailAttachmentFile(file)
-        const attachment = await uploadDraftAttachment(draftId, file)
+        const uploadOptions = await buildUploadOptions(file, attachmentE2eeEnabled)
+        const attachment = await uploadDraftAttachment(draftId, uploadOptions)
         attachments.value = upsertMailAttachment(attachments.value, attachment)
         clearFailure(file)
       } catch (error) {
@@ -282,7 +342,8 @@ async function onSend(payload: SendMailRequest): Promise<void> {
 
 async function onSave(payload: DraftRequest): Promise<void> {
   try {
-    const draftId = await saveDraft(payload)
+    const outboundPayload = await buildDraftPayload(payload)
+    const draftId = await saveDraft(outboundPayload)
     applySavedDraft(payload, draftId)
     await syncMailboxStats()
     await replaceDraftRoute(draftId)
@@ -299,7 +360,8 @@ async function onSave(payload: DraftRequest): Promise<void> {
 
 async function onAutoSave(payload: DraftRequest): Promise<void> {
   try {
-    const draftId = await saveDraft(payload)
+    const outboundPayload = await buildDraftPayload(payload)
+    const draftId = await saveDraft(outboundPayload)
     applySavedDraft(payload, draftId)
     await syncMailboxStats()
     if (!payload.draftId) {
@@ -349,17 +411,38 @@ async function onDownloadAttachment(payload: { attachmentId: string }): Promise<
   }
   try {
     const downloaded = await downloadMailAttachment(attachment.mailId, attachment.id)
-    const url = URL.createObjectURL(downloaded.blob)
-    const link = document.createElement('a')
-    link.href = url
-    link.download = downloaded.fileName
-    link.click()
-    URL.revokeObjectURL(url)
+    const localFile = attachment.e2ee?.enabled
+      ? await decryptDownloadedAttachment(downloaded, attachment, resolveAttachmentPassphrase())
+      : downloaded
+    triggerBrowserDownload(localFile.blob, localFile.fileName)
   } catch (error) {
     const message = error instanceof Error ? error.message : t('mailCompose.messages.attachmentDownloadFailed')
     composerError.value = message
     ElMessage.error(message)
   }
+}
+
+function resolveAttachmentPassphrase(): string {
+  if (draftPassphrase.value.trim()) {
+    return draftPassphrase.value.trim()
+  }
+  if (typeof window === 'undefined') {
+    throw new Error(t('mailCompose.attachments.e2ee.messages.passphraseRequired'))
+  }
+  const prompted = window.prompt(t('mailCompose.attachments.e2ee.passphrasePrompt'))?.trim() || ''
+  if (!prompted) {
+    throw new Error(t('mailCompose.attachments.e2ee.messages.passphraseRequired'))
+  }
+  return prompted
+}
+
+function triggerBrowserDownload(blob: Blob, fileName: string): void {
+  const url = URL.createObjectURL(blob)
+  const link = document.createElement('a')
+  link.href = url
+  link.download = fileName
+  link.click()
+  URL.revokeObjectURL(url)
 }
 
 async function fetchRecipientSuggestions(keyword: string, senderEmail: string): Promise<string[]> {
@@ -377,6 +460,28 @@ function onRouteContextChange(payload: { toEmail: string, fromEmail: string }): 
     return
   }
   scheduleRecipientE2eeRefresh(payload.toEmail, payload.fromEmail)
+}
+
+function onDraftUnlocked(body: string): void {
+  applyComposerDefaults({
+    ...composerDefaults.value,
+    body
+  })
+  encryptedDraft.value = null
+  resetDraftDecryptState()
+}
+
+async function onDraftDecrypt(): Promise<void> {
+  if (!encryptedDraft.value) {
+    return
+  }
+  try {
+    const plaintext = await decryptDraftBody(encryptedDraft.value.ciphertext)
+    onDraftUnlocked(plaintext)
+    ElMessage.success(t('mailCompose.draftE2ee.messages.decryptSuccess'))
+  } catch {
+    ElMessage.error(draftDecryptError.value || t('mailCompose.draftE2ee.messages.decryptFailed'))
+  }
 }
 
 watch(
@@ -418,6 +523,43 @@ onMounted(async () => {
       :title="composerError"
     />
     <el-skeleton v-if="draftLoading" :rows="8" animated />
+    <section
+      v-else-if="encryptedDraft"
+      class="mm-card compose-draft-e2ee"
+      data-testid="mail-compose-draft-e2ee"
+    >
+      <span class="compose-draft-e2ee__badge">{{ t('mailCompose.draftE2ee.badge') }}</span>
+      <h2 class="mm-section-title">{{ t('mailCompose.draftE2ee.title') }}</h2>
+      <p class="compose-draft-e2ee__copy">{{ t('mailCompose.draftE2ee.description') }}</p>
+      <p class="compose-draft-e2ee__copy">
+        {{ t('mailWorkspace.detail.e2ee.algorithm', { value: encryptedDraft.metadata.algorithm || 'unknown' }) }}
+      </p>
+      <p class="compose-draft-e2ee__copy">
+        {{ t('mailWorkspace.detail.e2ee.fingerprintCount', { count: encryptedDraft.metadata.recipientFingerprints.length }) }}
+      </p>
+      <el-alert
+        v-if="draftDecryptError"
+        type="error"
+        :closable="false"
+        :title="draftDecryptError"
+      />
+      <p class="compose-draft-e2ee__copy">{{ t('mailCompose.draftE2ee.hint') }}</p>
+      <el-input
+        v-model="draftPassphrase"
+        data-testid="mail-compose-draft-e2ee-passphrase"
+        type="password"
+        show-password
+        :placeholder="t('mailCompose.draftE2ee.passphrasePlaceholder')"
+      />
+      <el-button
+        type="primary"
+        :loading="draftDecrypting"
+        data-testid="mail-compose-draft-e2ee-decrypt"
+        @click="onDraftDecrypt"
+      >
+        {{ t('mailCompose.draftE2ee.actions.decrypt') }}
+      </el-button>
+    </section>
     <MailComposer
       v-else
       :draft-id="composerDefaults.draftId || undefined"
@@ -451,5 +593,28 @@ onMounted(async () => {
 <style scoped>
 .compose-alert {
   margin-bottom: 16px;
+}
+
+.compose-draft-e2ee {
+  display: grid;
+  gap: 12px;
+  padding: 20px;
+}
+
+.compose-draft-e2ee__badge {
+  display: inline-flex;
+  width: fit-content;
+  padding: 4px 10px;
+  border-radius: 999px;
+  background: rgba(19, 126, 67, 0.12);
+  color: #137e43;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.compose-draft-e2ee__copy {
+  margin: 0;
+  color: var(--mm-muted);
+  line-height: 1.6;
 }
 </style>

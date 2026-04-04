@@ -21,6 +21,9 @@ import type {
   SuiteNotificationMarkReadResult,
   SuiteNotificationSync,
   SuiteNotificationWorkflowResult,
+  SuiteWebPushStatus,
+  SuiteWebPushSubscribeRequest,
+  SuiteWebPushUnsubscribeRequest,
   SuiteGovernanceChangeRequest,
   SuiteGovernanceOverview,
   SuiteGovernancePolicyTemplate,
@@ -130,6 +133,19 @@ export function useSuiteApi() {
       }
     })
     return response.data.data
+  }
+
+  async function getWebPushStatus(): Promise<SuiteWebPushStatus> {
+    const response = await $apiClient.get<ApiResponse<SuiteWebPushStatus>>('/api/v1/suite/web-push')
+    return response.data.data
+  }
+
+  async function subscribeWebPush(payload: SuiteWebPushSubscribeRequest): Promise<void> {
+    await $apiClient.post<ApiResponse<null>>('/api/v1/suite/web-push/subscriptions', payload)
+  }
+
+  async function unsubscribeWebPush(payload: SuiteWebPushUnsubscribeRequest): Promise<void> {
+    await $apiClient.delete<ApiResponse<null>>('/api/v1/suite/web-push/subscriptions', { data: payload })
   }
 
   async function markNotificationsRead(
@@ -320,6 +336,9 @@ export function useSuiteApi() {
     getNotificationCenter,
     getNotificationOperationHistory,
     getNotificationSync,
+    getWebPushStatus,
+    subscribeWebPush,
+    unsubscribeWebPush,
     markNotificationsRead,
     markAllNotificationsRead,
     archiveNotifications,

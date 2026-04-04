@@ -62,15 +62,15 @@ env -u http_proxy -u https_proxy -u HTTP_PROXY -u HTTPS_PROXY -u ALL_PROXY -u al
 
 echo "[validate-local] frontend i18n governance"
 env -u http_proxy -u https_proxy -u HTTP_PROXY -u HTTPS_PROXY -u ALL_PROXY -u all_proxy \
-  pnpm --dir frontend exec vitest run tests/i18n.spec.ts tests/i18n-governance.spec.ts tests/i18n-coverage.spec.ts tests/contacts-i18n.spec.ts tests/mail-compose-i18n.spec.ts tests/mail-workspace-i18n.spec.ts >/tmp/mmmail-frontend-i18n.log 2>&1
+  pnpm --dir frontend i18n:test >/tmp/mmmail-frontend-i18n.log 2>&1
 
 echo "[validate-local] i18n consistency report"
 env -u http_proxy -u https_proxy -u HTTP_PROXY -u HTTPS_PROXY -u ALL_PROXY -u all_proxy \
-  node --experimental-strip-types frontend/scripts/i18n-report.mjs >/tmp/mmmail-i18n-report.log 2>&1
+  pnpm --dir frontend i18n:catalog >/tmp/mmmail-i18n-report.log 2>&1
 
 echo "[validate-local] i18n page coverage report"
 env -u http_proxy -u https_proxy -u HTTP_PROXY -u HTTPS_PROXY -u ALL_PROXY -u all_proxy \
-  node --experimental-strip-types frontend/scripts/i18n-coverage-report.mjs >/tmp/mmmail-i18n-coverage.log 2>&1
+  pnpm --dir frontend i18n:coverage >/tmp/mmmail-i18n-coverage.log 2>&1
 
 echo "[validate-local] security gates"
 bash scripts/validate-security.sh >/tmp/mmmail-security.log 2>&1

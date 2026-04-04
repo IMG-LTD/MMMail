@@ -1,6 +1,7 @@
 <script setup lang="ts">
+import { useI18n } from '~/composables/useI18n'
 import type { SuiteRemediationAction, SuiteRemediationExecutionResult } from '~/types/api'
-import { canExecuteAction } from '~/utils/suite-operations'
+import { canExecuteAction, remediationExecutionStatusLabel } from '~/utils/suite-operations'
 
 interface Props {
   priorityActions: SuiteRemediationAction[]
@@ -10,30 +11,35 @@ interface Props {
 }
 
 defineProps<Props>()
+const { t } = useI18n()
 </script>
 
 <template>
   <section class="mm-card suite-panel">
-    <h2 class="mm-section-title">Priority Remediation Backlog</h2>
+    <h2 class="mm-section-title">{{ t('suite.operations.remediation.title') }}</h2>
     <el-alert
       v-if="lastExecutionResult"
       :type="lastExecutionResult.status === 'SUCCESS' ? 'success' : lastExecutionResult.status === 'NO_OP' ? 'info' : 'warning'"
       :closable="false"
       class="posture-alert"
       show-icon
-      :title="`${lastExecutionResult.productCode} / ${lastExecutionResult.actionCode} -> ${lastExecutionResult.status}`"
+      :title="t('suite.operations.remediation.lastResult.title', {
+        product: lastExecutionResult.productCode,
+        action: lastExecutionResult.actionCode,
+        status: remediationExecutionStatusLabel(lastExecutionResult.status, t)
+      })"
       :description="lastExecutionResult.message"
     />
     <el-table :data="priorityActions" style="width: 100%">
-      <el-table-column label="Priority" width="100">
+      <el-table-column :label="t('suite.operations.remediation.columns.priority')" width="100">
         <template #default="scope">
           <el-tag :type="scope.row.priority === 'P0' ? 'danger' : scope.row.priority === 'P1' ? 'warning' : 'info'">
             {{ scope.row.priority }}
           </el-tag>
         </template>
       </el-table-column>
-      <el-table-column prop="productCode" label="Product" width="140" />
-      <el-table-column label="Action" min-width="420">
+      <el-table-column prop="productCode" :label="t('suite.operations.remediation.columns.product')" width="140" />
+      <el-table-column :label="t('suite.operations.remediation.columns.action')" min-width="420">
         <template #default="scope">
           <div class="stack-cell">
             <span>{{ scope.row.action }}</span>
@@ -41,7 +47,7 @@ defineProps<Props>()
           </div>
         </template>
       </el-table-column>
-      <el-table-column label="Execute" width="150">
+      <el-table-column :label="t('suite.operations.remediation.columns.execute')" width="150">
         <template #default="scope">
           <el-button
             size="small"
@@ -51,7 +57,7 @@ defineProps<Props>()
             :loading="scope.row.actionCode ? runningActionCode === scope.row.actionCode : false"
             @click="void executeAction(scope.row)"
           >
-            {{ canExecuteAction(scope.row) ? 'Execute' : 'Manual' }}
+            {{ canExecuteAction(scope.row) ? t('suite.operations.remediation.actions.execute') : t('suite.operations.remediation.actions.manual') }}
           </el-button>
         </template>
       </el-table-column>

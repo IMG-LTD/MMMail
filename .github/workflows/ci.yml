@@ -28,6 +28,41 @@ jobs:
       - name: Install frontend deps
         run: pnpm --dir frontend install --frozen-lockfile
 
+      - name: Frontend i18n gates
+        run: pnpm --dir frontend i18n:check
+
+      - name: Publish frontend i18n summary
+        if: always()
+        run: |
+          node <<'NODE'
+          const fs = require('node:fs')
+          const summaryPath = process.env.GITHUB_STEP_SUMMARY
+          const catalogPath = 'artifacts/i18n-consistency-report.json'
+          const coveragePath = 'artifacts/i18n-page-coverage-report.json'
+          const surfacePath = 'artifacts/i18n-surface-literal-report.json'
+          const lines = ['## Frontend i18n gates']
+          if (!summaryPath) {
+            process.exit(0)
+          }
+          if (!fs.existsSync(catalogPath) || !fs.existsSync(coveragePath) || !fs.existsSync(surfacePath)) {
+            lines.push('- i18n report artifacts unavailable')
+            fs.appendFileSync(summaryPath, `${lines.join('\n')}\n`)
+            process.exit(0)
+          }
+          const catalog = JSON.parse(fs.readFileSync(catalogPath, 'utf8'))
+          const coverage = JSON.parse(fs.readFileSync(coveragePath, 'utf8'))
+          const surface = JSON.parse(fs.readFileSync(surfacePath, 'utf8'))
+          lines.push(`- modules: \`${catalog.totalModules}\``)
+          lines.push(`- locale key gaps: \`${catalog.modulesWithGaps.length}\``)
+          lines.push(`- placeholder mismatches: \`${catalog.modulesWithPlaceholderMismatches.length}\``)
+          lines.push(`- surface literal files: \`${surface.filesWithFindings.length}\``)
+          lines.push(`- surface literal findings: \`${surface.totalFindings}\``)
+          lines.push(`- page coverage: \`${coverage.coveragePercent}%\``)
+          lines.push(`- pages without i18n: \`${coverage.pagesWithoutI18n.length}\``)
+          lines.push(`- pages without static keys: \`${coverage.pagesWithoutStaticKeys.length}\``)
+          fs.appendFileSync(summaryPath, `${lines.join('\n')}\n`)
+          NODE
+
       - name: Frontend tests
         run: pnpm --dir frontend test
 

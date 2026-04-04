@@ -1,6 +1,6 @@
 export const driveCollaborationEn = {
-  'drive.shareDrawer.publicBadge': 'Public links',
-  'drive.shareDrawer.publicTitle': 'Public access links',
+  'drive.shareDrawer.publicBadge': 'Public link',
+  'drive.shareDrawer.publicTitle': 'Public share',
   'drive.collaboration.status.needsAction': 'Needs action',
   'drive.collaboration.status.accepted': 'Accepted',
   'drive.collaboration.status.declined': 'Declined',
@@ -71,7 +71,7 @@ export const driveCollaborationEn = {
 
 export const driveCollaborationZhCN = {
   'drive.shareDrawer.publicBadge': '公开链接',
-  'drive.shareDrawer.publicTitle': '公开访问链接',
+  'drive.shareDrawer.publicTitle': '公开分享',
   'drive.collaboration.status.needsAction': '待处理',
   'drive.collaboration.status.accepted': '已接受',
   'drive.collaboration.status.declined': '已拒绝',
@@ -142,7 +142,7 @@ export const driveCollaborationZhCN = {
 
 export const driveCollaborationZhTW = {
   'drive.shareDrawer.publicBadge': '公開連結',
-  'drive.shareDrawer.publicTitle': '公開存取連結',
+  'drive.shareDrawer.publicTitle': '公開分享',
   'drive.collaboration.status.needsAction': '待處理',
   'drive.collaboration.status.accepted': '已接受',
   'drive.collaboration.status.declined': '已拒絕',

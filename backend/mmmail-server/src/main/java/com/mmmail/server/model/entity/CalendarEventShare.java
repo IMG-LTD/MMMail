@@ -18,6 +18,7 @@ public class CalendarEventShare {
     private String targetEmail;
     private String permission;
     private String responseStatus;
+    private String source;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
     @TableLogic(value = "0", delval = "1")
@@ -77,6 +78,14 @@ public class CalendarEventShare {
 
     public void setResponseStatus(String responseStatus) {
         this.responseStatus = responseStatus;
+    }
+
+    public String getSource() {
+        return source;
+    }
+
+    public void setSource(String source) {
+        this.source = source;
     }
 
     public LocalDateTime getCreatedAt() {

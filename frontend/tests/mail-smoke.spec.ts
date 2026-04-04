@@ -14,6 +14,10 @@ const routerReplaceMock = vi.fn()
 const messageErrorMock = vi.fn()
 const messageSuccessMock = vi.fn()
 const messageWarningMock = vi.fn()
+const fetchMailE2eeKeyProfileMock = vi.fn()
+const isDraftAttachmentEncryptionEnabledMock = vi.fn()
+const encryptDraftAttachmentMock = vi.fn()
+const decryptDownloadedAttachmentMock = vi.fn()
 const routeState = {
   params: { id: '42' },
   query: {} as Record<string, unknown>
@@ -128,14 +132,14 @@ vi.mock('~/composables/useSettingsApi', () => ({
       autoSaveSeconds: 15,
       undoSendSeconds: 0
     })),
-    fetchMailE2eeKeyProfile: vi.fn(async () => ({
-      enabled: false,
-      fingerprint: null,
-      algorithm: null,
-      publicKeyArmored: null,
-      encryptedPrivateKeyArmored: null,
-      keyCreatedAt: null
-    }))
+    fetchMailE2eeKeyProfile: fetchMailE2eeKeyProfileMock
+  })
+}))
+vi.mock('~/composables/useMailAttachmentE2ee', () => ({
+  useMailAttachmentE2ee: () => ({
+    isDraftAttachmentEncryptionEnabled: isDraftAttachmentEncryptionEnabledMock,
+    encryptDraftAttachment: encryptDraftAttachmentMock,
+    decryptDownloadedAttachment: decryptDownloadedAttachmentMock
   })
 }))
 vi.mock('~/composables/useContactApi', () => ({
@@ -312,7 +316,37 @@ function buildPage(page: number, keyword = '', total = 1): MailPage {
 }
 
 function resetMailApiMocks(): void {
+  fetchMailE2eeKeyProfileMock.mockReset()
+  isDraftAttachmentEncryptionEnabledMock.mockReset()
+  encryptDraftAttachmentMock.mockReset()
+  decryptDownloadedAttachmentMock.mockReset()
   Object.values(mailApiMock).forEach((value) => value.mockReset())
+  fetchMailE2eeKeyProfileMock.mockResolvedValue({
+    enabled: false,
+    fingerprint: null,
+    algorithm: null,
+    publicKeyArmored: null,
+    encryptedPrivateKeyArmored: null,
+    keyCreatedAt: null
+  })
+  isDraftAttachmentEncryptionEnabledMock.mockResolvedValue(false)
+  encryptDraftAttachmentMock.mockImplementation(async (file: File) => ({
+    file,
+    fileName: file.name,
+    contentType: file.type || 'application/octet-stream',
+    fileSize: file.size,
+    e2ee: {
+      algorithm: 'openpgp',
+      recipientFingerprints: ['PROFILE'],
+      envelope: {
+        contentFormat: 'openpgp-binary',
+        originalFileName: file.name,
+        originalContentType: file.type || 'application/octet-stream',
+        originalFileSize: file.size
+      }
+    }
+  }))
+  decryptDownloadedAttachmentMock.mockImplementation(async (downloaded: { blob: Blob, fileName: string }) => downloaded)
   mailApiMock.fetchStats.mockResolvedValue({ folderCounts: {}, unreadCount: 1, starredCount: 0 })
   mailApiMock.applyAction.mockResolvedValue({ affected: 1, stats: { folderCounts: {}, unreadCount: 0, starredCount: 0 } })
   mailApiMock.applyBatchAction.mockResolvedValue({ affected: 1, stats: { folderCounts: {}, unreadCount: 0, starredCount: 0 } })
@@ -468,10 +502,21 @@ describe('mail smoke', () => {
 
   it('restores the same draft and retries failed attachment upload', async () => {
     routeState.query = { draftId: '42' }
+    isDraftAttachmentEncryptionEnabledMock.mockResolvedValue(true)
     mailApiMock.fetchMailDetail.mockResolvedValueOnce({
       ...detailMail,
       isDraft: true,
       folderType: 'DRAFTS'
+    })
+    encryptDraftAttachmentMock.mockResolvedValue({
+      file: new File(['ciphertext'], 'upload.txt.pgp', { type: 'application/octet-stream' }),
+      fileName: 'upload.txt',
+      contentType: 'text/plain',
+      fileSize: 6,
+      e2ee: {
+        algorithm: 'openpgp',
+        recipientFingerprints: ['A1B2C3']
+      }
     })
     mailApiMock.uploadDraftAttachment
       .mockRejectedValueOnce(new Error('Attachment upload failed'))
@@ -495,13 +540,22 @@ describe('mail smoke', () => {
 
     await wrapper.get('[data-testid="upload"]').trigger('click')
     await flushPromises()
-    expect(mailApiMock.uploadDraftAttachment).toHaveBeenCalledWith('42', expect.objectContaining({ name: 'upload.txt', size: 6 }))
+    expect(mailApiMock.uploadDraftAttachment).toHaveBeenCalledWith('42', expect.objectContaining({
+      fileName: 'upload.txt',
+      contentType: 'text/plain',
+      fileSize: 6,
+      e2ee: expect.objectContaining({
+        algorithm: 'openpgp',
+        recipientFingerprints: ['A1B2C3']
+      })
+    }))
     expect(wrapper.get('[data-testid="failure-count"]').text()).toBe('1')
     expect(wrapper.get('[data-testid="mail-compose-error"]').text()).toContain('Attachment upload failed')
     expect(mailApiMock.saveDraft).not.toHaveBeenCalled()
 
     await wrapper.get('[data-testid="retry"]').trigger('click')
     await flushPromises()
+    expect(encryptDraftAttachmentMock).toHaveBeenCalledTimes(2)
     expect(mailApiMock.uploadDraftAttachment).toHaveBeenCalledTimes(2)
     expect(wrapper.get('[data-testid="attachment-count"]').text()).toBe('2')
     expect(wrapper.get('[data-testid="failure-count"]').text()).toBe('0')

@@ -3,6 +3,7 @@ import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { ElMessage } from 'element-plus'
 import type { SuiteCommandCenter, SuiteCommandFeed, SuiteRemediationAction } from '~/types/api'
 import { useCommandPalette } from '~/composables/useCommandPalette'
+import { useI18n } from '~/composables/useI18n'
 import { useSuiteApi } from '~/composables/useSuiteApi'
 import { useOrgAccessStore } from '~/stores/org-access'
 import {
@@ -34,6 +35,7 @@ const commandFeed = ref<SuiteCommandFeed | null>(null)
 const searchInputRef = ref<{ focus: () => void } | null>(null)
 
 const { isOpen, openPalette, closePalette } = useCommandPalette()
+const { t } = useI18n()
 const { getCommandCenter, getCommandFeed, executeRemediationAction } = useSuiteApi()
 const orgAccessStore = useOrgAccessStore()
 
@@ -208,27 +210,27 @@ function appendStaticCommands(commandList: PaletteCommand[], keySet: Set<string>
   appendCommand(commandList, keySet, {
     key: 'route-collaboration',
     kind: 'ROUTE',
-    badge: 'ROUTE',
-    label: 'Collaboration',
-    description: 'Open cross-product collaboration center',
+    badge: t('commandCenter.palette.badges.route'),
+    label: t('commandCenter.palette.static.collaboration.label'),
+    description: t('commandCenter.palette.static.collaboration.description'),
     routePath: '/collaboration',
     actionCode: null
   })
   appendCommand(commandList, keySet, {
     key: 'route-business',
     kind: 'ROUTE',
-    badge: 'ROUTE',
-    label: 'Business',
-    description: 'Open Business overview and team spaces',
+    badge: t('commandCenter.palette.badges.route'),
+    label: t('commandCenter.palette.static.business.label'),
+    description: t('commandCenter.palette.static.business.description'),
     routePath: '/business',
     actionCode: null
   })
   appendCommand(commandList, keySet, {
     key: 'route-notifications',
     kind: 'ROUTE',
-    badge: 'ROUTE',
-    label: 'Notifications',
-    description: 'Open cross-product notification center',
+    badge: t('commandCenter.palette.badges.route'),
+    label: t('commandCenter.palette.static.notifications.label'),
+    description: t('commandCenter.palette.static.notifications.description'),
     routePath: '/notifications',
     actionCode: null
   })
@@ -261,9 +263,9 @@ function appendSearchCommands(
     appendCommand(commandList, keySet, {
       key: `preset-${item.label}-${item.routePath}`,
       kind: 'SEARCH',
-      badge: 'SEARCH',
+      badge: t('commandCenter.palette.badges.search'),
       label: item.label,
-      description: item.description || 'Pinned search',
+      description: item.description || t('commandCenter.palette.pinnedFallback'),
       routePath: item.routePath || '/search',
       actionCode: null
     })
@@ -272,9 +274,9 @@ function appendSearchCommands(
     appendCommand(commandList, keySet, {
       key: `keyword-${keywordItem}`,
       kind: 'SEARCH',
-      badge: 'SEARCH',
-      label: `Search "${keywordItem}"`,
-      description: 'Recent keyword',
+      badge: t('commandCenter.palette.badges.search'),
+      label: t('commandCenter.palette.recentKeywordLabel', { value: keywordItem }),
+      description: t('commandCenter.palette.recentKeywordDescription'),
       routePath: `/search?keyword=${encodeURIComponent(keywordItem)}`,
       actionCode: null
     })
@@ -290,7 +292,7 @@ function appendActionCommands(
     appendCommand(commandList, keySet, {
       key: `action-${action.actionCode || action.action}`,
       kind: 'ACTION',
-      badge: 'ACTION',
+      badge: t('commandCenter.palette.badges.action'),
       label: action.action,
       description: `${action.productCode} · ${action.priority}`,
       routePath: '/command-center',
@@ -343,14 +345,14 @@ function appendCommand(
   >
     <div class="palette-root">
       <header class="palette-header">
-        <h2>Suite Command Palette</h2>
-        <p>Type to search routes, actions, and history. Enter to run.</p>
+        <h2>{{ t('commandCenter.palette.title') }}</h2>
+        <p>{{ t('commandCenter.palette.subtitle') }}</p>
       </header>
 
       <el-input
         ref="searchInputRef"
         v-model="keyword"
-        placeholder="Search commands..."
+        :placeholder="t('commandCenter.palette.searchPlaceholder')"
         clearable
         class="palette-input"
       />
@@ -376,15 +378,15 @@ function appendCommand(
               <el-tag size="small" effect="plain">{{ item.badge }}</el-tag>
             </span>
           </button>
-          <el-empty v-if="filteredCommands.length === 0" description="No command found" />
+          <el-empty v-if="filteredCommands.length === 0" :description="t('commandCenter.palette.empty')" />
         </el-scrollbar>
       </template>
 
       <footer class="palette-footer">
-        <span>↑/↓ select</span>
-        <span>Enter run</span>
-        <span>Esc close</span>
-        <el-badge v-if="executing" value="RUNNING" />
+        <span>{{ t('commandCenter.palette.footer.upDown') }}</span>
+        <span>{{ t('commandCenter.palette.footer.enter') }}</span>
+        <span>{{ t('commandCenter.palette.footer.escape') }}</span>
+        <el-badge v-if="executing" :value="t('commandCenter.palette.footer.running')" />
       </footer>
     </div>
   </el-dialog>

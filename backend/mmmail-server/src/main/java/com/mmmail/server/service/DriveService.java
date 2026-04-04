@@ -15,10 +15,12 @@ import com.mmmail.server.mapper.UserAccountMapper;
 import com.mmmail.server.mapper.UserPreferenceMapper;
 import com.mmmail.server.model.dto.CreateDriveFileRequest;
 import com.mmmail.server.model.dto.CreateDriveFolderRequest;
+import com.mmmail.server.model.dto.CreateEncryptedDriveShareRequest;
 import com.mmmail.server.model.dto.CreateDriveShareRequest;
 import com.mmmail.server.model.dto.MoveDriveItemRequest;
 import com.mmmail.server.model.dto.RenameDriveItemRequest;
 import com.mmmail.server.model.dto.SaveDriveSharedWithMeRequest;
+import com.mmmail.server.model.dto.UploadDriveFileRequest;
 import com.mmmail.server.model.dto.UpdateDriveShareRequest;
 import com.mmmail.server.model.vo.AuditEventVo;
 import com.mmmail.server.model.vo.DriveBatchActionResultVo;
@@ -96,6 +98,8 @@ public class DriveService {
     private static final int MIN_VERSION_RETENTION_DAYS = 1;
     private static final int MAX_VERSION_RETENTION_DAYS = 3650;
     private static final String DEFAULT_BINARY_MIME = "application/octet-stream";
+    private static final String DRIVE_E2EE_PREVIEW_UNAVAILABLE = "Drive E2EE files must be decrypted locally before preview";
+    private static final String DRIVE_PUBLIC_SHARE_E2EE_PREVIEW_UNAVAILABLE = "Drive E2EE public shares must be decrypted locally before preview";
     private static final int DEFAULT_RECYCLE_BIN_RETENTION_DAYS = 30;
     private static final int DEFAULT_PREVIEW_TEXT_MAX_BYTES = 262_144;
     private static final int DEFAULT_PUBLIC_RATE_LIMIT_WINDOW_SECONDS = 60;
@@ -133,6 +137,8 @@ public class DriveService {
     private final SuiteService suiteService;
     private final AuditService auditService;
     private final SuiteCollaborationService suiteCollaborationService;
+    private final DriveFileE2eeService driveFileE2eeService;
+    private final DriveReadableShareE2eeService driveReadableShareE2eeService;
     private final PasswordEncoder passwordEncoder;
     private final ObjectProvider<StringRedisTemplate> stringRedisTemplateProvider;
     private final Map<String, PublicRateCounter> publicRateCounterMap = new ConcurrentHashMap<>();
@@ -162,6 +168,8 @@ public class DriveService {
             SuiteService suiteService,
             AuditService auditService,
             SuiteCollaborationService suiteCollaborationService,
+            DriveFileE2eeService driveFileE2eeService,
+            DriveReadableShareE2eeService driveReadableShareE2eeService,
             PasswordEncoder passwordEncoder,
             ObjectProvider<StringRedisTemplate> stringRedisTemplateProvider
     ) {
@@ -175,6 +183,8 @@ public class DriveService {
         this.suiteService = suiteService;
         this.auditService = auditService;
         this.suiteCollaborationService = suiteCollaborationService;
+        this.driveFileE2eeService = driveFileE2eeService;
+        this.driveReadableShareE2eeService = driveReadableShareE2eeService;
         this.passwordEncoder = passwordEncoder;
         this.stringRedisTemplateProvider = stringRedisTemplateProvider;
     }
@@ -366,6 +376,7 @@ public class DriveService {
         item.setSizeBytes(0L);
         item.setStoragePath(null);
         item.setChecksum(null);
+        applyE2eeMetadata(item, DriveFileE2eeService.DriveFileE2eeMetadata.disabled());
         item.setCreatedAt(now);
         item.setUpdatedAt(now);
         item.setDeleted(0);
@@ -403,6 +414,7 @@ public class DriveService {
         item.setSizeBytes(sizeBytes);
         item.setStoragePath(normalizeNullableText(request.storagePath(), 512));
         item.setChecksum(normalizeNullableText(request.checksum(), 128));
+        applyE2eeMetadata(item, DriveFileE2eeService.DriveFileE2eeMetadata.disabled());
         item.setCreatedAt(now);
         item.setUpdatedAt(now);
         item.setDeleted(0);
@@ -418,37 +430,21 @@ public class DriveService {
     }
 
     @Transactional
-    public DriveItemVo uploadFile(Long userId, Long parentId, MultipartFile file, String ipAddress) {
-        if (file == null || file.isEmpty()) {
-            throw new BizException(ErrorCode.INVALID_ARGUMENT, "file is required");
-        }
-
-        String fileName = normalizeName(resolveUploadName(file));
-        ensureParentFolder(userId, parentId);
-        ensureNameUnique(userId, parentId, ITEM_TYPE_FILE, fileName, null);
-
-        byte[] content = readUploadBytes(file);
-        long sizeBytes = content.length;
-        if (sizeBytes <= 0) {
-            throw new BizException(ErrorCode.INVALID_ARGUMENT, "file size must be greater than 0");
-        }
-        assertUploadSizeWithinLimit(sizeBytes);
-        suiteService.assertDriveStorageQuota(userId, sizeBytes, ipAddress);
-
-        String checksum = sha256(content);
-        String mimeType = normalizeNullableText(file.getContentType(), 128);
-        String storagePath = normalizeNullableText(storeUploadedFile(userId, fileName, content), 512);
-
+    public DriveItemVo uploadFile(Long userId, UploadDriveFileRequest request, String ipAddress) {
+        ensureParentFolder(userId, request.getParentId());
+        PreparedUpload upload = prepareOwnedUpload(userId, request, null, ipAddress);
+        ensureNameUnique(userId, request.getParentId(), ITEM_TYPE_FILE, upload.fileName(), null);
         LocalDateTime now = LocalDateTime.now();
         DriveItem item = new DriveItem();
         item.setOwnerId(userId);
-        item.setParentId(parentId);
+        item.setParentId(request.getParentId());
         item.setItemType(ITEM_TYPE_FILE);
-        item.setName(fileName);
-        item.setMimeType(mimeType == null ? DEFAULT_BINARY_MIME : mimeType);
-        item.setSizeBytes(sizeBytes);
-        item.setStoragePath(storagePath);
-        item.setChecksum(checksum);
+        item.setName(upload.fileName());
+        item.setMimeType(upload.mimeType());
+        item.setSizeBytes(upload.sizeBytes());
+        item.setStoragePath(upload.storagePath());
+        item.setChecksum(upload.checksum());
+        applyE2eeMetadata(item, upload.e2eeMetadata());
         item.setCreatedAt(now);
         item.setUpdatedAt(now);
         item.setDeleted(0);
@@ -457,7 +453,7 @@ public class DriveService {
         auditService.record(
                 userId,
                 "DRIVE_FILE_UPLOAD",
-                "itemId=" + item.getId() + ",sizeBytes=" + sizeBytes + ",parentId=" + nullableId(parentId),
+                "itemId=" + item.getId() + ",sizeBytes=" + upload.sizeBytes() + ",parentId=" + nullableId(request.getParentId()),
                 ipAddress
         );
         return toItemVo(item, 0);
@@ -502,37 +498,22 @@ public class DriveService {
     }
 
     @Transactional
-    public DriveItemVo uploadFileVersion(Long userId, Long itemId, MultipartFile file, String ipAddress) {
+    public DriveItemVo uploadFileVersion(Long userId, Long itemId, UploadDriveFileRequest request, String ipAddress) {
         DriveItem currentItem = loadOwnedFile(userId, itemId);
-        if (file == null || file.isEmpty()) {
-            throw new BizException(ErrorCode.INVALID_ARGUMENT, "file is required");
-        }
-
-        byte[] content = readUploadBytes(file);
-        long sizeBytes = content.length;
-        if (sizeBytes <= 0) {
-            throw new BizException(ErrorCode.INVALID_ARGUMENT, "file size must be greater than 0");
-        }
-        assertUploadSizeWithinLimit(sizeBytes);
-        suiteService.assertDriveStorageQuota(userId, sizeBytes, ipAddress);
-
+        PreparedUpload upload = prepareOwnedUpload(userId, request, currentItem.getName(), ipAddress);
         snapshotCurrentItemAsVersion(currentItem);
-
-        String checksum = sha256(content);
-        String mimeType = normalizeNullableText(file.getContentType(), 128);
-        String storagePath = normalizeNullableText(storeUploadedFile(userId, currentItem.getName(), content), 512);
-
-        currentItem.setMimeType(mimeType == null ? DEFAULT_BINARY_MIME : mimeType);
-        currentItem.setSizeBytes(sizeBytes);
-        currentItem.setStoragePath(storagePath);
-        currentItem.setChecksum(checksum);
+        currentItem.setMimeType(upload.mimeType());
+        currentItem.setSizeBytes(upload.sizeBytes());
+        currentItem.setStoragePath(upload.storagePath());
+        currentItem.setChecksum(upload.checksum());
+        applyE2eeMetadata(currentItem, upload.e2eeMetadata());
         currentItem.setUpdatedAt(LocalDateTime.now());
         driveItemMapper.updateById(currentItem);
 
         AuditEventVo event = auditService.recordEvent(
                 userId,
                 "DRIVE_FILE_VERSION_UPLOAD",
-                "itemId=" + itemId + ",sizeBytes=" + sizeBytes,
+                "itemId=" + itemId + ",sizeBytes=" + upload.sizeBytes(),
                 ipAddress
         );
         suiteCollaborationService.publishToUser(userId, event);
@@ -560,6 +541,9 @@ public class DriveService {
         currentItem.setSizeBytes(targetVersion.getSizeBytes());
         currentItem.setStoragePath(targetVersion.getStoragePath());
         currentItem.setChecksum(targetVersion.getChecksum());
+        currentItem.setE2eeEnabled(targetVersion.getE2eeEnabled());
+        currentItem.setE2eeAlgorithm(targetVersion.getE2eeAlgorithm());
+        currentItem.setE2eeFingerprintsJson(targetVersion.getE2eeFingerprintsJson());
         currentItem.setUpdatedAt(LocalDateTime.now());
         driveItemMapper.updateById(currentItem);
 
@@ -623,7 +607,8 @@ public class DriveService {
     public DriveFileDownloadVo downloadByPublicToken(String token, String sharePassword, String ipAddress, String userAgent) {
         ShareAndItem pair = loadPublicShareAndItemForAction(token, sharePassword, ipAddress, userAgent, PUBLIC_ACTION_DOWNLOAD, true);
         DriveItem file = requirePublicSharedFile(pair.item());
-        byte[] content = readStoredFile(file);
+        boolean readableE2ee = driveReadableShareE2eeService.isEnabled(pair.share().getReadableE2eeEnabled());
+        byte[] content = readableE2ee ? readStoredReadableShareFile(pair.share()) : readStoredFile(file);
         auditService.record(
                 file.getOwnerId(),
                 "DRIVE_PUBLIC_SHARE_DOWNLOAD",
@@ -631,12 +616,23 @@ public class DriveService {
                 ipAddress
         );
         recordPublicAccess(pair, token, PUBLIC_ACTION_DOWNLOAD, ACCESS_STATUS_ALLOW, ipAddress, userAgent);
+        if (readableE2ee) {
+            return new DriveFileDownloadVo(
+                    encryptedReadableShareFileName(file.getName()),
+                    DEFAULT_BINARY_MIME,
+                    content
+            );
+        }
         return toFileDownloadVo(file, content);
     }
 
     public DriveFilePreviewVo previewByPublicToken(String token, String sharePassword, String ipAddress, String userAgent) {
         ShareAndItem pair = loadPublicShareAndItemForAction(token, sharePassword, ipAddress, userAgent, PUBLIC_ACTION_PREVIEW, true);
         DriveItem file = requirePublicSharedFile(pair.item());
+        if (driveReadableShareE2eeService.isEnabled(pair.share().getReadableE2eeEnabled())) {
+            recordPublicAccess(pair, token, PUBLIC_ACTION_PREVIEW, ACCESS_STATUS_DENY_UNSUPPORTED_PREVIEW, ipAddress, userAgent);
+            throw new BizException(ErrorCode.INVALID_ARGUMENT, DRIVE_PUBLIC_SHARE_E2EE_PREVIEW_UNAVAILABLE);
+        }
         PreviewContent previewContent;
         try {
             previewContent = readStoredPreviewContent(file);
@@ -749,6 +745,7 @@ public class DriveService {
         item.setSizeBytes(sizeBytes);
         item.setStoragePath(storagePath);
         item.setChecksum(checksum);
+        applyE2eeMetadata(item, DriveFileE2eeService.DriveFileE2eeMetadata.disabled());
         item.setCreatedAt(now);
         item.setUpdatedAt(now);
         item.setDeleted(0);
@@ -895,7 +892,13 @@ public class DriveService {
 
     @Transactional
     public DriveShareLinkVo createShare(Long userId, Long itemId, CreateDriveShareRequest request, String ipAddress) {
-        loadOwnedItem(userId, itemId);
+        DriveItem item = loadOwnedItem(userId, itemId);
+        if (driveFileE2eeService.isEnabled(item.getE2eeEnabled())) {
+            throw new BizException(
+                    ErrorCode.INVALID_ARGUMENT,
+                    "Drive E2EE files must use the readable-share E2EE create flow"
+            );
+        }
         String permission = normalizeSharePermission(request.permission());
         LocalDateTime expiresAt = normalizeShareExpiry(request.expiresAt());
         String passwordHash = encodeSharePassword(request.password());
@@ -923,6 +926,67 @@ public class DriveService {
         );
         suiteCollaborationService.publishToUser(userId, event);
         return toShareVo(shareLink);
+    }
+
+    @Transactional
+    public DriveShareLinkVo createEncryptedShare(
+            Long userId,
+            Long itemId,
+            CreateEncryptedDriveShareRequest request,
+            String ipAddress
+    ) {
+        DriveItem item = loadOwnedFile(userId, itemId);
+        if (!driveFileE2eeService.isEnabled(item.getE2eeEnabled())) {
+            throw new BizException(ErrorCode.INVALID_ARGUMENT, "Drive readable-share E2EE requires an E2EE file");
+        }
+        String permission = normalizeSharePermission(request.getPermission());
+        if (!SHARE_PERMISSION_VIEW.equals(permission)) {
+            throw new BizException(
+                    ErrorCode.INVALID_ARGUMENT,
+                    "Drive readable-share E2EE only supports view-only public links"
+            );
+        }
+        LocalDateTime expiresAt = normalizeShareExpiry(request.getExpiresAt());
+        String password = requireSharePassword(request.getPassword());
+        DriveReadableShareE2eeService.ReadableShareE2eeMetadata e2eeMetadata =
+                driveReadableShareE2eeService.resolveCreate(request.getE2eeAlgorithm());
+        MultipartFile file = requireUploadFile(request.getFile());
+        byte[] content = readUploadBytes(file);
+        validateUploadSize(content.length);
+        String storagePath = null;
+        try {
+            storagePath = normalizeNullableText(storeUploadedFile(userId, encryptedReadableShareFileName(item.getName()), content), 512);
+            LocalDateTime now = LocalDateTime.now();
+            DriveShareLink shareLink = new DriveShareLink();
+            shareLink.setOwnerId(userId);
+            shareLink.setItemId(itemId);
+            shareLink.setToken(generateShareToken());
+            shareLink.setPermission(permission);
+            shareLink.setExpiresAt(expiresAt);
+            shareLink.setPasswordHash(passwordEncoder.encode(password));
+            shareLink.setReadableE2eeEnabled(e2eeMetadata.flag());
+            shareLink.setReadableE2eeAlgorithm(e2eeMetadata.algorithm());
+            shareLink.setReadableE2eeStoragePath(storagePath);
+            shareLink.setReadableE2eeChecksum(sha256(content));
+            shareLink.setStatus(SHARE_STATUS_ACTIVE);
+            shareLink.setCreatedAt(now);
+            shareLink.setUpdatedAt(now);
+            shareLink.setDeleted(0);
+            driveShareLinkMapper.insert(shareLink);
+
+            AuditEventVo event = auditService.recordEvent(
+                    userId,
+                    "DRIVE_SHARE_CREATE",
+                    "itemId=" + itemId + ",shareId=" + shareLink.getId() + ",permission=" + permission
+                            + ",passwordProtected=true,readableE2ee=true",
+                    ipAddress
+            );
+            suiteCollaborationService.publishToUser(userId, event);
+            return toShareVo(shareLink);
+        } catch (RuntimeException exception) {
+            removeStoredFileIfExists(storagePath);
+            throw exception;
+        }
     }
 
     @Transactional
@@ -970,6 +1034,12 @@ public class DriveService {
         DriveShareLink shareLink = loadOwnedShareLink(userId, shareId);
         if (!SHARE_STATUS_ACTIVE.equals(shareLink.getStatus())) {
             throw new BizException(ErrorCode.INVALID_ARGUMENT, "Drive share link is revoked");
+        }
+        if (driveReadableShareE2eeService.isEnabled(shareLink.getReadableE2eeEnabled())) {
+            throw new BizException(
+                    ErrorCode.INVALID_ARGUMENT,
+                    "Drive readable-share E2EE links must be revoked and recreated to change settings"
+            );
         }
 
         String permission = normalizeSharePermission(request.permission());
@@ -1019,6 +1089,9 @@ public class DriveService {
         shareLink.setStatus(SHARE_STATUS_REVOKED);
         shareLink.setUpdatedAt(LocalDateTime.now());
         driveShareLinkMapper.updateById(shareLink);
+        if (driveReadableShareE2eeService.isEnabled(shareLink.getReadableE2eeEnabled())) {
+            removeStoredFileIfExists(shareLink.getReadableE2eeStoragePath());
+        }
         auditService.record(
                 userId,
                 "DRIVE_SHARE_REVOKE",
@@ -1201,6 +1274,7 @@ public class DriveService {
     }
 
     private PreviewContent readStoredPreviewContent(DriveItem item) {
+        assertServerPreviewAllowed(item);
         String mimeType = normalizeMimeType(item.getMimeType());
         String path = item.getStoragePath();
         if (!StringUtils.hasText(path)) {
@@ -1247,6 +1321,68 @@ public class DriveService {
             return DEFAULT_BINARY_MIME;
         }
         return mimeType.trim().toLowerCase();
+    }
+
+    private PreparedUpload prepareOwnedUpload(
+            Long userId,
+            UploadDriveFileRequest request,
+            String fixedFileName,
+            String ipAddress
+    ) {
+        MultipartFile file = requireUploadFile(request.getFile());
+        byte[] content = readUploadBytes(file);
+        long storedSize = validateUploadSize(content.length);
+        suiteService.assertDriveStorageQuota(userId, storedSize, ipAddress);
+        DriveFileE2eeService.DriveFileE2eeMetadata e2eeMetadata = driveFileE2eeService.resolveUpload(
+                request.getE2eeEnabled(),
+                request.getE2eeAlgorithm(),
+                request.getE2eeRecipientFingerprintsJson()
+        );
+        String fileName = resolveUploadFileName(request, file, fixedFileName, e2eeMetadata.enabled());
+        String mimeType = resolveUploadMimeType(request, file, e2eeMetadata.enabled());
+        String storagePath = normalizeNullableText(storeUploadedFile(userId, fileName, content), 512);
+        return new PreparedUpload(fileName, mimeType, storedSize, storagePath, sha256(content), e2eeMetadata);
+    }
+
+    private MultipartFile requireUploadFile(MultipartFile file) {
+        if (file == null || file.isEmpty()) {
+            throw new BizException(ErrorCode.INVALID_ARGUMENT, "file is required");
+        }
+        return file;
+    }
+
+    private long validateUploadSize(long sizeBytes) {
+        if (sizeBytes <= 0) {
+            throw new BizException(ErrorCode.INVALID_ARGUMENT, "file size must be greater than 0");
+        }
+        assertUploadSizeWithinLimit(sizeBytes);
+        return sizeBytes;
+    }
+
+    private String resolveUploadFileName(
+            UploadDriveFileRequest request,
+            MultipartFile file,
+            String fixedFileName,
+            boolean e2eeEnabled
+    ) {
+        if (StringUtils.hasText(fixedFileName)) {
+            return normalizeName(fixedFileName);
+        }
+        if (!e2eeEnabled) {
+            return normalizeName(resolveUploadName(file));
+        }
+        return normalizeName(requireText(request.getFileName(), "Drive file fileName is required"));
+    }
+
+    private String resolveUploadMimeType(
+            UploadDriveFileRequest request,
+            MultipartFile file,
+            boolean e2eeEnabled
+    ) {
+        if (!e2eeEnabled) {
+            return normalizeMimeType(file.getContentType());
+        }
+        return normalizeMimeType(requireText(request.getContentType(), "Drive file contentType is required"));
     }
 
     private int effectivePreviewTextMaxBytes() {
@@ -1411,6 +1547,18 @@ public class DriveService {
         }
     }
 
+    private void assertServerPreviewAllowed(DriveItem item) {
+        if (driveFileE2eeService.isEnabled(item.getE2eeEnabled())) {
+            throw new BizException(ErrorCode.INVALID_ARGUMENT, DRIVE_E2EE_PREVIEW_UNAVAILABLE);
+        }
+    }
+
+    private void applyE2eeMetadata(DriveItem item, DriveFileE2eeService.DriveFileE2eeMetadata metadata) {
+        item.setE2eeEnabled(metadata.flag());
+        item.setE2eeAlgorithm(metadata.algorithm());
+        item.setE2eeFingerprintsJson(metadata.fingerprintsJson());
+    }
+
     private String storeUploadedFile(Long userId, String fileName, byte[] content) {
         String safeName = sanitizeStorageName(fileName);
         String uniqueName = UUID.randomUUID().toString().replace("-", "") + "-" + safeName;
@@ -1467,6 +1615,9 @@ public class DriveService {
         version.setSizeBytes(currentItem.getSizeBytes() == null ? 0L : currentItem.getSizeBytes());
         version.setStoragePath(currentItem.getStoragePath());
         version.setChecksum(currentItem.getChecksum());
+        version.setE2eeEnabled(currentItem.getE2eeEnabled());
+        version.setE2eeAlgorithm(currentItem.getE2eeAlgorithm());
+        version.setE2eeFingerprintsJson(currentItem.getE2eeFingerprintsJson());
         version.setCreatedAt(now);
         version.setUpdatedAt(now);
         version.setDeleted(0);
@@ -1602,6 +1753,21 @@ public class DriveService {
             return Files.readAllBytes(Paths.get(path));
         } catch (IOException ex) {
             throw new BizException(ErrorCode.INVALID_ARGUMENT, "Drive file content is unavailable");
+        }
+    }
+
+    private byte[] readStoredReadableShareFile(DriveShareLink share) {
+        String path = share.getReadableE2eeStoragePath();
+        if (!StringUtils.hasText(path)) {
+            throw new BizException(ErrorCode.INVALID_ARGUMENT, "Drive readable-share E2EE content is unavailable");
+        }
+        if (!isPathWithinStorageRoot(path)) {
+            throw new BizException(ErrorCode.INVALID_ARGUMENT, "Drive readable-share E2EE content is unavailable");
+        }
+        try {
+            return Files.readAllBytes(Paths.get(path));
+        } catch (IOException ex) {
+            throw new BizException(ErrorCode.INVALID_ARGUMENT, "Drive readable-share E2EE content is unavailable");
         }
     }
 
@@ -1860,6 +2026,17 @@ public class DriveService {
         return normalized == null ? null : passwordEncoder.encode(normalized);
     }
 
+    private String requireSharePassword(String rawPassword) {
+        String normalized = normalizeOptionalSharePassword(rawPassword);
+        if (!StringUtils.hasText(normalized)) {
+            throw new BizException(
+                    ErrorCode.INVALID_ARGUMENT,
+                    "Drive readable-share E2EE requires a password-protected public link"
+            );
+        }
+        return normalized;
+    }
+
     private String resolveUpdatedSharePasswordHash(String currentHash, String rawPassword, Boolean clearPassword) {
         if (Boolean.TRUE.equals(clearPassword)) {
             return null;
@@ -1877,6 +2054,14 @@ public class DriveService {
             throw new BizException(ErrorCode.INVALID_ARGUMENT, "Drive share password is too long");
         }
         return normalized;
+    }
+
+    private String encryptedReadableShareFileName(String fileName) {
+        String normalized = StringUtils.hasText(fileName) ? fileName.trim() : "drive-share";
+        if (normalized.endsWith(".pgp")) {
+            return normalized;
+        }
+        return normalized + ".pgp";
     }
 
     private void assertPublicSharePassword(
@@ -2012,6 +2197,13 @@ public class DriveService {
         return rawKeyword.trim();
     }
 
+    private String requireText(String value, String message) {
+        if (!StringUtils.hasText(value)) {
+            throw new BizException(ErrorCode.INVALID_ARGUMENT, message);
+        }
+        return value.trim();
+    }
+
     private String normalizeNullableText(String value, int maxLength) {
         if (!StringUtils.hasText(value)) {
             return null;
@@ -2077,7 +2269,8 @@ public class DriveService {
                 status,
                 expiresAt,
                 savedShare.getCreatedAt(),
-                available
+                available,
+                toReadableShareE2eeVo(share)
         );
     }
 
@@ -2103,6 +2296,7 @@ public class DriveService {
                 item.getMimeType(),
                 item.getSizeBytes() == null ? 0L : item.getSizeBytes(),
                 shareCount,
+                driveFileE2eeService.toVo(item.getE2eeEnabled(), item.getE2eeAlgorithm(), item.getE2eeFingerprintsJson()),
                 item.getCreatedAt(),
                 item.getUpdatedAt()
         );
@@ -2116,6 +2310,7 @@ public class DriveService {
                 version.getMimeType(),
                 version.getSizeBytes() == null ? 0L : version.getSizeBytes(),
                 version.getChecksum(),
+                driveFileE2eeService.toVo(version.getE2eeEnabled(), version.getE2eeAlgorithm(), version.getE2eeFingerprintsJson()),
                 version.getCreatedAt()
         );
     }
@@ -2143,6 +2338,7 @@ public class DriveService {
                 link.getExpiresAt(),
                 link.getStatus(),
                 StringUtils.hasText(link.getPasswordHash()),
+                toReadableShareE2eeVo(link),
                 link.getCreatedAt(),
                 link.getUpdatedAt()
         );
@@ -2177,7 +2373,18 @@ public class DriveService {
                 share.getPermission(),
                 share.getStatus(),
                 share.getExpiresAt(),
-                StringUtils.hasText(share.getPasswordHash())
+                StringUtils.hasText(share.getPasswordHash()),
+                toReadableShareE2eeVo(share)
+        );
+    }
+
+    private com.mmmail.server.model.vo.DriveShareReadableE2eeVo toReadableShareE2eeVo(DriveShareLink share) {
+        if (share == null) {
+            return null;
+        }
+        return driveReadableShareE2eeService.toVo(
+                share.getReadableE2eeEnabled(),
+                share.getReadableE2eeAlgorithm()
         );
     }
 
@@ -2210,6 +2417,16 @@ public class DriveService {
             return false;
         }
         return currentParentId.equals(targetParentId);
+    }
+
+    private record PreparedUpload(
+            String fileName,
+            String mimeType,
+            long sizeBytes,
+            String storagePath,
+            String checksum,
+            DriveFileE2eeService.DriveFileE2eeMetadata e2eeMetadata
+    ) {
     }
 
     private record ShareAndItem(DriveShareLink share, DriveItem item) {

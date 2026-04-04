@@ -55,6 +55,9 @@ public class MailE2eeRecipientDiscoveryService {
     }
 
     private MailE2eeRecipientRouteVo toRouteVo(MailDeliveryTarget target) {
+        if (target.isSmtpOutbound()) {
+            return new MailE2eeRecipientRouteVo(target.targetEmail(), target.forwardToEmail(), false, null, null, null);
+        }
         UserPreference preference = userPreferenceMapper.selectOne(new LambdaQueryWrapper<UserPreference>()
                 .eq(UserPreference::getOwnerId, target.ownerId())
                 .last("limit 1"));

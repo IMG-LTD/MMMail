@@ -106,3 +106,19 @@ mmmail:
   mail:
     attachment:
       storage-root: ${MMMAIL_MAIL_ATTACHMENT_STORAGE_ROOT:${java.io.tmpdir}/mmmail-mail-attachments}
+  web-push:
+    vapid-subject: ${MMMAIL_WEB_PUSH_VAPID_SUBJECT:}
+    vapid-public-key: ${MMMAIL_WEB_PUSH_VAPID_PUBLIC_KEY:}
+    vapid-private-key: ${MMMAIL_WEB_PUSH_VAPID_PRIVATE_KEY:}
+  smtp-outbound:
+    enabled: ${MMMAIL_SMTP_OUTBOUND_ENABLED:false}
+    host: ${MMMAIL_SMTP_OUTBOUND_HOST:}
+    port: ${MMMAIL_SMTP_OUTBOUND_PORT:587}
+    username: ${MMMAIL_SMTP_OUTBOUND_USERNAME:}
+    password: ${MMMAIL_SMTP_OUTBOUND_PASSWORD:}
+    protocol: ${MMMAIL_SMTP_OUTBOUND_PROTOCOL:smtp}
+    starttls-enabled: ${MMMAIL_SMTP_OUTBOUND_STARTTLS_ENABLED:true}
+    ssl-enabled: ${MMMAIL_SMTP_OUTBOUND_SSL_ENABLED:false}
+    connect-timeout-ms: ${MMMAIL_SMTP_OUTBOUND_CONNECT_TIMEOUT_MS:10000}
+    read-timeout-ms: ${MMMAIL_SMTP_OUTBOUND_READ_TIMEOUT_MS:10000}
+    write-timeout-ms: ${MMMAIL_SMTP_OUTBOUND_WRITE_TIMEOUT_MS:10000}

@@ -57,6 +57,7 @@ public class DriveCollaborationService {
     private static final String STATUS_DECLINED = "DECLINED";
     private static final String STATUS_REVOKED = "REVOKED";
     private static final String DEFAULT_BINARY_MIME = "application/octet-stream";
+    private static final String DRIVE_E2EE_PREVIEW_UNAVAILABLE = "Drive E2EE files must be decrypted locally before preview";
     private static final int DEFAULT_LIMIT = 100;
     private static final int MAX_LIMIT = 200;
     private static final int DEFAULT_PREVIEW_TEXT_MAX_BYTES = 262_144;
@@ -67,6 +68,7 @@ public class DriveCollaborationService {
     private final SuiteService suiteService;
     private final AuditService auditService;
     private final SuiteCollaborationService suiteCollaborationService;
+    private final DriveFileE2eeService driveFileE2eeService;
 
     @Value("${mmmail.drive.storage-root:${java.io.tmpdir}/mmmail-drive}")
     private String driveStorageRoot;
@@ -82,7 +84,8 @@ public class DriveCollaborationService {
             UserAccountMapper userAccountMapper,
             SuiteService suiteService,
             AuditService auditService,
-            SuiteCollaborationService suiteCollaborationService
+            SuiteCollaborationService suiteCollaborationService,
+            DriveFileE2eeService driveFileE2eeService
     ) {
         this.driveCollaboratorShareMapper = driveCollaboratorShareMapper;
         this.driveItemMapper = driveItemMapper;
@@ -90,6 +93,7 @@ public class DriveCollaborationService {
         this.suiteService = suiteService;
         this.auditService = auditService;
         this.suiteCollaborationService = suiteCollaborationService;
+        this.driveFileE2eeService = driveFileE2eeService;
     }
 
     public List<DriveCollaboratorShareVo> listShares(Long userId, Long itemId) {
@@ -505,6 +509,7 @@ public class DriveCollaborationService {
         item.setSizeBytes(0L);
         item.setStoragePath(null);
         item.setChecksum(null);
+        item.setE2eeEnabled(DriveFileE2eeService.E2EE_DISABLED_FLAG);
         item.setCreatedAt(now);
         item.setUpdatedAt(now);
         item.setDeleted(0);
@@ -523,6 +528,7 @@ public class DriveCollaborationService {
         item.setSizeBytes(payload.sizeBytes());
         item.setStoragePath(payload.storagePath());
         item.setChecksum(payload.checksum());
+        item.setE2eeEnabled(DriveFileE2eeService.E2EE_DISABLED_FLAG);
         item.setCreatedAt(now);
         item.setUpdatedAt(now);
         item.setDeleted(0);
@@ -909,6 +915,9 @@ public class DriveCollaborationService {
     }
 
     private PreviewPayload readPreview(DriveItem item) {
+        if (driveFileE2eeService.isEnabled(item.getE2eeEnabled())) {
+            throw new BizException(ErrorCode.INVALID_ARGUMENT, DRIVE_E2EE_PREVIEW_UNAVAILABLE);
+        }
         String mimeType = normalizeMimeType(item.getMimeType());
         if (mimeType.startsWith("text/") || mimeType.contains("json") || mimeType.contains("xml")) {
             return readTextPreview(item.getStoragePath());
@@ -965,6 +974,7 @@ public class DriveCollaborationService {
                 item.getMimeType(),
                 item.getSizeBytes() == null ? 0L : item.getSizeBytes(),
                 0,
+                driveFileE2eeService.toVo(item.getE2eeEnabled(), item.getE2eeAlgorithm(), item.getE2eeFingerprintsJson()),
                 item.getCreatedAt(),
                 item.getUpdatedAt()
         );

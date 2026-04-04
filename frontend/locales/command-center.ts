@@ -28,7 +28,27 @@ const commandCenterEn = {
   'commandCenter.messages.selectRequest': 'Please select at least one governance request',
   'commandCenter.messages.batchExecuted': 'Batch executed: {count} succeeded',
   'commandCenter.messages.batchReviewed': 'Batch review: {count} succeeded',
-  'commandCenter.messages.lastBatch': 'Last batch: {success}/{total} succeeded'
+  'commandCenter.messages.lastBatch': 'Last batch: {success}/{total} succeeded',
+  'commandCenter.palette.title': 'Suite Command Palette',
+  'commandCenter.palette.subtitle': 'Type to search routes, actions, and history. Enter to run.',
+  'commandCenter.palette.searchPlaceholder': 'Search commands...',
+  'commandCenter.palette.empty': 'No command found',
+  'commandCenter.palette.footer.upDown': '↑/↓ select',
+  'commandCenter.palette.footer.enter': 'Enter run',
+  'commandCenter.palette.footer.escape': 'Esc close',
+  'commandCenter.palette.footer.running': 'RUNNING',
+  'commandCenter.palette.badges.route': 'Route',
+  'commandCenter.palette.badges.search': 'Search',
+  'commandCenter.palette.badges.action': 'Action',
+  'commandCenter.palette.static.collaboration.label': 'Collaboration',
+  'commandCenter.palette.static.collaboration.description': 'Open cross-product collaboration center',
+  'commandCenter.palette.static.business.label': 'Business',
+  'commandCenter.palette.static.business.description': 'Open Business overview and team spaces',
+  'commandCenter.palette.static.notifications.label': 'Notifications',
+  'commandCenter.palette.static.notifications.description': 'Open cross-product notification center',
+  'commandCenter.palette.pinnedFallback': 'Pinned search',
+  'commandCenter.palette.recentKeywordLabel': 'Search “{value}”',
+  'commandCenter.palette.recentKeywordDescription': 'Recent keyword'
 }
 
 const commandCenterZhCN = {
@@ -61,7 +81,27 @@ const commandCenterZhCN = {
   'commandCenter.messages.selectRequest': '请至少选择一个治理请求',
   'commandCenter.messages.batchExecuted': '批量执行完成：成功 {count} 项',
   'commandCenter.messages.batchReviewed': '批量评审完成：成功 {count} 项',
-  'commandCenter.messages.lastBatch': '最近一次批量执行：成功 {success}/{total}'
+  'commandCenter.messages.lastBatch': '最近一次批量执行：成功 {success}/{total}',
+  'commandCenter.palette.title': '套件命令面板',
+  'commandCenter.palette.subtitle': '输入即可搜索路由、动作和历史记录，按 Enter 执行。',
+  'commandCenter.palette.searchPlaceholder': '搜索命令...',
+  'commandCenter.palette.empty': '未找到命令',
+  'commandCenter.palette.footer.upDown': '↑/↓ 选择',
+  'commandCenter.palette.footer.enter': 'Enter 执行',
+  'commandCenter.palette.footer.escape': 'Esc 关闭',
+  'commandCenter.palette.footer.running': '执行中',
+  'commandCenter.palette.badges.route': '路由',
+  'commandCenter.palette.badges.search': '搜索',
+  'commandCenter.palette.badges.action': '动作',
+  'commandCenter.palette.static.collaboration.label': '协作',
+  'commandCenter.palette.static.collaboration.description': '打开跨产品协作中心',
+  'commandCenter.palette.static.business.label': '商业',
+  'commandCenter.palette.static.business.description': '打开 Business 总览与团队空间',
+  'commandCenter.palette.static.notifications.label': '通知',
+  'commandCenter.palette.static.notifications.description': '打开跨产品通知中心',
+  'commandCenter.palette.pinnedFallback': '固定搜索',
+  'commandCenter.palette.recentKeywordLabel': '搜索“{value}”',
+  'commandCenter.palette.recentKeywordDescription': '最近使用的关键词'
 }
 
 const commandCenterZhTW = {
@@ -94,7 +134,27 @@ const commandCenterZhTW = {
   'commandCenter.messages.selectRequest': '請至少選擇一個治理請求',
   'commandCenter.messages.batchExecuted': '批次執行完成：成功 {count} 項',
   'commandCenter.messages.batchReviewed': '批次審查完成：成功 {count} 項',
-  'commandCenter.messages.lastBatch': '最近一次批次執行：成功 {success}/{total}'
+  'commandCenter.messages.lastBatch': '最近一次批次執行：成功 {success}/{total}',
+  'commandCenter.palette.title': '套件命令面板',
+  'commandCenter.palette.subtitle': '輸入即可搜尋路由、動作與歷史紀錄，按 Enter 執行。',
+  'commandCenter.palette.searchPlaceholder': '搜尋命令...',
+  'commandCenter.palette.empty': '找不到命令',
+  'commandCenter.palette.footer.upDown': '↑/↓ 選擇',
+  'commandCenter.palette.footer.enter': 'Enter 執行',
+  'commandCenter.palette.footer.escape': 'Esc 關閉',
+  'commandCenter.palette.footer.running': '執行中',
+  'commandCenter.palette.badges.route': '路由',
+  'commandCenter.palette.badges.search': '搜尋',
+  'commandCenter.palette.badges.action': '動作',
+  'commandCenter.palette.static.collaboration.label': '協作',
+  'commandCenter.palette.static.collaboration.description': '開啟跨產品協作中心',
+  'commandCenter.palette.static.business.label': '商務',
+  'commandCenter.palette.static.business.description': '開啟 Business 總覽與團隊空間',
+  'commandCenter.palette.static.notifications.label': '通知',
+  'commandCenter.palette.static.notifications.description': '開啟跨產品通知中心',
+  'commandCenter.palette.pinnedFallback': '固定搜尋',
+  'commandCenter.palette.recentKeywordLabel': '搜尋「{value}」',
+  'commandCenter.palette.recentKeywordDescription': '最近使用的關鍵字'
 }
 
 export { commandCenterEn, commandCenterZhCN, commandCenterZhTW }

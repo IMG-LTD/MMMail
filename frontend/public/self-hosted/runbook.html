@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>MMMail Community v1.2 Runbook</title>
+  <title>MMMail Community v1.3 Runbook</title>
   <style>
     :root { color-scheme: light; }
     body { margin: 0; font-family: Inter, Arial, sans-serif; background: #f6f8fb; color: #102a43; }
@@ -17,7 +17,7 @@
 </head>
 <body>
 <main>
-  <h1>MMMail Community v1.2 运维 Runbook / Operations Runbook</h1>
+  <h1>MMMail Community v1.3 运维 Runbook / Operations Runbook</h1>
   <section>
     <h2>入口 / Entry Points</h2>
     <ul>
@@ -25,6 +25,7 @@
       <li>Prometheus: <code>GET /actuator/prometheus</code></li>
       <li>管理页 / Admin UI: <code>/settings/system-health</code></li>
       <li>API docs: <code>/swagger-ui.html</code> and <code>/v3/api-docs</code></li>
+      <li>API quick page: <a href="/self-hosted/api.html" rel="noopener noreferrer" target="_blank"><code>/self-hosted/api.html</code></a></li>
       <li>本地门禁 / Local gate: <code>bash scripts/validate-local.sh</code></li>
     </ul>
   </section>
@@ -42,16 +43,16 @@
   <section>
     <h2>边界 / Boundary</h2>
     <ul>
-      <li>当前 Mail E2EE 只覆盖 key profile foundation、READY 内部路由正文加密与详情本地解密。</li>
-      <li>Current Mail E2EE only covers the key profile foundation, READY internal-route message-body encryption, and local decryption on detail view.</li>
-      <li>Web Push、零知识架构、SMTP / IMAP / Bridge 仍不属于当前主线已交付能力。</li>
-      <li>Web Push delivery, zero-knowledge architecture, and SMTP / IMAP / Bridge remain outside the currently shipped scope.</li>
+      <li>当前主线已包含 Mail E2EE 草稿 / 附件加密、密钥恢复、Drive owner E2EE foundation、Web Push 与 SMTP outbound adapter。</li>
+      <li>The current mainline includes Mail E2EE draft and attachment encryption, key recovery, Drive owner E2EE foundation, Web Push, and the SMTP outbound adapter.</li>
+      <li>零知识架构、外部加密邮件、SMTP inbound / IMAP / Bridge 仍不属于当前已交付能力。</li>
+      <li>Zero-knowledge architecture, external encrypted mail, and SMTP inbound / IMAP / Bridge remain outside the currently shipped scope.</li>
     </ul>
   </section>
   <section>
     <h2>权威文档 / Authoritative Docs</h2>
-    <p>仓库运维权威文档位于 <code>docs/ops/runbook.md</code> 与 <code>docs/ops/install.md</code>。本页用于浏览器内快速查阅。</p>
-    <p>The authoritative operations docs live in <code>docs/ops/runbook.md</code> and <code>docs/ops/install.md</code>. This page is a bundled browser quick reference.</p>
+    <p>仓库运维权威文档位于 <code>docs/ops/runbook.md</code> 与 <code>docs/ops/install.md</code>；API 文档聚合入口位于 <a href="/self-hosted/api.html" rel="noopener noreferrer" target="_blank"><code>/self-hosted/api.html</code></a>。本页用于浏览器内快速查阅。</p>
+    <p>The authoritative operations docs live in <code>docs/ops/runbook.md</code> and <code>docs/ops/install.md</code>; the API aggregation entry lives at <a href="/self-hosted/api.html" rel="noopener noreferrer" target="_blank"><code>/self-hosted/api.html</code></a>. This page is a bundled browser quick reference.</p>
   </section>
 </main>
 </body>

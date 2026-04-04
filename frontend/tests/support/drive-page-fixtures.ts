@@ -13,6 +13,7 @@ import type {
 
 export const navigateToMock = vi.fn(async () => undefined)
 export const confirmMock = vi.fn(async () => undefined)
+export const promptMock = vi.fn(async () => ({ value: 'drive-passphrase' }))
 export const messageErrorMock = vi.fn()
 export const messageSuccessMock = vi.fn()
 export const messageWarningMock = vi.fn()
@@ -81,6 +82,7 @@ export const driveApiMock = {
   listItems: vi.fn(),
   createFolder: vi.fn(),
   uploadFile: vi.fn(),
+  createEncryptedPublicShare: vi.fn(),
   renameItem: vi.fn(),
   moveItem: vi.fn(),
   deleteItem: vi.fn(),
@@ -110,6 +112,14 @@ export const driveApiMock = {
   removeSharedWithMe: vi.fn(),
 }
 
+export const driveFileE2eeMock = {
+  isDriveFileEncryptionEnabled: vi.fn(),
+  encryptOwnedFile: vi.fn(),
+  decryptOwnedFile: vi.fn(),
+  encryptPublicShareFile: vi.fn(),
+  decryptPublicShareFile: vi.fn(),
+}
+
 export const docsApiMock = {
   createNote: vi.fn(async () => ({ id: 'note-1' })),
 }
@@ -126,6 +136,7 @@ export function resetDriveApiMocks(): void {
   driveApiMock.listItems.mockResolvedValue(baseItems)
   driveApiMock.createFolder.mockResolvedValue(baseItems[0])
   driveApiMock.uploadFile.mockResolvedValue(baseItems[1])
+  driveApiMock.createEncryptedPublicShare.mockResolvedValue(undefined)
   driveApiMock.renameItem.mockResolvedValue({ ...baseItems[1], name: 'renamed.txt' })
   driveApiMock.moveItem.mockResolvedValue({ ...baseItems[1], parentId: 'folder-1' })
   driveApiMock.deleteItem.mockResolvedValue(undefined)
@@ -174,6 +185,33 @@ export function resetDriveApiMocks(): void {
     truncated: false,
   })
   driveApiMock.removeSharedWithMe.mockResolvedValue(undefined)
+  driveFileE2eeMock.isDriveFileEncryptionEnabled.mockResolvedValue(false)
+  driveFileE2eeMock.encryptOwnedFile.mockImplementation(async (file: File) => ({
+    file,
+    e2ee: {
+      enabled: true,
+      algorithm: 'openpgp',
+      recipientFingerprints: ['DRIVE-SELF-FP'],
+      fileName: file.name,
+      contentType: file.type || 'application/octet-stream',
+      fileSize: file.size,
+    },
+  }))
+  driveFileE2eeMock.decryptOwnedFile.mockImplementation(async (payload: { blob: Blob; fileName: string }) => payload)
+  driveFileE2eeMock.encryptPublicShareFile.mockImplementation(async (payload: { blob: Blob; fileName: string }) => ({
+    file: new File([await payload.blob.arrayBuffer()], payload.fileName, {
+      type: 'application/octet-stream',
+    }),
+    e2ee: {
+      enabled: true,
+      algorithm: 'openpgp',
+      mode: 'PASSWORD',
+      fileName: payload.fileName,
+      contentType: 'application/octet-stream',
+      fileSize: payload.blob.size,
+    },
+  }))
+  driveFileE2eeMock.decryptPublicShareFile.mockImplementation(async (payload: { blob: Blob; fileName: string }) => payload)
   suiteApiMock.getCollaborationCenter.mockResolvedValue(collaborationItems)
 }
 

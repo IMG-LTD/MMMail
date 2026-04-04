@@ -3,6 +3,7 @@ import { computed, onBeforeUnmount, ref, watch } from 'vue'
 import { ElMessage } from 'element-plus'
 import type { DriveItem, DrivePreviewKind, PublicDriveShareMetadata } from '~/types/api'
 import { useDriveApi } from '~/composables/useDriveApi'
+import { useDriveFileE2ee } from '~/composables/useDriveFileE2ee'
 import { useI18n } from '~/composables/useI18n'
 import { useAuthStore } from '~/stores/auth'
 import {
@@ -28,6 +29,7 @@ const {
   uploadPublicShareFile,
   saveSharedWithMe
 } = useDriveApi()
+const { decryptPublicShareFile } = useDriveFileE2ee()
 
 const token = computed(() => String(route.params.token || ''))
 const loading = ref(false)
@@ -90,6 +92,7 @@ const saveForLaterHint = computed(() => {
 })
 const currentPassword = computed(() => sharePassword.value.trim() || undefined)
 const metadataMimeType = computed(() => metadata.value?.mimeType || 'application/octet-stream')
+const isRootE2eeShare = computed(() => Boolean(metadata.value?.itemType === 'FILE' && metadata.value?.e2ee?.enabled))
 const pageTitle = computed(() => t(isFolderShare.value ? 'drive.publicShare.folder.title' : 'drive.publicShare.title'))
 const pageSubtitle = computed(() => t(isFolderShare.value ? 'drive.publicShare.folder.subtitle' : 'drive.publicShare.subtitle'))
 const displayName = computed(() => {
@@ -197,7 +200,70 @@ function resolvePreviewKind(mimeType: string): DrivePreviewKind {
 function resolveErrorMessage(error: unknown, fallbackKey: string): string {
   const message = error instanceof Error ? error.message : ''
   const translatedKey = resolvePublicDriveShareErrorKey(message)
-  return translatedKey ? t(translatedKey) : t(fallbackKey)
+  if (translatedKey) {
+    return t(translatedKey)
+  }
+  return message || t(fallbackKey)
+}
+
+function normalizePublicItemE2ee(item: DriveItem): DriveItem {
+  if (!item.e2ee?.enabled) {
+    return item
+  }
+  const fingerprints = Array.isArray(item.e2ee.recipientFingerprints)
+    ? item.e2ee.recipientFingerprints
+    : []
+  return {
+    ...item,
+    e2ee: {
+      enabled: true,
+      algorithm: item.e2ee.algorithm,
+      recipientFingerprints: fingerprints,
+    },
+  }
+}
+
+function buildRootSharedFileItem(): DriveItem {
+  if (!metadata.value) {
+    throw new Error('Public share metadata is required.')
+  }
+  return {
+    id: metadata.value.itemId,
+    parentId: null,
+    itemType: 'FILE',
+    name: metadata.value.itemName,
+    mimeType: metadata.value.mimeType,
+    sizeBytes: metadata.value.sizeBytes,
+    shareCount: 0,
+    e2ee: metadata.value.e2ee?.enabled
+      ? {
+        enabled: true,
+        algorithm: metadata.value.e2ee.algorithm,
+        recipientFingerprints: [],
+      }
+      : null,
+    createdAt: '',
+    updatedAt: '',
+  }
+}
+
+async function decryptDownloadedSharedFile(
+  payload: { blob: Blob; fileName: string },
+  item: DriveItem,
+): Promise<{ blob: Blob; fileName: string }> {
+  return decryptPublicShareFile(payload, normalizePublicItemE2ee(item), sharePassword.value)
+}
+
+async function buildLocalSharedPreview(
+  payload: { blob: Blob; fileName: string },
+  item: DriveItem,
+): Promise<{ blob: Blob; mimeType: string; truncated: boolean }> {
+  const decrypted = await decryptDownloadedSharedFile(payload, item)
+  return {
+    blob: decrypted.blob,
+    mimeType: decrypted.blob.type || item.mimeType || 'application/octet-stream',
+    truncated: false,
+  }
 }
 
 async function loadMetadata(): Promise<void> {
@@ -252,7 +318,12 @@ async function onDownloadRootFile(): Promise<void> {
   }
   downloading.value = true
   try {
-    const file = await downloadPublicShareFile(token.value, currentPassword.value)
+    const file = isRootE2eeShare.value
+      ? await decryptDownloadedSharedFile(
+        await downloadPublicShareFile(token.value, currentPassword.value),
+        buildRootSharedFileItem(),
+      )
+      : await downloadPublicShareFile(token.value, currentPassword.value)
     unlocked.value = true
     saveBlob(file.blob, file.fileName)
     ElMessage.success(t('drive.publicShare.messages.downloadStarted'))
@@ -272,8 +343,14 @@ async function previewRootFile(): Promise<void> {
   previewLoading.value = true
   clearPreviewState()
   try {
-    const file = await previewPublicShareFile(token.value, currentPassword.value)
-    applyPreviewResult(file, metadata.value?.itemName || displayName.value)
+    if (isRootE2eeShare.value) {
+      const encryptedFile = await downloadPublicShareFile(token.value, currentPassword.value)
+      const preview = await buildLocalSharedPreview(encryptedFile, buildRootSharedFileItem())
+      await applyPreviewResult(preview, metadata.value?.itemName || displayName.value)
+    } else {
+      const file = await previewPublicShareFile(token.value, currentPassword.value)
+      await applyPreviewResult(file, metadata.value?.itemName || displayName.value)
+    }
     unlocked.value = true
   } catch (error) {
     unlocked.value = false
@@ -360,8 +437,14 @@ async function onPreviewItem(item: DriveItem): Promise<void> {
   previewLoading.value = true
   clearPreviewState()
   try {
-    const file = await previewPublicShareItem(token.value, item.id, currentPassword.value)
-    await applyPreviewResult(file, item.name)
+    if (item.e2ee?.enabled) {
+      const encryptedFile = await downloadPublicShareItem(token.value, item.id, currentPassword.value)
+      const preview = await buildLocalSharedPreview(encryptedFile, item)
+      await applyPreviewResult(preview, item.name)
+    } else {
+      const file = await previewPublicShareItem(token.value, item.id, currentPassword.value)
+      await applyPreviewResult(file, item.name)
+    }
     selectedFile.value = item
   } catch (error) {
     previewMessage.value = resolveErrorMessage(error, 'drive.publicShare.errors.previewFailed')
@@ -373,7 +456,12 @@ async function onPreviewItem(item: DriveItem): Promise<void> {
 async function onDownloadItem(item: DriveItem): Promise<void> {
   downloading.value = true
   try {
-    const file = await downloadPublicShareItem(token.value, item.id, currentPassword.value)
+    const file = item.e2ee?.enabled
+      ? await decryptDownloadedSharedFile(
+        await downloadPublicShareItem(token.value, item.id, currentPassword.value),
+        item,
+      )
+      : await downloadPublicShareItem(token.value, item.id, currentPassword.value)
     saveBlob(file.blob, file.fileName)
     ElMessage.success(t('drive.publicShare.messages.downloadStarted'))
   } catch (error) {
@@ -558,8 +646,13 @@ onBeforeUnmount(() => {
                 <p>{{ t('drive.publicShare.password.description') }}</p>
               </div>
               <div class="password-actions">
-                <el-input v-model.trim="sharePassword" show-password :placeholder="t('drive.publicShare.password.placeholder')" />
-                <el-button type="primary" :loading="previewLoading || folderLoading" @click="onUnlock">
+                <el-input
+                  v-model.trim="sharePassword"
+                  data-testid="public-share-password"
+                  show-password
+                  :placeholder="t('drive.publicShare.password.placeholder')"
+                />
+                <el-button data-testid="public-share-unlock" type="primary" :loading="previewLoading || folderLoading" @click="onUnlock">
                   {{ t('drive.publicShare.actions.unlock') }}
                 </el-button>
                 <el-button @click="clearPassword">{{ t('drive.publicShare.actions.clearPassword') }}</el-button>
@@ -682,10 +775,10 @@ onBeforeUnmount(() => {
 
             <template v-else>
               <div class="actions-row">
-                <el-button type="primary" :loading="previewLoading" :disabled="!canInteract" @click="previewRootFile">
+                <el-button data-testid="public-share-preview" type="primary" :loading="previewLoading" :disabled="!canInteract" @click="previewRootFile">
                   {{ t('drive.publicShare.actions.preview') }}
                 </el-button>
-                <el-button type="success" :loading="downloading" :disabled="!canInteract" @click="onDownloadRootFile">
+                <el-button data-testid="public-share-download" type="success" :loading="downloading" :disabled="!canInteract" @click="onDownloadRootFile">
                   {{ t('drive.publicShare.actions.download') }}
                 </el-button>
               </div>

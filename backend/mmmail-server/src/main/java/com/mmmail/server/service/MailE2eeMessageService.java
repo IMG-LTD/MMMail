@@ -6,6 +6,7 @@ import com.mmmail.common.exception.BizException;
 import com.mmmail.common.exception.ErrorCode;
 import com.mmmail.server.mapper.UserPreferenceMapper;
 import com.mmmail.server.model.dto.MailBodyE2eePayloadRequest;
+import com.mmmail.server.model.dto.SaveDraftRequest;
 import com.mmmail.server.model.dto.SendMailRequest;
 import com.mmmail.server.model.entity.MailMessage;
 import com.mmmail.server.model.entity.UserPreference;
@@ -51,6 +52,14 @@ public class MailE2eeMessageService {
         return resolveEncryptedBody(userId, senderEmail, request.toEmail(), request.e2ee());
     }
 
+    public OutboundBody resolveDraftBody(Long userId, SaveDraftRequest request) {
+        if (request.e2ee() == null) {
+            return OutboundBody.plain(request.body());
+        }
+        rejectPlainBodyLeak(request.body());
+        return resolveEncryptedDraftBody(userId, request.e2ee());
+    }
+
     public MailBodyE2eeVo toDetailVo(MailMessage message) {
         if (!isEncrypted(message)) {
             return null;
@@ -84,6 +93,26 @@ public class MailE2eeMessageService {
         return OutboundBody.encrypted(encryptedBody, algorithm, serializeFingerprints(actualFingerprints));
     }
 
+    private OutboundBody resolveEncryptedDraftBody(Long userId, MailBodyE2eePayloadRequest payload) {
+        String encryptedBody = requireText(payload.encryptedBody(), "Encrypted Mail E2EE draft body is required");
+        String algorithm = requireText(payload.algorithm(), "Mail E2EE draft algorithm is required");
+        List<String> actualFingerprints = normalizeFingerprints(payload.recipientFingerprints());
+        return OutboundBody.encrypted(
+                encryptedBody,
+                algorithm,
+                validateDraftRecipientFingerprints(userId, actualFingerprints)
+        );
+    }
+
+    public String resolveDraftAttachmentFingerprintsJson(Long userId, String fingerprintsJson) {
+        String payload = requireText(
+                fingerprintsJson,
+                "Mail E2EE attachment recipient fingerprints JSON is required"
+        );
+        List<String> fingerprints = parseAttachmentFingerprints(payload);
+        return validateDraftRecipientFingerprints(userId, fingerprints);
+    }
+
     private void requireReadyRecipient(MailE2eeRecipientStatusVo recipientStatus) {
         if (!recipientStatus.deliverable() || !recipientStatus.encryptionReady()) {
             throw new BizException(ErrorCode.INVALID_ARGUMENT, "Recipient route is not ready for Mail E2EE send");
@@ -98,6 +127,14 @@ public class MailE2eeMessageService {
                 .forEach(fingerprints::add);
         fingerprints.add(loadSenderFingerprint(userId));
         return fingerprints;
+    }
+
+    private String validateDraftRecipientFingerprints(Long userId, List<String> actualFingerprints) {
+        String senderFingerprint = loadSenderFingerprint(userId);
+        if (!new LinkedHashSet<>(actualFingerprints).equals(Set.of(senderFingerprint))) {
+            throw new BizException(ErrorCode.INVALID_ARGUMENT, "Mail E2EE draft must target only the current sender key");
+        }
+        return serializeFingerprints(actualFingerprints);
     }
 
     private String loadSenderFingerprint(Long userId) {
@@ -142,6 +179,20 @@ public class MailE2eeMessageService {
             throw exception;
         } catch (Exception exception) {
             throw new IllegalStateException("Failed to parse Mail E2EE fingerprint metadata", exception);
+        }
+    }
+
+    private List<String> parseAttachmentFingerprints(String fingerprintsJson) {
+        try {
+            List<String> fingerprints = objectMapper.readValue(fingerprintsJson, STRING_LIST_TYPE);
+            return normalizeFingerprints(fingerprints);
+        } catch (BizException exception) {
+            throw exception;
+        } catch (Exception exception) {
+            throw new BizException(
+                    ErrorCode.INVALID_ARGUMENT,
+                    "Mail E2EE attachment recipient fingerprints JSON is invalid"
+            );
         }
     }
 

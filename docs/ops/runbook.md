@@ -1,7 +1,7 @@
-# Community Edition v1.2 运维 Runbook
+# Community Edition v1.3 运维 Runbook
 
-**版本**: `v1.2-mainline`  
-**日期**: `2026-04-02`  
+**版本**: `v1.3-mainline`  
+**日期**: `2026-04-03`  
 **作者**: `Codex`
 
 ## 1. 入口清单
@@ -11,6 +11,8 @@
 - API 文档：
   - `GET /v3/api-docs`
   - `/swagger-ui.html`
+- 浏览器内 API quick page：
+  - `/self-hosted/api.html`
 - 设置页采用入口：
   - `/settings`
 - 本地门禁：`bash scripts/validate-local.sh`
@@ -29,6 +31,7 @@
 - Adoption readiness：
   - 使用管理员账号登录后访问 `/settings`
   - 确认可打开：
+    - `API quick page`
     - `Swagger UI`
     - `OpenAPI JSON`
     - 自托管安装说明 / Runbook 快速页
@@ -37,12 +40,19 @@
 - 当前只验证已交付主路径：
   - 设置页可以生成并保存 `key profile`
   - `READY` 内部路由发信会对正文加密
+  - 草稿保存与恢复走加密链路
+  - 附件上传 / 下载走本地加解密链路
   - 邮件详情页可在浏览器内解密正文
 - 不要把以下事项当作当前 Runbook 成功条件：
-  - 附件加密
-  - 草稿加密
   - 外部收件人公钥发现
   - 零知识架构
+
+### 已交付的新增主线能力
+- `Drive E2EE foundation`
+- `Web Push`
+- `SMTP outbound adapter`
+- `Calendar internal invitation orchestration`
+- `Pass Beta readiness`
 
 ### 本地后端门禁环境
 - 默认 `validate-local.sh` 现在使用后端 `test` profile 回归，不再依赖本机 MySQL / Redis / Nacos 实例或真实密钥。

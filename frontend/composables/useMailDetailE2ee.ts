@@ -13,7 +13,7 @@ export function useMailDetailE2ee() {
   const decryptError = ref('')
   const passphrase = ref('')
 
-  async function decryptEncryptedBody(ciphertext: string): Promise<void> {
+  async function decryptEncryptedBody(ciphertext: string): Promise<string> {
     if (!passphrase.value.trim()) {
       throw new Error(t('mailWorkspace.detail.e2ee.messages.passphraseRequired'))
     }
@@ -21,9 +21,11 @@ export function useMailDetailE2ee() {
     try {
       const profile = await fetchMailE2eeKeyProfile()
       validateProfile(profile)
-      decryptedBody.value = await decryptBody(ciphertext, profile, passphrase.value)
+      const plaintext = await decryptBody(ciphertext, profile, passphrase.value)
+      decryptedBody.value = plaintext
       decryptError.value = ''
       passphrase.value = ''
+      return plaintext
     } catch (error) {
       decryptedBody.value = ''
       decryptError.value = error instanceof Error ? error.message : t('mailWorkspace.detail.e2ee.messages.decryptFailed')

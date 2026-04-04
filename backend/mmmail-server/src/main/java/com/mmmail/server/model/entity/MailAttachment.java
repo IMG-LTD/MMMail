@@ -17,6 +17,9 @@ public class MailAttachment {
     private String fileName;
     private String contentType;
     private Long fileSize;
+    private Integer e2eeEnabled;
+    private String e2eeAlgorithm;
+    private String e2eeFingerprintsJson;
     private String storagePath;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
@@ -69,6 +72,30 @@ public class MailAttachment {
 
     public void setFileSize(Long fileSize) {
         this.fileSize = fileSize;
+    }
+
+    public Integer getE2eeEnabled() {
+        return e2eeEnabled;
+    }
+
+    public void setE2eeEnabled(Integer e2eeEnabled) {
+        this.e2eeEnabled = e2eeEnabled;
+    }
+
+    public String getE2eeAlgorithm() {
+        return e2eeAlgorithm;
+    }
+
+    public void setE2eeAlgorithm(String e2eeAlgorithm) {
+        this.e2eeAlgorithm = e2eeAlgorithm;
+    }
+
+    public String getE2eeFingerprintsJson() {
+        return e2eeFingerprintsJson;
+    }
+
+    public void setE2eeFingerprintsJson(String e2eeFingerprintsJson) {
+        this.e2eeFingerprintsJson = e2eeFingerprintsJson;
     }
 
     public String getStoragePath() {

@@ -28,6 +28,14 @@ export const mailComposeEn = {
   'mailCompose.e2ee.messages.bodyRequired': 'Mail body is required before Mail E2EE encryption.',
   'mailCompose.e2ee.messages.routeUnavailable': 'Recipient route is not available for Mail E2EE send.',
   'mailCompose.e2ee.messages.routeKeyMissing': 'Recipient route is missing a Mail E2EE public key.',
+  'mailCompose.draftE2ee.badge': 'Encrypted draft',
+  'mailCompose.draftE2ee.title': 'Unlock draft locally before editing',
+  'mailCompose.draftE2ee.description': 'This draft body is stored as encrypted OpenPGP content. MMMail does not reopen it as plaintext until you decrypt it in the browser.',
+  'mailCompose.draftE2ee.hint': 'Enter your private key passphrase to restore the draft body into the editor.',
+  'mailCompose.draftE2ee.passphrasePlaceholder': 'Private key passphrase',
+  'mailCompose.draftE2ee.actions.decrypt': 'Unlock draft body',
+  'mailCompose.draftE2ee.messages.decryptSuccess': 'Encrypted draft body restored locally.',
+  'mailCompose.draftE2ee.messages.decryptFailed': 'Failed to decrypt draft body.',
   'mailCompose.form.title': 'Compose',
   'mailCompose.form.from': 'From',
   'mailCompose.form.fromPlaceholder': 'Select sender identity',
@@ -52,7 +60,11 @@ export const mailComposeEn = {
   'mailCompose.attachments.remove': 'Remove',
   'mailCompose.attachments.empty': 'No attachments yet',
   'mailCompose.attachments.emptyReadOnly': 'No attachments',
-  'mailCompose.attachments.retry': 'Retry'
+  'mailCompose.attachments.retry': 'Retry',
+  'mailCompose.attachments.e2ee.passphrasePrompt': 'Enter your private key passphrase to decrypt this attachment locally.',
+  'mailCompose.attachments.e2ee.messages.passphraseRequired': 'Private key passphrase is required to decrypt this attachment.',
+  'mailCompose.attachments.e2ee.messages.profileMissing': 'Current account does not have a Mail E2EE public key profile for attachment encryption.',
+  'mailCompose.attachments.e2ee.messages.privateKeyMissing': 'Current account does not have an encrypted Mail E2EE private key package for attachment decrypt.'
 }
 
 export const mailComposeZhCN = {
@@ -85,6 +97,14 @@ export const mailComposeZhCN = {
   'mailCompose.e2ee.messages.bodyRequired': '请先填写邮件正文，再执行 Mail E2EE 加密发送。',
   'mailCompose.e2ee.messages.routeUnavailable': '当前收件路由还不能用于 Mail E2EE 加密发送。',
   'mailCompose.e2ee.messages.routeKeyMissing': '当前收件路由缺少 Mail E2EE 公钥。',
+  'mailCompose.draftE2ee.badge': '加密草稿',
+  'mailCompose.draftE2ee.title': '请先在浏览器内解锁草稿，再继续编辑',
+  'mailCompose.draftE2ee.description': '当前草稿正文以 OpenPGP 密文形式保存在服务端；在你本地解密之前，MMMail 不会把它重新回填成明文。',
+  'mailCompose.draftE2ee.hint': '请输入私钥口令，把草稿正文只在当前浏览器内恢复到编辑器。',
+  'mailCompose.draftE2ee.passphrasePlaceholder': '私钥口令',
+  'mailCompose.draftE2ee.actions.decrypt': '解锁草稿正文',
+  'mailCompose.draftE2ee.messages.decryptSuccess': '加密草稿正文已在本地恢复。',
+  'mailCompose.draftE2ee.messages.decryptFailed': '解密草稿正文失败。',
   'mailCompose.form.title': '写邮件',
   'mailCompose.form.from': '发件人',
   'mailCompose.form.fromPlaceholder': '选择发件人身份',
@@ -109,7 +129,11 @@ export const mailComposeZhCN = {
   'mailCompose.attachments.remove': '移除',
   'mailCompose.attachments.empty': '暂未添加附件',
   'mailCompose.attachments.emptyReadOnly': '没有附件',
-  'mailCompose.attachments.retry': '重试'
+  'mailCompose.attachments.retry': '重试',
+  'mailCompose.attachments.e2ee.passphrasePrompt': '请输入私钥口令，在本地解密该附件。',
+  'mailCompose.attachments.e2ee.messages.passphraseRequired': '解密附件需要私钥口令。',
+  'mailCompose.attachments.e2ee.messages.profileMissing': '当前账号没有可用于附件加密的 Mail E2EE 公钥资料。',
+  'mailCompose.attachments.e2ee.messages.privateKeyMissing': '当前账号没有可用于附件解密的 Mail E2EE 加密私钥包。'
 }
 
 export const mailComposeZhTW = {
@@ -142,6 +166,14 @@ export const mailComposeZhTW = {
   'mailCompose.e2ee.messages.bodyRequired': '請先填寫郵件本文，再執行 Mail E2EE 加密寄送。',
   'mailCompose.e2ee.messages.routeUnavailable': '目前收件路由尚不能用於 Mail E2EE 加密寄送。',
   'mailCompose.e2ee.messages.routeKeyMissing': '目前收件路由缺少 Mail E2EE 公鑰。',
+  'mailCompose.draftE2ee.badge': '加密草稿',
+  'mailCompose.draftE2ee.title': '請先在瀏覽器內解鎖草稿，再繼續編輯',
+  'mailCompose.draftE2ee.description': '目前草稿本文是以 OpenPGP 密文形式保存到服務端；在你本地解密之前，MMMail 不會把它重新回填成明文。',
+  'mailCompose.draftE2ee.hint': '請輸入私鑰口令，把草稿本文只在目前瀏覽器內恢復到編輯器。',
+  'mailCompose.draftE2ee.passphrasePlaceholder': '私鑰口令',
+  'mailCompose.draftE2ee.actions.decrypt': '解鎖草稿本文',
+  'mailCompose.draftE2ee.messages.decryptSuccess': '加密草稿本文已在本地恢復。',
+  'mailCompose.draftE2ee.messages.decryptFailed': '解密草稿本文失敗。',
   'mailCompose.form.title': '撰寫郵件',
   'mailCompose.form.from': '寄件者',
   'mailCompose.form.fromPlaceholder': '選擇寄件者身分',
@@ -166,5 +198,9 @@ export const mailComposeZhTW = {
   'mailCompose.attachments.remove': '移除',
   'mailCompose.attachments.empty': '尚未加入附件',
   'mailCompose.attachments.emptyReadOnly': '沒有附件',
-  'mailCompose.attachments.retry': '重試'
+  'mailCompose.attachments.retry': '重試',
+  'mailCompose.attachments.e2ee.passphrasePrompt': '請輸入私鑰口令，在本地解密該附件。',
+  'mailCompose.attachments.e2ee.messages.passphraseRequired': '解密附件需要私鑰口令。',
+  'mailCompose.attachments.e2ee.messages.profileMissing': '目前帳號沒有可用於附件加密的 Mail E2EE 公鑰資料。',
+  'mailCompose.attachments.e2ee.messages.privateKeyMissing': '目前帳號沒有可用於附件解密的 Mail E2EE 加密私鑰包。'
 }

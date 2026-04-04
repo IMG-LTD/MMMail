@@ -5,6 +5,7 @@ public record MailAttachmentVo(
         String mailId,
         String fileName,
         String contentType,
-        long fileSize
+        long fileSize,
+        MailAttachmentE2eeVo e2ee
 ) {
 }

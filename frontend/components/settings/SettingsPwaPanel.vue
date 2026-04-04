@@ -1,8 +1,9 @@
 <script setup lang="ts">
-import { computed } from 'vue'
+import { computed, onMounted } from 'vue'
 import { ElMessage } from 'element-plus'
 import { useI18n } from '~/composables/useI18n'
 import { usePwaInstall } from '~/composables/usePwaInstall'
+import { usePwaWebPush } from '~/composables/usePwaWebPush'
 
 const {
   installPromptAvailable,
@@ -17,6 +18,15 @@ const {
   installApp,
   requestNotificationPermission
 } = usePwaInstall()
+const {
+  webPushState,
+  webPushError,
+  webPushServerStatus,
+  webPushSupported,
+  refreshWebPushStatus,
+  subscribeCurrentBrowser,
+  unsubscribeCurrentBrowser
+} = usePwaWebPush()
 const { t } = useI18n()
 
 const installStatusLabel = computed(() => {
@@ -63,8 +73,53 @@ const notificationStatusLabel = computed(() => {
   return t('settings.pwa.status.notificationsDefault')
 })
 
+const webPushStatusLabel = computed(() => {
+  if (!webPushSupported.value) {
+    return t('settings.pwa.status.pushUnsupported')
+  }
+
+  if (webPushState.value === 'subscribed') {
+    return t('settings.pwa.status.pushSubscribed')
+  }
+
+  if (webPushState.value === 'not-subscribed') {
+    return t('settings.pwa.status.pushNotSubscribed')
+  }
+
+  if (webPushState.value === 'disabled') {
+    return t('settings.pwa.status.pushDisabled')
+  }
+
+  if (webPushState.value === 'missing-vapid') {
+    return t('settings.pwa.status.pushMissingVapid')
+  }
+
+  if (webPushState.value === 'loading') {
+    return t('settings.pwa.status.pushLoading')
+  }
+
+  if (webPushState.value === 'error') {
+    return t('settings.pwa.status.pushError')
+  }
+
+  return t('settings.pwa.status.pushIdle')
+})
+
+const pushHintLabel = computed(() => webPushServerStatus.value?.message || '')
 const canInstall = computed(() => installSupported.value && installPromptAvailable.value && !isInstalled.value)
-const canRequestNotifications = computed(() => notificationsSupported.value && notificationPermission.value === 'default')
+const canSubscribePush = computed(() => {
+  if (!webPushSupported.value || webPushState.value === 'loading') {
+    return false
+  }
+
+  if (webPushState.value === 'subscribed' || webPushState.value === 'disabled' || webPushState.value === 'missing-vapid') {
+    return false
+  }
+
+  return notificationsSupported.value && notificationPermission.value !== 'denied'
+})
+const canUnsubscribePush = computed(() => webPushState.value === 'subscribed')
+const panelErrors = computed(() => [registerError.value, webPushError.value].filter(Boolean))
 
 async function onInstall(): Promise<void> {
   const outcome = await installApp()
@@ -81,20 +136,48 @@ async function onInstall(): Promise<void> {
   ElMessage.warning(t('settings.pwa.messages.installUnavailable'))
 }
 
-async function onEnableNotifications(): Promise<void> {
-  const permission = await requestNotificationPermission()
-  if (permission === 'granted') {
-    ElMessage.success(t('settings.pwa.messages.notificationsGranted'))
-    return
-  }
+async function onSubscribePush(): Promise<void> {
+  try {
+    const permission = notificationPermission.value === 'granted'
+      ? 'granted'
+      : await requestNotificationPermission()
 
-  if (permission === 'denied') {
-    ElMessage.warning(t('settings.pwa.messages.notificationsDenied'))
-    return
-  }
+    if (permission === 'denied') {
+      ElMessage.warning(t('settings.pwa.messages.notificationsDenied'))
+      return
+    }
 
-  ElMessage.warning(t('settings.pwa.messages.notificationsUnavailable'))
+    if (permission !== 'granted') {
+      ElMessage.warning(t('settings.pwa.messages.notificationsUnavailable'))
+      return
+    }
+
+    await subscribeCurrentBrowser()
+    await refreshWebPushStatus()
+    ElMessage.success(t('settings.pwa.messages.pushSubscribed'))
+  } catch (error) {
+    const fallbackMessage = t('settings.pwa.messages.pushSubscribeFailed')
+    ElMessage.warning(error instanceof Error && error.message ? error.message : fallbackMessage)
+  }
 }
+
+async function onUnsubscribePush(): Promise<void> {
+  try {
+    await unsubscribeCurrentBrowser()
+    await refreshWebPushStatus()
+    ElMessage.success(t('settings.pwa.messages.pushUnsubscribed'))
+  } catch (error) {
+    const fallbackMessage = t('settings.pwa.messages.pushUnsubscribeFailed')
+    ElMessage.warning(error instanceof Error && error.message ? error.message : fallbackMessage)
+  }
+}
+
+onMounted(() => {
+  void refreshWebPushStatus().catch((error) => {
+    const fallbackMessage = t('settings.pwa.messages.pushStatusFailed')
+    ElMessage.warning(error instanceof Error && error.message ? error.message : fallbackMessage)
+  })
+})
 </script>
 
 <template>
@@ -122,6 +205,10 @@ async function onEnableNotifications(): Promise<void> {
         <span>{{ t('settings.pwa.labels.notifications') }}</span>
         <strong>{{ notificationStatusLabel }}</strong>
       </div>
+      <div class="pwa-panel__metric" data-testid="settings-pwa-push-status">
+        <span>{{ t('settings.pwa.labels.push') }}</span>
+        <strong>{{ webPushStatusLabel }}</strong>
+      </div>
     </div>
 
     <div class="pwa-panel__actions">
@@ -134,13 +221,28 @@ async function onEnableNotifications(): Promise<void> {
         {{ t('settings.pwa.actions.install') }}
       </el-button>
       <el-button
-        data-testid="settings-pwa-notification-button"
-        :disabled="!canRequestNotifications"
-        @click="onEnableNotifications"
+        data-testid="settings-pwa-subscribe-button"
+        :disabled="!canSubscribePush"
+        @click="onSubscribePush"
       >
-        {{ t('settings.pwa.actions.notifications') }}
+        {{ t('settings.pwa.actions.subscribePush') }}
+      </el-button>
+      <el-button
+        data-testid="settings-pwa-unsubscribe-button"
+        :disabled="!canUnsubscribePush"
+        @click="onUnsubscribePush"
+      >
+        {{ t('settings.pwa.actions.unsubscribePush') }}
       </el-button>
     </div>
+
+    <p
+      v-if="pushHintLabel"
+      class="pwa-panel__hint"
+      data-testid="settings-pwa-push-hint"
+    >
+      {{ pushHintLabel }}
+    </p>
 
     <el-alert
       data-testid="settings-pwa-boundary"
@@ -150,12 +252,8 @@ async function onEnableNotifications(): Promise<void> {
       :description="t('settings.pwa.boundaryDescription')"
     />
 
-    <p
-      v-if="registerError"
-      class="pwa-panel__error"
-      data-testid="settings-pwa-register-error"
-    >
-      {{ registerError }}
+    <p v-for="(panelError, index) in panelErrors" :key="index" class="pwa-panel__error" data-testid="settings-pwa-error">
+      {{ panelError }}
     </p>
   </section>
 </template>
@@ -214,6 +312,12 @@ async function onEnableNotifications(): Promise<void> {
   display: flex;
   gap: 12px;
   flex-wrap: wrap;
+}
+
+.pwa-panel__hint {
+  margin: 0;
+  color: var(--mm-muted);
+  font-size: 13px;
 }
 
 .pwa-panel__error {

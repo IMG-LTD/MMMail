@@ -10,6 +10,7 @@ public record DriveItemVo(
         String mimeType,
         long sizeBytes,
         int shareCount,
+        DriveFileE2eeVo e2ee,
         LocalDateTime createdAt,
         LocalDateTime updatedAt
 ) {

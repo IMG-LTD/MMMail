@@ -61,12 +61,22 @@ import {
   organizationsMonitorZhTW
 } from './organizations-monitor'
 import { passBusinessEn, passBusinessZhCN, passBusinessZhTW } from './pass-business'
+import {
+  passAccessibilityEn,
+  passAccessibilityZhCN,
+  passAccessibilityZhTW
+} from './pass-accessibility'
 import { passMonitorEn, passMonitorZhCN, passMonitorZhTW } from './pass-monitor'
 import {
   passWorkspaceEn,
   passWorkspaceZhCN,
   passWorkspaceZhTW
 } from './pass-workspace'
+import {
+  securityCenterEn,
+  securityCenterZhCN,
+  securityCenterZhTW
+} from './security-center'
 import { orgAccessEn, orgAccessZhCN, orgAccessZhTW } from './org-access'
 import {
   mailFoldersEn,
@@ -126,6 +136,11 @@ import {
 } from './suite-billing-center'
 import { suitePlansEn, suitePlansZhCN, suitePlansZhTW } from './suite-plans'
 import {
+  suiteOperationsEn,
+  suiteOperationsZhCN,
+  suiteOperationsZhTW
+} from './suite-operations'
+import {
   communityReleaseEn,
   communityReleaseZhCN,
   communityReleaseZhTW
@@ -169,9 +184,11 @@ export const messages: TranslationCatalog = {
     ...organizationsAuthSecurityEn,
     ...organizationsMonitorEn,
     ...orgAccessEn,
+    ...passAccessibilityEn,
     ...passBusinessEn,
     ...passMonitorEn,
     ...passWorkspaceEn,
+    ...securityCenterEn,
     ...mailE2eeEn,
     ...pwaEn,
     ...sheetsSharingEn,
@@ -185,6 +202,7 @@ export const messages: TranslationCatalog = {
     ...suiteBillingEn,
     ...suiteBillingCenterEn,
     ...suitePlansEn,
+    ...suiteOperationsEn,
     ...vpnEn,
     ...walletEn,
     ...walletWorkspaceEn,
@@ -216,9 +234,11 @@ export const messages: TranslationCatalog = {
     ...organizationsAuthSecurityZhCN,
     ...organizationsMonitorZhCN,
     ...orgAccessZhCN,
+    ...passAccessibilityZhCN,
     ...passBusinessZhCN,
     ...passMonitorZhCN,
     ...passWorkspaceZhCN,
+    ...securityCenterZhCN,
     ...mailE2eeZhCN,
     ...pwaZhCN,
     ...sheetsSharingZhCN,
@@ -232,6 +252,7 @@ export const messages: TranslationCatalog = {
     ...suiteBillingZhCN,
     ...suiteBillingCenterZhCN,
     ...suitePlansZhCN,
+    ...suiteOperationsZhCN,
     ...vpnZhCN,
     ...walletZhCN,
     ...walletWorkspaceZhCN,
@@ -263,9 +284,11 @@ export const messages: TranslationCatalog = {
     ...organizationsAuthSecurityZhTW,
     ...organizationsMonitorZhTW,
     ...orgAccessZhTW,
+    ...passAccessibilityZhTW,
     ...passBusinessZhTW,
     ...passMonitorZhTW,
     ...passWorkspaceZhTW,
+    ...securityCenterZhTW,
     ...mailE2eeZhTW,
     ...pwaZhTW,
     ...sheetsSharingZhTW,
@@ -279,6 +302,7 @@ export const messages: TranslationCatalog = {
     ...suiteBillingZhTW,
     ...suiteBillingCenterZhTW,
     ...suitePlansZhTW,
+    ...suiteOperationsZhTW,
     ...vpnZhTW,
     ...walletZhTW,
     ...walletWorkspaceZhTW,

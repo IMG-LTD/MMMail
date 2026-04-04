@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { useI18n } from '~/composables/useI18n'
 import type { OrgWorkspace } from '~/types/api'
 import type { PassBusinessOverview, PassWorkspaceMode } from '~/types/pass-business'
 import { formatPassTime } from '~/utils/pass'
@@ -17,35 +18,40 @@ const emit = defineEmits<{
   'update:selectedOrgId': [orgId: string]
   refresh: []
 }>()
+const { t } = useI18n()
 
 const metricCards = computed(() => {
   if (!props.overview) {
     return [
-      { label: 'Shared Vaults', value: '--' },
-      { label: 'Members', value: '--' },
-      { label: 'Secure Links', value: '--' },
-      { label: 'Weak Passwords', value: '--' }
+      { label: t('pass.hero.metrics.sharedVaults'), value: '--' },
+      { label: t('pass.hero.metrics.members'), value: '--' },
+      { label: t('pass.hero.metrics.secureLinks'), value: '--' },
+      { label: t('pass.hero.metrics.weakPasswords'), value: '--' }
     ]
   }
   return [
-    { label: 'Shared Vaults', value: String(props.overview.sharedVaultCount) },
-    { label: 'Members', value: String(props.overview.memberCount) },
-    { label: 'Secure Links', value: String(props.overview.secureLinkCount) },
-    { label: 'Weak Passwords', value: String(props.overview.weakPasswordItemCount) }
+    { label: t('pass.hero.metrics.sharedVaults'), value: String(props.overview.sharedVaultCount) },
+    { label: t('pass.hero.metrics.members'), value: String(props.overview.memberCount) },
+    { label: t('pass.hero.metrics.secureLinks'), value: String(props.overview.secureLinkCount) },
+    { label: t('pass.hero.metrics.weakPasswords'), value: String(props.overview.weakPasswordItemCount) }
   ]
 })
 
-const selectedOrgName = computed(() => props.organizations.find(item => item.id === props.selectedOrgId)?.name || 'No organization selected')
-const modeLabel = computed(() => (props.workspaceMode === 'PERSONAL' ? 'Personal Vault' : 'Shared Vaults'))
+const selectedOrgName = computed(() => props.organizations.find(item => item.id === props.selectedOrgId)?.name || t('pass.hero.empty.org'))
+const modeLabel = computed(() => props.workspaceMode === 'PERSONAL' ? t('pass.hero.mode.personal') : t('pass.hero.mode.shared'))
 const statusChips = computed(() => {
   if (!props.overview) {
-    return ['Workspace posture', 'Policy aware', 'Shared-ready']
+    return [
+      t('pass.hero.status.workspacePosture'),
+      t('pass.hero.status.policyAware'),
+      t('pass.hero.status.sharedReady')
+    ]
   }
   return [
-    props.overview.allowSecureLinks ? 'Secure links on' : 'Secure links off',
-    props.overview.forceTwoFactor ? '2FA enforced' : '2FA optional',
-    props.overview.allowPasskeys ? 'Passkeys enabled' : 'Passkeys blocked',
-    props.overview.allowAliases ? 'Aliases enabled' : 'Aliases blocked'
+    props.overview.allowSecureLinks ? t('pass.hero.status.secureLinksOn') : t('pass.hero.status.secureLinksOff'),
+    props.overview.forceTwoFactor ? t('pass.hero.status.twoFactorEnforced') : t('pass.hero.status.twoFactorOptional'),
+    props.overview.allowPasskeys ? t('pass.hero.status.passkeysEnabled') : t('pass.hero.status.passkeysBlocked'),
+    props.overview.allowAliases ? t('pass.hero.status.aliasesEnabled') : t('pass.hero.status.aliasesBlocked')
   ]
 })
 </script>
@@ -53,33 +59,33 @@ const statusChips = computed(() => {
 <template>
   <section class="pass-hero">
     <div class="hero-copy">
-      <p class="hero-eyebrow">Pass Workspace</p>
+      <p class="hero-eyebrow">{{ t('pass.hero.eyebrow') }}</p>
       <h1>{{ modeLabel }}</h1>
-      <p class="hero-subtitle">Personal secrets, shared vaults, and policy controls in one workspace surface.</p>
+      <p class="hero-subtitle">{{ t('pass.hero.subtitle') }}</p>
       <div class="hero-meta">
-        <span class="hero-pill">Org: {{ selectedOrgName }}</span>
-        <span class="hero-pill">Vault: {{ selectedVaultName || 'No vault selected' }}</span>
-        <span class="hero-pill">Activity: {{ formatPassTime(overview?.lastActivityAt || null) }}</span>
+        <span class="hero-pill">{{ t('pass.hero.meta.org', { value: selectedOrgName }) }}</span>
+        <span class="hero-pill">{{ t('pass.hero.meta.vault', { value: selectedVaultName || t('pass.hero.empty.vault') }) }}</span>
+        <span class="hero-pill">{{ t('pass.hero.meta.activity', { value: formatPassTime(overview?.lastActivityAt || null) }) }}</span>
       </div>
       <div class="hero-actions">
         <el-segmented
           :model-value="workspaceMode"
           :options="[
-            { label: 'Personal', value: 'PERSONAL' },
-            { label: 'Shared', value: 'SHARED' }
+            { label: t('pass.hero.segment.personal'), value: 'PERSONAL' },
+            { label: t('pass.hero.segment.shared'), value: 'SHARED' }
           ]"
           @update:model-value="emit('update:workspaceMode', $event as PassWorkspaceMode)"
         />
         <el-select
           v-if="workspaceMode === 'SHARED'"
           :model-value="selectedOrgId"
-          placeholder="Select organization"
+          :placeholder="t('pass.hero.orgPlaceholder')"
           class="org-select"
           @change="emit('update:selectedOrgId', $event)"
         >
           <el-option v-for="org in organizations" :key="org.id" :label="org.name" :value="org.id" />
         </el-select>
-        <el-button :loading="loading" @click="emit('refresh')">Refresh workspace</el-button>
+        <el-button :loading="loading" @click="emit('refresh')">{{ t('pass.hero.actions.refresh') }}</el-button>
       </div>
     </div>
     <div class="hero-metrics">

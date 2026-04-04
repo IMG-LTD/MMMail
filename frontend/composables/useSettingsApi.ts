@@ -3,10 +3,12 @@ import type {
   BlockedDomain,
   BlockedSender,
   MailE2eeKeyProfile,
+  MailE2eeRecoveryPackage,
   RuleResolution,
   TrustedDomain,
   TrustedSender,
   UpdateMailE2eeKeyProfileRequest,
+  UpdateMailE2eeRecoveryRequest,
   UpdateUserPreferenceRequest,
   UserPreference
 } from '~/types/api'
@@ -31,6 +33,21 @@ export function useSettingsApi() {
 
   async function updateMailE2eeKeyProfile(payload: UpdateMailE2eeKeyProfileRequest): Promise<MailE2eeKeyProfile> {
     const response = await $apiClient.put<ApiResponse<MailE2eeKeyProfile>>('/api/v1/settings/mail-e2ee', payload)
+    return response.data.data
+  }
+
+  async function fetchMailE2eeRecoveryPackage(): Promise<MailE2eeRecoveryPackage> {
+    const response = await $apiClient.get<ApiResponse<MailE2eeRecoveryPackage>>('/api/v1/settings/mail-e2ee/recovery')
+    return response.data.data
+  }
+
+  async function updateMailE2eeRecoveryPackage(
+    payload: UpdateMailE2eeRecoveryRequest
+  ): Promise<MailE2eeRecoveryPackage> {
+    const response = await $apiClient.put<ApiResponse<MailE2eeRecoveryPackage>>(
+      '/api/v1/settings/mail-e2ee/recovery',
+      payload
+    )
     return response.data.data
   }
 
@@ -102,6 +119,8 @@ export function useSettingsApi() {
     updateProfile,
     fetchMailE2eeKeyProfile,
     updateMailE2eeKeyProfile,
+    fetchMailE2eeRecoveryPackage,
+    updateMailE2eeRecoveryPackage,
     listBlockedSenders,
     addBlockedSender,
     removeBlockedSender,

@@ -5,10 +5,12 @@ import com.mmmail.server.model.dto.BatchDriveItemsRequest;
 import com.mmmail.server.model.dto.BatchCreateDriveShareRequest;
 import com.mmmail.server.model.dto.CreateDriveFileRequest;
 import com.mmmail.server.model.dto.CreateDriveFolderRequest;
+import com.mmmail.server.model.dto.CreateEncryptedDriveShareRequest;
 import com.mmmail.server.model.dto.CreateDriveShareRequest;
 import com.mmmail.server.model.dto.MoveDriveItemRequest;
 import com.mmmail.server.model.dto.RenameDriveItemRequest;
 import com.mmmail.server.model.dto.SaveDriveSharedWithMeRequest;
+import com.mmmail.server.model.dto.UploadDriveFileRequest;
 import com.mmmail.server.model.dto.UpdateDriveShareRequest;
 import com.mmmail.server.model.vo.DriveBatchActionResultVo;
 import com.mmmail.server.model.vo.DriveBatchShareResultVo;
@@ -33,6 +35,7 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
@@ -40,8 +43,6 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
-import org.springframework.web.multipart.MultipartFile;
-
 import java.nio.charset.StandardCharsets;
 import java.util.List;
 
@@ -83,11 +84,10 @@ public class DriveController {
 
     @PostMapping("/files/upload")
     public Result<DriveItemVo> uploadFile(
-            @RequestParam("file") MultipartFile file,
-            @RequestParam(required = false) Long parentId,
+            @ModelAttribute UploadDriveFileRequest request,
             HttpServletRequest httpRequest
     ) {
-        return Result.success(driveService.uploadFile(SecurityUtils.currentUserId(), parentId, file, httpRequest.getRemoteAddr()));
+        return Result.success(driveService.uploadFile(SecurityUtils.currentUserId(), request, httpRequest.getRemoteAddr()));
     }
 
     @GetMapping("/files/{itemId}/download")
@@ -119,10 +119,15 @@ public class DriveController {
     @PostMapping("/files/{itemId}/versions")
     public Result<DriveItemVo> uploadFileVersion(
             @PathVariable Long itemId,
-            @RequestParam("file") MultipartFile file,
+            @ModelAttribute UploadDriveFileRequest uploadRequest,
             HttpServletRequest request
     ) {
-        return Result.success(driveService.uploadFileVersion(SecurityUtils.currentUserId(), itemId, file, request.getRemoteAddr()));
+        return Result.success(driveService.uploadFileVersion(
+                SecurityUtils.currentUserId(),
+                itemId,
+                uploadRequest,
+                request.getRemoteAddr()
+        ));
     }
 
     @PostMapping("/files/{itemId}/versions/{versionId}/restore")
@@ -239,6 +244,20 @@ public class DriveController {
             HttpServletRequest httpRequest
     ) {
         return Result.success(driveService.createShare(SecurityUtils.currentUserId(), itemId, request, httpRequest.getRemoteAddr()));
+    }
+
+    @PostMapping("/items/{itemId}/shares/e2ee")
+    public Result<DriveShareLinkVo> createEncryptedShare(
+            @PathVariable Long itemId,
+            @Valid @ModelAttribute CreateEncryptedDriveShareRequest request,
+            HttpServletRequest httpRequest
+    ) {
+        return Result.success(driveService.createEncryptedShare(
+                SecurityUtils.currentUserId(),
+                itemId,
+                request,
+                httpRequest.getRemoteAddr()
+        ));
     }
 
     @PutMapping("/shares/{shareId}")

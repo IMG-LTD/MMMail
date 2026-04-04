@@ -1,5 +1,7 @@
 <script setup lang="ts">
+import { useI18n } from '~/composables/useI18n'
 import type { OrgWorkspace, SuiteGovernanceChangeRequest, SuiteGovernancePolicyTemplate } from '~/types/api'
+import { organizationRoleLabel } from '~/utils/organization-admin'
 import type { GovernanceOverviewCard } from '~/utils/suite-operations'
 import {
   canExecuteGovernanceRequest,
@@ -11,11 +13,13 @@ import {
   governanceOverviewCardClass,
   governanceSlaLabel,
   governanceSlaTagType,
+  governanceStatusLabel,
   governanceStatusTagType,
   isGovernanceActionLoading,
   isReviewedByCurrentSession,
   reviewStageLabel,
   reviewStageTagType,
+  riskLevelLabel,
   riskTagType,
   summarizeExecution
 } from '~/utils/suite-operations'
@@ -57,6 +61,7 @@ interface Props {
 }
 
 const props = defineProps<Props>()
+const { t, locale } = useI18n()
 const emit = defineEmits<{
   updateSelectedTemplateCode: [value: string]
   updateGovernanceReason: [value: string]
@@ -69,13 +74,17 @@ const emit = defineEmits<{
 }>()
 function governanceScopeLabel(request: SuiteGovernanceChangeRequest): string {
   if (!request.orgId) {
-    return 'PERSONAL'
+    return t('suite.operations.governance.scope.personal')
   }
   const org = props.managedOrganizations.find(item => item.id === request.orgId)
   if (!org) {
-    return `ORG#${request.orgId}`
+    return t('suite.operations.governance.scope.orgId', { id: request.orgId })
   }
-  return `ORG:${org.name}`
+  return org.name
+}
+
+function governanceScopeOptionLabel(org: OrgWorkspace): string {
+  return `${org.name} (${organizationRoleLabel(org.role, t)})`
 }
 </script>
 
@@ -83,11 +92,11 @@ function governanceScopeLabel(request: SuiteGovernanceChangeRequest): string {
   <section class="mm-card suite-panel">
     <div class="panel-head">
       <div>
-        <h2 class="mm-section-title">Governance Orchestrator</h2>
-        <p class="mm-muted">Template-driven governance flow with review, execution and rollback.</p>
+        <h2 class="mm-section-title">{{ t('suite.operations.governance.title') }}</h2>
+        <p class="mm-muted">{{ t('suite.operations.governance.description') }}</p>
       </div>
       <div class="panel-actions">
-        <el-button :loading="props.loading" @click="void props.refreshOperations()">Refresh Governance</el-button>
+        <el-button :loading="props.loading" @click="void props.refreshOperations()">{{ t('suite.operations.governance.actions.refresh') }}</el-button>
       </div>
     </div>
 
@@ -107,7 +116,7 @@ function governanceScopeLabel(request: SuiteGovernanceChangeRequest): string {
       <el-select
         :model-value="props.selectedTemplateCode"
         filterable
-        placeholder="Select governance template"
+        :placeholder="t('suite.operations.governance.form.selectTemplate')"
         @update:model-value="emit('updateSelectedTemplateCode', String($event || ''))"
       >
         <el-option
@@ -119,7 +128,7 @@ function governanceScopeLabel(request: SuiteGovernanceChangeRequest): string {
       </el-select>
       <el-input
         :model-value="props.governanceReason"
-        placeholder="Change request reason"
+        :placeholder="t('suite.operations.governance.form.reason')"
         clearable
         @update:model-value="emit('updateGovernanceReason', String($event || ''))"
       />
@@ -129,7 +138,7 @@ function governanceScopeLabel(request: SuiteGovernanceChangeRequest): string {
         :disabled="!props.canCreateGovernanceRequest"
         @click="void props.createGovernanceRequest()"
       >
-        Create Request
+        {{ t('suite.operations.governance.actions.createRequest') }}
       </el-button>
     </div>
 
@@ -138,20 +147,22 @@ function governanceScopeLabel(request: SuiteGovernanceChangeRequest): string {
         :model-value="props.governanceScopeType"
         @update:model-value="emit('updateGovernanceScopeType', String($event || 'PERSONAL') as 'PERSONAL' | 'ORG')"
       >
-        <el-option label="Personal Scope" value="PERSONAL" />
-        <el-option label="Organization Scope" value="ORG" />
+        <el-option :label="t('suite.operations.governance.scope.personalOption')" value="PERSONAL" />
+        <el-option :label="t('suite.operations.governance.scope.orgOption')" value="ORG" />
       </el-select>
       <el-select
         :model-value="props.governanceScopeOrgId"
         filterable
         :disabled="props.governanceScopeType !== 'ORG'"
-        :placeholder="props.governanceScopeType === 'ORG' ? 'Select organization' : 'Not required for personal scope'"
+        :placeholder="props.governanceScopeType === 'ORG'
+          ? t('suite.operations.governance.form.selectOrganization')
+          : t('suite.operations.governance.form.personalScopeNotRequired')"
         @update:model-value="emit('updateGovernanceScopeOrgId', String($event || ''))"
       >
         <el-option
           v-for="org in props.managedOrganizations"
           :key="org.id"
-          :label="`${org.name} (${org.role})`"
+          :label="governanceScopeOptionLabel(org)"
           :value="org.id"
         />
       </el-select>
@@ -160,7 +171,9 @@ function governanceScopeLabel(request: SuiteGovernanceChangeRequest): string {
         filterable
         clearable
         :disabled="props.governanceScopeType !== 'ORG'"
-        :placeholder="props.governanceScopeType === 'ORG' ? 'Designated second reviewer (optional)' : 'Only for organization scope'"
+        :placeholder="props.governanceScopeType === 'ORG'
+          ? t('suite.operations.governance.form.secondReviewer')
+          : t('suite.operations.governance.form.orgOnly')"
         @update:model-value="emit('updateGovernanceSecondReviewerUserId', String($event || ''))"
       >
         <el-option
@@ -175,19 +188,19 @@ function governanceScopeLabel(request: SuiteGovernanceChangeRequest): string {
     <div class="governance-controls secondary">
       <el-input
         :model-value="props.reviewNote"
-        placeholder="Review note (optional)"
+        :placeholder="t('suite.operations.governance.form.reviewNote')"
         clearable
         @update:model-value="emit('updateReviewNote', String($event || ''))"
       />
       <el-input
         :model-value="props.approvalNote"
-        placeholder="Execution note (optional)"
+        :placeholder="t('suite.operations.governance.form.executionNote')"
         clearable
         @update:model-value="emit('updateApprovalNote', String($event || ''))"
       />
       <el-input
         :model-value="props.rollbackReason"
-        placeholder="Rollback reason (required for rollback)"
+        :placeholder="t('suite.operations.governance.form.rollbackReason')"
         clearable
         @update:model-value="emit('updateRollbackReason', String($event || ''))"
       />
@@ -198,21 +211,21 @@ function governanceScopeLabel(request: SuiteGovernanceChangeRequest): string {
       :closable="false"
       class="posture-alert"
       show-icon
-      title="Governance control: dual-review (org policy) + session separation (review vs execute)."
+      :title="t('suite.operations.governance.alert.dualReview')"
     />
 
     <article v-if="props.selectedGovernanceTemplate" class="template-preview">
       <div class="product-head">
         <h3 class="mm-section-subtitle">{{ props.selectedGovernanceTemplate.name }}</h3>
         <el-tag :type="riskTagType(props.selectedGovernanceTemplate.riskLevel)">
-          {{ props.selectedGovernanceTemplate.riskLevel }}
+          {{ riskLevelLabel(props.selectedGovernanceTemplate.riskLevel, t) }}
         </el-tag>
       </div>
       <p class="mm-muted">{{ props.selectedGovernanceTemplate.description }}</p>
       <div class="template-summary">
-        <span>Actions: {{ props.selectedGovernanceTemplate.actionCodes.length }}</span>
-        <span>Rollback Actions: {{ props.selectedGovernanceTemplate.rollbackActionCodes.length }}</span>
-        <span>Approval Required: {{ props.selectedGovernanceTemplate.approvalRequired ? 'YES' : 'NO' }}</span>
+        <span>{{ t('suite.operations.governance.template.summary.actions', { count: props.selectedGovernanceTemplate.actionCodes.length }) }}</span>
+        <span>{{ t('suite.operations.governance.template.summary.rollbackActions', { count: props.selectedGovernanceTemplate.rollbackActionCodes.length }) }}</span>
+        <span>{{ t('suite.operations.governance.template.summary.approvalRequired', { value: t(`suite.operations.values.${props.selectedGovernanceTemplate.approvalRequired ? 'yes' : 'no'}`) }) }}</span>
       </div>
     </article>
 
@@ -220,12 +233,12 @@ function governanceScopeLabel(request: SuiteGovernanceChangeRequest): string {
       <article v-for="template in props.governanceTemplates" :key="template.templateCode" class="template-card">
         <div class="product-head">
           <h3 class="mm-section-subtitle">{{ template.name }}</h3>
-          <el-tag :type="riskTagType(template.riskLevel)">{{ template.riskLevel }}</el-tag>
+          <el-tag :type="riskTagType(template.riskLevel)">{{ riskLevelLabel(template.riskLevel, t) }}</el-tag>
         </div>
         <p class="mm-muted">{{ template.description }}</p>
         <div class="template-summary">
-          <span>Exec: {{ template.actionCodes.length }}</span>
-          <span>Rollback: {{ template.rollbackActionCodes.length }}</span>
+          <span>{{ t('suite.operations.governance.template.summary.exec', { count: template.actionCodes.length }) }}</span>
+          <span>{{ t('suite.operations.governance.template.summary.rollback', { count: template.rollbackActionCodes.length }) }}</span>
         </div>
         <div class="action-codes">
           <el-tag v-for="actionCode in template.actionCodes" :key="actionCode" size="small" type="info">
@@ -236,26 +249,26 @@ function governanceScopeLabel(request: SuiteGovernanceChangeRequest): string {
     </div>
 
     <el-table :data="props.governanceRequests" style="width: 100%">
-      <el-table-column prop="requestId" label="Request ID" width="180" />
-      <el-table-column label="Scope" width="210">
+      <el-table-column prop="requestId" :label="t('suite.operations.governance.columns.requestId')" width="180" />
+      <el-table-column :label="t('suite.operations.governance.columns.scope')" width="210">
         <template #default="scope">
           <el-tag size="small" :type="scope.row.orgId ? 'warning' : 'info'">{{ governanceScopeLabel(scope.row) }}</el-tag>
         </template>
       </el-table-column>
-      <el-table-column prop="ownerId" label="Owner" width="120" />
-      <el-table-column label="Status" width="210">
+      <el-table-column prop="ownerId" :label="t('suite.operations.governance.columns.owner')" width="120" />
+      <el-table-column :label="t('suite.operations.governance.columns.status')" width="210">
         <template #default="scope">
-          <el-tag :type="governanceStatusTagType(scope.row.status)">{{ scope.row.status }}</el-tag>
+          <el-tag :type="governanceStatusTagType(scope.row.status)">{{ governanceStatusLabel(scope.row.status, t) }}</el-tag>
         </template>
       </el-table-column>
-      <el-table-column label="Review Stage" width="220">
+      <el-table-column :label="t('suite.operations.governance.columns.reviewStage')" width="220">
         <template #default="scope">
           <el-tag size="small" :type="reviewStageTagType(scope.row.reviewStage)">
-            {{ reviewStageLabel(scope.row.reviewStage) }}
+            {{ reviewStageLabel(scope.row.reviewStage, t) }}
           </el-tag>
         </template>
       </el-table-column>
-      <el-table-column label="Template" min-width="220">
+      <el-table-column :label="t('suite.operations.governance.columns.template')" min-width="220">
         <template #default="scope">
           <div class="stack-cell">
             <span>{{ scope.row.templateName }}</span>
@@ -263,51 +276,51 @@ function governanceScopeLabel(request: SuiteGovernanceChangeRequest): string {
           </div>
         </template>
       </el-table-column>
-      <el-table-column prop="reason" label="Reason" min-width="220" />
-      <el-table-column label="Requested" width="180">
-        <template #default="scope">{{ formatDateTime(scope.row.requestedAt) }}</template>
+      <el-table-column prop="reason" :label="t('suite.operations.governance.columns.reason')" min-width="220" />
+      <el-table-column :label="t('suite.operations.governance.columns.requested')" width="180">
+        <template #default="scope">{{ formatDateTime(scope.row.requestedAt, locale) }}</template>
       </el-table-column>
-      <el-table-column label="Reviewed" width="180">
-        <template #default="scope">{{ formatDateTime(scope.row.reviewedAt) }}</template>
+      <el-table-column :label="t('suite.operations.governance.columns.reviewed')" width="180">
+        <template #default="scope">{{ formatDateTime(scope.row.reviewedAt, locale) }}</template>
       </el-table-column>
-      <el-table-column label="Reviewed By" width="130">
+      <el-table-column :label="t('suite.operations.governance.columns.reviewedBy')" width="130">
         <template #default="scope">{{ formatActorUserId(scope.row.reviewedByUserId) }}</template>
       </el-table-column>
-      <el-table-column label="First Reviewed By" width="150">
+      <el-table-column :label="t('suite.operations.governance.columns.firstReviewedBy')" width="150">
         <template #default="scope">{{ formatActorUserId(scope.row.firstReviewedByUserId) }}</template>
       </el-table-column>
-      <el-table-column label="Designated 2nd Reviewer" width="190">
+      <el-table-column :label="t('suite.operations.governance.columns.designatedSecondReviewer')" width="190">
         <template #default="scope">{{ formatActorUserId(scope.row.secondReviewerUserId) }}</template>
       </el-table-column>
-      <el-table-column label="Review Due At" width="190">
-        <template #default="scope">{{ formatDateTime(scope.row.reviewDueAt) }}</template>
+      <el-table-column :label="t('suite.operations.governance.columns.reviewDueAt')" width="190">
+        <template #default="scope">{{ formatDateTime(scope.row.reviewDueAt, locale) }}</template>
       </el-table-column>
-      <el-table-column label="SLA" width="110">
+      <el-table-column :label="t('suite.operations.governance.columns.sla')" width="110">
         <template #default="scope">
           <el-tag size="small" :type="governanceSlaTagType(scope.row)">
-            {{ governanceSlaLabel(scope.row) }}
+            {{ governanceSlaLabel(scope.row, t) }}
           </el-tag>
         </template>
       </el-table-column>
-      <el-table-column label="Reviewed Session" width="160">
+      <el-table-column :label="t('suite.operations.governance.columns.reviewedSession')" width="160">
         <template #default="scope">{{ formatActorSessionId(scope.row.reviewedBySessionId) }}</template>
       </el-table-column>
-      <el-table-column label="First Review Session" width="170">
+      <el-table-column :label="t('suite.operations.governance.columns.firstReviewSession')" width="170">
         <template #default="scope">{{ formatActorSessionId(scope.row.firstReviewedBySessionId) }}</template>
       </el-table-column>
-      <el-table-column label="Executed By" width="130">
+      <el-table-column :label="t('suite.operations.governance.columns.executedBy')" width="130">
         <template #default="scope">{{ formatActorUserId(scope.row.executedByUserId) }}</template>
       </el-table-column>
-      <el-table-column label="Executed Session" width="160">
+      <el-table-column :label="t('suite.operations.governance.columns.executedSession')" width="160">
         <template #default="scope">{{ formatActorSessionId(scope.row.executedBySessionId) }}</template>
       </el-table-column>
-      <el-table-column label="Execution" min-width="160">
-        <template #default="scope">{{ summarizeExecution(scope.row.executionResults) }}</template>
+      <el-table-column :label="t('suite.operations.governance.columns.execution')" min-width="160">
+        <template #default="scope">{{ summarizeExecution(scope.row.executionResults, t) }}</template>
       </el-table-column>
-      <el-table-column label="Rollback" min-width="160">
-        <template #default="scope">{{ summarizeExecution(scope.row.rollbackResults) }}</template>
+      <el-table-column :label="t('suite.operations.governance.columns.rollback')" min-width="160">
+        <template #default="scope">{{ summarizeExecution(scope.row.rollbackResults, t) }}</template>
       </el-table-column>
-      <el-table-column label="Actions" width="420">
+      <el-table-column :label="t('suite.operations.governance.columns.actions')" width="420">
         <template #default="scope">
           <div class="request-actions">
             <el-button
@@ -318,7 +331,9 @@ function governanceScopeLabel(request: SuiteGovernanceChangeRequest): string {
               :loading="isGovernanceActionLoading(scope.row.requestId, 'REVIEW_APPROVE', props.governanceActionLoadingRequestId, props.governanceActionLoadingType)"
               @click="void props.reviewGovernanceRequest(scope.row, 'APPROVE')"
             >
-              {{ scope.row.status === 'PENDING_SECOND_REVIEW' ? 'Second Approve' : 'Review Approve' }}
+              {{ scope.row.status === 'PENDING_SECOND_REVIEW'
+                ? t('suite.operations.governance.actions.secondApprove')
+                : t('suite.operations.governance.actions.reviewApprove') }}
             </el-button>
             <el-button
               size="small"
@@ -328,18 +343,22 @@ function governanceScopeLabel(request: SuiteGovernanceChangeRequest): string {
               :loading="isGovernanceActionLoading(scope.row.requestId, 'REVIEW_REJECT', props.governanceActionLoadingRequestId, props.governanceActionLoadingType)"
               @click="void props.reviewGovernanceRequest(scope.row, 'REJECT')"
             >
-              {{ scope.row.status === 'PENDING_SECOND_REVIEW' ? 'Second Reject' : 'Review Reject' }}
+              {{ scope.row.status === 'PENDING_SECOND_REVIEW'
+                ? t('suite.operations.governance.actions.secondReject')
+                : t('suite.operations.governance.actions.reviewReject') }}
             </el-button>
             <el-button
               size="small"
               type="success"
               plain
               :disabled="!canExecuteGovernanceRequest(scope.row, props.currentSessionId)"
-              :title="isReviewedByCurrentSession(scope.row, props.currentSessionId) ? 'Execution requires a different authenticated session than reviewer' : ''"
+              :title="isReviewedByCurrentSession(scope.row, props.currentSessionId)
+                ? t('suite.operations.governance.messages.executionRequiresDifferentSession')
+                : ''"
               :loading="isGovernanceActionLoading(scope.row.requestId, 'EXECUTE', props.governanceActionLoadingRequestId, props.governanceActionLoadingType)"
               @click="void props.executeGovernanceRequest(scope.row)"
             >
-              Execute
+              {{ t('suite.operations.governance.actions.execute') }}
             </el-button>
             <el-button
               size="small"
@@ -349,7 +368,7 @@ function governanceScopeLabel(request: SuiteGovernanceChangeRequest): string {
               :loading="isGovernanceActionLoading(scope.row.requestId, 'ROLLBACK', props.governanceActionLoadingRequestId, props.governanceActionLoadingType)"
               @click="void props.rollbackGovernanceRequest(scope.row)"
             >
-              Rollback
+              {{ t('suite.operations.governance.actions.rollback') }}
             </el-button>
           </div>
         </template>

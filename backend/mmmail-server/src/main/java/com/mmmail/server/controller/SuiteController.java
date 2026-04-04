@@ -8,7 +8,9 @@ import com.mmmail.server.model.dto.BatchReviewSuiteGovernanceChangeRequestsReque
 import com.mmmail.server.model.dto.ChangeSuitePlanRequest;
 import com.mmmail.server.model.dto.ExecuteSuiteRemediationActionRequest;
 import com.mmmail.server.model.dto.CreateSuiteGovernanceChangeRequestRequest;
+import com.mmmail.server.model.dto.DeleteSuiteWebPushSubscriptionRequest;
 import com.mmmail.server.model.dto.MarkSuiteNotificationsReadRequest;
+import com.mmmail.server.model.dto.RegisterSuiteWebPushSubscriptionRequest;
 import com.mmmail.server.model.dto.ReviewSuiteGovernanceChangeRequestRequest;
 import com.mmmail.server.model.dto.RollbackSuiteGovernanceChangeRequestRequest;
 import com.mmmail.server.model.dto.SnoozeSuiteNotificationsRequest;
@@ -34,16 +36,20 @@ import com.mmmail.server.model.vo.SuiteRemediationExecutionResultVo;
 import com.mmmail.server.model.vo.SuiteSecurityPostureVo;
 import com.mmmail.server.model.vo.SuiteSubscriptionVo;
 import com.mmmail.server.model.vo.SuiteUnifiedSearchResultVo;
+import com.mmmail.server.model.vo.SuiteWebPushStatusVo;
+import com.mmmail.server.model.vo.SuiteWebPushSubscriptionVo;
 import com.mmmail.server.service.SuiteCollaborationService;
 import com.mmmail.server.service.SuiteCommandCenterService;
 import com.mmmail.server.service.SuiteInsightService;
 import com.mmmail.server.service.SuiteNotificationSyncService;
 import com.mmmail.server.service.SuiteOrgScopeService;
 import com.mmmail.server.service.SuiteService;
+import com.mmmail.server.service.WebPushService;
 import com.mmmail.server.util.SecurityUtils;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import org.springframework.http.MediaType;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -65,6 +71,7 @@ public class SuiteController {
     private final SuiteCommandCenterService suiteCommandCenterService;
     private final SuiteNotificationSyncService suiteNotificationSyncService;
     private final SuiteOrgScopeService suiteOrgScopeService;
+    private final WebPushService webPushService;
 
     public SuiteController(
             SuiteService suiteService,
@@ -72,7 +79,8 @@ public class SuiteController {
             SuiteCollaborationService suiteCollaborationService,
             SuiteCommandCenterService suiteCommandCenterService,
             SuiteNotificationSyncService suiteNotificationSyncService,
-            SuiteOrgScopeService suiteOrgScopeService
+            SuiteOrgScopeService suiteOrgScopeService,
+            WebPushService webPushService
     ) {
         this.suiteService = suiteService;
         this.suiteInsightService = suiteInsightService;
@@ -80,6 +88,7 @@ public class SuiteController {
         this.suiteCommandCenterService = suiteCommandCenterService;
         this.suiteNotificationSyncService = suiteNotificationSyncService;
         this.suiteOrgScopeService = suiteOrgScopeService;
+        this.webPushService = webPushService;
     }
 
     @GetMapping("/plans")
@@ -205,6 +214,35 @@ public class SuiteController {
                 includeSnoozed,
                 httpRequest.getRemoteAddr(),
                 resolveVisibleProductCodes(httpRequest, userId)
+        ));
+    }
+
+    @GetMapping("/web-push")
+    public Result<SuiteWebPushStatusVo> getWebPushStatus(HttpServletRequest httpRequest) {
+        return Result.success(webPushService.getStatus(SecurityUtils.currentUserId(), httpRequest.getRemoteAddr()));
+    }
+
+    @PostMapping("/web-push/subscriptions")
+    public Result<SuiteWebPushSubscriptionVo> registerWebPushSubscription(
+            @Valid @RequestBody RegisterSuiteWebPushSubscriptionRequest request,
+            HttpServletRequest httpRequest
+    ) {
+        return Result.success(webPushService.registerSubscription(
+                SecurityUtils.currentUserId(),
+                request,
+                httpRequest.getRemoteAddr()
+        ));
+    }
+
+    @DeleteMapping("/web-push/subscriptions")
+    public Result<Boolean> deleteWebPushSubscription(
+            @Valid @RequestBody DeleteSuiteWebPushSubscriptionRequest request,
+            HttpServletRequest httpRequest
+    ) {
+        return Result.success(webPushService.deleteSubscription(
+                SecurityUtils.currentUserId(),
+                request,
+                httpRequest.getRemoteAddr()
         ));
     }
 

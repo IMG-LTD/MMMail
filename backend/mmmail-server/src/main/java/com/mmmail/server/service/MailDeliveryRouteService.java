@@ -78,7 +78,7 @@ public class MailDeliveryRouteService {
                 .eq(UserAccount::getEmail, resolvedEmail)
                 .last("limit 1"));
         if (recipient != null) {
-            return Optional.of(List.of(new MailDeliveryTarget(recipient.getId(), displayEmail, recipient.getEmail())));
+            return Optional.of(List.of(MailDeliveryTarget.internal(recipient.getId(), displayEmail, recipient.getEmail())));
         }
         PassMailAlias alias = passAliasService.loadEnabledAliasByEmail(resolvedEmail);
         if (alias != null) {
@@ -88,13 +88,13 @@ public class MailDeliveryRouteService {
             }
             List<MailDeliveryTarget> targets = routeEmails.stream()
                     .map(routeEmail -> passMailboxService.resolveVerifiedRouteMailbox(alias.getOwnerId(), routeEmail))
-                    .map(mailbox -> new MailDeliveryTarget(mailbox.getMailboxUserId(), alias.getAliasEmail(), mailbox.getMailboxEmail()))
+                    .map(mailbox -> MailDeliveryTarget.internal(mailbox.getMailboxUserId(), alias.getAliasEmail(), mailbox.getMailboxEmail()))
                     .toList();
             String detail = "alias=" + alias.getAliasEmail() + ",routeCount=" + targets.size() + ",routes=" + String.join(",", routeEmails);
             recordAliasRelay(context, alias.getOwnerId(), detail);
             return Optional.of(targets);
         }
-        return Optional.empty();
+        return Optional.of(List.of(MailDeliveryTarget.smtp(displayEmail)));
     }
 
     private void recordReverseAliasRoute(DeliveryResolutionContext context, String reverseAliasEmail, String targetEmail) {

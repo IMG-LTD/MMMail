@@ -60,6 +60,7 @@ public class CalendarService {
     private final UserAccountMapper userAccountMapper;
     private final SuiteService suiteService;
     private final AuditService auditService;
+    private final CalendarInvitationOrchestrationService calendarInvitationOrchestrationService;
 
     public CalendarService(
             CalendarEventMapper calendarEventMapper,
@@ -67,7 +68,8 @@ public class CalendarService {
             CalendarEventShareMapper calendarEventShareMapper,
             UserAccountMapper userAccountMapper,
             SuiteService suiteService,
-            AuditService auditService
+            AuditService auditService,
+            CalendarInvitationOrchestrationService calendarInvitationOrchestrationService
     ) {
         this.calendarEventMapper = calendarEventMapper;
         this.calendarEventAttendeeMapper = calendarEventAttendeeMapper;
@@ -75,6 +77,7 @@ public class CalendarService {
         this.userAccountMapper = userAccountMapper;
         this.suiteService = suiteService;
         this.auditService = auditService;
+        this.calendarInvitationOrchestrationService = calendarInvitationOrchestrationService;
     }
 
     public List<CalendarEventItemVo> listEvents(Long userId, String from, String to) {
@@ -129,6 +132,7 @@ public class CalendarService {
         calendarEventMapper.insert(event);
 
         replaceAttendees(userId, event.getId(), request.attendees(), now);
+        calendarInvitationOrchestrationService.syncInternalInvitations(userId, event.getId(), ipAddress, now);
         auditService.record(userId, "CAL_EVENT_CREATE", "eventId=" + event.getId(), ipAddress);
         return getEvent(userId, event.getId());
     }
@@ -156,6 +160,7 @@ public class CalendarService {
         calendarEventMapper.updateById(event);
 
         replaceAttendees(event.getOwnerId(), eventId, request.attendees(), now);
+        calendarInvitationOrchestrationService.syncInternalInvitations(event.getOwnerId(), eventId, ipAddress, now);
         auditService.record(
                 userId,
                 access.shared() ? "CAL_EVENT_UPDATE_BY_SHARE_EDITOR" : "CAL_EVENT_UPDATE",
@@ -192,10 +197,20 @@ public class CalendarService {
         if (targetUser.getId().equals(userId)) {
             throw new BizException(ErrorCode.INVALID_ARGUMENT, "Cannot share event with yourself");
         }
-        suiteService.assertCalendarShareQuota(userId, ipAddress);
 
         LocalDateTime now = LocalDateTime.now();
-        calendarEventShareMapper.purgeByEventAndTarget(eventId, targetUser.getId());
+        CalendarEventShare existingShare = findShareByEventAndTarget(eventId, targetUser.getId());
+        if (existingShare != null) {
+            existingShare.setTargetEmail(targetEmail);
+            existingShare.setPermission(permission);
+            existingShare.setSource(CalendarInvitationOrchestrationService.SHARE_SOURCE_MANUAL);
+            existingShare.setUpdatedAt(now);
+            calendarEventShareMapper.updateById(existingShare);
+            auditService.record(userId, "CAL_SHARE_CREATE", "eventId=" + eventId + ",target=" + targetEmail, ipAddress);
+            return toShareVo(existingShare);
+        }
+
+        suiteService.assertCalendarShareQuota(userId, ipAddress);
 
         CalendarEventShare share = new CalendarEventShare();
         share.setOwnerId(userId);
@@ -204,6 +219,7 @@ public class CalendarService {
         share.setTargetEmail(targetEmail);
         share.setPermission(permission);
         share.setResponseStatus(SHARE_STATUS_NEEDS_ACTION);
+        share.setSource(CalendarInvitationOrchestrationService.SHARE_SOURCE_MANUAL);
         share.setCreatedAt(now);
         share.setUpdatedAt(now);
         share.setDeleted(0);
@@ -244,6 +260,7 @@ public class CalendarService {
 
         String permission = normalizePermission(request.permission());
         share.setPermission(permission);
+        share.setSource(CalendarInvitationOrchestrationService.SHARE_SOURCE_MANUAL);
         share.setUpdatedAt(LocalDateTime.now());
         calendarEventShareMapper.updateById(share);
         auditService.record(userId, "CAL_SHARE_PERMISSION_UPDATE", "eventId=" + eventId + ",shareId=" + shareId + ",permission=" + permission, ipAddress);
@@ -253,9 +270,10 @@ public class CalendarService {
     @Transactional
     public void removeShare(Long userId, Long eventId, Long shareId, String ipAddress) {
         loadOwnedEvent(userId, eventId);
-        int affected = calendarEventShareMapper.purgeByOwnerEventAndId(userId, eventId, shareId);
-        if (affected == 0) {
-            throw new BizException(ErrorCode.CALENDAR_SHARE_NOT_FOUND);
+        CalendarEventShare share = loadOwnedShare(userId, eventId, shareId);
+        calendarEventShareMapper.purgeByOwnerEventAndId(userId, eventId, shareId);
+        if (CalendarInvitationOrchestrationService.SHARE_SOURCE_ATTENDEE.equals(share.getSource())) {
+            calendarEventAttendeeMapper.purgeByEventAndEmail(eventId, share.getTargetEmail());
         }
         auditService.record(userId, "CAL_SHARE_REMOVE", "eventId=" + eventId + ",shareId=" + shareId, ipAddress);
     }
@@ -296,9 +314,16 @@ public class CalendarService {
         }
 
         String responseStatus = normalizeResponse(request.response());
+        LocalDateTime now = LocalDateTime.now();
         share.setResponseStatus(responseStatus);
-        share.setUpdatedAt(LocalDateTime.now());
+        share.setUpdatedAt(now);
         calendarEventShareMapper.updateById(share);
+        calendarInvitationOrchestrationService.syncAttendeeResponseStatus(
+                share.getEventId(),
+                share.getTargetEmail(),
+                responseStatus,
+                now
+        );
 
         CalendarEvent event = calendarEventMapper.selectById(share.getEventId());
         String ownerEmail = resolveUserEmail(share.getOwnerId());
@@ -468,6 +493,23 @@ public class CalendarService {
         return event;
     }
 
+    private CalendarEventShare loadOwnedShare(Long ownerId, Long eventId, Long shareId) {
+        CalendarEventShare share = calendarEventShareMapper.selectOne(new LambdaQueryWrapper<CalendarEventShare>()
+                .eq(CalendarEventShare::getOwnerId, ownerId)
+                .eq(CalendarEventShare::getEventId, eventId)
+                .eq(CalendarEventShare::getId, shareId));
+        if (share == null) {
+            throw new BizException(ErrorCode.CALENDAR_SHARE_NOT_FOUND);
+        }
+        return share;
+    }
+
+    private CalendarEventShare findShareByEventAndTarget(Long eventId, Long targetUserId) {
+        return calendarEventShareMapper.selectOne(new LambdaQueryWrapper<CalendarEventShare>()
+                .eq(CalendarEventShare::getEventId, eventId)
+                .eq(CalendarEventShare::getTargetUserId, targetUserId));
+    }
+
     private List<CalendarEvent> queryEventsByOwnerAndRange(Long ownerId, LocalDateTime fromAt, LocalDateTime toAt) {
         return calendarEventMapper.selectList(buildOverlapQuery(fromAt, toAt)
                 .eq(CalendarEvent::getOwnerId, ownerId));
@@ -496,7 +538,13 @@ public class CalendarService {
     }
 
     private void replaceAttendees(Long ownerId, Long eventId, List<CalendarAttendeeInput> inputs, LocalDateTime now) {
-        calendarEventAttendeeMapper.purgeByEventId(eventId);
+        Map<String, CalendarEventAttendee> existingByEmail = new LinkedHashMap<>();
+        for (CalendarEventAttendee attendee : calendarEventAttendeeMapper.selectList(new LambdaQueryWrapper<CalendarEventAttendee>()
+                .eq(CalendarEventAttendee::getOwnerId, ownerId)
+                .eq(CalendarEventAttendee::getEventId, eventId))) {
+            existingByEmail.put(attendee.getEmail(), attendee);
+        }
+        calendarEventAttendeeMapper.purgeByOwnerAndEvent(ownerId, eventId);
 
         Map<String, CalendarAttendeeInput> deduplicated = new LinkedHashMap<>();
         if (inputs != null) {
@@ -513,12 +561,19 @@ public class CalendarService {
             attendee.setEventId(eventId);
             attendee.setEmail(entry.getKey());
             attendee.setDisplayName(normalizeText(input.displayName()));
-            attendee.setResponseStatus("NEEDS_ACTION");
+            attendee.setResponseStatus(resolveAttendeeResponseStatus(existingByEmail.get(entry.getKey())));
             attendee.setCreatedAt(now);
             attendee.setUpdatedAt(now);
             attendee.setDeleted(0);
             calendarEventAttendeeMapper.insert(attendee);
         }
+    }
+
+    private String resolveAttendeeResponseStatus(CalendarEventAttendee existingAttendee) {
+        if (existingAttendee == null || !StringUtils.hasText(existingAttendee.getResponseStatus())) {
+            return SHARE_STATUS_NEEDS_ACTION;
+        }
+        return existingAttendee.getResponseStatus();
     }
 
     private List<CalendarAttendeeVo> listAttendees(Long eventId) {

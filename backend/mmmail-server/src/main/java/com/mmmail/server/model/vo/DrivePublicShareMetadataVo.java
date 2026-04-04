@@ -13,6 +13,7 @@ public record DrivePublicShareMetadataVo(
         String permission,
         String status,
         LocalDateTime expiresAt,
-        boolean passwordProtected
+        boolean passwordProtected,
+        DriveShareReadableE2eeVo e2ee
 ) {
 }

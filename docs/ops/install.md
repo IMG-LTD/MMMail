@@ -1,17 +1,20 @@
-# Community Edition v1.2 安装说明
+# Community Edition v1.3 安装说明
 
-**版本**: `v1.2-mainline`  
-**日期**: `2026-04-02`  
+**版本**: `v1.3-mainline`  
+**日期**: `2026-04-03`  
 **作者**: `Codex`
 
 ## 当前边界
-- 当前版本是 `Community Edition v1.2` 主线，不承诺 `SMTP / IMAP / Bridge`、零知识架构或 Hosted 自动化 onboarding。
+- 当前版本是 `Community Edition v1.3` 主线，不承诺 `SMTP inbound / IMAP / Bridge`、零知识架构、外部加密邮件或 Hosted 自动化 onboarding。
 - 浏览器侧已经交付：
   - `PWA` manifest、Service Worker 注册与安装入口
-  - `Mail E2EE foundation`（key profile、READY 内部路由正文加密、详情本地解密）
+  - `Mail E2EE` 当前闭环（key profile、READY 内部路由正文加密、草稿加密、附件加密、详情本地解密、密钥恢复）
+  - `Drive E2EE foundation`
+  - `Web Push`
+  - `SMTP outbound adapter`
 - 仍未交付：
-  - `Web Push` 下发
-  - 附件 / 草稿 / 外部收件人加密
+  - `SMTP inbound / IMAP / Bridge`
+  - 外部加密邮件
   - 原生客户端
 
 ## 前置条件
@@ -56,6 +59,8 @@
 - Backend OpenAPI / Swagger UI：
   - `http://127.0.0.1:8080/swagger-ui.html`
   - `curl -sf http://127.0.0.1:8080/v3/api-docs`
+- Frontend bundled API quick page：
+  - `http://127.0.0.1:3001/self-hosted/api.html`
 - 数据迁移状态：
   - `./scripts/db-upgrade.sh .env info`
 
@@ -67,6 +72,7 @@
   - `Adoption readiness`
   - `PWA readiness`
 - `Adoption readiness` 面板会直接暴露：
+  - 内置 `API quick page`
   - 后端 `Swagger UI`
   - 后端 `OpenAPI JSON`
   - 内置的自托管安装说明与 Runbook 快速页

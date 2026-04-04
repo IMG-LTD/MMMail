@@ -1,6 +1,7 @@
 import type {
   ApiResponse,
   BatchCreateDriveShareRequest,
+  CreateEncryptedPublicShareRequest,
   CreateDriveCollaboratorShareRequest,
   CreateDriveFolderRequest,
   DriveCollaboratorShare,
@@ -9,6 +10,7 @@ import type {
   DriveBatchActionResult,
   DriveBatchShareResult,
   DriveFileVersion,
+  DriveUploadE2eePayload,
   DriveIncomingCollaboratorShare,
   DriveItem,
   DriveSavedShare,
@@ -57,8 +59,15 @@ export function useDriveApi() {
     return response.data.data
   }
 
-  async function uploadFile(file: File, parentId?: string | null): Promise<DriveItem> {
-    const response = await $apiClient.post<ApiResponse<DriveItem>>('/api/v1/drive/files/upload', buildFileFormData(file, parentId))
+  async function uploadFile(
+    file: File,
+    parentId?: string | null,
+    e2ee?: DriveUploadE2eePayload,
+  ): Promise<DriveItem> {
+    const response = await $apiClient.post<ApiResponse<DriveItem>>(
+      '/api/v1/drive/files/upload',
+      buildFileFormData(file, parentId, e2ee),
+    )
     return response.data.data
   }
 
@@ -128,6 +137,17 @@ export function useDriveApi() {
     return response.data.data
   }
 
+  async function createEncryptedPublicShare(
+    itemId: string,
+    payload: CreateEncryptedPublicShareRequest,
+  ): Promise<DriveShareLink> {
+    const response = await $apiClient.post<ApiResponse<DriveShareLink>>(
+      `/api/v1/drive/items/${itemId}/shares/e2ee`,
+      buildEncryptedPublicShareFormData(payload),
+    )
+    return response.data.data
+  }
+
   async function listCollaboratorShares(itemId: string): Promise<DriveCollaboratorShare[]> {
     const response = await $apiClient.get<ApiResponse<DriveCollaboratorShare[]>>(`/api/v1/drive/items/${itemId}/collaborator-shares`)
     return response.data.data
@@ -190,9 +210,12 @@ export function useDriveApi() {
     return response.data.data
   }
 
-  async function uploadFileVersion(itemId: string, file: File): Promise<DriveItem> {
-    const formData = new FormData()
-    formData.append('file', file)
+  async function uploadFileVersion(
+    itemId: string,
+    file: File,
+    e2ee?: DriveUploadE2eePayload,
+  ): Promise<DriveItem> {
+    const formData = buildFileFormData(file, undefined, e2ee)
     const response = await $apiClient.post<ApiResponse<DriveItem>>(`/api/v1/drive/files/${itemId}/versions`, formData)
     return response.data.data
   }
@@ -415,6 +438,7 @@ export function useDriveApi() {
     purgeTrashItem,
     listShares,
     createShare,
+    createEncryptedPublicShare,
     listCollaboratorShares,
     createCollaboratorShare,
     updateCollaboratorShare,
@@ -450,11 +474,40 @@ export function useDriveApi() {
   }
 }
 
-function buildFileFormData(file: File, parentId?: string | null): FormData {
+function buildEncryptedPublicShareFormData(payload: CreateEncryptedPublicShareRequest): FormData {
+  const formData = new FormData()
+  formData.append('permission', payload.permission)
+  if (payload.expiresAt) {
+    formData.append('expiresAt', payload.expiresAt)
+  }
+  formData.append('password', payload.password)
+  formData.append('file', payload.encryptedFile)
+  formData.append('e2eeEnabled', 'true')
+  formData.append('e2eeAlgorithm', payload.e2ee.algorithm)
+  formData.append('e2eeMode', payload.e2ee.mode)
+  formData.append('fileName', payload.e2ee.fileName)
+  formData.append('contentType', payload.e2ee.contentType)
+  formData.append('fileSize', String(payload.e2ee.fileSize))
+  return formData
+}
+
+function buildFileFormData(
+  file: File,
+  parentId?: string | null,
+  e2ee?: DriveUploadE2eePayload,
+): FormData {
   const formData = new FormData()
   formData.append('file', file)
   if (parentId) {
     formData.append('parentId', parentId)
+  }
+  if (e2ee?.enabled) {
+    formData.append('fileName', e2ee.fileName)
+    formData.append('contentType', e2ee.contentType)
+    formData.append('fileSize', String(e2ee.fileSize))
+    formData.append('e2eeEnabled', 'true')
+    formData.append('e2eeAlgorithm', e2ee.algorithm)
+    formData.append('e2eeRecipientFingerprintsJson', JSON.stringify(e2ee.recipientFingerprints))
   }
   return formData
 }

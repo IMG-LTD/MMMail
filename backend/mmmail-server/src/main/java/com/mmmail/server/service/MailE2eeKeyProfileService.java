@@ -56,7 +56,7 @@ public class MailE2eeKeyProfileService {
         UserPreference preference = loadPreference(userId);
         MailE2eeKeyProfile current = resolve(preference);
         MailE2eeKeyProfile next = merge(request, current);
-        persist(userId, preference, next);
+        persist(userId, preference, current, next);
         auditService.record(
                 userId,
                 "MAIL_E2EE_PROFILE_UPDATE",
@@ -142,9 +142,10 @@ public class MailE2eeKeyProfileService {
         );
     }
 
-    private void persist(Long userId, UserPreference preference, MailE2eeKeyProfile profile) {
+    private void persist(Long userId, UserPreference preference, MailE2eeKeyProfile current, MailE2eeKeyProfile profile) {
         LocalDateTime now = LocalDateTime.now();
         applyProfile(preference, profile);
+        clearRecoveryIfProfileChanged(preference, current, profile);
         preference.setUpdatedAt(now);
         if (preference.getId() == null) {
             preference.setCreatedAt(now);
@@ -152,7 +153,7 @@ public class MailE2eeKeyProfileService {
             userPreferenceMapper.insert(preference);
             return;
         }
-        updateColumns(preference.getId(), userId, profile, now);
+        updateColumns(preference.getId(), userId, profile, now, shouldClearRecovery(current, profile));
     }
 
     private void applyProfile(UserPreference preference, MailE2eeKeyProfile profile) {
@@ -168,7 +169,13 @@ public class MailE2eeKeyProfileService {
         preference.setMailE2eeKeyCreatedAt(profile.keyCreatedAt());
     }
 
-    private void updateColumns(Long preferenceId, Long userId, MailE2eeKeyProfile profile, LocalDateTime updatedAt) {
+    private void updateColumns(
+            Long preferenceId,
+            Long userId,
+            MailE2eeKeyProfile profile,
+            LocalDateTime updatedAt,
+            boolean clearRecovery
+    ) {
         LambdaUpdateWrapper<UserPreference> update = new LambdaUpdateWrapper<UserPreference>()
                 .eq(UserPreference::getId, preferenceId)
                 .eq(UserPreference::getOwnerId, userId)
@@ -176,6 +183,7 @@ public class MailE2eeKeyProfileService {
                 .set(UserPreference::getUpdatedAt, updatedAt);
         if (!profile.enabled()) {
             clearProfile(update);
+            clearRecovery(update);
             userPreferenceMapper.update(null, update);
             return;
         }
@@ -184,6 +192,9 @@ public class MailE2eeKeyProfileService {
                 .set(UserPreference::getMailE2eePublicKeyArmored, profile.publicKeyArmored())
                 .set(UserPreference::getMailE2eePrivateKeyEncrypted, profile.encryptedPrivateKeyArmored())
                 .set(UserPreference::getMailE2eeKeyCreatedAt, profile.keyCreatedAt());
+        if (clearRecovery) {
+            clearRecovery(update);
+        }
         userPreferenceMapper.update(null, update);
     }
 
@@ -195,12 +206,36 @@ public class MailE2eeKeyProfileService {
         preference.setMailE2eeKeyCreatedAt(null);
     }
 
+    private void clearRecoveryIfProfileChanged(
+            UserPreference preference,
+            MailE2eeKeyProfile current,
+            MailE2eeKeyProfile next
+    ) {
+        if (!shouldClearRecovery(current, next)) {
+            return;
+        }
+        preference.setMailE2eeRecoveryPrivateKeyEncrypted(null);
+        preference.setMailE2eeRecoveryUpdatedAt(null);
+    }
+
     private void clearProfile(LambdaUpdateWrapper<UserPreference> update) {
         update.setSql("mail_e2ee_key_fingerprint = null")
                 .setSql("mail_e2ee_key_algorithm = null")
                 .setSql("mail_e2ee_public_key_armored = null")
                 .setSql("mail_e2ee_private_key_encrypted = null")
                 .setSql("mail_e2ee_key_created_at = null");
+    }
+
+    private void clearRecovery(LambdaUpdateWrapper<UserPreference> update) {
+        update.setSql("mail_e2ee_recovery_private_key_encrypted = null")
+                .setSql("mail_e2ee_recovery_updated_at = null");
+    }
+
+    private boolean shouldClearRecovery(MailE2eeKeyProfile current, MailE2eeKeyProfile next) {
+        if (!next.enabled()) {
+            return true;
+        }
+        return current.enabled() && !next.fingerprint().equals(current.fingerprint());
     }
 
     private String requireText(String candidate, String message) {

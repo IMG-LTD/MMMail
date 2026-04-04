@@ -15,6 +15,7 @@ public record DriveSavedShareVo(
         String status,
         LocalDateTime expiresAt,
         LocalDateTime savedAt,
-        boolean available
+        boolean available,
+        DriveShareReadableE2eeVo e2ee
 ) {
 }

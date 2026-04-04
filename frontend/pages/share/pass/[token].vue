@@ -90,18 +90,19 @@ onMounted(() => {
 
 <template>
   <div class="public-pass-page">
-    <section class="public-pass-shell mm-card">
+    <section class="public-pass-shell mm-card" :aria-busy="loading ? 'true' : 'false'">
       <header class="public-pass-head">
         <div class="public-pass-copy">
           <p class="public-pass-badge">{{ t('pass.publicShare.badge') }}</p>
           <h1>{{ pageTitle }}</h1>
-          <p class="public-pass-subtitle" :class="{ error: !share && !loading }">{{ pageSubtitle }}</p>
+          <p class="public-pass-subtitle" :class="{ error: !share && !loading }" aria-live="polite">{{ pageSubtitle }}</p>
         </div>
         <el-button plain :loading="loading" @click="loadShare">{{ t('common.actions.refresh') }}</el-button>
       </header>
 
       <div v-if="share" class="public-pass-grid">
-        <section class="public-pass-summary">
+        <section class="public-pass-summary" aria-labelledby="public-pass-summary-title">
+          <h2 id="public-pass-summary-title" class="sr-only">{{ t('pass.publicShare.a11y.summaryRegion') }}</h2>
           <div class="public-pass-metrics">
             <article class="metric-card">
               <span>{{ t('pass.publicShare.metrics.itemType') }}</span>
@@ -142,7 +143,8 @@ onMounted(() => {
           </article>
         </section>
 
-        <section class="public-pass-secret">
+        <section class="public-pass-secret" aria-labelledby="public-pass-secret-title">
+          <h2 id="public-pass-secret-title" class="sr-only">{{ t('pass.publicShare.a11y.secretRegion') }}</h2>
           <article class="secret-card">
             <div class="field-card__head">
               <span>{{ t('pass.publicShare.fields.secret') }}</span>
@@ -174,6 +176,18 @@ onMounted(() => {
   display: flex;
   align-items: center;
   justify-content: center;
+}
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
 }
 
 .public-pass-shell {

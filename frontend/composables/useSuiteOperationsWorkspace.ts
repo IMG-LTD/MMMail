@@ -2,6 +2,7 @@ import { computed, onMounted, ref, watch } from 'vue'
 import { ElMessage } from 'element-plus'
 import { useSuiteApi } from '~/composables/useSuiteApi'
 import { useOrganizationApi } from '~/composables/useOrganizationApi'
+import { useI18n } from '~/composables/useI18n'
 import { useAuthStore } from '~/stores/auth'
 import { useOrgAccessStore } from '~/stores/org-access'
 import type {
@@ -25,6 +26,7 @@ import {
   canReviewRequest,
   priorityOrder
 } from '~/utils/suite-operations'
+import { organizationRoleLabel } from '~/utils/organization-admin'
 import {
   filterSuiteReadinessByAccess,
   filterSuiteSecurityPostureByAccess,
@@ -38,7 +40,12 @@ function messageFromError(error: unknown, fallbackMessage: string): string {
   return fallbackMessage
 }
 
+function formatGovernanceReviewerLabel(member: OrgMember, t: ReturnType<typeof useI18n>['t']): string {
+  return `${member.userEmail} (${organizationRoleLabel(member.role, t)})`
+}
+
 export function useSuiteOperationsWorkspace() {
+  const { t } = useI18n()
   const authStore = useAuthStore()
   const orgAccessStore = useOrgAccessStore()
   const {
@@ -136,7 +143,7 @@ export function useSuiteOperationsWorkspace() {
       .filter(member => member.status === 'ACTIVE' && member.userId && (member.role === 'OWNER' || member.role === 'ADMIN'))
       .map(member => ({
         userId: member.userId as string,
-        label: `${member.userEmail} (${member.role})`
+        label: formatGovernanceReviewerLabel(member, t)
       }))
   })
   const canCreateGovernanceRequest = computed(() => {
@@ -148,7 +155,7 @@ export function useSuiteOperationsWorkspace() {
     }
     return true
   })
-  const governanceOverviewCards = computed(() => buildGovernanceOverviewCards(governanceOverview.value))
+  const governanceOverviewCards = computed(() => buildGovernanceOverviewCards(governanceOverview.value, t))
 
   async function refreshGovernanceReviewerCandidates(): Promise<void> {
     if (governanceScopeType.value !== 'ORG' || !governanceScopeOrgId.value) {
@@ -195,7 +202,7 @@ export function useSuiteOperationsWorkspace() {
       }
       await refreshGovernanceReviewerCandidates()
     } catch (error) {
-      ElMessage.error(messageFromError(error, 'Failed to load suite operational surfaces'))
+      ElMessage.error(messageFromError(error, t('suite.operations.messages.loadFailed')))
     } finally {
       loading.value = false
     }
@@ -217,14 +224,14 @@ export function useSuiteOperationsWorkspace() {
   async function onCommandSearch(): Promise<void> {
     const keyword = commandKeyword.value.trim()
     if (!keyword) {
-      ElMessage.warning('Search keyword is required')
+      ElMessage.warning(t('suite.operations.messages.searchKeywordRequired'))
       return
     }
     commandSearchLoading.value = true
     try {
       commandSearchResult.value = await getUnifiedSearch(keyword, 50)
     } catch (error) {
-      ElMessage.error(messageFromError(error, 'Command search failed'))
+      ElMessage.error(messageFromError(error, t('suite.operations.messages.commandSearchFailed')))
     } finally {
       commandSearchLoading.value = false
     }
@@ -250,7 +257,7 @@ export function useSuiteOperationsWorkspace() {
 
   async function onExecuteAction(action: SuiteRemediationAction): Promise<void> {
     if (!action.actionCode) {
-      ElMessage.info('This remediation item requires manual handling')
+      ElMessage.info(t('suite.operations.messages.manualHandlingRequired'))
       return
     }
     runningActionCode.value = action.actionCode
@@ -258,15 +265,15 @@ export function useSuiteOperationsWorkspace() {
       const result = await executeRemediationAction(action.actionCode)
       lastExecutionResult.value = result
       if (result.status === 'SUCCESS') {
-        ElMessage.success(result.message || 'Remediation action executed')
+        ElMessage.success(result.message || t('suite.operations.messages.remediationExecuted'))
       } else if (result.status === 'NO_OP') {
-        ElMessage.info(result.message || 'No changes were needed')
+        ElMessage.info(result.message || t('suite.operations.messages.remediationNoChanges'))
       } else {
-        ElMessage.warning(result.message || 'Remediation action completed with warnings')
+        ElMessage.warning(result.message || t('suite.operations.messages.remediationWarnings'))
       }
       await loadOperationsData()
     } catch (error) {
-      ElMessage.error(messageFromError(error, 'Failed to execute remediation action'))
+      ElMessage.error(messageFromError(error, t('suite.operations.messages.remediationFailed')))
     } finally {
       runningActionCode.value = ''
     }
@@ -276,11 +283,11 @@ export function useSuiteOperationsWorkspace() {
     const templateCode = selectedTemplateCode.value
     const reason = governanceReason.value.trim()
     if (!templateCode || !reason) {
-      ElMessage.warning('Template and reason are required')
+      ElMessage.warning(t('suite.operations.messages.templateAndReasonRequired'))
       return
     }
     if (governanceScopeType.value === 'ORG' && !governanceScopeOrgId.value) {
-      ElMessage.warning('Select an organization for governance scope')
+      ElMessage.warning(t('suite.operations.messages.selectOrganization'))
       return
     }
     creatingGovernanceRequest.value = true
@@ -293,12 +300,12 @@ export function useSuiteOperationsWorkspace() {
           ? governanceSecondReviewerUserId.value || undefined
           : undefined
       })
-      ElMessage.success(`Governance request created: ${created.requestId}`)
+      ElMessage.success(t('suite.operations.messages.governanceCreated', { requestId: created.requestId }))
       governanceReason.value = ''
       governanceSecondReviewerUserId.value = ''
       await refreshGovernanceAndRisk()
     } catch (error) {
-      ElMessage.error(messageFromError(error, 'Failed to create governance request'))
+      ElMessage.error(messageFromError(error, t('suite.operations.messages.governanceCreateFailed')))
     } finally {
       creatingGovernanceRequest.value = false
     }
@@ -320,16 +327,16 @@ export function useSuiteOperationsWorkspace() {
         reviewNote: reviewNote.value.trim() || undefined
       })
       if (updated.status === 'PENDING_SECOND_REVIEW') {
-        ElMessage.success('First review approved, waiting for second reviewer')
+        ElMessage.success(t('suite.operations.messages.firstReviewApproved'))
       } else if (updated.status === 'REJECTED') {
-        ElMessage.info('Governance request rejected')
+        ElMessage.info(t('suite.operations.messages.governanceRejected'))
       } else {
-        ElMessage.success('Governance request approved for execution')
+        ElMessage.success(t('suite.operations.messages.governanceApproved'))
       }
       reviewNote.value = ''
       await refreshGovernanceAndRisk()
     } catch (error) {
-      ElMessage.error(messageFromError(error, 'Failed to review governance request'))
+      ElMessage.error(messageFromError(error, t('suite.operations.messages.governanceReviewFailed')))
     } finally {
       governanceActionLoadingRequestId.value = ''
       governanceActionLoadingType.value = ''
@@ -345,14 +352,14 @@ export function useSuiteOperationsWorkspace() {
         approvalNote: approvalNote.value.trim() || undefined
       })
       if (updated.status === 'EXECUTED_WITH_FAILURE') {
-        ElMessage.warning('Governance request executed with failures')
+        ElMessage.warning(t('suite.operations.messages.governanceExecutedWithFailures'))
       } else {
-        ElMessage.success('Governance request executed')
+        ElMessage.success(t('suite.operations.messages.governanceExecuted'))
       }
       approvalNote.value = ''
       await refreshGovernanceAndRisk()
     } catch (error) {
-      ElMessage.error(messageFromError(error, 'Failed to execute governance request'))
+      ElMessage.error(messageFromError(error, t('suite.operations.messages.governanceExecuteFailed')))
     } finally {
       governanceActionLoadingRequestId.value = ''
       governanceActionLoadingType.value = ''
@@ -362,7 +369,7 @@ export function useSuiteOperationsWorkspace() {
   async function onRollbackGovernanceRequest(request: SuiteGovernanceChangeRequest): Promise<void> {
     const reason = rollbackReason.value.trim()
     if (!reason) {
-      ElMessage.warning('Rollback reason is required')
+      ElMessage.warning(t('suite.operations.messages.rollbackReasonRequired'))
       return
     }
     governanceActionLoadingRequestId.value = request.requestId
@@ -373,14 +380,14 @@ export function useSuiteOperationsWorkspace() {
         rollbackReason: reason
       })
       if (updated.status === 'ROLLBACK_WITH_FAILURE') {
-        ElMessage.warning('Rollback finished with failures')
+        ElMessage.warning(t('suite.operations.messages.rollbackWithFailures'))
       } else {
-        ElMessage.success('Rollback completed')
+        ElMessage.success(t('suite.operations.messages.rollbackCompleted'))
       }
       rollbackReason.value = ''
       await refreshGovernanceAndRisk()
     } catch (error) {
-      ElMessage.error(messageFromError(error, 'Failed to rollback governance request'))
+      ElMessage.error(messageFromError(error, t('suite.operations.messages.governanceRollbackFailed')))
     } finally {
       governanceActionLoadingRequestId.value = ''
       governanceActionLoadingType.value = ''

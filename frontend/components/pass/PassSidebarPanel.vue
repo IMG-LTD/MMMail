@@ -1,6 +1,7 @@
 <script setup lang="ts">
+import { useI18n } from '~/composables/useI18n'
 import type { PassSharedVault, PassWorkspaceItemSummary, PassWorkspaceMode } from '~/types/pass-business'
-import { formatPassItemType, formatPassTime } from '~/utils/pass'
+import { formatPassItemType, formatPassTime, formatVaultRole } from '~/utils/pass'
 
 const props = defineProps<{
   mode: PassWorkspaceMode
@@ -14,57 +15,81 @@ const emit = defineEmits<{
   'select-item': [itemId: string]
   'select-vault': [vaultId: string]
 }>()
+
+const { t } = useI18n()
+
+function itemMeta(item: PassWorkspaceItemSummary): string {
+  return item.username || item.website || t('pass.sidebar.itemMetaFallback')
+}
+
+function itemAriaLabel(item: PassWorkspaceItemSummary): string {
+  return t('pass.sidebar.itemAriaLabel', {
+    title: item.title,
+    type: formatPassItemType(item.itemType),
+  })
+}
+
+function vaultAriaLabel(vault: PassSharedVault): string {
+  return t('pass.sidebar.vaultAriaLabel', {
+    name: vault.name,
+    role: formatVaultRole(vault.accessRole),
+  })
+}
 </script>
 
 <template>
   <aside class="mm-card pass-sidebar">
     <div class="sidebar-head">
-      <strong>{{ mode === 'PERSONAL' ? 'Credentials' : 'Vaults' }}</strong>
+      <strong>{{ mode === 'PERSONAL' ? t('pass.sidebar.personalTitle') : t('pass.sidebar.sharedTitle') }}</strong>
       <span>{{ mode === 'PERSONAL' ? items.length : sharedVaults.length }}</span>
     </div>
 
-    <div v-if="mode === 'PERSONAL'" class="sidebar-list">
+    <div v-if="mode === 'PERSONAL'" class="sidebar-list" role="list" :aria-label="t('pass.sidebar.personalListLabel')">
       <button
         v-for="item in items"
         :key="item.id"
         type="button"
         class="sidebar-card"
         :class="{ active: item.id === activeItemId }"
+        :aria-current="item.id === activeItemId ? 'true' : undefined"
+        :aria-label="itemAriaLabel(item)"
         @click="emit('select-item', item.id)"
       >
         <div class="sidebar-line">
           <span class="card-title">{{ item.title }}</span>
           <span class="card-badge">{{ formatPassItemType(item.itemType) }}</span>
         </div>
-        <span class="card-meta">{{ item.username || item.website || 'No username or site' }}</span>
+        <span class="card-meta">{{ itemMeta(item) }}</span>
         <div class="sidebar-line card-foot">
           <span>{{ formatPassTime(item.updatedAt) }}</span>
-          <span>{{ item.favorite ? '★ Favorite' : `Links ${item.secureLinkCount}` }}</span>
+          <span>{{ item.favorite ? t('pass.sidebar.favorite') : t('pass.sidebar.linkCount', { value: item.secureLinkCount }) }}</span>
         </div>
       </button>
-      <el-empty v-if="items.length === 0" description="No personal credentials yet" />
+      <el-empty v-if="items.length === 0" :description="t('pass.sidebar.personalEmpty')" />
     </div>
 
-    <div v-else class="sidebar-list">
+    <div v-else class="sidebar-list" role="list" :aria-label="t('pass.sidebar.sharedListLabel')">
       <button
         v-for="vault in sharedVaults"
         :key="vault.id"
         type="button"
         class="sidebar-card vault-card"
         :class="{ active: vault.id === activeVaultId }"
+        :aria-current="vault.id === activeVaultId ? 'true' : undefined"
+        :aria-label="vaultAriaLabel(vault)"
         @click="emit('select-vault', vault.id)"
       >
         <div class="sidebar-line">
           <span class="card-title">{{ vault.name }}</span>
-          <span class="card-badge">{{ vault.accessRole }}</span>
+          <span class="card-badge">{{ formatVaultRole(vault.accessRole) }}</span>
         </div>
-        <span class="card-meta">{{ vault.description || 'No vault description yet' }}</span>
+        <span class="card-meta">{{ vault.description || t('pass.sidebar.vaultMetaFallback') }}</span>
         <div class="sidebar-line card-foot">
-          <span>{{ vault.memberCount }} members</span>
-          <span>{{ vault.itemCount }} items</span>
+          <span>{{ t('pass.sidebar.memberCount', { value: vault.memberCount }) }}</span>
+          <span>{{ t('pass.sidebar.itemCount', { value: vault.itemCount }) }}</span>
         </div>
       </button>
-      <el-empty v-if="sharedVaults.length === 0" description="No shared vaults yet" />
+      <el-empty v-if="sharedVaults.length === 0" :description="t('pass.sidebar.sharedEmpty')" />
     </div>
   </aside>
 </template>

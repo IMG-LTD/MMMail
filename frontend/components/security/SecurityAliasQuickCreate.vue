@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { computed, reactive, watch } from 'vue'
+import { useI18n } from '~/composables/useI18n'
 import type { CreatePassMailAliasRequest, PassMailAlias } from '~/types/pass-business'
 import {
   formatAliasRouteSummary,
@@ -33,6 +34,7 @@ const emit = defineEmits<{
   create: [payload: CreatePassMailAliasRequest]
   jump: []
 }>()
+const { t } = useI18n()
 
 const form = reactive({
   title: '',
@@ -87,58 +89,58 @@ function onCreate(): void {
     <div class="quick-create-card">
       <div class="panel-head">
         <div>
-          <p class="eyebrow">Mail Security Center</p>
-          <h2 class="mm-section-title">Create and copy alias</h2>
+          <p class="eyebrow">{{ t('security.aliasQuickCreate.eyebrow') }}</p>
+          <h2 class="mm-section-title">{{ t('security.aliasQuickCreate.title') }}</h2>
         </div>
-        <el-button text type="primary" @click="emit('jump')">All aliases</el-button>
+        <el-button text type="primary" @click="emit('jump')">{{ t('security.aliasQuickCreate.jump') }}</el-button>
       </div>
-      <p class="subtitle">Create a hide-my-email alias from Security Center, route it to your current mailbox by default, and copy it immediately for sign-up flows.</p>
+      <p class="subtitle">{{ t('security.aliasQuickCreate.subtitle') }}</p>
       <div class="form-grid">
-        <el-input v-model="form.title" maxlength="128" placeholder="Alias title" />
-        <el-input v-model="form.prefix" maxlength="64" placeholder="Prefix (optional)" />
+        <el-input v-model="form.title" maxlength="128" :placeholder="t('security.aliasQuickCreate.fields.title')" />
+        <el-input v-model="form.prefix" maxlength="64" :placeholder="t('security.aliasQuickCreate.fields.prefix')" />
         <el-select
           v-model="form.forwardToEmails"
           multiple
           collapse-tags
           collapse-tags-tooltip
           :disabled="!hasForwardTargets"
-          placeholder="Route to mailbox(es)"
+          :placeholder="t('security.aliasQuickCreate.fields.forwardTargets')"
         >
           <el-option v-for="option in forwardTargetOptions" :key="option.value" :label="option.label" :value="option.value" />
         </el-select>
-        <el-input v-model="form.note" type="textarea" :rows="3" maxlength="2000" show-word-limit placeholder="Usage note" />
+        <el-input v-model="form.note" type="textarea" :rows="3" maxlength="2000" show-word-limit :placeholder="t('security.aliasQuickCreate.fields.note')" />
       </div>
       <div class="panel-actions">
-        <el-button :disabled="!hasForwardTargets" :loading="mutationId === 'create'" type="primary" @click="onCreate">Create and copy alias</el-button>
-        <span class="hint">{{ forwardTargetOptions.length }} verified mailboxes available</span>
+        <el-button :disabled="!hasForwardTargets" :loading="mutationId === 'create'" type="primary" @click="onCreate">{{ t('security.aliasQuickCreate.actions.create') }}</el-button>
+        <span class="hint">{{ t('security.aliasQuickCreate.metrics.verifiedMailboxes', { count: forwardTargetOptions.length }) }}</span>
       </div>
     </div>
 
     <div class="recent-card">
       <div class="panel-head compact">
         <div>
-          <p class="eyebrow">Recent</p>
-          <h3 class="mm-section-subtitle">Last three aliases</h3>
+          <p class="eyebrow">{{ t('security.aliasQuickCreate.recent.eyebrow') }}</p>
+          <h3 class="mm-section-subtitle">{{ t('security.aliasQuickCreate.recent.title') }}</h3>
         </div>
-        <span class="hint">{{ loading ? 'Loading' : recentAliases.length }}</span>
+        <span class="hint">{{ loading ? t('security.aliasQuickCreate.recent.loading') : recentAliases.length }}</span>
       </div>
       <div class="recent-list">
         <article v-for="alias in recentAliases" :key="alias.id" class="recent-item">
           <div class="recent-row">
             <strong>{{ alias.title }}</strong>
-            <el-tag :type="alias.status === 'ENABLED' ? 'success' : 'info'" size="small">{{ formatPassAliasStatus(alias.status) }}</el-tag>
+            <el-tag :type="alias.status === 'ENABLED' ? 'success' : 'info'" size="small">{{ formatPassAliasStatus(alias.status, t) }}</el-tag>
           </div>
           <p>{{ alias.aliasEmail }}</p>
           <div class="route-row">
-            <span class="route-count">{{ resolveAliasRouteEmails(alias).length }} routes</span>
+            <span class="route-count">{{ t('security.aliasQuickCreate.recent.routeCount', { count: resolveAliasRouteEmails(alias).length }) }}</span>
             <span v-for="route in resolveAliasRouteEmails(alias).slice(0, 2)" :key="route" class="route-chip">{{ route }}</span>
           </div>
           <div class="recent-meta">
-            <span>{{ formatAliasRouteSummary(alias) }}</span>
+            <span>{{ formatAliasRouteSummary(alias, t) }}</span>
             <span>{{ formatPassTime(alias.updatedAt) }}</span>
           </div>
         </article>
-        <el-empty v-if="!loading && recentAliases.length === 0" description="No aliases created yet." />
+        <el-empty v-if="!loading && recentAliases.length === 0" :description="t('security.aliasQuickCreate.recent.empty')" />
       </div>
     </div>
   </section>

@@ -6,12 +6,15 @@ import { resolveApiBase } from '~/utils/api-base'
 const runtimeConfig = useRuntimeConfig()
 const { t } = useI18n()
 
+const apiGuidePath = '/self-hosted/api.html'
 const selfHostedInstallGuideUrl = '/self-hosted/install.html'
 const selfHostedRunbookUrl = '/self-hosted/runbook.html'
 
 const apiBase = computed(() => resolveApiBase(runtimeConfig.public.apiBase))
-const swaggerUiUrl = computed(() => new URL('/swagger-ui.html', apiBase.value).toString())
-const openApiJsonUrl = computed(() => new URL('/v3/api-docs', apiBase.value).toString())
+const normalizedApiBase = computed(() => apiBase.value.replace(/\/+$/, ''))
+const apiGuideUrl = computed(() => `${apiGuidePath}?${new URLSearchParams({ apiBase: normalizedApiBase.value }).toString()}`)
+const swaggerUiUrl = computed(() => new URL('/swagger-ui.html', normalizedApiBase.value).toString())
+const openApiJsonUrl = computed(() => new URL('/v3/api-docs', normalizedApiBase.value).toString())
 </script>
 
 <template>
@@ -31,6 +34,15 @@ const openApiJsonUrl = computed(() => new URL('/v3/api-docs', apiBase.value).toS
         <div class="adoption-panel__actions">
           <a
             class="adoption-panel__action adoption-panel__action--primary"
+            data-testid="settings-adoption-api-guide-link"
+            :href="apiGuideUrl"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            {{ t('settings.adoption.cards.api.guide') }}
+          </a>
+          <a
+            class="adoption-panel__action"
             data-testid="settings-adoption-swagger-link"
             :href="swaggerUiUrl"
             target="_blank"
@@ -49,7 +61,7 @@ const openApiJsonUrl = computed(() => new URL('/v3/api-docs', apiBase.value).toS
           </a>
         </div>
         <p class="adoption-panel__meta" data-testid="settings-adoption-api-meta">
-          {{ t('settings.adoption.cards.api.meta', { value: apiBase }) }}
+          {{ t('settings.adoption.cards.api.meta', { value: normalizedApiBase }) }}
         </p>
       </article>
 

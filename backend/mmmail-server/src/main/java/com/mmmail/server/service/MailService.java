@@ -16,6 +16,7 @@ import com.mmmail.server.model.dto.BatchMailActionRequest;
 import com.mmmail.server.model.dto.PreviewMailFilterRequest;
 import com.mmmail.server.model.dto.SaveDraftRequest;
 import com.mmmail.server.model.dto.SendMailRequest;
+import com.mmmail.server.model.dto.UploadDraftAttachmentRequest;
 import com.mmmail.server.model.entity.MailLabel;
 import com.mmmail.server.model.entity.MailMessage;
 import com.mmmail.server.model.entity.UserAccount;
@@ -37,6 +38,8 @@ import com.mmmail.server.model.vo.RuleResolutionVo;
 import com.mmmail.server.model.vo.MailSummaryVo;
 import com.mmmail.server.model.vo.MailDeliveryTarget;
 import com.mmmail.server.model.vo.MailboxStatsVo;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.dao.DuplicateKeyException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -61,6 +64,8 @@ import java.util.regex.Pattern;
 
 @Service
 public class MailService {
+
+    private static final Logger log = LoggerFactory.getLogger(MailService.class);
 
     private static final TypeReference<List<String>> LABEL_TYPE = new TypeReference<>() {
     };
@@ -107,6 +112,8 @@ public class MailService {
     private final MailE2eeRecipientDiscoveryService mailE2eeRecipientDiscoveryService;
     private final MailE2eeMessageService mailE2eeMessageService;
     private final MailAttachmentService mailAttachmentService;
+    private final MailOutboundDeliveryGateway mailOutboundDeliveryGateway;
+    private final WebPushService webPushService;
     private final AuditService auditService;
     private final ObjectMapper objectMapper;
 
@@ -128,6 +135,8 @@ public class MailService {
             MailE2eeRecipientDiscoveryService mailE2eeRecipientDiscoveryService,
             MailE2eeMessageService mailE2eeMessageService,
             MailAttachmentService mailAttachmentService,
+            MailOutboundDeliveryGateway mailOutboundDeliveryGateway,
+            WebPushService webPushService,
             AuditService auditService,
             ObjectMapper objectMapper
     ) {
@@ -148,6 +157,8 @@ public class MailService {
         this.mailE2eeRecipientDiscoveryService = mailE2eeRecipientDiscoveryService;
         this.mailE2eeMessageService = mailE2eeMessageService;
         this.mailAttachmentService = mailAttachmentService;
+        this.mailOutboundDeliveryGateway = mailOutboundDeliveryGateway;
+        this.webPushService = webPushService;
         this.auditService = auditService;
         this.objectMapper = objectMapper;
     }
@@ -450,12 +461,17 @@ public class MailService {
         }
         boolean scheduled = request.scheduledAt() != null && scheduledAt.isAfter(now);
         int undoSeconds = resolveUndoSendSeconds(userId);
-        boolean useOutbox = !scheduled && undoSeconds > 0;
-        LocalDateTime deliveryAt = scheduled ? scheduledAt : (useOutbox ? now.plusSeconds(undoSeconds) : now);
+        boolean hasSmtpTargets = deliveryTargets.stream().anyMatch(MailDeliveryTarget::isSmtpOutbound);
+        boolean useOutbox = !scheduled && (undoSeconds > 0 || hasSmtpTargets);
+        LocalDateTime deliveryAt = scheduled
+                ? scheduledAt
+                : (useOutbox && undoSeconds > 0 ? now.plusSeconds(undoSeconds) : now);
+        boolean immediateQueuedDispatch = !scheduled && useOutbox && deliveryAt.equals(now);
         MailDeliveryTarget primaryTarget = deliveryTargets.get(0);
         MailE2eeMessageService.OutboundBody outboundBody = mailE2eeMessageService.resolveOutboundBody(userId, senderEmail, request);
 
         MailMessage sent = resolveOutboundMail(userId, request.draftId(), now);
+        validateExternalDeliveryCompatibility(sent, deliveryTargets, outboundBody);
         sent.setOwnerId(userId);
         sent.setPeerId(primaryTarget.ownerId());
         sent.setPeerEmail(primaryTarget.targetEmail());
@@ -486,19 +502,27 @@ public class MailService {
         }
 
         if (!scheduled && !useOutbox) {
-            deliverInboundCopies(sent, deliveryTargets, now);
+            dispatchDeliveryTargets(sent, deliveryTargets, now);
+        }
+        if (immediateQueuedDispatch) {
+            dispatchQueuedMessage(sent, "OUTBOX", "MAIL_OUTBOX_DISPATCH", now, true);
         }
 
         auditService.record(
                 userId,
-                scheduled ? "MAIL_SCHEDULED" : (useOutbox ? "MAIL_OUTBOX_QUEUED" : "MAIL_SENT"),
+                scheduled ? "MAIL_SCHEDULED" : ((useOutbox && !immediateQueuedDispatch) ? "MAIL_OUTBOX_QUEUED" : "MAIL_SENT"),
                 "mail from " + senderEmail + " to " + request.toEmail() + " at " + deliveryAt + ",routeCount=" + deliveryTargets.size(),
                 ipAddress
         );
     }
 
-    public MailAttachmentUploadVo uploadDraftAttachment(Long userId, Long draftId, org.springframework.web.multipart.MultipartFile file, String ipAddress) {
-        return mailAttachmentService.uploadDraftAttachment(userId, draftId, file, ipAddress);
+    public MailAttachmentUploadVo uploadDraftAttachment(
+            Long userId,
+            Long draftId,
+            UploadDraftAttachmentRequest request,
+            String ipAddress
+    ) {
+        return mailAttachmentService.uploadDraftAttachment(userId, draftId, request, ipAddress);
     }
 
     public void deleteDraftAttachment(Long userId, Long draftId, Long attachmentId, String ipAddress) {
@@ -538,11 +562,12 @@ public class MailService {
             draft.setDeleted(0);
         }
 
+        MailE2eeMessageService.OutboundBody draftBody = mailE2eeMessageService.resolveDraftBody(userId, request);
         draft.setSubject(request.subject());
-        draft.setBodyCiphertext(request.body());
-        draft.setBodyE2eeEnabled(0);
-        draft.setBodyE2eeAlgorithm(null);
-        draft.setBodyE2eeFingerprintsJson(null);
+        draft.setBodyCiphertext(draftBody.bodyCiphertext());
+        draft.setBodyE2eeEnabled(draftBody.bodyE2eeEnabled());
+        draft.setBodyE2eeAlgorithm(draftBody.bodyE2eeAlgorithm());
+        draft.setBodyE2eeFingerprintsJson(draftBody.bodyE2eeFingerprintsJson());
         draft.setPeerEmail(draftPeerEmail);
         draft.setSenderEmail(senderEmail);
         draft.setSentAt(now);
@@ -1112,27 +1137,58 @@ public class MailService {
             return;
         }
         for (MailMessage message : dueMessages) {
-            int transitioned = mailMessageMapper.update(
-                    null,
-                    new LambdaUpdateWrapper<MailMessage>()
-                            .eq(MailMessage::getId, message.getId())
-                            .eq(MailMessage::getFolderType, sourceFolder)
-                            .le(MailMessage::getSentAt, now)
-                            .set(MailMessage::getFolderType, "SENT")
-                            .set(MailMessage::getCustomFolderId, null)
-                            .set(MailMessage::getUpdatedAt, now)
-            );
-            if (transitioned == 0) {
-                continue;
+            dispatchQueuedMessage(message, sourceFolder, auditEvent, now, false);
+        }
+    }
+
+    private void dispatchQueuedMessage(
+            MailMessage message,
+            String sourceFolder,
+            String auditEvent,
+            LocalDateTime now,
+            boolean failFast
+    ) {
+        List<MailDeliveryTarget> deliveryTargets = resolveStoredDeliveryTargets(message);
+        try {
+            dispatchDeliveryTargets(message, deliveryTargets, now);
+            if (!transitionQueuedMessageToSent(message, sourceFolder, now)) {
+                return;
             }
-            List<MailDeliveryTarget> deliveryTargets = resolveStoredDeliveryTargets(message);
-            deliverInboundCopies(message, deliveryTargets, now);
             auditService.record(
                     message.getOwnerId(),
                     auditEvent,
                     "mail=" + message.getId() + ",routeCount=" + deliveryTargets.size(),
                     "system"
             );
+        } catch (BizException exception) {
+            handleQueuedDispatchFailure(message, exception, failFast);
+        }
+    }
+
+    private boolean transitionQueuedMessageToSent(MailMessage message, String sourceFolder, LocalDateTime now) {
+        int transitioned = mailMessageMapper.update(
+                null,
+                new LambdaUpdateWrapper<MailMessage>()
+                        .eq(MailMessage::getId, message.getId())
+                        .eq(MailMessage::getFolderType, sourceFolder)
+                        .le(MailMessage::getSentAt, now)
+                        .set(MailMessage::getFolderType, "SENT")
+                        .set(MailMessage::getCustomFolderId, null)
+                        .set(MailMessage::getUpdatedAt, now)
+        );
+        return transitioned > 0;
+    }
+
+    private void handleQueuedDispatchFailure(MailMessage message, BizException exception, boolean failFast) {
+        log.warn("Queued mail dispatch failed for mail {}: {}", message.getId(), exception.getMessage());
+        auditService.record(
+                message.getOwnerId(),
+                "MAIL_OUTBOUND_DELIVERY_FAILED",
+                "mail=" + message.getId() + ",message=" + exception.getMessage(),
+                "system"
+        );
+        if (failFast) {
+            throw exception;
         }
     }
 
@@ -1315,12 +1371,15 @@ public class MailService {
         if (message.getPeerId() == null) {
             throw new BizException(ErrorCode.INTERNAL_ERROR, "Mail delivery target is missing for mail " + message.getId());
         }
-        return List.of(new MailDeliveryTarget(message.getPeerId(), message.getPeerEmail(), message.getPeerEmail()));
+        return List.of(MailDeliveryTarget.internal(message.getPeerId(), message.getPeerEmail(), message.getPeerEmail()));
     }
 
     private void deliverInboundCopies(MailMessage outbound, List<MailDeliveryTarget> deliveryTargets, LocalDateTime now) {
         for (int index = 0; index < deliveryTargets.size(); index++) {
             MailDeliveryTarget deliveryTarget = deliveryTargets.get(index);
+            if (!deliveryTarget.isInternalMailbox()) {
+                continue;
+            }
             String inboundKey = buildInboundIdempotencyKey(outbound.getId(), index);
             MailMessage existingInbox = mailMessageMapper.selectOne(new LambdaQueryWrapper<MailMessage>()
                     .eq(MailMessage::getOwnerId, deliveryTarget.ownerId())
@@ -1365,9 +1424,72 @@ public class MailService {
                         now
                 );
                 recordInboundFilterAudit(deliveryTarget.ownerId(), inbox.getId(), resolution);
+                webPushService.dispatchInboxMail(
+                        deliveryTarget.ownerId(),
+                        inbox.getId(),
+                        outbound.getSenderEmail(),
+                        outbound.getSubject()
+                );
             } catch (DuplicateKeyException ignored) {
                 // Multiple dispatch attempts may race; keep operation idempotent.
             }
+        }
+    }
+
+    private void dispatchDeliveryTargets(MailMessage outbound, List<MailDeliveryTarget> deliveryTargets, LocalDateTime now) {
+        List<MailDeliveryTarget> internalTargets = deliveryTargets.stream()
+                .filter(MailDeliveryTarget::isInternalMailbox)
+                .toList();
+        if (!internalTargets.isEmpty()) {
+            deliverInboundCopies(outbound, internalTargets, now);
+        }
+        List<MailDeliveryTarget> smtpTargets = deliveryTargets.stream()
+                .filter(MailDeliveryTarget::isSmtpOutbound)
+                .toList();
+        if (!smtpTargets.isEmpty()) {
+            deliverSmtpOutboundCopies(outbound, smtpTargets);
+        }
+    }
+
+    private void deliverSmtpOutboundCopies(MailMessage outbound, List<MailDeliveryTarget> deliveryTargets) {
+        requireSmtpOutboundConfigured();
+        for (MailDeliveryTarget deliveryTarget : deliveryTargets) {
+            MailOutboundDeliveryGateway.MailOutboundDeliveryResult result = mailOutboundDeliveryGateway.send(
+                    new MailOutboundDeliveryGateway.MailOutboundRequest(
+                            outbound.getSenderEmail(),
+                            deliveryTarget.forwardToEmail(),
+                            outbound.getSubject(),
+                            outbound.getBodyCiphertext()
+                    )
+            );
+            if (!result.success()) {
+                throw new BizException(ErrorCode.INTERNAL_ERROR, result.message());
+            }
+        }
+    }
+
+    private void requireSmtpOutboundConfigured() {
+        if (mailOutboundDeliveryGateway.isConfigured()) {
+            return;
+        }
+        throw new BizException(ErrorCode.INTERNAL_ERROR, mailOutboundDeliveryGateway.configurationMessage());
+    }
+
+    private void validateExternalDeliveryCompatibility(
+            MailMessage outbound,
+            List<MailDeliveryTarget> deliveryTargets,
+            MailE2eeMessageService.OutboundBody outboundBody
+    ) {
+        boolean hasSmtpTargets = deliveryTargets.stream().anyMatch(MailDeliveryTarget::isSmtpOutbound);
+        if (!hasSmtpTargets) {
+            return;
+        }
+        requireSmtpOutboundConfigured();
+        if (outboundBody.bodyE2eeEnabled() != 0) {
+            throw new BizException(ErrorCode.INVALID_ARGUMENT, "SMTP outbound does not support Mail E2EE payloads yet");
+        }
+        if (outbound.getId() != null && mailAttachmentService.hasAttachments(outbound.getId())) {
+            throw new BizException(ErrorCode.INVALID_ARGUMENT, "SMTP outbound attachments are not supported yet");
         }
     }
 

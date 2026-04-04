@@ -792,6 +792,7 @@ export interface MailAttachment {
   fileName: string
   contentType: string
   fileSize: number
+  e2ee?: MailAttachmentE2ee | null
 }
 
 export interface MailPage {
@@ -1355,6 +1356,25 @@ export interface SuiteNotificationSync {
   items: SuiteNotificationSyncEvent[]
 }
 
+export interface SuiteWebPushStatus {
+  enabled: boolean
+  deliveryScope: string
+  vapidPublicKey: string | null
+  message: string | null
+}
+
+export interface SuiteWebPushSubscribeRequest {
+  endpoint: string
+  p256dh: string
+  auth: string
+  contentEncoding: string
+  userAgent?: string
+}
+
+export interface SuiteWebPushUnsubscribeRequest {
+  endpoint: string
+}
+
 export interface MarkSuiteNotificationsReadRequest {
   notificationIds: string[]
 }
@@ -1535,6 +1555,27 @@ export type DriveSavedShareStatus = 'ACTIVE' | 'REVOKED' | 'EXPIRED' | 'UNAVAILA
 export type DriveCollaboratorShareStatus = 'NEEDS_ACTION' | 'ACCEPTED' | 'DECLINED' | 'REVOKED'
 export type DrivePreviewKind = 'TEXT' | 'IMAGE' | 'PDF' | 'UNSUPPORTED'
 
+export interface DriveFileE2ee {
+  enabled: boolean
+  algorithm: string
+  recipientFingerprints: string[]
+}
+
+export interface DriveShareE2ee {
+  enabled: boolean
+  algorithm: string
+  mode?: 'PASSWORD'
+}
+
+export interface DriveUploadE2eePayload {
+  enabled: true
+  algorithm: string
+  recipientFingerprints: string[]
+  fileName: string
+  contentType: string
+  fileSize: number
+}
+
 export interface DriveItem {
   id: string
   parentId: string | null
@@ -1543,6 +1584,7 @@ export interface DriveItem {
   mimeType: string | null
   sizeBytes: number
   shareCount: number
+  e2ee?: DriveFileE2ee | null
   createdAt: string
   updatedAt: string
 }
@@ -1555,6 +1597,7 @@ export interface DriveShareLink {
   expiresAt: string | null
   status: DriveShareStatus
   passwordProtected: boolean
+  e2ee?: DriveShareE2ee | null
   createdAt: string
   updatedAt: string
 }
@@ -1607,6 +1650,7 @@ export interface DriveSavedShare {
   permission: DriveSharePermission
   status: DriveSavedShareStatus
   expiresAt: string | null
+  e2ee?: DriveShareE2ee | null
   savedAt: string
   available: boolean
 }
@@ -1641,6 +1685,7 @@ export interface DriveFileVersion {
   mimeType: string | null
   sizeBytes: number
   checksum: string | null
+  e2ee?: DriveFileE2ee | null
   createdAt: string
 }
 
@@ -1729,6 +1774,23 @@ export interface CreateDriveShareRequest {
   password?: string
 }
 
+export interface DriveEncryptedPublicShareE2eePayload {
+  enabled: true
+  algorithm: string
+  mode: 'PASSWORD'
+  fileName: string
+  contentType: string
+  fileSize: number
+}
+
+export interface CreateEncryptedPublicShareRequest {
+  permission: Extract<DriveSharePermission, 'VIEW'>
+  expiresAt?: string
+  password: string
+  encryptedFile: File
+  e2ee: DriveEncryptedPublicShareE2eePayload
+}
+
 export interface UpdateDriveShareRequest {
   permission: DriveSharePermission
   expiresAt?: string | null
@@ -1748,6 +1810,7 @@ export interface PublicDriveShareMetadata {
   status: DriveShareStatus
   expiresAt: string | null
   passwordProtected: boolean
+  e2ee?: DriveShareE2ee | null
 }
 
 export type OrgRole = 'OWNER' | 'ADMIN' | 'MEMBER'
@@ -1913,12 +1976,32 @@ export interface MailBodyE2eePayload {
   recipientFingerprints: string[]
 }
 
+export interface MailAttachmentE2ee {
+  enabled: boolean
+  algorithm: string | null
+  recipientFingerprints: string[]
+}
+
+export interface MailAttachmentE2eePayload {
+  algorithm: string
+  recipientFingerprints: string[]
+}
+
+export interface UploadDraftAttachmentOptions {
+  file: Blob | File
+  fileName: string
+  contentType: string
+  fileSize: number
+  e2ee?: MailAttachmentE2eePayload
+}
+
 export interface DraftRequest {
   draftId?: MailId
   toEmail: string
   fromEmail?: string
   subject: string
-  body: string
+  body?: string
+  e2ee?: MailBodyE2eePayload
 }
 
 export interface LabelItem {
@@ -2020,6 +2103,12 @@ export interface MailE2eeKeyProfile {
   keyCreatedAt: string | null
 }
 
+export interface MailE2eeRecoveryPackage {
+  enabled: boolean
+  encryptedPrivateKeyArmored: string | null
+  updatedAt: string | null
+}
+
 export interface UpdateMailE2eeKeyProfileRequest {
   enabled: boolean
   publicKeyArmored?: string
@@ -2027,6 +2116,11 @@ export interface UpdateMailE2eeKeyProfileRequest {
   fingerprint?: string
   algorithm?: string
   keyCreatedAt?: string
+}
+
+export interface UpdateMailE2eeRecoveryRequest {
+  enabled: boolean
+  encryptedPrivateKeyArmored?: string
 }
 
 export interface AuditEvent {

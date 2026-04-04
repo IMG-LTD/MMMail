@@ -38,6 +38,8 @@ public class UserPreference {
     private String mailE2eePrivateKeyEncrypted;
     private String mailE2eeKeyAlgorithm;
     private LocalDateTime mailE2eeKeyCreatedAt;
+    private String mailE2eeRecoveryPrivateKeyEncrypted;
+    private LocalDateTime mailE2eeRecoveryUpdatedAt;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
     @TableLogic(value = "0", delval = "1")
@@ -257,6 +259,22 @@ public class UserPreference {
 
     public void setMailE2eeKeyCreatedAt(LocalDateTime mailE2eeKeyCreatedAt) {
         this.mailE2eeKeyCreatedAt = mailE2eeKeyCreatedAt;
+    }
+
+    public String getMailE2eeRecoveryPrivateKeyEncrypted() {
+        return mailE2eeRecoveryPrivateKeyEncrypted;
+    }
+
+    public void setMailE2eeRecoveryPrivateKeyEncrypted(String mailE2eeRecoveryPrivateKeyEncrypted) {
+        this.mailE2eeRecoveryPrivateKeyEncrypted = mailE2eeRecoveryPrivateKeyEncrypted;
+    }
+
+    public LocalDateTime getMailE2eeRecoveryUpdatedAt() {
+        return mailE2eeRecoveryUpdatedAt;
+    }
+
+    public void setMailE2eeRecoveryUpdatedAt(LocalDateTime mailE2eeRecoveryUpdatedAt) {
+        this.mailE2eeRecoveryUpdatedAt = mailE2eeRecoveryUpdatedAt;
     }
 
     public LocalDateTime getCreatedAt() {

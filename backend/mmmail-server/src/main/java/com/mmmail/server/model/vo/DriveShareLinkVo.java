@@ -10,6 +10,7 @@ public record DriveShareLinkVo(
         LocalDateTime expiresAt,
         String status,
         boolean passwordProtected,
+        DriveShareReadableE2eeVo e2ee,
         LocalDateTime createdAt,
         LocalDateTime updatedAt
 ) {

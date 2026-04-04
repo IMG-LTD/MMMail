@@ -48,6 +48,10 @@ mmmail:
   mail:
     attachment:
       storage-root: ${java.io.tmpdir}/mmmail-mail-attachments-test
+  web-push:
+    vapid-subject: mailto:test@mmmail.local
+    vapid-public-key: BG6kxmQZCeU6xxlW4THvdTZLKmnxMR9GFzLEkNrk5-dkwl28YnBMDaqM3zNYnkcqojxB_z1ZUEZNk-y7qrsC5Ug
+    vapid-private-key: -uuw1t_4Bch0I4dr671s6XLJgfIf2q_xUmiF3Q6o7tQ
   schema:
     preview-initializers:
       enabled: false

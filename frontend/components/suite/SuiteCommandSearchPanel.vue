@@ -17,7 +17,7 @@ const props = defineProps<Props>()
 const emit = defineEmits<{
   updateCommandKeyword: [value: string]
 }>()
-const { t } = useI18n()
+const { t, locale } = useI18n()
 
 function onKeywordUpdate(value: string): void {
   emit('updateCommandKeyword', value)
@@ -28,52 +28,52 @@ function onKeywordUpdate(value: string): void {
   <section class="mm-card suite-panel">
     <div class="panel-head">
       <div>
-        <h2 class="mm-section-title">Suite Command Search</h2>
+        <h2 class="mm-section-title">{{ t('suite.operations.command.title') }}</h2>
         <p class="mm-muted">{{ props.commandSearchSummary }}</p>
       </div>
     </div>
 
     <div class="command-search-controls">
-      <el-input
-        :model-value="props.commandKeyword"
-        clearable
-        placeholder="Try: invoice, roadmap, security baseline..."
-        @update:model-value="onKeywordUpdate"
-        @keyup.enter="void props.searchCommand()"
-      >
+        <el-input
+          :model-value="props.commandKeyword"
+          clearable
+          :placeholder="t('suite.operations.command.placeholder')"
+          @update:model-value="onKeywordUpdate"
+          @keyup.enter="void props.searchCommand()"
+        >
         <template #append>
-          <el-button :loading="props.commandSearchLoading" @click="void props.searchCommand()">Search</el-button>
+          <el-button :loading="props.commandSearchLoading" @click="void props.searchCommand()">{{ t('suite.operations.command.actions.search') }}</el-button>
         </template>
       </el-input>
       <el-button @click="props.clearCommand">{{ t('common.actions.clear') }}</el-button>
     </div>
 
     <el-table v-if="props.commandSearchResult" :data="props.commandSearchResult.items" style="width: 100%">
-      <el-table-column prop="productCode" label="Product" width="130" />
-      <el-table-column label="Type" width="150">
+      <el-table-column prop="productCode" :label="t('suite.operations.command.columns.product')" width="130" />
+      <el-table-column :label="t('suite.operations.command.columns.type')" width="150">
         <template #default="scope">
-          <el-tag size="small" type="info">{{ commandItemTypeLabel(scope.row.itemType) }}</el-tag>
+          <el-tag size="small" type="info">{{ commandItemTypeLabel(scope.row.itemType, t) }}</el-tag>
         </template>
       </el-table-column>
-      <el-table-column prop="title" label="Title" min-width="260" />
-      <el-table-column prop="summary" label="Summary" min-width="300" />
-      <el-table-column label="Updated At" width="180">
+      <el-table-column prop="title" :label="t('suite.operations.command.columns.title')" min-width="260" />
+      <el-table-column prop="summary" :label="t('suite.operations.command.columns.summary')" min-width="300" />
+      <el-table-column :label="t('suite.operations.command.columns.updatedAt')" width="180">
         <template #default="scope">
-          {{ formatCommandUpdatedAt(scope.row.updatedAt) }}
+          {{ formatCommandUpdatedAt(scope.row.updatedAt, locale) }}
         </template>
       </el-table-column>
-      <el-table-column label="Action" width="120">
+      <el-table-column :label="t('suite.operations.command.columns.action')" width="120">
         <template #default="scope">
-          <el-button size="small" type="primary" plain @click="void props.openCommandResult(scope.row)">
-            Open
-          </el-button>
+            <el-button size="small" type="primary" plain @click="void props.openCommandResult(scope.row)">
+              {{ t('suite.operations.command.actions.open') }}
+            </el-button>
         </template>
       </el-table-column>
     </el-table>
 
     <el-empty
       v-if="props.commandSearchResult && props.commandSearchResult.total === 0"
-      description="No results found for current keyword"
+      :description="t('suite.operations.command.empty')"
     />
   </section>
 </template>

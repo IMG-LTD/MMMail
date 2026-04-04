@@ -60,7 +60,7 @@ const { t } = useI18n()
             :rows="3"
             :disabled="!canEditPolicy"
             :model-value="allowedEmailDomainsText"
-            placeholder="example.com, acme.test"
+            :placeholder="t('organizations.policy.allowedDomainsPlaceholder')"
             @update:model-value="emit('update:allowed-email-domains-text', $event)"
           />
         </el-form-item>

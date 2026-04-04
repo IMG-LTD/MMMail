@@ -1,3 +1,4 @@
+import type { SupportedLocale } from '../constants/i18n'
 import type {
   SuiteGovernanceChangeRequest,
   SuiteGovernanceOverview,
@@ -15,6 +16,8 @@ export interface GovernanceOverviewCard {
   tone: 'neutral' | 'warning' | 'danger' | 'success'
 }
 
+export type SuiteTranslate = (key: string, params?: Record<string, string | number>) => string
+
 export function priorityOrder(priority: SuiteRemediationAction['priority']): number {
   if (priority === 'P0') {
     return 0
@@ -26,30 +29,31 @@ export function priorityOrder(priority: SuiteRemediationAction['priority']): num
 }
 
 export function buildGovernanceOverviewCards(
-  overview: SuiteGovernanceOverview | null
+  overview: SuiteGovernanceOverview | null,
+  t: SuiteTranslate
 ): GovernanceOverviewCard[] {
   if (!overview) {
     return []
   }
   return [
-    { key: 'total', label: 'Total Requests', value: overview.totalRequests, tone: 'neutral' },
-    { key: 'pending-review', label: 'Pending Review', value: overview.pendingReviewCount, tone: 'warning' },
-    { key: 'pending-second', label: 'Pending 2nd Review', value: overview.pendingSecondReviewCount, tone: 'warning' },
-    { key: 'pending-exec', label: 'Pending Execution', value: overview.approvedPendingExecutionCount, tone: 'warning' },
+    { key: 'total', label: t('suite.operations.governance.overview.totalRequests'), value: overview.totalRequests, tone: 'neutral' },
+    { key: 'pending-review', label: t('suite.operations.governance.overview.pendingReview'), value: overview.pendingReviewCount, tone: 'warning' },
+    { key: 'pending-second', label: t('suite.operations.governance.overview.pendingSecondReview'), value: overview.pendingSecondReviewCount, tone: 'warning' },
+    { key: 'pending-exec', label: t('suite.operations.governance.overview.pendingExecution'), value: overview.approvedPendingExecutionCount, tone: 'warning' },
     {
       key: 'executed',
-      label: 'Executed',
+      label: t('suite.operations.governance.overview.executed'),
       value: overview.executedCount + overview.executedWithFailureCount,
       tone: 'success'
     },
-    { key: 'rejected', label: 'Rejected', value: overview.rejectedCount, tone: 'neutral' },
+    { key: 'rejected', label: t('suite.operations.governance.overview.rejected'), value: overview.rejectedCount, tone: 'neutral' },
     {
       key: 'rolled-back',
-      label: 'Rolled Back',
+      label: t('suite.operations.governance.overview.rolledBack'),
       value: overview.rolledBackCount + overview.rollbackWithFailureCount,
       tone: 'neutral'
     },
-    { key: 'sla-breached', label: 'SLA Breached', value: overview.slaBreachedCount, tone: 'danger' }
+    { key: 'sla-breached', label: t('suite.operations.governance.overview.slaBreached'), value: overview.slaBreachedCount, tone: 'danger' }
   ]
 }
 
@@ -64,6 +68,10 @@ export function riskTagType(riskLevel: SuiteRiskLevel): 'success' | 'warning' | 
     return 'danger'
   }
   return 'info'
+}
+
+export function riskLevelLabel(riskLevel: SuiteRiskLevel, t: SuiteTranslate): string {
+  return t(`suite.operations.riskLevel.${riskLevel}`)
 }
 
 export function governanceOverviewCardClass(tone: GovernanceOverviewCard['tone']): string {
@@ -94,25 +102,46 @@ export function governanceStatusTagType(
   return 'info'
 }
 
+export function governanceStatusLabel(
+  status: SuiteGovernanceRequestStatus,
+  t: SuiteTranslate
+): string {
+  return t(`suite.operations.governance.status.${status}`)
+}
+
 export function canExecuteAction(action: SuiteRemediationAction): boolean {
   return Boolean(action.actionCode)
 }
 
-export function formatDateTime(value: string | null): string {
+export function formatDateTime(value: string | null, locale: SupportedLocale = 'en'): string {
   if (!value) {
     return '-'
   }
-  return new Date(value).toLocaleString()
+  return new Date(value).toLocaleString(locale)
 }
 
-export function summarizeExecution(results: SuiteRemediationExecutionResult[]): string {
+export function summarizeExecution(
+  results: SuiteRemediationExecutionResult[],
+  t: SuiteTranslate
+): string {
   if (!results.length) {
     return '-'
   }
   const successCount = results.filter(item => item.status === 'SUCCESS').length
   const noOpCount = results.filter(item => item.status === 'NO_OP').length
   const failedCount = results.filter(item => item.status === 'FAILED').length
-  return `S:${successCount} / N:${noOpCount} / F:${failedCount}`
+  return [
+    `${t('suite.operations.remediation.status.SUCCESS')} ${successCount}`,
+    `${t('suite.operations.remediation.status.NO_OP')} ${noOpCount}`,
+    `${t('suite.operations.remediation.status.FAILED')} ${failedCount}`
+  ].join(' / ')
+}
+
+export function remediationExecutionStatusLabel(
+  status: SuiteRemediationExecutionResult['status'],
+  t: SuiteTranslate
+): string {
+  return t(`suite.operations.remediation.status.${status}`)
 }
 
 export function formatActorUserId(userId: string | null): string {
@@ -138,11 +167,16 @@ export function governanceSlaTagType(
   return 'success'
 }
 
-export function governanceSlaLabel(request: SuiteGovernanceChangeRequest): string {
+export function governanceSlaLabel(
+  request: SuiteGovernanceChangeRequest,
+  t: SuiteTranslate
+): string {
   if (!request.reviewDueAt) {
-    return 'N/A'
+    return t('suite.operations.governance.sla.NA')
   }
-  return request.reviewSlaBreached ? 'BREACHED' : 'ON_TIME'
+  return request.reviewSlaBreached
+    ? t('suite.operations.governance.sla.BREACHED')
+    : t('suite.operations.governance.sla.ON_TIME')
 }
 
 export function canReviewRequest(request: SuiteGovernanceChangeRequest): boolean {
@@ -159,28 +193,25 @@ export function reviewStageTagType(stage: SuiteGovernanceReviewStage): 'info' | 
   return 'info'
 }
 
-export function reviewStageLabel(stage: SuiteGovernanceReviewStage): string {
+export function reviewStageLabel(stage: SuiteGovernanceReviewStage, t: SuiteTranslate): string {
   if (stage === 'FIRST_REVIEW_PENDING') {
-    return 'FIRST_REVIEW_PENDING'
+    return t('suite.operations.governance.reviewStage.FIRST_REVIEW_PENDING')
   }
   if (stage === 'SECOND_REVIEW_PENDING') {
-    return 'SECOND_REVIEW_PENDING'
+    return t('suite.operations.governance.reviewStage.SECOND_REVIEW_PENDING')
   }
   if (stage === 'REVIEW_COMPLETED') {
-    return 'REVIEW_COMPLETED'
+    return t('suite.operations.governance.reviewStage.REVIEW_COMPLETED')
   }
-  return 'SINGLE_REVIEW'
+  return t('suite.operations.governance.reviewStage.SINGLE_REVIEW')
 }
 
-export function commandItemTypeLabel(itemType: string): string {
-  return itemType.replace(/_/g, ' ')
+export function commandItemTypeLabel(itemType: string, t: SuiteTranslate): string {
+  return t(`suite.operations.command.itemType.${itemType}`)
 }
 
-export function formatCommandUpdatedAt(updatedAt: string | null): string {
-  if (!updatedAt) {
-    return '-'
-  }
-  return new Date(updatedAt).toLocaleString()
+export function formatCommandUpdatedAt(updatedAt: string | null, locale: SupportedLocale = 'en'): string {
+  return formatDateTime(updatedAt, locale)
 }
 
 export function isReviewedByCurrentSession(
