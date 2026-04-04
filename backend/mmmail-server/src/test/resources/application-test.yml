@@ -51,7 +51,7 @@ mmmail:
   web-push:
     vapid-subject: mailto:test@mmmail.local
     vapid-public-key: BG6kxmQZCeU6xxlW4THvdTZLKmnxMR9GFzLEkNrk5-dkwl28YnBMDaqM3zNYnkcqojxB_z1ZUEZNk-y7qrsC5Ug
-    vapid-private-key: -uuw1t_4Bch0I4dr671s6XLJgfIf2q_xUmiF3Q6o7tQ
+    vapid-private-key: ${MMMAIL_WEB_PUSH_VAPID_PRIVATE_KEY:}
   schema:
     preview-initializers:
       enabled: false
