@@ -88,8 +88,8 @@ export const COMMUNITY_CAPABILITY_STATUS: ReadonlyArray<CommunityCapabilityStatu
 
 export const COMMUNITY_BOUNDARY_DOC_PATHS = [
   'README.md',
-  'docs/release/community-v1-v1.3-mainline-roadmap.md',
-  'docs/release/community-v1-v1.2-capability-boundaries.md',
+  'docs/release/community-v1-v1.4-mainline-roadmap.md',
+  'docs/release/community-v1-v1.4.0-release-notes.md',
   'docs/architecture/mail-zero-knowledge-roadmap.md',
   'docs/architecture/mail-protocol-stack-discovery.md',
   'docs/release/community-v1-support-boundaries.md',

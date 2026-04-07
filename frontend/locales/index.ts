@@ -151,6 +151,11 @@ import {
   systemHealthZhTW
 } from './system-health'
 import { mailE2eeEn, mailE2eeZhCN, mailE2eeZhTW } from './mail-e2ee'
+import {
+  mailPublicShareEn,
+  mailPublicShareZhCN,
+  mailPublicShareZhTW
+} from './mail-public-share'
 import { adoptionEn, adoptionZhCN, adoptionZhTW } from './adoption'
 import { pwaEn, pwaZhCN, pwaZhTW } from './pwa'
 
@@ -190,6 +195,7 @@ export const messages: TranslationCatalog = {
     ...passWorkspaceEn,
     ...securityCenterEn,
     ...mailE2eeEn,
+    ...mailPublicShareEn,
     ...pwaEn,
     ...sheetsSharingEn,
     ...shellEn,
@@ -240,6 +246,7 @@ export const messages: TranslationCatalog = {
     ...passWorkspaceZhCN,
     ...securityCenterZhCN,
     ...mailE2eeZhCN,
+    ...mailPublicShareZhCN,
     ...pwaZhCN,
     ...sheetsSharingZhCN,
     ...shellZhCN,
@@ -290,6 +297,7 @@ export const messages: TranslationCatalog = {
     ...passWorkspaceZhTW,
     ...securityCenterZhTW,
     ...mailE2eeZhTW,
+    ...mailPublicShareZhTW,
     ...pwaZhTW,
     ...sheetsSharingZhTW,
     ...shellZhTW,

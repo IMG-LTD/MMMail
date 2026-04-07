@@ -1,20 +1,24 @@
-# Community Edition v1.3 安装说明
+# Community Edition v1.4 安装说明
 
-**版本**: `v1.3-mainline`  
-**日期**: `2026-04-03`  
+**版本**: `v1.4-mainline`  
+**日期**: `2026-04-07`  
 **作者**: `Codex`
 
 ## 当前边界
-- 当前版本是 `Community Edition v1.3` 主线，不承诺 `SMTP inbound / IMAP / Bridge`、零知识架构、外部加密邮件或 Hosted 自动化 onboarding。
+- 当前版本是 `Community Edition v1.4` 主线，不承诺 `SMTP inbound / IMAP / Bridge`、零知识架构、外部加密附件 / 外部加密草稿、完整 MIME 外部 E2EE 兼容或 Hosted 自动化 onboarding。
 - 浏览器侧已经交付：
   - `PWA` manifest、Service Worker 注册与安装入口
   - `Mail E2EE` 当前闭环（key profile、READY 内部路由正文加密、草稿加密、附件加密、详情本地解密、密钥恢复）
-  - `Drive E2EE foundation`
+  - `Mail` 外部密码保护加密投递（body-only secure link）
+  - `Drive E2EE foundation` 与单文件 `readable-share` E2EE foundation
   - `Web Push`
   - `SMTP outbound adapter`
+  - `Calendar internal invitation orchestration`
+  - `Pass Beta readiness`
 - 仍未交付：
   - `SMTP inbound / IMAP / Bridge`
-  - 外部加密邮件
+  - 外部加密附件 / 外部加密草稿 / 完整 MIME 外部 E2EE
+  - 真正零知识邮件架构
   - 原生客户端
 
 ## 前置条件
@@ -98,3 +102,6 @@
   - 检查 `SPRING_DATASOURCE_PASSWORD` 与 `MYSQL_ROOT_PASSWORD` 是否已正确设置。
 - Frontend 页面打开但 API 403/500：
   - 先看 `docker compose logs backend`，再检查 `MMMAIL_JWT_SECRET` 与数据库初始化日志。
+- 外部密码保护加密邮件无法打开：
+  - 先确认 SMTP 通知邮件中的 secure link 使用了正确 `public base URL`
+  - 再确认公开页面请求 `/api/v1/public/mail/{token}` 与 `/api/v1/public/mail/{token}/access` 未被反向代理拦截

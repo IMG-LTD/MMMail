@@ -52,6 +52,12 @@ const stubs = {
     props: { placeholder: { type: String, default: '' } },
     template: '<input :placeholder="placeholder">'
   }),
+  ElSwitch: defineComponent({
+    name: 'ElSwitch',
+    props: { modelValue: { type: Boolean, default: false } },
+    emits: ['update:modelValue'],
+    template: '<input type="checkbox" :checked="modelValue" @change="$emit(\'update:modelValue\', $event.target.checked)">'
+  }),
   ElEmpty: defineComponent({
     name: 'ElEmpty',
     props: { description: { type: String, default: '' } },
@@ -126,5 +132,45 @@ describe('mail compose i18n', () => {
     expect(wrapper.text()).toContain('Add files')
     expect(wrapper.text()).toContain('No attachments yet')
     expect(wrapper.text()).toContain('Retry')
+  })
+
+  it('renders external secure delivery copy for smtp outbound recipients', () => {
+    const wrapper = mount(MailComposer, {
+      props: {
+        autoSaveSeconds: 15,
+        recipientE2eeStatus: {
+          toEmail: 'external@example.net',
+          fromEmail: 'owner@mmmail.local',
+          deliverable: true,
+          encryptionReady: false,
+          readiness: 'NOT_READY',
+          routeCount: 1,
+          routes: [{
+            targetEmail: 'external@example.net',
+            forwardToEmail: 'external@example.net',
+            keyAvailable: false,
+            fingerprint: null,
+            algorithm: null,
+            publicKeyArmored: null,
+            smtpOutbound: true
+          }]
+        },
+        senderOptions: [{
+          identityId: null,
+          orgId: null,
+          orgName: null,
+          memberId: null,
+          emailAddress: 'owner@mmmail.local',
+          displayName: 'Owner',
+          source: 'PRIMARY',
+          status: 'ENABLED',
+          defaultIdentity: true
+        }]
+      },
+      global: { stubs }
+    })
+
+    expect(wrapper.get('[data-testid="mail-compose-external-secure"]').text()).toContain('Password-protected secure delivery')
+    expect(wrapper.text()).toContain('Encrypt the message body in the browser, email a secure link through SMTP, and share the password out of band.')
   })
 })

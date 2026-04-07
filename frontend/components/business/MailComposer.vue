@@ -4,9 +4,9 @@ import type {
   DraftRequest,
   LabelItem,
   MailAttachment,
+  MailComposeSubmitRequest,
   MailE2eeRecipientStatus,
   MailSenderIdentity,
-  SendMailRequest
 } from '~/types/api'
 import MailAttachmentPanel, { type FailedMailAttachmentUpload } from '~/components/business/MailAttachmentPanel.vue'
 import { useI18n } from '~/composables/useI18n'
@@ -56,7 +56,7 @@ const props = withDefaults(
 )
 
 const emit = defineEmits<{
-  send: [payload: SendMailRequest]
+  send: [payload: MailComposeSubmitRequest]
   save: [payload: DraftRequest]
   autosave: [payload: DraftRequest]
   uploadAttachments: [{ files: File[], draft: DraftRequest }]
@@ -74,14 +74,29 @@ const form = reactive({
   labels: [] as string[],
   scheduledAt: ''
 })
+const externalSecureDelivery = reactive({
+  enabled: false,
+  password: '',
+  passwordHint: '',
+  expiresAt: ''
+})
 
 const senderDisabled = computed(() => props.senderOptions.length <= 1)
 const { t } = useI18n()
 let draftTimer: ReturnType<typeof setTimeout> | null = null
+const supportsExternalSecureDelivery = computed(() => {
+  if (!props.recipientE2eeStatus?.deliverable || props.recipientE2eeStatus.routes.length === 0) {
+    return false
+  }
+  return props.recipientE2eeStatus.routes.every(route => route.smtpOutbound === true)
+})
 
 const recipientE2eeAlertType = computed(() => {
   if (props.recipientE2eeError) {
     return 'error'
+  }
+  if (supportsExternalSecureDelivery.value) {
+    return 'info'
   }
   switch (props.recipientE2eeStatus?.readiness) {
     case 'READY':
@@ -99,6 +114,9 @@ const recipientE2eeAlertTitle = computed(() => {
   if (props.recipientE2eeError) {
     return props.recipientE2eeError
   }
+  if (supportsExternalSecureDelivery.value) {
+    return t('mailCompose.externalSecure.title')
+  }
   switch (props.recipientE2eeStatus?.readiness) {
     case 'READY':
       return t('mailCompose.e2ee.readyTitle')
@@ -114,6 +132,9 @@ const recipientE2eeAlertTitle = computed(() => {
 const recipientE2eeAlertDescription = computed(() => {
   if (props.recipientE2eeError) {
     return t('mailCompose.e2ee.boundaryNote')
+  }
+  if (supportsExternalSecureDelivery.value) {
+    return t('mailCompose.externalSecure.description')
   }
   switch (props.recipientE2eeStatus?.readiness) {
     case 'READY':
@@ -187,7 +208,15 @@ function onSend(): void {
     body: form.body,
     labels: [...form.labels],
     idempotencyKey: buildIdempotencyKey(),
-    scheduledAt: form.scheduledAt || undefined
+    scheduledAt: form.scheduledAt || undefined,
+    externalSecureDelivery: externalSecureDelivery.enabled
+      ? {
+          enabled: true,
+          password: externalSecureDelivery.password,
+          passwordHint: externalSecureDelivery.passwordHint || undefined,
+          expiresAt: externalSecureDelivery.expiresAt || undefined
+        }
+      : undefined
   })
 }
 
@@ -249,11 +278,47 @@ watch(
   { immediate: true, deep: true }
 )
 
+watch(
+  supportsExternalSecureDelivery,
+  (supported) => {
+    if (supported) {
+      if (!externalSecureDelivery.expiresAt) {
+        externalSecureDelivery.expiresAt = buildDefaultSecureExpiryValue()
+      }
+      return
+    }
+    resetExternalSecureDelivery()
+  },
+  { immediate: true }
+)
+
+watch(
+  () => externalSecureDelivery.enabled,
+  (enabled) => {
+    if (enabled && !externalSecureDelivery.expiresAt) {
+      externalSecureDelivery.expiresAt = buildDefaultSecureExpiryValue()
+    }
+  }
+)
+
 onBeforeUnmount(() => {
   if (draftTimer) {
     clearTimeout(draftTimer)
   }
 })
+
+function resetExternalSecureDelivery(): void {
+  externalSecureDelivery.enabled = false
+  externalSecureDelivery.password = ''
+  externalSecureDelivery.passwordHint = ''
+  externalSecureDelivery.expiresAt = ''
+}
+
+function buildDefaultSecureExpiryValue(reference = new Date()): string {
+  const target = new Date(reference.getTime() + 7 * 24 * 60 * 60 * 1000)
+  const pad = (value: number) => String(value).padStart(2, '0')
+  return `${target.getFullYear()}-${pad(target.getMonth() + 1)}-${pad(target.getDate())}T${pad(target.getHours())}:${pad(target.getMinutes())}:${pad(target.getSeconds())}`
+}
 </script>
 
 <template>
@@ -299,6 +364,43 @@ onBeforeUnmount(() => {
         :title="recipientE2eeAlertTitle"
         :description="recipientE2eeAlertDescription"
       />
+      <section
+        v-if="supportsExternalSecureDelivery"
+        class="external-secure-card"
+        data-testid="mail-compose-external-secure"
+      >
+        <div class="external-secure-card__head">
+          <span>{{ t('mailCompose.externalSecure.form.title') }}</span>
+          <el-switch v-model="externalSecureDelivery.enabled" />
+        </div>
+        <p class="external-secure-card__hint">{{ t('mailCompose.externalSecure.form.hint') }}</p>
+        <div v-if="externalSecureDelivery.enabled" class="external-secure-card__body">
+          <el-form-item :label="t('mailCompose.externalSecure.form.password')">
+            <el-input
+              v-model="externalSecureDelivery.password"
+              show-password
+              type="password"
+              :placeholder="t('mailCompose.externalSecure.form.passwordPlaceholder')"
+            />
+          </el-form-item>
+          <el-form-item :label="t('mailCompose.externalSecure.form.passwordHint')">
+            <el-input
+              v-model="externalSecureDelivery.passwordHint"
+              :placeholder="t('mailCompose.externalSecure.form.passwordHintPlaceholder')"
+            />
+          </el-form-item>
+          <el-form-item :label="t('mailCompose.externalSecure.form.expiresAt')">
+            <el-date-picker
+              v-model="externalSecureDelivery.expiresAt"
+              type="datetime"
+              value-format="YYYY-MM-DDTHH:mm:ss"
+              :placeholder="t('mailCompose.externalSecure.form.expiresAtPlaceholder')"
+              style="width: 100%"
+            />
+          </el-form-item>
+          <p class="external-secure-card__boundary">{{ t('mailCompose.externalSecure.form.boundary') }}</p>
+        </div>
+      </section>
       <el-form-item :label="t('mailCompose.form.subject')">
         <el-input v-model="form.subject" :placeholder="t('mailCompose.form.subjectPlaceholder')" />
       </el-form-item>
@@ -374,5 +476,31 @@ onBeforeUnmount(() => {
 
 .recipient-e2ee--loading {
   color: var(--mm-accent, #0c5a5a);
+}
+
+.external-secure-card {
+  margin: 12px 0 18px;
+  padding: 16px;
+  border-radius: 16px;
+  border: 1px solid rgba(12, 90, 90, 0.12);
+  background: rgba(12, 90, 90, 0.04);
+}
+
+.external-secure-card__head,
+.external-secure-card__body {
+  display: grid;
+  gap: 12px;
+}
+
+.external-secure-card__head {
+  grid-template-columns: 1fr auto;
+  align-items: center;
+}
+
+.external-secure-card__hint,
+.external-secure-card__boundary {
+  margin: 0;
+  color: var(--mm-muted);
+  font-size: 13px;
 }
 </style>

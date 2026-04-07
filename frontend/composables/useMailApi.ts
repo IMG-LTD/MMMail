@@ -8,6 +8,7 @@ import type {
   MailId,
   MailPage,
   MailDetail,
+  MailPublicSecureLink,
   MailSenderIdentity,
   MailboxStats,
   SearchMailParams,
@@ -82,6 +83,11 @@ export function useMailApi() {
 
   async function sendMail(payload: SendMailRequest): Promise<void> {
     await $apiClient.post('/api/v1/mails/send', payload)
+  }
+
+  async function getPublicSecureLink(token: string): Promise<MailPublicSecureLink> {
+    const response = await $apiClient.get<ApiResponse<MailPublicSecureLink>>(`/api/v1/public/mail/secure-links/${token}`)
+    return response.data.data
   }
 
   async function undoSend(mailId: MailId): Promise<void> {
@@ -191,6 +197,7 @@ export function useMailApi() {
     listSenderIdentities,
     fetchRecipientE2eeStatus,
     sendMail,
+    getPublicSecureLink,
     undoSend,
     saveDraft,
     uploadDraftAttachment,

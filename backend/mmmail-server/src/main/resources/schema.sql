@@ -117,6 +117,26 @@ create index idx_mail_filter_owner_custom_folder on mail_filter(owner_id, target
 alter table mail_message add column if not exists custom_folder_id bigint;
 create index idx_mail_owner_custom_folder_sent on mail_message(owner_id, custom_folder_id, sent_at);
 
+create table if not exists mail_external_secure_link (
+    id bigint primary key,
+    mail_id bigint not null,
+    owner_id bigint not null,
+    recipient_email varchar(254) not null,
+    token varchar(64) not null,
+    public_url varchar(512) not null,
+    password_hint varchar(255),
+    expires_at timestamp,
+    revoked_at timestamp,
+    last_accessed_at timestamp,
+    created_at timestamp not null,
+    updated_at timestamp not null,
+    deleted tinyint not null default 0
+);
+
+create unique index uk_mail_external_secure_link_mail on mail_external_secure_link(mail_id);
+create unique index uk_mail_external_secure_link_token on mail_external_secure_link(token);
+create index idx_mail_external_secure_link_owner on mail_external_secure_link(owner_id, revoked_at, expires_at);
+
 create table if not exists contact_entry (
     id bigint primary key,
     owner_id bigint not null,

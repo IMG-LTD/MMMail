@@ -150,6 +150,43 @@ describe('mail compose message e2ee send', () => {
     const plainText = await decryptCiphertext(result.e2ee?.encryptedBody as string, senderKey)
     expect(plainText).toBe('Encrypted compose body')
   })
+
+  it('encrypts body for password-protected external delivery and strips compose-only fields', async () => {
+    const { useMailComposeMessageE2ee } = await import('~/composables/useMailComposeMessageE2ee')
+    const { buildSendPayload } = useMailComposeMessageE2ee()
+
+    const result = await buildSendPayload({
+      toEmail: 'external-recipient@example.net',
+      fromEmail: 'sender@mmmail.local',
+      subject: 'External encrypted subject',
+      body: 'External encrypted compose body',
+      idempotencyKey: 'compose-e2ee-external-send',
+      labels: [],
+      externalSecureDelivery: {
+        enabled: true,
+        password: 'ExternalPass@123',
+        passwordHint: 'shared out-of-band',
+        expiresAt: '2026-04-21T12:00:00'
+      }
+    }, null)
+
+    expect(result.body).toBeUndefined()
+    expect((result as { externalSecureDelivery?: unknown }).externalSecureDelivery).toBeUndefined()
+    expect(result.e2ee?.recipientFingerprints).toEqual([senderKey.fingerprint])
+    expect(result.e2ee?.externalAccess).toEqual({
+      mode: 'PASSWORD_PROTECTED',
+      passwordHint: 'shared out-of-band',
+      expiresAt: '2026-04-21T12:00:00'
+    })
+
+    const senderPlainText = await decryptCiphertext(result.e2ee?.encryptedBody as string, senderKey)
+    const passwordPlainText = await decryptCiphertextWithPassword(
+      result.e2ee?.encryptedBody as string,
+      'ExternalPass@123'
+    )
+    expect(senderPlainText).toBe('External encrypted compose body')
+    expect(passwordPlainText).toBe('External encrypted compose body')
+  })
 })
 
 async function mountHost() {
@@ -188,6 +225,16 @@ async function decryptCiphertext(ciphertext: string, material: KeyMaterial): Pro
   const result = await decrypt({
     message,
     decryptionKeys: unlockedKey,
+    format: 'utf8'
+  })
+  return String(result.data || '')
+}
+
+async function decryptCiphertextWithPassword(ciphertext: string, password: string): Promise<string> {
+  const message = await readMessage({ armoredMessage: ciphertext })
+  const result = await decrypt({
+    message,
+    passwords: [password],
     format: 'utf8'
   })
   return String(result.data || '')

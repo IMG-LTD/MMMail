@@ -50,4 +50,28 @@ describe('i18n literal scan', () => {
       'composables/useDemo.ts',
     ])
   })
+
+  it('ignores localized interpolations and template expressions', async () => {
+    const rootDir = await mkdtemp(resolve(tmpdir(), 'mmmail-i18n-safe-'))
+    const componentsDir = resolve(rootDir, 'components/suite')
+    await mkdir(componentsDir, { recursive: true })
+
+    await writeFile(resolve(componentsDir, 'LocalizedPanel.vue'), [
+      '<template>',
+      '  <section v-if="pendingCount > 0">',
+      '    <h2>{{ t(\'suite.readiness.title\') }}</h2>',
+      '    <p>{{ isCurrent ? t(\'suite.plans.currentPlan\') : t(\'suite.billing.compare.select\') }}</p>',
+      '    <el-button :title="t(\'suite.readiness.action\')">{{ actionLabel }}</el-button>',
+      '    <span>{{ signal.key }}={{ signal.value }}</span>',
+      '  </section>',
+      '</template>',
+    ].join('\n'))
+
+    const report = await collectI18nLiteralScanReport(rootDir, [
+      resolve(rootDir, 'components/suite'),
+    ])
+
+    expect(report.totalViolations).toBe(0)
+    expect(report.filesWithViolations).toEqual([])
+  })
 })

@@ -1,15 +1,15 @@
 # Module Maturity Matrix
 
-**版本**: `v1.3-mainline`
-**日期**: `2026-04-02`
+**版本**: `v1.4-mainline`
+**日期**: `2026-04-07`
 **作者**: `Codex`
 
 | 模块 | 路由 / 入口 | 成熟度 | 默认导航 | 当前说明 |
 |---|---|---|---|---|
 | Auth / Session / MFA | `/login` `/register` `/security` | `GA` | 否 | 已纳入 release-blocking 与安全门禁。 |
-| Mail | `/inbox` | `GA` | 是 | 主路径稳定；`v1.3` 已收敛正文 / 草稿 / 附件 E2EE、Web Push inbox 下发与最小 external SMTP outbound。 |
-| Calendar | `/calendar` | `GA` | 是 | 维持稳定 GA 工作流；`v1.3` 已补内部邀请编排与 RSVP 状态回投。 |
-| Drive | `/drive` | `GA` | 是 | 维持稳定 GA 工作流；`v1.3` 已交付 owner 文件主链的客户端 E2EE foundation。 |
+| Mail | `/inbox` | `GA` | 是 | 主路径稳定；`v1.4` 已收敛正文 / 草稿 / 附件 E2EE、Web Push inbox 下发、最小 external SMTP outbound，以及 `body-only` 外部密码保护加密投递。 |
+| Calendar | `/calendar` | `GA` | 是 | 维持稳定 GA 工作流；已补内部邀请编排与 RSVP 状态回投。 |
+| Drive | `/drive` | `GA` | 是 | 维持稳定 GA 工作流；已交付 owner 文件主链客户端 E2EE foundation 与单文件 `readable-share` E2EE foundation。 |
 | Suite Shell | `/suite` | `GA` | 是 | 统一工作区壳层与入口。 |
 | Business / Admin | `/business` `/organizations` | `GA` | 是 | 租户、RBAC、审计和治理入口。 |
 | Settings / Security / System Health | `/settings` `/security` | `GA` | 是 | 包含可观测性、安全、PWA readiness、Mail E2EE foundation、adoption readiness 与 release boundary map。 |

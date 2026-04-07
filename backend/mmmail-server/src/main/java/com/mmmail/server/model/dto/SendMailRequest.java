@@ -1,5 +1,6 @@
 package com.mmmail.server.model.dto;
 
+import jakarta.validation.Valid;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
@@ -16,6 +17,6 @@ public record SendMailRequest(
         @NotBlank String idempotencyKey,
         List<String> labels,
         LocalDateTime scheduledAt,
-        MailBodyE2eePayloadRequest e2ee
+        @Valid MailBodyE2eePayloadRequest e2ee
 ) {
 }
