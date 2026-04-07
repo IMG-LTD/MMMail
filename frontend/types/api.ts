@@ -1942,6 +1942,7 @@ export type MailE2eeRecipientReadiness = 'READY' | 'NOT_READY' | 'UNDELIVERABLE'
 export interface MailE2eeRecipientRouteStatus {
   targetEmail: string
   forwardToEmail: string
+  smtpOutbound?: boolean
   keyAvailable: boolean
   fingerprint: string | null
   algorithm: string | null
@@ -1970,10 +1971,28 @@ export interface SendMailRequest {
   e2ee?: MailBodyE2eePayload
 }
 
+export interface MailComposeExternalSecureDelivery {
+  enabled: boolean
+  password: string
+  passwordHint?: string
+  expiresAt?: string
+}
+
+export interface MailComposeSubmitRequest extends Omit<SendMailRequest, 'e2ee'> {
+  externalSecureDelivery?: MailComposeExternalSecureDelivery
+}
+
 export interface MailBodyE2eePayload {
   encryptedBody: string
   algorithm: string
   recipientFingerprints: string[]
+  externalAccess?: MailBodyE2eeExternalAccessPayload
+}
+
+export interface MailBodyE2eeExternalAccessPayload {
+  mode: 'PASSWORD_PROTECTED'
+  passwordHint?: string
+  expiresAt?: string
 }
 
 export interface MailAttachmentE2ee {
@@ -2002,6 +2021,17 @@ export interface DraftRequest {
   subject: string
   body?: string
   e2ee?: MailBodyE2eePayload
+}
+
+export interface MailPublicSecureLink {
+  mailId: string
+  subject: string
+  senderEmail: string
+  recipientEmail: string
+  bodyCiphertext: string
+  algorithm: string
+  passwordHint: string | null
+  expiresAt: string | null
 }
 
 export interface LabelItem {

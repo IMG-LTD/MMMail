@@ -87,6 +87,7 @@ public class SecurityConfig {
                         .hasRole("ADMIN")
                         .requestMatchers(
                                 "/api/v1/auth/**",
+                                "/api/v1/public/mail/**",
                                 "/api/v1/public/drive/**",
                                 "/api/v1/public/meet/**",
                                 "/api/v1/public/pass/**",

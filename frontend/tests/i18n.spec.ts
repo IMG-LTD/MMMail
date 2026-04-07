@@ -70,7 +70,7 @@ describe('i18n utils', () => {
     expect(translate(messages, 'en', 'settings.easySwitch.title')).toBe('Import current and past mailbox exports')
     expect(translate(messages, 'en', 'settings.pwa.title')).toBe('Install MMMail as a web app')
     expect(translate(messages, 'zh-CN', 'settings.pwa.status.installReady')).toBe('可安装')
-    expect(translate(messages, 'zh-TW', 'settings.pwa.boundaryTitle')).toBe('目前 v1.3 邊界')
+    expect(translate(messages, 'zh-TW', 'settings.pwa.boundaryTitle')).toBe('目前 v1.4 邊界')
     expect(translate(messages, 'en', 'settings.adoption.title')).toBe('API docs portal and self-hosted references')
     expect(translate(messages, 'en', 'settings.adoption.cards.api.guide')).toBe('Open API guide')
     expect(translate(messages, 'zh-CN', 'settings.adoption.cards.api.primary')).toBe('打开 Swagger UI')

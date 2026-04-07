@@ -1,14 +1,14 @@
 # Community Edition Support Boundaries
 
-**版本**: `v1.3-mainline`
-**日期**: `2026-04-02`
+**版本**: `v1.4-mainline`
+**日期**: `2026-04-07`
 **作者**: `Codex`
 
 ## 当前分支状态
-- `release/v1.2`：`v1.2.0 RELEASED`
-- `release/v1.0`：`v1.0.0 RELEASED`，继续承接 `v1.0.x`
-- `dev/community-v1`：`v1.3-mainline` 当前主线开发分支
-- 含义：`release/v1.2` 承接 `v1.2.x` 的 release-blocking / security / metadata 修复；`dev/community-v1` 继续承接 `v1.3` 主线能力闭环。
+- `main`：`v1.3.1` 当前公开基线
+- `dev/v1.4`：`v1.4-mainline` 当前主线开发分支
+- `release/v1.2`：历史维护分支
+- 含义：`main` 保持 `v1.3.1` 可发布基线；`dev/v1.4` 承接 `v1.4` 主线范围冻结与验证收口。
 
 ## 支持范围
 ### GA
@@ -32,8 +32,13 @@
 ### Community
 - 自托管部署、升级、备份恢复
 - `Mail / Calendar / Drive / Admin / Workspace Shell / Settings`
-- `Mail E2EE` 当前为 `GA` 邮件主路径上的受限增强：覆盖 key profile、recipient readiness、`READY` 内部路由正文加密、草稿加密、附件加密与详情本地解密
-- `Drive E2EE foundation` 当前只覆盖 owner 文件上传 / 版本上传 / 本地预览 / 本地下载解密
+- `Mail E2EE` 当前为 `GA` 邮件主路径上的受限增强：覆盖 key profile、recipient readiness、`READY` 内部路由正文加密、草稿加密、附件加密、恢复包、详情本地解密，以及 `body-only` 外部密码保护加密投递
+- 外部密码保护加密投递当前语义：
+  - 浏览器内加密正文
+  - 服务端保存密文正文与 secure link metadata
+  - `SMTP outbound` 只外发通知邮件与 secure link，不外发明文正文
+  - 公开页面 `/share/mail/[token]` 通过密码在浏览器内本地解密
+- `Drive E2EE foundation` 当前覆盖 owner 文件上传 / 版本上传 / 本地预览 / 本地下载解密，以及单文件 `readable-share` E2EE foundation
 - `Web Push` 当前只覆盖 Mail inbox 新邮件的真实浏览器订阅与下发
 - `SMTP outbound adapter` 当前只覆盖最小 external outbound，不承诺 inbound / IMAP / Bridge
 - `Docs / Sheets / Billing center / Pass` 维持 `Beta`；其中 `Pass` 虽升为 `Beta`，但仍只通过 `Labs` 暴露
@@ -66,7 +71,7 @@
 ## 自托管责任边界
 ### 维护者负责
 - 代码、文档、脚本、默认门禁
-- `v1.3-mainline` 已实现能力的真实边界说明
+- `v1.4-mainline` 已实现能力的真实边界说明
 
 ### 部署者负责
 - 真实 secrets 管理
@@ -79,7 +84,7 @@
 - `Preview` 模块生产承诺
 - 多节点高可用拓扑保证
 - Hosted 专属商业能力
-- `Mail E2EE` 外部加密投递与零知识模型
-- `Drive` public share / collaborator decrypt
+- `Mail E2EE` 外部加密附件、外部加密草稿、完整 MIME 外部 E2EE、零知识模型
+- `Drive` collaborator decrypt、folder descendants readable-share decrypt、零知识元数据
 - 原生客户端、完整 `SMTP / IMAP / Bridge`
 - `Pass` 浏览器扩展 / 自动填充 / 真实 passkey ceremony / 暗网真实数据源

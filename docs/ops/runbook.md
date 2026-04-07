@@ -1,7 +1,7 @@
-# Community Edition v1.3 运维 Runbook
+# Community Edition v1.4 运维 Runbook
 
-**版本**: `v1.3-mainline`  
-**日期**: `2026-04-03`  
+**版本**: `v1.4-mainline`  
+**日期**: `2026-04-07`  
 **作者**: `Codex`
 
 ## 1. 入口清单
@@ -43,8 +43,9 @@
   - 草稿保存与恢复走加密链路
   - 附件上传 / 下载走本地加解密链路
   - 邮件详情页可在浏览器内解密正文
+  - 外部密码保护加密投递会生成 secure link，并在公开页面完成本地解密
 - 不要把以下事项当作当前 Runbook 成功条件：
-  - 外部收件人公钥发现
+  - 外部加密附件或外部加密草稿
   - 零知识架构
 
 ### 已交付的新增主线能力
@@ -53,6 +54,7 @@
 - `SMTP outbound adapter`
 - `Calendar internal invitation orchestration`
 - `Pass Beta readiness`
+- `Mail external password-protected encrypted delivery`
 
 ### 本地后端门禁环境
 - 默认 `validate-local.sh` 现在使用后端 `test` profile 回归，不再依赖本机 MySQL / Redis / Nacos 实例或真实密钥。
@@ -107,6 +109,19 @@
   - `backend/mmmail-server/src/main/java/com/mmmail/server/config/WebMvcConfig.java`
   - `backend/mmmail-server/src/main/java/com/mmmail/server/config/SecurityConfig.java`
 - 若前端设置页中的文档链接指向错误 origin，检查部署时的 `NUXT_PUBLIC_API_BASE`。
+
+### 外部密码保护加密邮件打不开
+- 先确认 secure link 指向的公开页面为：
+  - `/share/mail/{token}`
+- 再确认后端公开 API 可以访问：
+  - `GET /api/v1/public/mail/{token}`
+  - `POST /api/v1/public/mail/{token}/access`
+- 若公开页面返回 `403` 或 `404`：
+  - 检查反向代理是否放行 `/api/v1/public/mail/**`
+  - 检查 `SecurityConfig` 与路由映射是否仍保持公开访问
+- 若密码校验通过但页面无法解密：
+  - 检查发件侧是否为外部收件人生成了 `externalEncryptedPayload`
+  - 检查浏览器控制台是否存在 `OpenPGP` 解密异常
 
 ### 前端 runtime error 未上报
 - 只在已登录会话下上报。

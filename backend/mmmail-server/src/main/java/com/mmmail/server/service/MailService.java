@@ -12,12 +12,14 @@ import com.mmmail.server.mapper.MailLabelMapper;
 import com.mmmail.server.mapper.MailMessageMapper;
 import com.mmmail.server.mapper.UserAccountMapper;
 import com.mmmail.server.mapper.UserPreferenceMapper;
+import com.mmmail.server.model.dto.MailExternalAccessRequest;
 import com.mmmail.server.model.dto.BatchMailActionRequest;
 import com.mmmail.server.model.dto.PreviewMailFilterRequest;
 import com.mmmail.server.model.dto.SaveDraftRequest;
 import com.mmmail.server.model.dto.SendMailRequest;
 import com.mmmail.server.model.dto.UploadDraftAttachmentRequest;
 import com.mmmail.server.model.entity.MailLabel;
+import com.mmmail.server.model.entity.MailExternalSecureLink;
 import com.mmmail.server.model.entity.MailMessage;
 import com.mmmail.server.model.entity.UserAccount;
 import com.mmmail.server.model.entity.UserPreference;
@@ -113,6 +115,7 @@ public class MailService {
     private final MailE2eeMessageService mailE2eeMessageService;
     private final MailAttachmentService mailAttachmentService;
     private final MailOutboundDeliveryGateway mailOutboundDeliveryGateway;
+    private final MailExternalSecureLinkService mailExternalSecureLinkService;
     private final WebPushService webPushService;
     private final AuditService auditService;
     private final ObjectMapper objectMapper;
@@ -136,6 +139,7 @@ public class MailService {
             MailE2eeMessageService mailE2eeMessageService,
             MailAttachmentService mailAttachmentService,
             MailOutboundDeliveryGateway mailOutboundDeliveryGateway,
+            MailExternalSecureLinkService mailExternalSecureLinkService,
             WebPushService webPushService,
             AuditService auditService,
             ObjectMapper objectMapper
@@ -158,6 +162,7 @@ public class MailService {
         this.mailE2eeMessageService = mailE2eeMessageService;
         this.mailAttachmentService = mailAttachmentService;
         this.mailOutboundDeliveryGateway = mailOutboundDeliveryGateway;
+        this.mailExternalSecureLinkService = mailExternalSecureLinkService;
         this.webPushService = webPushService;
         this.auditService = auditService;
         this.objectMapper = objectMapper;
@@ -431,7 +436,7 @@ public class MailService {
     }
 
     @Transactional
-    public void send(Long userId, SendMailRequest request, String ipAddress) {
+    public void send(Long userId, SendMailRequest request, String ipAddress, String publicBaseUrl) {
         UserAccount sender = userAccountMapper.selectById(userId);
         if (sender == null) {
             throw new BizException(ErrorCode.USER_NOT_FOUND);
@@ -469,9 +474,11 @@ public class MailService {
         boolean immediateQueuedDispatch = !scheduled && useOutbox && deliveryAt.equals(now);
         MailDeliveryTarget primaryTarget = deliveryTargets.get(0);
         MailE2eeMessageService.OutboundBody outboundBody = mailE2eeMessageService.resolveOutboundBody(userId, senderEmail, request);
+        MailExternalAccessRequest externalAccess = request.e2ee() == null ? null : request.e2ee().externalAccess();
+        boolean passwordProtectedExternal = mailE2eeMessageService.isPasswordProtectedExternalAccess(request.e2ee());
 
         MailMessage sent = resolveOutboundMail(userId, request.draftId(), now);
-        validateExternalDeliveryCompatibility(sent, deliveryTargets, outboundBody);
+        validateExternalDeliveryCompatibility(sent, deliveryTargets, outboundBody, passwordProtectedExternal);
         sent.setOwnerId(userId);
         sent.setPeerId(primaryTarget.ownerId());
         sent.setPeerEmail(primaryTarget.targetEmail());
@@ -499,6 +506,17 @@ public class MailService {
             mailMessageMapper.insert(sent);
         } else {
             mailMessageMapper.updateById(sent);
+        }
+        if (passwordProtectedExternal) {
+            MailDeliveryTarget smtpTarget = requireSingleSmtpTarget(deliveryTargets);
+            mailExternalSecureLinkService.createSecureLink(
+                    userId,
+                    sent,
+                    smtpTarget.forwardToEmail(),
+                    externalAccess,
+                    deliveryAt,
+                    publicBaseUrl
+            );
         }
 
         if (!scheduled && !useOutbox) {
@@ -1453,13 +1471,20 @@ public class MailService {
 
     private void deliverSmtpOutboundCopies(MailMessage outbound, List<MailDeliveryTarget> deliveryTargets) {
         requireSmtpOutboundConfigured();
+        MailExternalSecureLink secureLink = outbound.getId() == null
+                ? null
+                : mailExternalSecureLinkService.findActiveByMailId(outbound.getId());
         for (MailDeliveryTarget deliveryTarget : deliveryTargets) {
             MailOutboundDeliveryGateway.MailOutboundDeliveryResult result = mailOutboundDeliveryGateway.send(
                     new MailOutboundDeliveryGateway.MailOutboundRequest(
                             outbound.getSenderEmail(),
                             deliveryTarget.forwardToEmail(),
-                            outbound.getSubject(),
-                            outbound.getBodyCiphertext()
+                            secureLink == null
+                                    ? outbound.getSubject()
+                                    : mailExternalSecureLinkService.buildNotificationSubject(outbound),
+                            secureLink == null
+                                    ? outbound.getBodyCiphertext()
+                                    : mailExternalSecureLinkService.buildNotificationBody(secureLink, outbound)
                     )
             );
             if (!result.success()) {
@@ -1478,19 +1503,53 @@ public class MailService {
     private void validateExternalDeliveryCompatibility(
             MailMessage outbound,
             List<MailDeliveryTarget> deliveryTargets,
-            MailE2eeMessageService.OutboundBody outboundBody
+            MailE2eeMessageService.OutboundBody outboundBody,
+            boolean passwordProtectedExternal
     ) {
         boolean hasSmtpTargets = deliveryTargets.stream().anyMatch(MailDeliveryTarget::isSmtpOutbound);
         if (!hasSmtpTargets) {
+            if (passwordProtectedExternal) {
+                throw new BizException(
+                        ErrorCode.INVALID_ARGUMENT,
+                        "Password-protected external Mail E2EE requires SMTP outbound recipients"
+                );
+            }
             return;
         }
         requireSmtpOutboundConfigured();
+        if (passwordProtectedExternal && !deliveryTargets.stream().allMatch(MailDeliveryTarget::isSmtpOutbound)) {
+            throw new BizException(
+                    ErrorCode.INVALID_ARGUMENT,
+                    "Password-protected external Mail E2EE cannot mix SMTP outbound and internal routes"
+            );
+        }
         if (outboundBody.bodyE2eeEnabled() != 0) {
-            throw new BizException(ErrorCode.INVALID_ARGUMENT, "SMTP outbound does not support Mail E2EE payloads yet");
+            if (!passwordProtectedExternal) {
+                throw new BizException(ErrorCode.INVALID_ARGUMENT, "SMTP outbound does not support Mail E2EE payloads yet");
+            }
+            if (deliveryTargets.stream().filter(MailDeliveryTarget::isSmtpOutbound).count() != 1) {
+                throw new BizException(
+                        ErrorCode.INVALID_ARGUMENT,
+                        "Password-protected external Mail E2EE currently supports exactly one SMTP recipient"
+                );
+            }
         }
         if (outbound.getId() != null && mailAttachmentService.hasAttachments(outbound.getId())) {
             throw new BizException(ErrorCode.INVALID_ARGUMENT, "SMTP outbound attachments are not supported yet");
         }
+    }
+
+    private MailDeliveryTarget requireSingleSmtpTarget(List<MailDeliveryTarget> deliveryTargets) {
+        List<MailDeliveryTarget> smtpTargets = deliveryTargets.stream()
+                .filter(MailDeliveryTarget::isSmtpOutbound)
+                .toList();
+        if (smtpTargets.size() != 1) {
+            throw new BizException(
+                    ErrorCode.INVALID_ARGUMENT,
+                    "Password-protected external Mail E2EE currently supports exactly one SMTP recipient"
+            );
+        }
+        return smtpTargets.getFirst();
     }
 
     private MailMessage resolveOutboundMail(Long userId, Long draftId, LocalDateTime now) {

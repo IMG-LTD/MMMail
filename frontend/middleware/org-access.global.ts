@@ -9,6 +9,7 @@ export default defineNuxtRouteMiddleware(async (to) => {
   if (
     PUBLIC_ROUTES.has(to.path)
     || to.path.startsWith('/public/drive/shares/')
+    || to.path.startsWith('/share/mail/')
     || to.path.startsWith('/meet/join/')
   ) {
     return

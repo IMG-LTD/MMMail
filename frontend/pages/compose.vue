@@ -5,9 +5,9 @@ import type {
   DraftRequest,
   LabelItem,
   MailAttachment,
+  MailComposeSubmitRequest,
   MailId,
   MailSenderIdentity,
-  SendMailRequest,
   UploadDraftAttachmentOptions
 } from '~/types/api'
 import type { FailedMailAttachmentUpload } from '~/components/business/MailAttachmentPanel.vue'
@@ -315,7 +315,7 @@ async function uploadFiles(files: File[], draft: DraftRequest): Promise<void> {
   }
 }
 
-async function onSend(payload: SendMailRequest): Promise<void> {
+async function onSend(payload: MailComposeSubmitRequest): Promise<void> {
   try {
     const recipientStatus = await ensureRecipientE2eeStatus(payload.toEmail, payload.fromEmail || '')
     const outboundPayload = await buildSendPayload(payload, recipientStatus)

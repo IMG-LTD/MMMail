@@ -1,5 +1,6 @@
 package com.mmmail.server.model.dto;
 
+import jakarta.validation.Valid;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.Size;
 
@@ -9,6 +10,6 @@ public record SaveDraftRequest(
         @Email String fromEmail,
         @Size(max = 255) String subject,
         @Size(max = 20000) String body,
-        MailBodyE2eePayloadRequest e2ee
+        @Valid MailBodyE2eePayloadRequest e2ee
 ) {
 }

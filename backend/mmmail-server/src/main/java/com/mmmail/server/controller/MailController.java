@@ -20,6 +20,7 @@ import com.mmmail.server.model.vo.MailE2eeRecipientStatusVo;
 import com.mmmail.server.model.vo.MailPageVo;
 import com.mmmail.server.model.vo.MailSenderIdentityVo;
 import com.mmmail.server.model.vo.MailboxStatsVo;
+import com.mmmail.server.service.PublicBaseUrlResolver;
 import org.springframework.core.io.ByteArrayResource;
 import org.springframework.http.ContentDisposition;
 import org.springframework.http.HttpHeaders;
@@ -52,9 +53,11 @@ import java.util.List;
 public class MailController {
 
     private final MailService mailService;
+    private final PublicBaseUrlResolver publicBaseUrlResolver;
 
-    public MailController(MailService mailService) {
+    public MailController(MailService mailService, PublicBaseUrlResolver publicBaseUrlResolver) {
         this.mailService = mailService;
+        this.publicBaseUrlResolver = publicBaseUrlResolver;
     }
 
     @GetMapping("/inbox")
@@ -236,7 +239,12 @@ public class MailController {
 
     @PostMapping("/send")
     public Result<Void> send(@Valid @RequestBody SendMailRequest request, HttpServletRequest httpRequest) {
-        mailService.send(SecurityUtils.currentUserId(), request, httpRequest.getRemoteAddr());
+        mailService.send(
+                SecurityUtils.currentUserId(),
+                request,
+                httpRequest.getRemoteAddr(),
+                publicBaseUrlResolver.resolve(httpRequest)
+        );
         return Result.success(null);
     }
 

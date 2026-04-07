@@ -3,12 +3,11 @@
 隐私导向、模块化、可自托管的协作套件。当前 Community 主线以 `Web-first` 协作为基线，并通过 `Labs` 隔离预览模块。
 
 ## 当前发布状态
-- `release/v1.2`：`v1.2.0 RELEASED`
-- `release/v1.0`：`v1.0.0 RELEASED`，继续承接 `v1.0.x`
-- `dev/community-v1`：`post-v1.2` 主线开发分支，并继续作为后续 `main` 的收敛基线
-- 状态说明：`v1.2.0` 已于 `2026-04-02 14:38 +0800` 从 `release/v1.2` 正式切出，对应 tag / commit 为 `v1.2.0` / `38e548a1baa56f70f29841d094fa8f927367b1d9`
-- GitHub Release：`https://github.com/IMG-LTD/MMMail/releases/tag/v1.2.0`
-- 发布负责人摘要：`docs/release/community-v1-v1.2-release-manager-brief.md`
+- `main`：当前公开基线，已包含 `v1.3.1` 安全修复基线（tag / commit：`v1.3.1` / `4b442cc`）
+- `dev/v1.4`：当前 `v1.4` 主线开发分支，基于 `main` 新开并继续承接下一批已批准范围
+- `release/v1.2`：保留 `v1.2.x` 历史发布线
+- 状态说明：`v1.4` 当前冻结范围为 `Mail 外部密码保护加密投递`
+- 权威路线：`docs/release/community-v1-v1.4-plan.md`、`docs/release/community-v1-v1.4-mainline-roadmap.md`、`docs/release/community-v1-support-boundaries.md`
 
 ## 当前版本节奏
 - `v1.0.0-rc1`：历史候选基线，反馈已完成分流。
@@ -16,17 +15,26 @@
 - `v1.0.x`：沿 `release/v1.0` 承接安全修复和 release-blocking backport。
 - `v1.2.0`：已正式发布，范围冻结为 `PWA baseline / capability honesty / Mail E2EE foundation + recipient discovery + message encryption / architecture discovery / adoption readiness`。
 - `v1.2.x`：仅在 `release/v1.2` 上接收 `release-blocking / security / release metadata` 修复。
-- `post-v1.2`：由 `dev/community-v1` 承接下一轮已批准范围。
-- GitHub milestones：`v1.0.0`、`v1.2`、`post-v1.2`
+- `v1.3.0`：已完成 `Mail E2EE` 深化、`Drive E2EE foundation`、`Web Push`、`SMTP outbound`、`Calendar invite orchestration`、`Pass Beta readiness`、`API docs` 与 `i18n/a11y` 收口。
+- `v1.3.1`：当前 `main` 基线，只承接前端依赖安全修复。
+- `v1.4.0`：当前主线目标版本，范围冻结为 `Mail 外部密码保护加密投递`。
+- GitHub milestones：`v1.0.0`、`v1.2`、`v1.3`、`v1.4`
 - 不在当前版本节奏中推进 `VPN / Meet / Wallet / Lumo` 等 `Preview` 模块。
 
-## `v1.2` 能力边界快照
-- 已交付：PWA installability、`manifest`、`Service Worker` 注册、离线壳层入口、设置页 PWA readiness、`Mail E2EE foundation`、recipient readiness、`READY` 内部路由正文加密发送与详情页本地解密、OpenAPI / Swagger UI / self-hosted adoption quick pages。
-- 受限交付：`Mail E2EE` 当前只覆盖已实现主路径，不包含附件、草稿、外部收件人、Drive 或零知识架构。
-- 预研中：`Drive E2EE`、零知识邮件路线、`SMTP / IMAP / Bridge` 分阶段方案。
-- 尚未交付：真实 `Web Push` 下发、`iOS / Android / Desktop` 原生客户端、离线写入同步。
+## `v1.4` 能力边界快照
+- 已交付：
+  - `PWA` installability、`manifest`、`Service Worker` 注册与浏览器侧 `Web Push`
+  - `Mail E2EE` key profile、recipient readiness、`READY` 内部路由正文加密、草稿加密、附件加密、恢复包与详情页本地解密
+  - `Mail` 外部密码保护加密投递：浏览器内加密正文、服务端保存密文正文、SMTP 外发 secure link 通知、公开 secure link 页面本地解密
+  - `Drive E2EE foundation` 与单文件 `readable-share` E2EE foundation
+  - `SMTP outbound adapter`、`Calendar internal invitation orchestration`、`Pass Beta readiness`
+- 受限交付：
+  - 外部密码保护加密投递当前只覆盖 `body-only secure link`
+  - 不覆盖外部加密附件、外部加密草稿、完整 MIME 兼容或零知识元数据
+- 预研中：零知识邮件路线、`SMTP / IMAP / Bridge`
+- 尚未交付：`iOS / Android / Desktop` 原生客户端、离线写入同步、完整外部 E2EE 协议栈
 - 仅 Hosted：真实支付扣款、商业订阅生命周期、财务级税费 / 发票 / 对账。
-- 权威说明：以 `README.md`、`docs/release/community-v1-v1.2-mainline-roadmap.md`、`docs/release/community-v1-v1.2-capability-boundaries.md`、`docs/architecture/mail-zero-knowledge-roadmap.md`、`docs/architecture/mail-protocol-stack-discovery.md`、`/suite` 的 `Release boundary map` 为准。
+- 权威说明：以 `README.md`、`docs/release/community-v1-v1.4-mainline-roadmap.md`、`docs/release/community-v1-support-boundaries.md`、`docs/open-source/module-maturity-matrix.md`、`docs/architecture/mail-zero-knowledge-roadmap.md`、`docs/architecture/mail-protocol-stack-discovery.md`、`/suite` 的 `Release boundary map` 为准。
 
 ## 快速启动
 1. 准备运行时环境：
@@ -64,14 +72,13 @@
 - Mail E2EE message encryption：`docs/architecture/mail-e2ee-message-encryption.md`
 - Mail zero-knowledge roadmap：`docs/architecture/mail-zero-knowledge-roadmap.md`
 - Mail protocol stack discovery：`docs/architecture/mail-protocol-stack-discovery.md`
-- `v1.2` release manager brief：`docs/release/community-v1-v1.2-release-manager-brief.md`
-- `v1.2` release checklist：`docs/release/community-v1-v1.2-release-checklist.md`
-- `v1.2` final signoff：`docs/release/community-v1-v1.2-final-signoff.md`
-- `v1.2.0` release notes：`docs/release/community-v1-v1.2.0-release-notes.md`
+- `v1.4` 规划基线：`docs/release/community-v1-v1.4-plan.md`
+- `v1.4` 主线路线：`docs/release/community-v1-v1.4-mainline-roadmap.md`
+- `v1.4` release checklist：`docs/release/community-v1-v1.4-release-checklist.md`
+- `v1.4` release manager brief：`docs/release/community-v1-v1.4-release-manager-brief.md`
+- `v1.4` final signoff：`docs/release/community-v1-v1.4-final-signoff.md`
+- `v1.4.0` release notes：`docs/release/community-v1-v1.4.0-release-notes.md`
 - 支持边界：`docs/release/community-v1-support-boundaries.md`
-- `v1.2` 能力边界：`docs/release/community-v1-v1.2-capability-boundaries.md`
-- `v1.2` 规划基线：`docs/release/community-v1-v1.2-plan.md`
-- `v1.2` 主线路线：`docs/release/community-v1-v1.2-mainline-roadmap.md`
 - Community / Hosted 边界入口：`/suite` 中的 `Release boundary map`
 - 首发范围：`docs/release/community-v1-scope.md`
 - 发布门禁：`docs/release/community-v1-gate.md`

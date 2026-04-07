@@ -5,6 +5,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.mmmail.common.exception.BizException;
 import com.mmmail.common.exception.ErrorCode;
 import com.mmmail.server.mapper.UserPreferenceMapper;
+import com.mmmail.server.model.dto.MailExternalAccessRequest;
 import com.mmmail.server.model.dto.MailBodyE2eePayloadRequest;
 import com.mmmail.server.model.dto.SaveDraftRequest;
 import com.mmmail.server.model.dto.SendMailRequest;
@@ -23,6 +24,8 @@ import java.util.Set;
 
 @Service
 public class MailE2eeMessageService {
+
+    public static final String PASSWORD_PROTECTED_MODE = MailExternalSecureLinkService.PASSWORD_PROTECTED_MODE;
 
     private static final int DISABLED_FLAG = 0;
     private static final int ENABLED_FLAG = 1;
@@ -49,6 +52,9 @@ public class MailE2eeMessageService {
             return OutboundBody.plain(requirePlainBody(request.body()));
         }
         rejectPlainBodyLeak(request.body());
+        if (isPasswordProtectedExternalAccess(request.e2ee())) {
+            return resolvePasswordProtectedExternalBody(userId, request.e2ee());
+        }
         return resolveEncryptedBody(userId, senderEmail, request.toEmail(), request.e2ee());
     }
 
@@ -57,7 +63,14 @@ public class MailE2eeMessageService {
             return OutboundBody.plain(request.body());
         }
         rejectPlainBodyLeak(request.body());
+        rejectExternalAccessForDraft(request.e2ee().externalAccess());
         return resolveEncryptedDraftBody(userId, request.e2ee());
+    }
+
+    public boolean isPasswordProtectedExternalAccess(MailBodyE2eePayloadRequest payload) {
+        return payload != null
+                && payload.externalAccess() != null
+                && PASSWORD_PROTECTED_MODE.equals(normalizeAccessMode(payload.externalAccess().mode()));
     }
 
     public MailBodyE2eeVo toDetailVo(MailMessage message) {
@@ -90,6 +103,14 @@ public class MailE2eeMessageService {
         if (!expectedFingerprints.equals(new LinkedHashSet<>(actualFingerprints))) {
             throw new BizException(ErrorCode.INVALID_ARGUMENT, "Mail E2EE recipient fingerprints do not match current delivery routes");
         }
+        return OutboundBody.encrypted(encryptedBody, algorithm, serializeFingerprints(actualFingerprints));
+    }
+
+    private OutboundBody resolvePasswordProtectedExternalBody(Long userId, MailBodyE2eePayloadRequest payload) {
+        String encryptedBody = requireText(payload.encryptedBody(), "Encrypted Mail E2EE body is required");
+        String algorithm = requireText(payload.algorithm(), "Mail E2EE message algorithm is required");
+        rejectExternalAccessWithoutSenderFingerprint(payload.externalAccess(), userId, payload.recipientFingerprints());
+        List<String> actualFingerprints = normalizeFingerprints(payload.recipientFingerprints());
         return OutboundBody.encrypted(encryptedBody, algorithm, serializeFingerprints(actualFingerprints));
     }
 
@@ -135,6 +156,23 @@ public class MailE2eeMessageService {
             throw new BizException(ErrorCode.INVALID_ARGUMENT, "Mail E2EE draft must target only the current sender key");
         }
         return serializeFingerprints(actualFingerprints);
+    }
+
+    private void rejectExternalAccessWithoutSenderFingerprint(
+            MailExternalAccessRequest externalAccess,
+            Long userId,
+            List<String> fingerprints
+    ) {
+        if (!PASSWORD_PROTECTED_MODE.equals(normalizeAccessMode(externalAccess.mode()))) {
+            throw new BizException(ErrorCode.INVALID_ARGUMENT, "Unsupported external Mail E2EE access mode");
+        }
+        validateDraftRecipientFingerprints(userId, normalizeFingerprints(fingerprints));
+    }
+
+    private void rejectExternalAccessForDraft(MailExternalAccessRequest externalAccess) {
+        if (externalAccess != null) {
+            throw new BizException(ErrorCode.INVALID_ARGUMENT, "Password-protected external Mail E2EE is not supported for drafts");
+        }
     }
 
     private String loadSenderFingerprint(Long userId) {
@@ -232,6 +270,10 @@ public class MailE2eeMessageService {
 
     private boolean isEncrypted(MailMessage message) {
         return message.getBodyE2eeEnabled() != null && message.getBodyE2eeEnabled() == ENABLED_FLAG;
+    }
+
+    private String normalizeAccessMode(String mode) {
+        return requireText(mode, "External Mail E2EE access mode is required").toUpperCase(Locale.ROOT);
     }
 
     public record OutboundBody(

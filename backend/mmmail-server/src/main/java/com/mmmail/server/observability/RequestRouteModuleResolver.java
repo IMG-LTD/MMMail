@@ -13,7 +13,10 @@ public class RequestRouteModuleResolver {
         if (path.startsWith("/api/v1/auth")) {
             return "auth";
         }
-        if (path.startsWith("/api/v1/mails") || path.startsWith("/api/v1/mail-") || path.startsWith("/api/v1/conversations")) {
+        if (path.startsWith("/api/v1/mails")
+                || path.startsWith("/api/v1/mail-")
+                || path.startsWith("/api/v1/conversations")
+                || path.startsWith("/api/v1/public/mail")) {
             return "mail";
         }
         if (path.startsWith("/api/v1/calendar")) {

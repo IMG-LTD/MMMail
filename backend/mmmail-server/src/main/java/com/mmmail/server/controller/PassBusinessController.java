@@ -26,11 +26,10 @@ import com.mmmail.server.model.vo.PassSharedVaultSummaryVo;
 import com.mmmail.server.service.PassBusinessService;
 import com.mmmail.server.service.PassItemShareService;
 import com.mmmail.server.service.PassMonitorService;
+import com.mmmail.server.service.PublicBaseUrlResolver;
 import com.mmmail.server.util.SecurityUtils;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -40,9 +39,6 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
-import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
-
-import java.net.URI;
 import java.util.List;
 
 @RestController
@@ -52,18 +48,18 @@ public class PassBusinessController {
     private final PassBusinessService passBusinessService;
     private final PassItemShareService passItemShareService;
     private final PassMonitorService passMonitorService;
-    private final String configuredPublicBaseUrl;
+    private final PublicBaseUrlResolver publicBaseUrlResolver;
 
     public PassBusinessController(
             PassBusinessService passBusinessService,
             PassItemShareService passItemShareService,
             PassMonitorService passMonitorService,
-            @Value("${mmmail.public-base-url:}") String configuredPublicBaseUrl
+            PublicBaseUrlResolver publicBaseUrlResolver
     ) {
         this.passBusinessService = passBusinessService;
         this.passItemShareService = passItemShareService;
         this.passMonitorService = passMonitorService;
-        this.configuredPublicBaseUrl = configuredPublicBaseUrl;
+        this.publicBaseUrlResolver = publicBaseUrlResolver;
     }
 
     @GetMapping("/orgs/{orgId}/overview")
@@ -428,7 +424,7 @@ public class PassBusinessController {
                 SecurityUtils.currentUserId(),
                 orgId,
                 itemId,
-                resolvePublicBaseUrl(httpRequest),
+                publicBaseUrlResolver.resolve(httpRequest),
                 httpRequest.getRemoteAddr()
         ));
     }
@@ -441,7 +437,7 @@ public class PassBusinessController {
         return Result.success(passBusinessService.listOrgSecureLinks(
                 SecurityUtils.currentUserId(),
                 orgId,
-                resolvePublicBaseUrl(httpRequest),
+                publicBaseUrlResolver.resolve(httpRequest),
                 httpRequest.getRemoteAddr()
         ));
     }
@@ -458,7 +454,7 @@ public class PassBusinessController {
                 orgId,
                 itemId,
                 request,
-                resolvePublicBaseUrl(httpRequest),
+                publicBaseUrlResolver.resolve(httpRequest),
                 httpRequest.getRemoteAddr()
         ));
     }
@@ -473,36 +469,8 @@ public class PassBusinessController {
                 SecurityUtils.currentUserId(),
                 orgId,
                 linkId,
-                resolvePublicBaseUrl(httpRequest),
+                publicBaseUrlResolver.resolve(httpRequest),
                 httpRequest.getRemoteAddr()
         ));
-    }
-
-    private String resolvePublicBaseUrl(HttpServletRequest httpRequest) {
-        if (StringUtils.hasText(configuredPublicBaseUrl)) {
-            return trimTrailingSlash(configuredPublicBaseUrl);
-        }
-
-        String origin = httpRequest.getHeader("Origin");
-        if (StringUtils.hasText(origin)) {
-            return trimTrailingSlash(origin);
-        }
-
-        String referer = httpRequest.getHeader("Referer");
-        if (StringUtils.hasText(referer)) {
-            try {
-                URI uri = URI.create(referer);
-                if (StringUtils.hasText(uri.getScheme()) && StringUtils.hasText(uri.getAuthority())) {
-                    return trimTrailingSlash(uri.getScheme() + "://" + uri.getAuthority());
-                }
-            } catch (IllegalArgumentException ignored) {
-            }
-        }
-
-        return trimTrailingSlash(ServletUriComponentsBuilder.fromCurrentContextPath().build().toUriString());
-    }
-
-    private String trimTrailingSlash(String value) {
-        return value.endsWith("/") ? value.substring(0, value.length() - 1) : value;
     }
 }

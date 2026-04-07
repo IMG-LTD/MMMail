@@ -1,9 +1,38 @@
 import { readdir, readFile, stat } from 'node:fs/promises'
-import { basename, join, relative, sep } from 'node:path'
+import { join, relative, sep } from 'node:path'
+import { compileTemplate, parse as parseSfc } from 'vue/compiler-sfc'
 
 const USER_FACING_ATTRIBUTES = ['description', 'label', 'placeholder', 'title'] as const
-const TEXT_LITERAL_PATTERN = />\s*([^<{][^<]*[A-Za-z][^<]*)\s*</g
 const EL_MESSAGE_LITERAL_PATTERN = /ElMessage\.(success|warning|error|info)\(\s*(['"`])([^'"`$\\]+)\2/g
+const TEMPLATE_AST_ELEMENT = 1
+const TEMPLATE_AST_TEXT = 2
+const TEMPLATE_AST_ATTRIBUTE = 6
+
+interface TemplateAstLocation {
+  start: {
+    line: number
+  }
+}
+
+interface TemplateAstValue {
+  content: string
+}
+
+interface TemplateAstNode {
+  type: number
+  loc?: TemplateAstLocation
+  name?: string
+  value?: TemplateAstValue | null
+  props?: TemplateAstNode[]
+  children?: TemplateAstNode[]
+  branches?: TemplateAstNode[]
+  content?: string
+}
+
+interface ParsedTemplateBlock {
+  ast: TemplateAstNode
+  lineOffset: number
+}
 
 export type I18nLiteralViolationKind = 'el-message' | 'template-attribute' | 'template-text'
 
@@ -91,46 +120,112 @@ function scanSource(rootDir: string, filePath: string, source: string): I18nLite
 }
 
 function scanTemplateLiterals(filePath: string, source: string): I18nLiteralViolation[] {
-  const template = extractTemplateBlock(source)
-  if (!template) {
+  const template = parseTemplateBlock(filePath, source)
+  if (template === null) {
     return []
   }
 
+  return scanTemplateNode(filePath, template.ast, template.lineOffset)
+}
+
+function parseTemplateBlock(filePath: string, source: string): ParsedTemplateBlock | null {
+  const { descriptor } = parseSfc(source, { filename: filePath })
+  if (descriptor.template === null) {
+    return null
+  }
+
+  const compiled = compileTemplate({
+    filename: filePath,
+    id: normalizePath(filePath),
+    source: descriptor.template.content,
+  })
+
+  if (compiled.errors.length > 0) {
+    throw new Error(`failed to parse template for ${filePath}: ${formatTemplateErrors(compiled.errors)}`)
+  }
+
+  return {
+    ast: compiled.ast as TemplateAstNode,
+    lineOffset: descriptor.template.loc.start.line - 1,
+  }
+}
+
+function scanTemplateNode(
+  filePath: string,
+  node: TemplateAstNode,
+  lineOffset: number,
+): I18nLiteralViolation[] {
   return [
-    ...scanTemplateAttributes(filePath, template.content, template.baseLine),
-    ...scanTemplateTexts(filePath, template.content, template.baseLine),
+    ...scanTemplateTextNode(filePath, node, lineOffset),
+    ...scanTemplateAttributes(filePath, node, lineOffset),
+    ...scanNestedTemplateNodes(filePath, node, lineOffset),
   ]
 }
 
-function extractTemplateBlock(source: string): { content: string, baseLine: number } | null {
-  const match = source.match(/<template>([\s\S]*?)<\/template>/)
-  if (!match || typeof match.index !== 'number') {
-    return null
+function scanNestedTemplateNodes(
+  filePath: string,
+  node: TemplateAstNode,
+  lineOffset: number,
+): I18nLiteralViolation[] {
+  const nestedNodes = [
+    ...(node.children ?? []),
+    ...(node.branches ?? []),
+  ]
+
+  return nestedNodes.flatMap((child) => scanTemplateNode(filePath, child, lineOffset))
+}
+
+function scanTemplateTextNode(
+  filePath: string,
+  node: TemplateAstNode,
+  lineOffset: number,
+): I18nLiteralViolation[] {
+  if (node.type !== TEMPLATE_AST_TEXT || !node.loc) {
+    return []
   }
-  return {
-    content: match[1],
-    baseLine: lineNumberAt(source, match.index),
+
+  const literal = normalizeLiteral(node.content ?? '')
+  if (!isReportableLiteral(literal)) {
+    return []
   }
+
+  return [{
+    filePath,
+    kind: 'template-text',
+    line: lineOffset + node.loc.start.line,
+    literal,
+  }]
 }
 
 function scanTemplateAttributes(
   filePath: string,
-  template: string,
-  baseLine: number,
+  node: TemplateAstNode,
+  lineOffset: number,
 ): I18nLiteralViolation[] {
-  const pattern = new RegExp(
-    String.raw`(?:^|\s)(${USER_FACING_ATTRIBUTES.join('|')})\s*=\s*(['"])([^'"` + '`' + String.raw`]+)\2`,
-    'g',
-  )
-  return collectMatches(filePath, template, pattern, 'template-attribute', baseLine)
-}
+  if (node.type !== TEMPLATE_AST_ELEMENT) {
+    return []
+  }
 
-function scanTemplateTexts(
-  filePath: string,
-  template: string,
-  baseLine: number,
-): I18nLiteralViolation[] {
-  return collectMatches(filePath, template, TEXT_LITERAL_PATTERN, 'template-text', baseLine)
+  return (node.props ?? []).flatMap((prop) => {
+    if (prop.type !== TEMPLATE_AST_ATTRIBUTE || !prop.loc || !prop.name) {
+      return []
+    }
+    if (!USER_FACING_ATTRIBUTES.includes(prop.name as typeof USER_FACING_ATTRIBUTES[number])) {
+      return []
+    }
+
+    const literal = normalizeLiteral(prop.value?.content ?? '')
+    if (!isReportableLiteral(literal)) {
+      return []
+    }
+
+    return [{
+      filePath,
+      kind: 'template-attribute' as const,
+      line: lineOffset + prop.loc.start.line,
+      literal,
+    }]
+  })
 }
 
 function scanElMessageLiterals(filePath: string, source: string): I18nLiteralViolation[] {
@@ -176,6 +271,17 @@ function lineNumberAt(source: string, index: number): number {
 
 function normalizePath(value: string): string {
   return value.split(sep).join('/')
+}
+
+function formatTemplateErrors(errors: unknown[]): string {
+  return errors
+    .map((error) => {
+      if (error instanceof Error) {
+        return error.message
+      }
+      return String(error)
+    })
+    .join('; ')
 }
 
 export function formatI18nLiteralScanMarkdown(report: I18nLiteralScanReport): string {
