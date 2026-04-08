@@ -4,7 +4,7 @@
 
 ## 当前发布状态
 - `main`：当前公开发布主线；当前正式发布切点为 `v1.5.0`
-- `dev/v1.5`：`v1.5.0` 发布源分支，已完成 release 收口并准备合并回 `main`
+- `dev/v1.5`：`v1.5.0` 发布源分支，已完成 release 收口并合并回 `main`
 - `release/v1.2`：保留 `v1.2.x` 历史发布线
 - 状态说明：`v1.5.0` 已正式发布，范围冻结为 `Mail external secure delivery closure`
 - 权威路线：`docs/release/community-v1-v1.5-plan.md`、`docs/release/community-v1-v1.5-mainline-roadmap.md`、`docs/release/community-v1-support-boundaries.md`
