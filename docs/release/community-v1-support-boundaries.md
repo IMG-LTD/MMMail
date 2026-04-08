@@ -5,10 +5,10 @@
 **作者**: `Codex`
 
 ## 当前分支状态
-- `main`：`v1.5.0` 当前公开基线
-- `dev/v1.6`：`v1.6-mainline` 当前主线开发分支
+- `main`：`v1.6.0` 当前公开基线
+- `dev/v1.6`：`v1.6-mainline` release source branch，已完成合并回 `main`
 - `release/v1.2`：历史维护分支
-- 含义：`main` 保持 `v1.5.0` 已发布基线；`dev/v1.6` 承接 `v1.6` 的产品聚焦、信息架构收敛与可信边界同步。
+- 含义：`main` 已承接 `v1.6.0` 的产品聚焦、信息架构收敛与可信边界同步；`dev/v1.6` 保留为本次 release source branch 的历史上下文。
 
 ## 支持范围
 ### GA

@@ -5,7 +5,7 @@
 **作者**: `Codex`
 
 ## 当前状态
-- 当前状态：`READY_FOR_RELEASE`
+- 当前状态：`RELEASED_TO_MAIN_PENDING_REMOTE_PUSH`
 - 开发分支：`dev/v1.6`
 - 合并目标：`main`
 - 正式 tag：`v1.6.0`
@@ -13,7 +13,8 @@
   - 定向前端验证已通过
   - `v1.6` 计划、路线、release notes、support boundaries、module maturity 已完成
   - `README`、ops docs、self-hosted quick pages 已切到 `v1.6` 口径
-  - `validate-local` 待在最终待发布 commit 上执行
+  - `validate-local` 已在待发布 commit 上通过
+  - `dev/v1.6` 已快进合并到 `main`
 
 ## 版本范围
 - `Product Focus & IA Refinement`
@@ -41,8 +42,8 @@
 - 模块成熟度：`docs/open-source/module-maturity-matrix.md`
 
 ## 当前允许
-- 在 `dev/v1.6` 上只接收 `release-blocking / security / metadata` 收口
-- 继续执行 `validate-local` 与发布收尾动作
+- 仅承接 `v1.6.x` 级别的 `release-blocking / security / metadata` 修复
+- 继续完成 tag 与远端发布回填
 
 ## 当前禁止
 - 扩大 `v1.6` 范围
@@ -53,5 +54,5 @@
 ## 发布判断标准
 - [x] `Suite` 分区 IA、`Labs` curated catalog、boundary docs 与 runtime a11y 已落地
 - [x] `README / release docs / support boundaries / module maturity / ops docs / self-hosted pages` 已同步
-- [ ] `bash scripts/validate-local.sh` 已通过
-- [ ] `community-v1-v1.6-final-signoff.md` 已签收
+- [x] `bash scripts/validate-local.sh` 已通过
+- [x] `community-v1-v1.6-final-signoff.md` 已签收

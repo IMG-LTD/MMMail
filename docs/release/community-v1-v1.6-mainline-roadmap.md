@@ -5,8 +5,8 @@
 **作者**: `Codex`
 
 ## 当前状态
-- 当前公开基线：`main` → `v1.5.0`
-- 当前开发分支：`dev/v1.6`
+- 当前公开基线：`main` → `v1.6.0`
+- 当前开发分支：`dev/v1.6`（已合并回 `main`）
 - 主线主题：`Product Focus & IA Refinement`
 
 ## 主线拆分
@@ -15,7 +15,7 @@
 | L1 | `Suite sectioned IA` | `Completed` | `/suite` 已改为 `Overview / Plans / Billing / Operations / Boundary` 分区视图。 |
 | L2 | `Curated Labs catalog` | `Completed` | `/labs` 默认目录已收敛为 `Pass / Authenticator / SimpleLogin / Standard Notes`。 |
 | L3 | `Boundary + docs sync` | `Completed` | source-of-truth、support boundaries、canonical docs、ops docs 与 self-hosted quick pages 已切到 `v1.6`。 |
-| L4 | `Runtime a11y + release validation` | `In progress` | 运行时无障碍门禁与定向前端回归已完成，正在执行 `validate-local` 与正式 release 收口。 |
+| L4 | `Runtime a11y + release validation` | `Completed` | 运行时无障碍门禁、定向前端回归与 `validate-local` 已完成，并已进入正式发布收口。 |
 
 ## 权威范围
 - `README.md`
