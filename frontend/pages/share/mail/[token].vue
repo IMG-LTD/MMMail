@@ -1,11 +1,17 @@
 <script setup lang="ts">
 import { computed, onMounted, ref } from 'vue'
 import { ElMessage } from 'element-plus'
-import { decrypt, readMessage } from 'openpgp'
-import type { MailPublicSecureLink } from '~/types/api'
+import type { MailPublicSecureAttachment, MailPublicSecureLink } from '~/types/api'
 import { useI18n } from '~/composables/useI18n'
 import { useMailApi } from '~/composables/useMailApi'
-import { formatMailPublicTime, resolveMailPublicSecureLinkErrorKey } from '~/utils/mail-public'
+import {
+  decryptMailPublicAttachmentBlob,
+  decryptMailPublicBody,
+  formatMailPublicTime,
+  requireMailPublicPassword,
+  resolveMailPublicSecureLinkErrorKey,
+  triggerMailPublicDownload
+} from '~/utils/mail-public'
 
 definePageMeta({
   layout: 'public-mail'
@@ -13,11 +19,12 @@ definePageMeta({
 
 const route = useRoute()
 const { t } = useI18n()
-const { getPublicSecureLink } = useMailApi()
+const { getPublicSecureLink, downloadPublicSecureAttachment } = useMailApi()
 
 const token = computed(() => String(route.params.token || ''))
 const loading = ref(false)
 const decrypting = ref(false)
+const downloadingAttachmentId = ref('')
 const share = ref<MailPublicSecureLink | null>(null)
 const plaintext = ref('')
 const password = ref('')
@@ -40,6 +47,8 @@ const pageSubtitle = computed(() => {
   }
   return t(loadErrorKey.value || 'mailPublicShare.unavailableSubtitle')
 })
+
+const shareAttachments = computed(() => share.value?.attachments || [])
 
 async function loadShare(): Promise<void> {
   if (!token.value) {
@@ -64,34 +73,56 @@ async function unlockBody(): Promise<void> {
   if (!share.value) {
     return
   }
-  if (!password.value.trim()) {
-    decryptErrorKey.value = 'mailPublicShare.messages.passwordRequired'
-    ElMessage.error(t(decryptErrorKey.value))
-    return
-  }
   decrypting.value = true
   decryptErrorKey.value = ''
   try {
-    const message = await readMessage({ armoredMessage: share.value.bodyCiphertext })
-    const result = await decrypt({
-      message,
-      passwords: [password.value.trim()],
-      format: 'utf8'
-    })
-    plaintext.value = String(result.data || '')
+    const normalizedPassword = requireMailPublicPassword(password.value)
+    plaintext.value = await decryptMailPublicBody(share.value.bodyCiphertext, normalizedPassword)
     ElMessage.success(t('mailPublicShare.messages.decryptSuccess'))
-  } catch {
+  } catch (error) {
     plaintext.value = ''
-    decryptErrorKey.value = 'mailPublicShare.messages.decryptFailed'
+    decryptErrorKey.value = resolveDecryptErrorKey(error, 'mailPublicShare.messages.decryptFailed')
     ElMessage.error(t(decryptErrorKey.value))
   } finally {
     decrypting.value = false
   }
 }
 
+async function downloadAttachment(attachment: MailPublicSecureAttachment): Promise<void> {
+  if (!share.value) {
+    return
+  }
+  downloadingAttachmentId.value = attachment.id
+  decryptErrorKey.value = ''
+  try {
+    const normalizedPassword = requireMailPublicPassword(password.value)
+    const encryptedPayload = await downloadPublicSecureAttachment(token.value, attachment.id)
+    const decryptedBlob = await decryptMailPublicAttachmentBlob(
+      encryptedPayload.blob,
+      attachment.contentType,
+      normalizedPassword
+    )
+    triggerMailPublicDownload(decryptedBlob, attachment.fileName || encryptedPayload.fileName)
+    ElMessage.success(t('mailPublicShare.messages.attachmentDecryptSuccess'))
+  } catch (error) {
+    decryptErrorKey.value = resolveDecryptErrorKey(error, 'mailPublicShare.messages.attachmentDecryptFailed')
+    ElMessage.error(t(decryptErrorKey.value))
+  } finally {
+    downloadingAttachmentId.value = ''
+  }
+}
+
 onMounted(() => {
   void loadShare()
 })
+
+function resolveDecryptErrorKey(error: unknown, fallbackKey: string): string {
+  const message = error instanceof Error ? error.message : ''
+  if (message.startsWith('mailPublicShare.')) {
+    return message
+  }
+  return fallbackKey
+}
 </script>
 
 <template>
@@ -131,6 +162,15 @@ onMounted(() => {
         </section>
 
         <section class="public-mail-body">
+          <article class="trust-card" data-testid="mail-public-trust">
+            <span>{{ t('mailPublicShare.fields.trustTitle') }}</span>
+            <ul>
+              <li>{{ t('mailPublicShare.trust.localDecrypt') }}</li>
+              <li>{{ t('mailPublicShare.trust.attachmentDecrypt') }}</li>
+              <li>{{ t('mailPublicShare.trust.expiryReminder') }}</li>
+            </ul>
+          </article>
+
           <el-form label-position="top">
             <el-form-item :label="t('mailPublicShare.passwordLabel')">
               <el-input
@@ -154,6 +194,35 @@ onMounted(() => {
           <article class="body-card">
             <span>{{ t('mailPublicShare.fields.body') }}</span>
             <pre>{{ plaintext }}</pre>
+          </article>
+
+          <article class="body-card">
+            <div class="attachment-head">
+              <span>{{ t('mailPublicShare.fields.attachments') }}</span>
+              <strong>{{ shareAttachments.length }}</strong>
+            </div>
+            <div v-if="shareAttachments.length" class="attachment-list">
+              <div
+                v-for="attachment in shareAttachments"
+                :key="attachment.id"
+                class="attachment-item"
+                :data-testid="`mail-public-attachment-${attachment.id}`"
+              >
+                <div class="attachment-copy">
+                  <strong>{{ attachment.fileName }}</strong>
+                  <span>{{ attachment.contentType }} · {{ attachment.fileSize }} B</span>
+                </div>
+                <el-button
+                  plain
+                  :data-testid="`mail-public-download-${attachment.id}`"
+                  :loading="downloadingAttachmentId === attachment.id"
+                  @click="downloadAttachment(attachment)"
+                >
+                  {{ t('mailPublicShare.actions.downloadAttachment') }}
+                </el-button>
+              </div>
+            </div>
+            <p v-else class="attachment-empty">{{ t('mailPublicShare.fields.noAttachments') }}</p>
           </article>
         </section>
       </div>
@@ -190,6 +259,7 @@ onMounted(() => {
 .public-mail-copy,
 .public-mail-summary,
 .public-mail-body,
+.trust-card,
 .field-card,
 .body-card {
   display: flex;
@@ -238,8 +308,43 @@ onMounted(() => {
   border: 1px solid rgba(255, 255, 255, 0.08);
 }
 
+.trust-card ul,
+.attachment-empty {
+  margin: 0;
+}
+
+.trust-card ul {
+  padding-left: 18px;
+  color: rgba(235, 244, 255, 0.82);
+}
+
 .field-card span,
 .body-card span {
+  color: rgba(235, 244, 255, 0.72);
+  font-size: 13px;
+}
+
+.attachment-head,
+.attachment-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.attachment-list,
+.attachment-copy {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.attachment-copy strong,
+.attachment-copy span {
+  margin: 0;
+}
+
+.attachment-copy span {
   color: rgba(235, 244, 255, 0.72);
   font-size: 13px;
 }

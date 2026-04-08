@@ -25,6 +25,7 @@ create table if not exists mail_message (
     body_e2ee_enabled tinyint not null default 0,
     body_e2ee_algorithm varchar(64),
     body_e2ee_fingerprints_json text,
+    body_e2ee_external_access_json text,
     is_read tinyint not null,
     is_starred tinyint not null default 0,
     is_draft tinyint not null,
@@ -43,6 +44,7 @@ alter table mail_message add column if not exists delivery_targets_json text;
 alter table mail_message add column if not exists body_e2ee_enabled tinyint not null default 0;
 alter table mail_message add column if not exists body_e2ee_algorithm varchar(64);
 alter table mail_message add column if not exists body_e2ee_fingerprints_json text;
+alter table mail_message add column if not exists body_e2ee_external_access_json text;
 create index idx_mail_owner_sender_sent on mail_message(owner_id, sender_email, sent_at);
 
 create table if not exists mail_attachment (

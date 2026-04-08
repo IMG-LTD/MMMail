@@ -10,6 +10,7 @@ import com.mmmail.server.model.dto.MailBodyE2eePayloadRequest;
 import com.mmmail.server.model.dto.SaveDraftRequest;
 import com.mmmail.server.model.dto.SendMailRequest;
 import com.mmmail.server.model.entity.MailMessage;
+import com.mmmail.server.model.vo.MailBodyE2eeExternalAccessVo;
 import com.mmmail.server.model.entity.UserPreference;
 import com.mmmail.server.model.vo.MailBodyE2eeVo;
 import com.mmmail.server.model.vo.MailE2eeRecipientRouteVo;
@@ -63,7 +64,12 @@ public class MailE2eeMessageService {
             return OutboundBody.plain(request.body());
         }
         rejectPlainBodyLeak(request.body());
-        rejectExternalAccessForDraft(request.e2ee().externalAccess());
+        if (isPasswordProtectedExternalAccess(request.e2ee())) {
+            if (!StringUtils.hasText(request.e2ee().encryptedBody())) {
+                return resolvePasswordProtectedExternalDraftState(userId, request.e2ee());
+            }
+            return resolvePasswordProtectedExternalBody(userId, request.e2ee());
+        }
         return resolveEncryptedDraftBody(userId, request.e2ee());
     }
 
@@ -77,11 +83,16 @@ public class MailE2eeMessageService {
         if (!isEncrypted(message)) {
             return null;
         }
-        return new MailBodyE2eeVo(true, message.getBodyE2eeAlgorithm(), parseFingerprints(message.getBodyE2eeFingerprintsJson()));
+        return new MailBodyE2eeVo(
+                isEncrypted(message),
+                message.getBodyE2eeAlgorithm(),
+                isEncrypted(message) ? parseFingerprints(message.getBodyE2eeFingerprintsJson()) : List.of(),
+                parseExternalAccess(message.getBodyE2eeExternalAccessJson())
+        );
     }
 
     public String resolvePreview(MailMessage message) {
-        if (isEncrypted(message)) {
+        if (isEncrypted(message) || hasExternalAccess(message)) {
             return ENCRYPTED_PREVIEW;
         }
         String body = message.getBodyCiphertext() == null ? "" : message.getBodyCiphertext();
@@ -103,7 +114,7 @@ public class MailE2eeMessageService {
         if (!expectedFingerprints.equals(new LinkedHashSet<>(actualFingerprints))) {
             throw new BizException(ErrorCode.INVALID_ARGUMENT, "Mail E2EE recipient fingerprints do not match current delivery routes");
         }
-        return OutboundBody.encrypted(encryptedBody, algorithm, serializeFingerprints(actualFingerprints));
+        return OutboundBody.encrypted(encryptedBody, algorithm, serializeFingerprints(actualFingerprints), null);
     }
 
     private OutboundBody resolvePasswordProtectedExternalBody(Long userId, MailBodyE2eePayloadRequest payload) {
@@ -111,7 +122,12 @@ public class MailE2eeMessageService {
         String algorithm = requireText(payload.algorithm(), "Mail E2EE message algorithm is required");
         rejectExternalAccessWithoutSenderFingerprint(payload.externalAccess(), userId, payload.recipientFingerprints());
         List<String> actualFingerprints = normalizeFingerprints(payload.recipientFingerprints());
-        return OutboundBody.encrypted(encryptedBody, algorithm, serializeFingerprints(actualFingerprints));
+        return OutboundBody.encrypted(
+                encryptedBody,
+                algorithm,
+                serializeFingerprints(actualFingerprints),
+                serializeExternalAccess(payload.externalAccess())
+        );
     }
 
     private OutboundBody resolveEncryptedDraftBody(Long userId, MailBodyE2eePayloadRequest payload) {
@@ -121,8 +137,14 @@ public class MailE2eeMessageService {
         return OutboundBody.encrypted(
                 encryptedBody,
                 algorithm,
-                validateDraftRecipientFingerprints(userId, actualFingerprints)
+                validateDraftRecipientFingerprints(userId, actualFingerprints),
+                null
         );
+    }
+
+    private OutboundBody resolvePasswordProtectedExternalDraftState(Long userId, MailBodyE2eePayloadRequest payload) {
+        rejectExternalAccessWithoutSenderFingerprint(payload.externalAccess(), userId, payload.recipientFingerprints());
+        return OutboundBody.externalAccessOnly(serializeExternalAccess(payload.externalAccess()));
     }
 
     public String resolveDraftAttachmentFingerprintsJson(Long userId, String fingerprintsJson) {
@@ -167,12 +189,6 @@ public class MailE2eeMessageService {
             throw new BizException(ErrorCode.INVALID_ARGUMENT, "Unsupported external Mail E2EE access mode");
         }
         validateDraftRecipientFingerprints(userId, normalizeFingerprints(fingerprints));
-    }
-
-    private void rejectExternalAccessForDraft(MailExternalAccessRequest externalAccess) {
-        if (externalAccess != null) {
-            throw new BizException(ErrorCode.INVALID_ARGUMENT, "Password-protected external Mail E2EE is not supported for drafts");
-        }
     }
 
     private String loadSenderFingerprint(Long userId) {
@@ -272,6 +288,34 @@ public class MailE2eeMessageService {
         return message.getBodyE2eeEnabled() != null && message.getBodyE2eeEnabled() == ENABLED_FLAG;
     }
 
+    private boolean hasExternalAccess(MailMessage message) {
+        return StringUtils.hasText(message.getBodyE2eeExternalAccessJson());
+    }
+
+    private String serializeExternalAccess(MailExternalAccessRequest externalAccess) {
+        try {
+            return objectMapper.writeValueAsString(externalAccess);
+        } catch (Exception exception) {
+            throw new BizException(ErrorCode.INTERNAL_ERROR, "Failed to serialize Mail E2EE external access");
+        }
+    }
+
+    private MailBodyE2eeExternalAccessVo parseExternalAccess(String externalAccessJson) {
+        if (!StringUtils.hasText(externalAccessJson)) {
+            return null;
+        }
+        try {
+            MailExternalAccessRequest payload = objectMapper.readValue(externalAccessJson, MailExternalAccessRequest.class);
+            return new MailBodyE2eeExternalAccessVo(
+                    normalizeAccessMode(payload.mode()),
+                    payload.passwordHint(),
+                    payload.expiresAt()
+            );
+        } catch (Exception exception) {
+            throw new IllegalStateException("Failed to parse Mail E2EE external access metadata", exception);
+        }
+    }
+
     private String normalizeAccessMode(String mode) {
         return requireText(mode, "External Mail E2EE access mode is required").toUpperCase(Locale.ROOT);
     }
@@ -280,15 +324,25 @@ public class MailE2eeMessageService {
             String bodyCiphertext,
             int bodyE2eeEnabled,
             String bodyE2eeAlgorithm,
-            String bodyE2eeFingerprintsJson
+            String bodyE2eeFingerprintsJson,
+            String bodyE2eeExternalAccessJson
     ) {
 
         private static OutboundBody plain(String body) {
-            return new OutboundBody(body, DISABLED_FLAG, null, null);
+            return new OutboundBody(body, DISABLED_FLAG, null, null, null);
         }
 
-        private static OutboundBody encrypted(String body, String algorithm, String fingerprintsJson) {
-            return new OutboundBody(body, ENABLED_FLAG, algorithm, fingerprintsJson);
+        private static OutboundBody externalAccessOnly(String externalAccessJson) {
+            return new OutboundBody("", DISABLED_FLAG, null, null, externalAccessJson);
+        }
+
+        private static OutboundBody encrypted(
+                String body,
+                String algorithm,
+                String fingerprintsJson,
+                String externalAccessJson
+        ) {
+            return new OutboundBody(body, ENABLED_FLAG, algorithm, fingerprintsJson, externalAccessJson);
         }
     }
 }

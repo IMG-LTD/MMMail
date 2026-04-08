@@ -6,6 +6,7 @@ import { createMessage, encrypt } from 'openpgp'
 const messageErrorMock = vi.fn()
 const messageSuccessMock = vi.fn()
 const getPublicSecureLinkMock = vi.fn()
+const downloadPublicSecureAttachmentMock = vi.fn()
 
 vi.mock('element-plus', () => ({
   ElMessage: {
@@ -17,6 +18,7 @@ vi.mock('element-plus', () => ({
 vi.mock('~/composables/useMailApi', () => ({
   useMailApi: () => ({
     getPublicSecureLink: getPublicSecureLinkMock,
+    downloadPublicSecureAttachment: downloadPublicSecureAttachmentMock,
   }),
 }))
 
@@ -89,6 +91,10 @@ beforeEach(() => {
     params: { token: 'mail-share-token' },
   }))
   vi.stubGlobal('definePageMeta', vi.fn())
+  vi.stubGlobal('URL', {
+    createObjectURL: vi.fn(() => 'blob:mail-public'),
+    revokeObjectURL: vi.fn(),
+  })
 })
 
 describe('mail public share', () => {
@@ -109,6 +115,7 @@ describe('mail public share', () => {
       algorithm: 'openpgp',
       passwordHint: 'shared out-of-band',
       expiresAt: '2026-04-21T12:00:00',
+      attachments: [],
     })
 
     const wrapper = await mountPublicMailPage()
@@ -122,6 +129,50 @@ describe('mail public share', () => {
     expect(wrapper.text()).toContain('Shared secure mail')
     expect(wrapper.text()).toContain('External mail plaintext')
     expect(messageSuccessMock).toHaveBeenCalledWith('mailPublicShare.messages.decryptSuccess')
+  })
+
+  it('lists encrypted attachments and decrypts them locally before download', async () => {
+    const password = 'ExternalPass@123'
+    const message = await createMessage({ binary: new Uint8Array([1, 2, 3, 4]) })
+    const ciphertext = await encrypt({
+      message,
+      passwords: [password],
+      format: 'binary',
+    })
+    const clickSpy = vi.spyOn(HTMLAnchorElement.prototype, 'click').mockImplementation(() => undefined)
+    getPublicSecureLinkMock.mockResolvedValue({
+      mailId: 'mail-1',
+      subject: 'Shared secure mail',
+      senderEmail: 'sender@mmmail.local',
+      recipientEmail: 'external@example.net',
+      bodyCiphertext: '-----BEGIN PGP MESSAGE-----\nVersion: OpenPGP.js\n\nwcBMAwAAAAAA\n=abcd\n-----END PGP MESSAGE-----',
+      algorithm: 'openpgp',
+      passwordHint: 'shared out-of-band',
+      expiresAt: '2026-04-21T12:00:00',
+      attachments: [{
+        id: 'att-1',
+        fileName: 'contract.pdf',
+        contentType: 'application/pdf',
+        fileSize: 4096,
+        algorithm: 'openpgp',
+      }],
+    })
+    downloadPublicSecureAttachmentMock.mockResolvedValue({
+      blob: new Blob([ciphertext], { type: 'application/octet-stream' }),
+      fileName: 'contract.pdf.pgp',
+    })
+
+    const wrapper = await mountPublicMailPage()
+    await flushPromises()
+    await wrapper.get('[data-testid="mail-public-password"]').setValue(password)
+    await wrapper.get('[data-testid="mail-public-download-att-1"]').trigger('click')
+    await flushPromises()
+
+    expect(wrapper.text()).toContain('contract.pdf')
+    expect(downloadPublicSecureAttachmentMock).toHaveBeenCalledWith('mail-share-token', 'att-1')
+    expect(clickSpy).toHaveBeenCalledTimes(1)
+    expect(messageSuccessMock).toHaveBeenCalledWith('mailPublicShare.messages.attachmentDecryptSuccess')
+    clickSpy.mockRestore()
   })
 
   it('maps expired secure link errors to the public error copy', async () => {

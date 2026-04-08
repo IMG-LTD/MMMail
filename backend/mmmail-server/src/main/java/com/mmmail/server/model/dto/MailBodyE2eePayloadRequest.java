@@ -6,7 +6,7 @@ import jakarta.validation.constraints.NotBlank;
 import java.util.List;
 
 public record MailBodyE2eePayloadRequest(
-        @NotBlank String encryptedBody,
+        String encryptedBody,
         @NotBlank String algorithm,
         List<String> recipientFingerprints,
         @Valid MailExternalAccessRequest externalAccess

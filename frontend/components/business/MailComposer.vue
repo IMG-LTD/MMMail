@@ -1,9 +1,9 @@
 <script setup lang="ts">
 import { computed, onBeforeUnmount, reactive, watch } from 'vue'
 import type {
-  DraftRequest,
   LabelItem,
   MailAttachment,
+  MailComposeDraftRequest,
   MailComposeSubmitRequest,
   MailE2eeRecipientStatus,
   MailSenderIdentity,
@@ -16,12 +16,19 @@ interface SuggestionItem {
   value: string
 }
 
+interface ExternalSecureDefaults {
+  enabled: boolean
+  passwordHint?: string
+  expiresAt?: string
+}
+
 const props = withDefaults(
   defineProps<{
     defaultTo?: string
     defaultSubject?: string
     defaultBody?: string
     draftId?: string
+    defaultExternalSecureDelivery?: ExternalSecureDefaults | null
     defaultSenderEmail?: string
     senderOptions?: MailSenderIdentity[]
     availableLabels?: LabelItem[]
@@ -40,6 +47,7 @@ const props = withDefaults(
     defaultSubject: '',
     defaultBody: '',
     draftId: '',
+    defaultExternalSecureDelivery: null,
     defaultSenderEmail: '',
     senderOptions: () => [],
     availableLabels: () => [],
@@ -57,10 +65,10 @@ const props = withDefaults(
 
 const emit = defineEmits<{
   send: [payload: MailComposeSubmitRequest]
-  save: [payload: DraftRequest]
-  autosave: [payload: DraftRequest]
-  uploadAttachments: [{ files: File[], draft: DraftRequest }]
-  retryAttachment: [{ failureId: string, draft: DraftRequest }]
+  save: [payload: MailComposeDraftRequest]
+  autosave: [payload: MailComposeDraftRequest]
+  uploadAttachments: [{ files: File[], draft: MailComposeDraftRequest }]
+  retryAttachment: [{ failureId: string, draft: MailComposeDraftRequest }]
   removeAttachment: [{ attachmentId: string }]
   downloadAttachment: [{ attachmentId: string }]
   routeContextChange: [payload: { toEmail: string, fromEmail: string }]
@@ -167,15 +175,31 @@ function syncDefaultDraftFields(): void {
   form.toEmail = props.defaultTo
   form.subject = props.defaultSubject
   form.body = props.defaultBody
+  syncExternalSecureDefaults()
 }
 
-function buildDraftPayload(): DraftRequest {
+function syncExternalSecureDefaults(): void {
+  externalSecureDelivery.enabled = Boolean(props.defaultExternalSecureDelivery?.enabled)
+  externalSecureDelivery.password = ''
+  externalSecureDelivery.passwordHint = props.defaultExternalSecureDelivery?.passwordHint || ''
+  externalSecureDelivery.expiresAt = props.defaultExternalSecureDelivery?.expiresAt || ''
+}
+
+function buildDraftPayload(): MailComposeDraftRequest {
   return {
     draftId: props.draftId || undefined,
     toEmail: form.toEmail,
     fromEmail: form.fromEmail || undefined,
     subject: form.subject,
-    body: form.body
+    body: form.body,
+    externalSecureDelivery: externalSecureDelivery.enabled
+      ? {
+          enabled: true,
+          password: externalSecureDelivery.password,
+          passwordHint: externalSecureDelivery.passwordHint || undefined,
+          expiresAt: externalSecureDelivery.expiresAt || undefined
+        }
+      : undefined
   }
 }
 
@@ -191,7 +215,7 @@ function scheduleAutoSave(): void {
   if (draftTimer) {
     clearTimeout(draftTimer)
   }
-  if (!form.toEmail && !form.subject && !form.body) {
+  if (!form.toEmail && !form.subject && !form.body && !externalSecureDelivery.enabled) {
     return
   }
   draftTimer = setTimeout(() => {
@@ -247,15 +271,24 @@ async function queryRecipientSuggestions(
 }
 
 watch(
-  () => [props.defaultTo, props.defaultSubject, props.defaultBody],
+  () => [props.defaultTo, props.defaultSubject, props.defaultBody, props.defaultExternalSecureDelivery],
   () => {
     syncDefaultDraftFields()
   },
-  { immediate: true }
+  { immediate: true, deep: true }
 )
 
 watch(
-  () => [form.toEmail, form.subject, form.body, form.fromEmail],
+  () => [
+    form.toEmail,
+    form.subject,
+    form.body,
+    form.fromEmail,
+    externalSecureDelivery.enabled,
+    externalSecureDelivery.password,
+    externalSecureDelivery.passwordHint,
+    externalSecureDelivery.expiresAt
+  ],
   () => {
     scheduleAutoSave()
   }
@@ -281,6 +314,9 @@ watch(
 watch(
   supportsExternalSecureDelivery,
   (supported) => {
+    if (!props.recipientE2eeStatus && !props.recipientE2eeError) {
+      return
+    }
     if (supported) {
       if (!externalSecureDelivery.expiresAt) {
         externalSecureDelivery.expiresAt = buildDefaultSecureExpiryValue()

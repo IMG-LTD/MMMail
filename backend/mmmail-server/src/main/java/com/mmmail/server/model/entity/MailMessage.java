@@ -27,6 +27,7 @@ public class MailMessage {
     private Integer bodyE2eeEnabled;
     private String bodyE2eeAlgorithm;
     private String bodyE2eeFingerprintsJson;
+    private String bodyE2eeExternalAccessJson;
     private Integer isRead;
     private Integer isStarred;
     private Integer isDraft;
@@ -141,6 +142,14 @@ public class MailMessage {
 
     public void setBodyE2eeFingerprintsJson(String bodyE2eeFingerprintsJson) {
         this.bodyE2eeFingerprintsJson = bodyE2eeFingerprintsJson;
+    }
+
+    public String getBodyE2eeExternalAccessJson() {
+        return bodyE2eeExternalAccessJson;
+    }
+
+    public void setBodyE2eeExternalAccessJson(String bodyE2eeExternalAccessJson) {
+        this.bodyE2eeExternalAccessJson = bodyE2eeExternalAccessJson;
     }
 
     public Integer getIsRead() {

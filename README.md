@@ -3,11 +3,11 @@
 隐私导向、模块化、可自托管的协作套件。当前 Community 主线以 `Web-first` 协作为基线，并通过 `Labs` 隔离预览模块。
 
 ## 当前发布状态
-- `main`：当前公开发布主线；上一安全修复基线为 `v1.3.1`（tag / commit：`v1.3.1` / `4b442cc`），当前正式发布切点为 `v1.4.0`
-- `dev/v1.4`：`v1.4.0` 发布源分支，已完成 release candidate 收口并合并回 `main`
+- `main`：当前公开发布主线；当前正式发布切点为 `v1.5.0`
+- `dev/v1.5`：`v1.5.0` 发布源分支，已完成 release 收口并准备合并回 `main`
 - `release/v1.2`：保留 `v1.2.x` 历史发布线
-- 状态说明：`v1.4.0` 已正式发布，范围冻结为 `Mail 外部密码保护加密投递`
-- 权威路线：`docs/release/community-v1-v1.4-plan.md`、`docs/release/community-v1-v1.4-mainline-roadmap.md`、`docs/release/community-v1-support-boundaries.md`
+- 状态说明：`v1.5.0` 已正式发布，范围冻结为 `Mail external secure delivery closure`
+- 权威路线：`docs/release/community-v1-v1.5-plan.md`、`docs/release/community-v1-v1.5-mainline-roadmap.md`、`docs/release/community-v1-support-boundaries.md`
 
 ## 当前版本节奏
 - `v1.0.0-rc1`：历史候选基线，反馈已完成分流。
@@ -18,23 +18,24 @@
 - `v1.3.0`：已完成 `Mail E2EE` 深化、`Drive E2EE foundation`、`Web Push`、`SMTP outbound`、`Calendar invite orchestration`、`Pass Beta readiness`、`API docs` 与 `i18n/a11y` 收口。
 - `v1.3.1`：当前 `main` 基线，只承接前端依赖安全修复。
 - `v1.4.0`：已正式发布，范围冻结为 `Mail 外部密码保护加密投递`。
-- GitHub milestones：`v1.0.0`、`v1.2`、`v1.3`、`v1.4`
+- `v1.5.0`：已正式发布，聚焦 `Mail external secure attachments + draft reopen + public secure share trust UX`
+- GitHub milestones：`v1.0.0`、`v1.2`、`v1.3`、`v1.4`、`v1.5`
 - 不在当前版本节奏中推进 `VPN / Meet / Wallet / Lumo` 等 `Preview` 模块。
 
-## `v1.4` 能力边界快照
+## `v1.5` 能力边界快照
 - 已交付：
   - `PWA` installability、`manifest`、`Service Worker` 注册与浏览器侧 `Web Push`
   - `Mail E2EE` key profile、recipient readiness、`READY` 内部路由正文加密、草稿加密、附件加密、恢复包与详情页本地解密
-  - `Mail` 外部密码保护加密投递：浏览器内加密正文、服务端保存密文正文、SMTP 外发 secure link 通知、公开 secure link 页面本地解密
+  - `Mail` 外部密码保护加密投递：浏览器内加密正文与附件、服务端保存密文正文 / 附件与 secure link metadata、草稿恢复 external secure delivery 状态、公开 secure link 页面本地解密正文并下载解密附件
   - `Drive E2EE foundation` 与单文件 `readable-share` E2EE foundation
   - `SMTP outbound adapter`、`Calendar internal invitation orchestration`、`Pass Beta readiness`
 - 受限交付：
-  - 外部密码保护加密投递当前只覆盖 `body-only secure link`
-  - 不覆盖外部加密附件、外部加密草稿、完整 MIME 兼容或零知识元数据
+  - 外部密码保护加密投递当前仍是 `public secure link` 模式，不是完整 MIME 级外部邮箱互通
+  - 不覆盖外部联系人公钥发现、`SMTP inbound / IMAP / Bridge`、完整零知识元数据与搜索
 - 预研中：零知识邮件路线、`SMTP / IMAP / Bridge`
 - 尚未交付：`iOS / Android / Desktop` 原生客户端、离线写入同步、完整外部 E2EE 协议栈
 - 仅 Hosted：真实支付扣款、商业订阅生命周期、财务级税费 / 发票 / 对账。
-- 权威说明：以 `README.md`、`docs/release/community-v1-v1.4-mainline-roadmap.md`、`docs/release/community-v1-support-boundaries.md`、`docs/open-source/module-maturity-matrix.md`、`docs/architecture/mail-zero-knowledge-roadmap.md`、`docs/architecture/mail-protocol-stack-discovery.md`、`/suite` 的 `Release boundary map` 为准。
+- 权威说明：以 `README.md`、`docs/release/community-v1-v1.5-mainline-roadmap.md`、`docs/release/community-v1-support-boundaries.md`、`docs/open-source/module-maturity-matrix.md`、`docs/architecture/mail-zero-knowledge-roadmap.md`、`docs/architecture/mail-protocol-stack-discovery.md`、`/suite` 的 `Release boundary map` 为准。
 
 ## 快速启动
 1. 准备运行时环境：
@@ -72,8 +73,12 @@
 - Mail E2EE message encryption：`docs/architecture/mail-e2ee-message-encryption.md`
 - Mail zero-knowledge roadmap：`docs/architecture/mail-zero-knowledge-roadmap.md`
 - Mail protocol stack discovery：`docs/architecture/mail-protocol-stack-discovery.md`
-- `v1.4` 规划基线：`docs/release/community-v1-v1.4-plan.md`
-- `v1.4` 主线路线：`docs/release/community-v1-v1.4-mainline-roadmap.md`
+- `v1.5` 规划基线：`docs/release/community-v1-v1.5-plan.md`
+- `v1.5` 主线路线：`docs/release/community-v1-v1.5-mainline-roadmap.md`
+- `v1.5` release checklist：`docs/release/community-v1-v1.5-release-checklist.md`
+- `v1.5` release manager brief：`docs/release/community-v1-v1.5-release-manager-brief.md`
+- `v1.5` final signoff：`docs/release/community-v1-v1.5-final-signoff.md`
+- `v1.5.0` release notes：`docs/release/community-v1-v1.5.0-release-notes.md`
 - `v1.4` release checklist：`docs/release/community-v1-v1.4-release-checklist.md`
 - `v1.4` release manager brief：`docs/release/community-v1-v1.4-release-manager-brief.md`
 - `v1.4` final signoff：`docs/release/community-v1-v1.4-final-signoff.md`

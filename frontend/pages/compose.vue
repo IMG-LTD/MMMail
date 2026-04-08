@@ -2,9 +2,9 @@
 import { computed, onMounted, ref, watch } from 'vue'
 import { ElMessage } from 'element-plus'
 import type {
-  DraftRequest,
   LabelItem,
   MailAttachment,
+  MailComposeDraftRequest,
   MailComposeSubmitRequest,
   MailId,
   MailSenderIdentity,
@@ -38,11 +38,14 @@ interface ComposerDefaults {
   body: string
   sender: string
   draftId: string
+  externalSecureEnabled: boolean
+  externalSecurePasswordHint: string
+  externalSecureExpiresAt: string
 }
 
 interface UploadAttachmentPayload {
   files: File[]
-  draft: DraftRequest
+  draft: MailComposeDraftRequest
 }
 
 type FailedUploadState = FailedMailAttachmentUpload & { file: File }
@@ -52,7 +55,10 @@ const EMPTY_COMPOSER_DEFAULTS: ComposerDefaults = {
   subject: '',
   body: '',
   sender: '',
-  draftId: ''
+  draftId: '',
+  externalSecureEnabled: false,
+  externalSecurePasswordHint: '',
+  externalSecureExpiresAt: ''
 }
 
 const authStore = useAuthStore()
@@ -151,7 +157,10 @@ function buildQueryDefaults(): ComposerDefaults {
     subject: readRouteQueryValue(route.query.subject),
     body: readRouteQueryValue(route.query.body),
     sender: readRouteQueryValue(route.query.from),
-    draftId: ''
+    draftId: '',
+    externalSecureEnabled: false,
+    externalSecurePasswordHint: '',
+    externalSecureExpiresAt: ''
   }
 }
 
@@ -184,6 +193,7 @@ async function loadDraft(draftId: string): Promise<void> {
     if (!detail.isDraft) {
       throw new Error(t('mailCompose.messages.loadDraftFailed'))
     }
+    const externalAccess = detail.e2ee?.externalAccess
     encryptedDraft.value = detail.e2ee?.enabled
       ? { ciphertext: detail.body, metadata: detail.e2ee }
       : null
@@ -193,7 +203,10 @@ async function loadDraft(draftId: string): Promise<void> {
       subject: detail.subject,
       body: detail.e2ee?.enabled ? '' : detail.body,
       sender: detail.senderEmail || '',
-      draftId: detail.id
+      draftId: detail.id,
+      externalSecureEnabled: externalAccess?.mode === 'PASSWORD_PROTECTED',
+      externalSecurePasswordHint: externalAccess?.passwordHint || '',
+      externalSecureExpiresAt: externalAccess?.expiresAt || ''
     })
     attachments.value = [...detail.attachments]
     failedUploads.value = []
@@ -225,17 +238,20 @@ async function syncComposerFromRoute(): Promise<void> {
   resetAttachmentState()
 }
 
-function applySavedDraft(payload: DraftRequest, draftId: MailId): void {
+function applySavedDraft(payload: MailComposeDraftRequest, draftId: MailId): void {
   applyComposerDefaults({
     to: payload.toEmail,
     subject: payload.subject,
     body: payload.body || '',
     sender: payload.fromEmail || '',
-    draftId
+    draftId,
+    externalSecureEnabled: Boolean(payload.externalSecureDelivery?.enabled),
+    externalSecurePasswordHint: payload.externalSecureDelivery?.passwordHint || '',
+    externalSecureExpiresAt: payload.externalSecureDelivery?.expiresAt || ''
   })
 }
 
-async function ensureDraftId(payload: DraftRequest): Promise<MailId> {
+async function ensureDraftId(payload: MailComposeDraftRequest): Promise<MailId> {
   if (composerDefaults.value.draftId) {
     return composerDefaults.value.draftId
   }
@@ -269,11 +285,18 @@ function buildPlainUploadOptions(file: File): UploadDraftAttachmentOptions {
   }
 }
 
-async function buildUploadOptions(file: File, attachmentE2eeEnabled: boolean): Promise<UploadDraftAttachmentOptions> {
+async function buildUploadOptions(
+  file: File,
+  attachmentE2eeEnabled: boolean,
+  externalSecureDelivery?: MailComposeDraftRequest['externalSecureDelivery']
+): Promise<UploadDraftAttachmentOptions> {
+  if (externalSecureDelivery?.enabled && !attachmentE2eeEnabled) {
+    throw new Error(t('mailCompose.attachments.e2ee.messages.profileMissing'))
+  }
   if (!attachmentE2eeEnabled) {
     return buildPlainUploadOptions(file)
   }
-  const encrypted = await encryptDraftAttachment(file)
+  const encrypted = await encryptDraftAttachment(file, { externalSecureDelivery })
   return {
     file: encrypted.file,
     fileName: encrypted.fileName,
@@ -283,7 +306,7 @@ async function buildUploadOptions(file: File, attachmentE2eeEnabled: boolean): P
   }
 }
 
-async function uploadFiles(files: File[], draft: DraftRequest): Promise<void> {
+async function uploadFiles(files: File[], draft: MailComposeDraftRequest): Promise<void> {
   attachmentUploading.value = true
   composerError.value = ''
   try {
@@ -292,7 +315,7 @@ async function uploadFiles(files: File[], draft: DraftRequest): Promise<void> {
     for (const file of files) {
       try {
         validateMailAttachmentFile(file)
-        const uploadOptions = await buildUploadOptions(file, attachmentE2eeEnabled)
+        const uploadOptions = await buildUploadOptions(file, attachmentE2eeEnabled, draft.externalSecureDelivery)
         const attachment = await uploadDraftAttachment(draftId, uploadOptions)
         attachments.value = upsertMailAttachment(attachments.value, attachment)
         clearFailure(file)
@@ -340,7 +363,7 @@ async function onSend(payload: MailComposeSubmitRequest): Promise<void> {
   }
 }
 
-async function onSave(payload: DraftRequest): Promise<void> {
+async function onSave(payload: MailComposeDraftRequest): Promise<void> {
   try {
     const outboundPayload = await buildDraftPayload(payload)
     const draftId = await saveDraft(outboundPayload)
@@ -358,7 +381,7 @@ async function onSave(payload: DraftRequest): Promise<void> {
   }
 }
 
-async function onAutoSave(payload: DraftRequest): Promise<void> {
+async function onAutoSave(payload: MailComposeDraftRequest): Promise<void> {
   try {
     const outboundPayload = await buildDraftPayload(payload)
     const draftId = await saveDraft(outboundPayload)
@@ -378,7 +401,7 @@ async function onUploadAttachments(payload: UploadAttachmentPayload): Promise<vo
   await uploadFiles(payload.files, payload.draft)
 }
 
-async function onRetryAttachment(payload: { failureId: string, draft: DraftRequest }): Promise<void> {
+async function onRetryAttachment(payload: { failureId: string, draft: MailComposeDraftRequest }): Promise<void> {
   const failed = failedUploads.value.find(item => item.id === payload.failureId)
   if (!failed) {
     return
@@ -566,6 +589,11 @@ onMounted(async () => {
       :default-to="composerDefaults.to"
       :default-subject="composerDefaults.subject"
       :default-body="composerDefaults.body"
+      :default-external-secure-delivery="{
+        enabled: composerDefaults.externalSecureEnabled,
+        passwordHint: composerDefaults.externalSecurePasswordHint,
+        expiresAt: composerDefaults.externalSecureExpiresAt
+      }"
       :default-sender-email="composerDefaults.sender || defaultSenderEmail"
       :available-labels="labels"
       :attachments="attachments"

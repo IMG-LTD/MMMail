@@ -90,6 +90,20 @@ export function useMailApi() {
     return response.data.data
   }
 
+  async function downloadPublicSecureAttachment(
+    token: string,
+    attachmentId: MailId
+  ): Promise<{ blob: Blob, fileName: string }> {
+    const response = await $apiClient.get<Blob>(
+      `/api/v1/public/mail/secure-links/${token}/attachments/${attachmentId}/download`,
+      { responseType: 'blob' }
+    )
+    return {
+      blob: response.data,
+      fileName: extractFileName(String(response.headers['content-disposition'] || '')) || `mail-attachment-${attachmentId}`
+    }
+  }
+
   async function undoSend(mailId: MailId): Promise<void> {
     await $apiClient.post(`/api/v1/mails/${mailId}/undo-send`)
   }
@@ -198,6 +212,7 @@ export function useMailApi() {
     fetchRecipientE2eeStatus,
     sendMail,
     getPublicSecureLink,
+    downloadPublicSecureAttachment,
     undoSend,
     saveDraft,
     uploadDraftAttachment,
