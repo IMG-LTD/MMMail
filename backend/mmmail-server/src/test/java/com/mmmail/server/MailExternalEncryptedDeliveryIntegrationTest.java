@@ -12,10 +12,12 @@ import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMock
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.MediaType;
+import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
 
+import java.nio.charset.StandardCharsets;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -28,6 +30,7 @@ import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -39,6 +42,7 @@ class MailExternalEncryptedDeliveryIntegrationTest {
     private static final String PASSWORD = "Password@123";
     private static final String SENDER_FINGERPRINT = "111122223333444455556666777788889999AAAA";
     private static final String ENCRYPTED_BODY = "-----BEGIN PGP MESSAGE-----MMMAIL-EXTERNAL-----END PGP MESSAGE-----";
+    private static final byte[] ENCRYPTED_ATTACHMENT = "encrypted-attachment-payload".getBytes(StandardCharsets.UTF_8);
     private static final Pattern SECURE_LINK_PATTERN = Pattern.compile("/share/mail/([A-Za-z0-9]+)");
 
     @Autowired
@@ -68,7 +72,7 @@ class MailExternalEncryptedDeliveryIntegrationTest {
         disableUndoSend(senderToken);
         saveKeyProfile(senderToken, SENDER_FINGERPRINT);
 
-        mockMvc.perform(sendExternalEncryptedMail(senderToken, senderEmail, externalEmail, suffix))
+        mockMvc.perform(sendExternalEncryptedMail(senderToken, senderEmail, externalEmail, suffix, null))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.code").value(0));
 
@@ -113,7 +117,7 @@ class MailExternalEncryptedDeliveryIntegrationTest {
         disableUndoSend(senderToken);
         saveKeyProfile(senderToken, SENDER_FINGERPRINT);
 
-        mockMvc.perform(sendExternalEncryptedMail(senderToken, senderEmail, receiverEmail, suffix))
+        mockMvc.perform(sendExternalEncryptedMail(senderToken, senderEmail, receiverEmail, suffix, null))
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.code").value(ErrorCode.INVALID_ARGUMENT.getCode()))
                 .andExpect(jsonPath("$.message").value("Password-protected external Mail E2EE requires SMTP outbound recipients"));
@@ -122,47 +126,67 @@ class MailExternalEncryptedDeliveryIntegrationTest {
     }
 
     @Test
-    void passwordProtectedExternalDraftShouldFailExplicitly() throws Exception {
+    void passwordProtectedExternalDraftShouldPersistAndExposeEncryptedAttachments() throws Exception {
         String suffix = String.valueOf(System.nanoTime());
         String senderEmail = "mail-external-draft-sender-" + suffix + "@mmmail.local";
+        String externalEmail = "mail-external-draft-" + suffix + "@example.net";
         String senderToken = register(senderEmail, "External Mail Sender");
+        disableUndoSend(senderToken);
         saveKeyProfile(senderToken, SENDER_FINGERPRINT);
+        String draftId = saveExternalDraft(senderToken, senderEmail, externalEmail);
+        String attachmentId = uploadEncryptedAttachment(senderToken, draftId);
 
-        mockMvc.perform(post("/api/v1/mails/drafts")
+        mockMvc.perform(get("/api/v1/mails/" + draftId)
                         .header("Authorization", "Bearer " + senderToken)
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content("""
-                                {
-                                  "toEmail": "external@example.net",
-                                  "fromEmail": "%s",
-                                  "subject": "Draft secure subject",
-                                  "e2ee": {
-                                    "encryptedBody": "%s",
-                                    "algorithm": "openpgp",
-                                    "recipientFingerprints": ["%s"],
-                                    "externalAccess": {
-                                      "mode": "PASSWORD_PROTECTED",
-                                      "passwordHint": "shared out-of-band"
-                                    }
-                                  }
-                                }
-                                """.formatted(senderEmail, ENCRYPTED_BODY, SENDER_FINGERPRINT)))
-                .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.code").value(ErrorCode.INVALID_ARGUMENT.getCode()))
-                .andExpect(jsonPath("$.message").value("Password-protected external Mail E2EE is not supported for drafts"));
+                        .accept(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.isDraft").value(true))
+                .andExpect(jsonPath("$.data.body").value(ENCRYPTED_BODY))
+                .andExpect(jsonPath("$.data.e2ee.enabled").value(true))
+                .andExpect(jsonPath("$.data.e2ee.externalAccess.mode").value("PASSWORD_PROTECTED"))
+                .andExpect(jsonPath("$.data.e2ee.externalAccess.passwordHint").value("shared out-of-band"))
+                .andExpect(jsonPath("$.data.attachments[0].id").value(attachmentId))
+                .andExpect(jsonPath("$.data.attachments[0].e2ee.enabled").value(true))
+                .andExpect(jsonPath("$.data.attachments[0].e2ee.algorithm").value("openpgp"));
+
+        mockMvc.perform(sendExternalEncryptedMail(senderToken, senderEmail, externalEmail, suffix, draftId))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.code").value(0));
+
+        ArgumentCaptor<MailOutboundDeliveryGateway.MailOutboundRequest> requestCaptor = ArgumentCaptor.forClass(
+                MailOutboundDeliveryGateway.MailOutboundRequest.class
+        );
+        verify(mailOutboundDeliveryGateway, times(1)).send(requestCaptor.capture());
+        String secureToken = extractSecureToken(requestCaptor.getValue().body());
+
+        mockMvc.perform(get("/api/v1/public/mail/secure-links/" + secureToken))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.attachments[0].id").value(attachmentId))
+                .andExpect(jsonPath("$.data.attachments[0].fileName").value("roadmap.pdf"))
+                .andExpect(jsonPath("$.data.attachments[0].contentType").value("application/pdf"))
+                .andExpect(jsonPath("$.data.attachments[0].algorithm").value("openpgp"));
+
+        mockMvc.perform(get("/api/v1/public/mail/secure-links/" + secureToken + "/attachments/" + attachmentId + "/download"))
+                .andExpect(status().isOk())
+                .andExpect(content().bytes(ENCRYPTED_ATTACHMENT));
     }
 
     private org.springframework.test.web.servlet.request.MockHttpServletRequestBuilder sendExternalEncryptedMail(
             String token,
             String senderEmail,
             String recipientEmail,
-            String suffix
+            String suffix,
+            String draftId
     ) {
+        String draftFragment = draftId == null ? "" : """
+                          "draftId": %s,
+                        """.formatted(draftId);
         return post("/api/v1/mails/send")
                 .header("Authorization", "Bearer " + token)
                 .contentType(MediaType.APPLICATION_JSON)
                 .content("""
                         {
+                        %s
                           "fromEmail": "%s",
                           "toEmail": "%s",
                           "subject": "External secure subject",
@@ -179,7 +203,58 @@ class MailExternalEncryptedDeliveryIntegrationTest {
                             }
                           }
                         }
-                        """.formatted(senderEmail, recipientEmail, suffix, ENCRYPTED_BODY, SENDER_FINGERPRINT));
+                        """.formatted(draftFragment, senderEmail, recipientEmail, suffix, ENCRYPTED_BODY, SENDER_FINGERPRINT));
+    }
+
+    private String saveExternalDraft(String token, String senderEmail, String recipientEmail) throws Exception {
+        MvcResult result = mockMvc.perform(post("/api/v1/mails/drafts")
+                        .header("Authorization", "Bearer " + token)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {
+                                  "toEmail": "%s",
+                                  "fromEmail": "%s",
+                                  "subject": "Draft secure subject",
+                                  "e2ee": {
+                                    "encryptedBody": "%s",
+                                    "algorithm": "openpgp",
+                                    "recipientFingerprints": ["%s"],
+                                    "externalAccess": {
+                                      "mode": "PASSWORD_PROTECTED",
+                                      "passwordHint": "shared out-of-band",
+                                      "expiresAt": "2026-04-21T12:00:00"
+                                    }
+                                  }
+                                }
+                                """.formatted(recipientEmail, senderEmail, ENCRYPTED_BODY, SENDER_FINGERPRINT)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.code").value(0))
+                .andReturn();
+        return readJson(result).at("/data/draftId").asText();
+    }
+
+    private String uploadEncryptedAttachment(String token, String draftId) throws Exception {
+        MockMultipartFile file = new MockMultipartFile(
+                "file",
+                "roadmap.pdf.pgp",
+                MediaType.APPLICATION_OCTET_STREAM_VALUE,
+                ENCRYPTED_ATTACHMENT
+        );
+        MvcResult result = mockMvc.perform(org.springframework.test.web.servlet.request.MockMvcRequestBuilders.multipart(
+                                "/api/v1/mails/drafts/" + draftId + "/attachments"
+                        )
+                        .file(file)
+                        .param("fileName", "roadmap.pdf")
+                        .param("contentType", "application/pdf")
+                        .param("fileSize", "22")
+                        .param("e2eeEnabled", "true")
+                        .param("e2eeAlgorithm", "openpgp")
+                        .param("e2eeRecipientFingerprintsJson", "[\"" + SENDER_FINGERPRINT + "\"]")
+                        .header("Authorization", "Bearer " + token))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.code").value(0))
+                .andReturn();
+        return readJson(result).at("/data/attachment/id").asText();
     }
 
     private String extractSecureToken(String notificationBody) {

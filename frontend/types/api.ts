@@ -784,6 +784,7 @@ export interface MailBodyE2ee {
   enabled: boolean
   algorithm: string | null
   recipientFingerprints: string[]
+  externalAccess?: MailBodyE2eeExternalAccessPayload | null
 }
 
 export interface MailAttachment {
@@ -1982,6 +1983,11 @@ export interface MailComposeSubmitRequest extends Omit<SendMailRequest, 'e2ee'> 
   externalSecureDelivery?: MailComposeExternalSecureDelivery
 }
 
+export interface MailComposeDraftRequest extends Omit<DraftRequest, 'e2ee'> {
+  e2ee?: MailBodyE2eePayload
+  externalSecureDelivery?: MailComposeExternalSecureDelivery
+}
+
 export interface MailBodyE2eePayload {
   encryptedBody: string
   algorithm: string
@@ -2023,6 +2029,14 @@ export interface DraftRequest {
   e2ee?: MailBodyE2eePayload
 }
 
+export interface MailPublicSecureAttachment {
+  id: string
+  fileName: string
+  contentType: string
+  fileSize: number
+  algorithm: string | null
+}
+
 export interface MailPublicSecureLink {
   mailId: string
   subject: string
@@ -2032,6 +2046,7 @@ export interface MailPublicSecureLink {
   algorithm: string
   passwordHint: string | null
   expiresAt: string | null
+  attachments: MailPublicSecureAttachment[]
 }
 
 export interface LabelItem {

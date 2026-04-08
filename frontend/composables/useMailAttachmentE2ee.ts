@@ -4,6 +4,7 @@ import { useSettingsApi } from '~/composables/useSettingsApi'
 import type {
   MailAttachment,
   MailAttachmentE2ee,
+  MailComposeExternalSecureDelivery,
   MailAttachmentE2eePayload,
   MailE2eeKeyProfile
 } from '~/types/api'
@@ -25,6 +26,10 @@ export interface DownloadedAttachmentPayload {
   fileName: string
 }
 
+interface AttachmentEncryptionOptions {
+  externalSecureDelivery?: MailComposeExternalSecureDelivery | null
+}
+
 export function useMailAttachmentE2ee() {
   const { t } = useI18n()
   const { fetchMailE2eeKeyProfile } = useSettingsApi()
@@ -34,13 +39,18 @@ export function useMailAttachmentE2ee() {
     return Boolean(profile.enabled && profile.publicKeyArmored && profile.fingerprint)
   }
 
-  async function encryptDraftAttachment(file: File): Promise<DraftAttachmentEncryptionResult> {
+  async function encryptDraftAttachment(
+    file: File,
+    options: AttachmentEncryptionOptions = {}
+  ): Promise<DraftAttachmentEncryptionResult> {
     const profile = requireEncryptionProfile(await fetchMailE2eeKeyProfile(), t)
     const publicKey = await readKey({ armoredKey: profile.publicKeyArmored as string })
     const message = await createMessage({ binary: new Uint8Array(await file.arrayBuffer()) })
+    const passwords = resolveAttachmentPasswords(options.externalSecureDelivery, t)
     const encryptedBinary = await encrypt({
       message,
-      encryptionKeys: publicKey,
+      encryptionKeys: [publicKey],
+      passwords,
       format: 'binary'
     })
     const encryptedBytes = toUint8Array(encryptedBinary)
@@ -95,6 +105,20 @@ function buildAttachmentE2eePayload(fingerprint: string, file: File): MailAttach
     algorithm: ATTACHMENT_E2EE_ALGORITHM,
     recipientFingerprints: [fingerprint]
   }
+}
+
+function resolveAttachmentPasswords(
+  externalSecureDelivery: MailComposeExternalSecureDelivery | null | undefined,
+  translate: (key: string) => string
+): string[] | undefined {
+  if (!externalSecureDelivery?.enabled) {
+    return undefined
+  }
+  const password = externalSecureDelivery.password?.trim() || ''
+  if (!password) {
+    throw new Error(translate('mailCompose.externalSecure.messages.passwordRequired'))
+  }
+  return [password]
 }
 
 function requireAttachmentE2ee(attachment: MailAttachment): MailAttachmentE2ee {

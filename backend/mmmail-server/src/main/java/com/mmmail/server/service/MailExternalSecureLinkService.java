@@ -31,15 +31,18 @@ public class MailExternalSecureLinkService {
 
     private final MailExternalSecureLinkMapper mailExternalSecureLinkMapper;
     private final MailMessageMapper mailMessageMapper;
+    private final MailAttachmentService mailAttachmentService;
     private final AuditService auditService;
 
     public MailExternalSecureLinkService(
             MailExternalSecureLinkMapper mailExternalSecureLinkMapper,
             MailMessageMapper mailMessageMapper,
+            MailAttachmentService mailAttachmentService,
             AuditService auditService
     ) {
         this.mailExternalSecureLinkMapper = mailExternalSecureLinkMapper;
         this.mailMessageMapper = mailMessageMapper;
+        this.mailAttachmentService = mailAttachmentService;
         this.auditService = auditService;
     }
 
@@ -103,17 +106,8 @@ public class MailExternalSecureLinkService {
 
     @Transactional
     public MailPublicSecureLinkVo getPublicSecureLink(String token, String ipAddress) {
-        MailExternalSecureLink link = mailExternalSecureLinkMapper.selectOne(new LambdaQueryWrapper<MailExternalSecureLink>()
-                .eq(MailExternalSecureLink::getToken, requireToken(token))
-                .last("limit 1"));
-        if (link == null) {
-            throw new BizException(ErrorCode.INVALID_ARGUMENT, "Mail secure link is not found");
-        }
-        validateLinkActive(link);
-        MailMessage mail = mailMessageMapper.selectById(link.getMailId());
-        if (mail == null || mail.getBodyE2eeEnabled() == null || mail.getBodyE2eeEnabled() != 1) {
-            throw new BizException(ErrorCode.INVALID_ARGUMENT, "Mail secure link target is not found");
-        }
+        MailExternalSecureLink link = requireActiveLink(token);
+        MailMessage mail = requireEncryptedMail(link.getMailId());
         LocalDateTime now = LocalDateTime.now();
         link.setLastAccessedAt(now);
         link.setUpdatedAt(now);
@@ -132,8 +126,29 @@ public class MailExternalSecureLinkService {
                 mail.getBodyCiphertext(),
                 mail.getBodyE2eeAlgorithm(),
                 link.getPasswordHint(),
-                link.getExpiresAt()
+                link.getExpiresAt(),
+                mailAttachmentService.listForPublicSecureLink(mail.getId())
         );
+    }
+
+    public MailAttachmentService.PublicAttachmentDownload downloadPublicAttachment(
+            String token,
+            Long attachmentId,
+            String ipAddress
+    ) {
+        MailExternalSecureLink link = requireActiveLink(token);
+        MailMessage mail = requireEncryptedMail(link.getMailId());
+        MailAttachmentService.PublicAttachmentDownload download = mailAttachmentService.downloadPublicSecureAttachment(
+                mail.getId(),
+                attachmentId
+        );
+        auditService.record(
+                null,
+                "MAIL_SECURE_LINK_ATTACHMENT_DOWNLOAD",
+                "mailId=" + mail.getId() + ",attachment=" + attachmentId + ",token=" + link.getToken(),
+                ipAddress
+        );
+        return download;
     }
 
     public String buildNotificationSubject(MailMessage mail) {
@@ -167,6 +182,25 @@ public class MailExternalSecureLinkService {
         return mailExternalSecureLinkMapper.selectOne(new LambdaQueryWrapper<MailExternalSecureLink>()
                 .eq(MailExternalSecureLink::getMailId, mailId)
                 .last("limit 1"));
+    }
+
+    private MailExternalSecureLink requireActiveLink(String token) {
+        MailExternalSecureLink link = mailExternalSecureLinkMapper.selectOne(new LambdaQueryWrapper<MailExternalSecureLink>()
+                .eq(MailExternalSecureLink::getToken, requireToken(token))
+                .last("limit 1"));
+        if (link == null) {
+            throw new BizException(ErrorCode.INVALID_ARGUMENT, "Mail secure link is not found");
+        }
+        validateLinkActive(link);
+        return link;
+    }
+
+    private MailMessage requireEncryptedMail(Long mailId) {
+        MailMessage mail = mailMessageMapper.selectById(mailId);
+        if (mail == null || mail.getBodyE2eeEnabled() == null || mail.getBodyE2eeEnabled() != 1) {
+            throw new BizException(ErrorCode.INVALID_ARGUMENT, "Mail secure link target is not found");
+        }
+        return mail;
     }
 
     private LocalDateTime validateExpiresAt(LocalDateTime expiresAt, LocalDateTime deliveryAt) {

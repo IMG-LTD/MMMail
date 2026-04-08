@@ -5,6 +5,7 @@ import java.util.List;
 public record MailBodyE2eeVo(
         boolean enabled,
         String algorithm,
-        List<String> recipientFingerprints
+        List<String> recipientFingerprints,
+        MailBodyE2eeExternalAccessVo externalAccess
 ) {
 }

@@ -15,6 +15,7 @@ import com.mmmail.server.model.vo.MailAttachmentE2eeVo;
 import com.mmmail.server.model.vo.MailAttachmentUploadVo;
 import com.mmmail.server.model.vo.MailAttachmentVo;
 import com.mmmail.server.model.vo.MailDeliveryTarget;
+import com.mmmail.server.model.vo.MailPublicSecureAttachmentVo;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -39,6 +40,7 @@ public class MailAttachmentService {
     private static final int E2EE_DISABLED_FLAG = 0;
     private static final int E2EE_ENABLED_FLAG = 1;
     private static final String DEFAULT_CONTENT_TYPE = "application/octet-stream";
+    private static final String EXTERNAL_SECURE_ATTACHMENT_CONTENT_TYPE = "application/octet-stream";
     private static final TypeReference<List<String>> STRING_LIST_TYPE = new TypeReference<>() {
     };
     private static final Set<String> BLOCKED_EXTENSIONS = Set.of(
@@ -111,6 +113,28 @@ public class MailAttachmentService {
     public boolean hasAttachments(Long mailId) {
         return mailAttachmentMapper.selectCount(new LambdaQueryWrapper<MailAttachment>()
                 .eq(MailAttachment::getMailId, mailId)) > 0;
+    }
+
+    public void validateExternalSecureDeliveryAttachments(Long mailId) {
+        for (MailAttachment attachment : listRawAttachments(mailId)) {
+            requireEncryptedAttachment(attachment);
+        }
+    }
+
+    public List<MailPublicSecureAttachmentVo> listForPublicSecureLink(Long mailId) {
+        return listRawAttachments(mailId).stream()
+                .map(this::toPublicSecureVo)
+                .toList();
+    }
+
+    public PublicAttachmentDownload downloadPublicSecureAttachment(Long mailId, Long attachmentId) {
+        MailAttachment attachment = requireAttachment(mailId, attachmentId);
+        requireEncryptedAttachment(attachment);
+        return new PublicAttachmentDownload(
+                buildEncryptedDownloadName(attachment.getFileName()),
+                EXTERNAL_SECURE_ATTACHMENT_CONTENT_TYPE,
+                readAttachmentContent(attachment)
+        );
     }
 
     @Transactional
@@ -315,9 +339,16 @@ public class MailAttachmentService {
     }
 
     private MailAttachment requireOwnedAttachment(Long userId, Long mailId, Long attachmentId) {
+        MailAttachment attachment = requireAttachment(mailId, attachmentId);
+        if (!attachment.getOwnerId().equals(userId)) {
+            throw new BizException(ErrorCode.MAIL_NOT_FOUND, "Mail attachment not found");
+        }
+        return attachment;
+    }
+
+    private MailAttachment requireAttachment(Long mailId, Long attachmentId) {
         MailAttachment attachment = mailAttachmentMapper.selectOne(new LambdaQueryWrapper<MailAttachment>()
                 .eq(MailAttachment::getId, attachmentId)
-                .eq(MailAttachment::getOwnerId, userId)
                 .eq(MailAttachment::getMailId, mailId));
         if (attachment == null) {
             throw new BizException(ErrorCode.MAIL_NOT_FOUND, "Mail attachment not found");
@@ -351,6 +382,36 @@ public class MailAttachmentService {
                 attachment.getE2eeAlgorithm(),
                 parseFingerprints(attachment.getE2eeFingerprintsJson())
         );
+    }
+
+    private MailPublicSecureAttachmentVo toPublicSecureVo(MailAttachment attachment) {
+        requireEncryptedAttachment(attachment);
+        return new MailPublicSecureAttachmentVo(
+                String.valueOf(attachment.getId()),
+                attachment.getFileName(),
+                attachment.getContentType(),
+                attachment.getFileSize() == null ? 0 : attachment.getFileSize(),
+                attachment.getE2eeAlgorithm()
+        );
+    }
+
+    private void requireEncryptedAttachment(MailAttachment attachment) {
+        if (attachment.getE2eeEnabled() == null || attachment.getE2eeEnabled() != E2EE_ENABLED_FLAG) {
+            throw new BizException(
+                    ErrorCode.INVALID_ARGUMENT,
+                    "Password-protected external Mail E2EE requires every attachment to be encrypted"
+            );
+        }
+        if (!StringUtils.hasText(attachment.getE2eeAlgorithm())) {
+            throw new BizException(
+                    ErrorCode.INVALID_ARGUMENT,
+                    "Encrypted attachment is missing Mail E2EE algorithm metadata"
+            );
+        }
+    }
+
+    private String buildEncryptedDownloadName(String fileName) {
+        return fileName.endsWith(".pgp") ? fileName : fileName + ".pgp";
     }
 
     private List<String> parseFingerprints(String fingerprintsJson) {
@@ -396,5 +457,8 @@ public class MailAttachmentService {
         private boolean enabled() {
             return flag == E2EE_ENABLED_FLAG;
         }
+    }
+
+    public record PublicAttachmentDownload(String fileName, String contentType, byte[] bytes) {
     }
 }

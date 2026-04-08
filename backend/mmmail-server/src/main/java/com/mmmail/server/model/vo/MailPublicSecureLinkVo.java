@@ -1,6 +1,7 @@
 package com.mmmail.server.model.vo;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 public record MailPublicSecureLinkVo(
         String mailId,
@@ -10,6 +11,7 @@ public record MailPublicSecureLinkVo(
         String bodyCiphertext,
         String algorithm,
         String passwordHint,
-        LocalDateTime expiresAt
+        LocalDateTime expiresAt,
+        List<MailPublicSecureAttachmentVo> attachments
 ) {
 }

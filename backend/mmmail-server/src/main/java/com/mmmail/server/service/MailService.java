@@ -490,6 +490,7 @@ public class MailService {
         sent.setBodyE2eeEnabled(outboundBody.bodyE2eeEnabled());
         sent.setBodyE2eeAlgorithm(outboundBody.bodyE2eeAlgorithm());
         sent.setBodyE2eeFingerprintsJson(outboundBody.bodyE2eeFingerprintsJson());
+        sent.setBodyE2eeExternalAccessJson(outboundBody.bodyE2eeExternalAccessJson());
         sent.setIsRead(1);
         sent.setIsStarred(0);
         sent.setIsDraft(0);
@@ -586,6 +587,7 @@ public class MailService {
         draft.setBodyE2eeEnabled(draftBody.bodyE2eeEnabled());
         draft.setBodyE2eeAlgorithm(draftBody.bodyE2eeAlgorithm());
         draft.setBodyE2eeFingerprintsJson(draftBody.bodyE2eeFingerprintsJson());
+        draft.setBodyE2eeExternalAccessJson(draftBody.bodyE2eeExternalAccessJson());
         draft.setPeerEmail(draftPeerEmail);
         draft.setSenderEmail(senderEmail);
         draft.setSentAt(now);
@@ -1534,9 +1536,13 @@ public class MailService {
                 );
             }
         }
-        if (outbound.getId() != null && mailAttachmentService.hasAttachments(outbound.getId())) {
+        if (outbound.getId() == null || !mailAttachmentService.hasAttachments(outbound.getId())) {
+            return;
+        }
+        if (!passwordProtectedExternal) {
             throw new BizException(ErrorCode.INVALID_ARGUMENT, "SMTP outbound attachments are not supported yet");
         }
+        mailAttachmentService.validateExternalSecureDeliveryAttachments(outbound.getId());
     }
 
     private MailDeliveryTarget requireSingleSmtpTarget(List<MailDeliveryTarget> deliveryTargets) {
