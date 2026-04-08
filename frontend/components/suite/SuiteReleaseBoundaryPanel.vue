@@ -27,14 +27,15 @@ const limitedCapabilityCount = computed(() => countCommunityCapabilitiesByStatus
 const discoveryCapabilityCount = computed(() => countCommunityCapabilitiesByStatus('DISCOVERY'))
 const notShippedCapabilityCount = computed(() => countCommunityCapabilitiesByStatus('NOT_SHIPPED'))
 const hostedOnlyCapabilityCount = computed(() => countCommunityCapabilitiesByStatus('HOSTED_ONLY'))
+const panelTitleId = 'suite-release-boundary-title'
 </script>
 
 <template>
-  <section class="mm-card boundary-panel">
+  <section class="mm-card boundary-panel" :aria-labelledby="panelTitleId">
     <div class="boundary-head">
       <div>
         <p class="eyebrow">{{ t('community.boundary.badge') }}</p>
-        <h2 class="mm-section-title">{{ t('community.boundary.title') }}</h2>
+        <h2 :id="panelTitleId" class="mm-section-title">{{ t('community.boundary.title') }}</h2>
         <p class="mm-muted">{{ t('community.boundary.subtitle') }}</p>
       </div>
       <div class="boundary-metrics">

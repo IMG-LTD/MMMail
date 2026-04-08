@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 import type { ModuleMaturity } from '~/constants/module-maturity'
-import { COMMUNITY_V1_LABS_MODULES } from '~/constants/module-maturity'
+import { COMMUNITY_V1_CURATED_LABS_MODULES } from '~/constants/module-maturity'
 import { useI18n } from '~/composables/useI18n'
 
 definePageMeta({ layout: 'default' })
@@ -10,7 +10,7 @@ const { t } = useI18n()
 const runtimeConfig = useRuntimeConfig()
 
 const labsModulesEnabled = computed(() => runtimeConfig.public.enablePreviewModules === true)
-const labsModules = computed(() => COMMUNITY_V1_LABS_MODULES)
+const labsModules = computed(() => COMMUNITY_V1_CURATED_LABS_MODULES)
 
 function resolveMaturityTagType(maturity: ModuleMaturity): 'success' | 'warning' | 'info' {
   if (maturity === 'GA') {

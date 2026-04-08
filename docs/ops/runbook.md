@@ -1,7 +1,7 @@
-# Community Edition v1.4 运维 Runbook
+# Community Edition v1.6 运维 Runbook
 
-**版本**: `v1.4-mainline`  
-**日期**: `2026-04-07`  
+**版本**: `v1.6-mainline`  
+**日期**: `2026-04-08`  
 **作者**: `Codex`
 
 ## 1. 入口清单
@@ -13,8 +13,10 @@
   - `/swagger-ui.html`
 - 浏览器内 API quick page：
   - `/self-hosted/api.html`
-- 设置页采用入口：
-  - `/settings`
+- Suite boundary 入口：
+  - `/suite?section=boundary`
+- Labs curated catalog：
+  - `/labs`
 - 本地门禁：`bash scripts/validate-local.sh`
 - CI 门禁：`MMMAIL_VALIDATE_CONTAINER_TESTS=true bash scripts/validate-ci.sh`
 
@@ -35,6 +37,12 @@
     - `Swagger UI`
     - `OpenAPI JSON`
     - 自托管安装说明 / Runbook 快速页
+- Suite boundary：
+  - 打开 `/suite?section=boundary`
+  - 确认 `GA / Beta / Preview / Hosted-only` 说明与 `support boundaries` 文档一致
+- Labs curated catalog：
+  - 打开 `/labs`
+  - 确认默认只显示 `Pass / Authenticator / SimpleLogin / Standard Notes`
 
 ### Mail E2EE foundation
 - 当前只验证已交付主路径：
@@ -43,12 +51,16 @@
   - 草稿保存与恢复走加密链路
   - 附件上传 / 下载走本地加解密链路
   - 邮件详情页可在浏览器内解密正文
-  - 外部密码保护加密投递会生成 secure link，并在公开页面完成本地解密
+  - 外部密码保护加密投递会生成 secure link，并在公开页面完成本地解密与附件下载
 - 不要把以下事项当作当前 Runbook 成功条件：
-  - 外部加密附件或外部加密草稿
+  - 完整 MIME 级外部互通
   - 零知识架构
+  - `SMTP inbound / IMAP / Bridge`
 
-### 已交付的新增主线能力
+### 当前主线的新增聚焦能力
+- `Suite sectioned IA`
+- `Curated Labs catalog`
+- `Runtime a11y gate`（关键入口运行时自动化校验）
 - `Drive E2EE foundation`
 - `Web Push`
 - `SMTP outbound adapter`
@@ -57,7 +69,7 @@
 - `Mail external password-protected encrypted delivery`
 
 ### 本地后端门禁环境
-- 默认 `validate-local.sh` 现在使用后端 `test` profile 回归，不再依赖本机 MySQL / Redis / Nacos 实例或真实密钥。
+- 默认 `validate-local.sh` 使用后端 `test` profile 回归，不依赖本机 MySQL / Redis / Nacos 实例或真实密钥。
 - 如需单独验证 Docs 后端专项回归，可直接执行：
   - `timeout 60s $(bash -lc 'source scripts/lib/java-common.sh; resolve_maven_bin "$PWD"') -f backend/pom.xml -pl mmmail-server -am -Dtest='DocsCollaborationIntegrationTest,DocsSuggestionWorkflowIntegrationTest,DocsOrgAccessIntegrationTest' -Dsurefire.failIfNoSpecifiedTests=false test`
 - `DocsOrgAccessIntegrationTest` 会验证 org scope 下 `POST /api/v1/docs/notes`、`POST /api/v1/docs/notes/{id}/comments`、`GET /api/v1/docs/notes/{id}/collaboration` 在产品禁用与强制 2FA 策略下都被统一拒绝。
@@ -110,6 +122,11 @@
   - `backend/mmmail-server/src/main/java/com/mmmail/server/config/SecurityConfig.java`
 - 若前端设置页中的文档链接指向错误 origin，检查部署时的 `NUXT_PUBLIC_API_BASE`。
 
+### `/suite` 或 `/labs` 仍显示旧结构
+- 先确认浏览器未命中旧缓存。
+- 再确认部署产物来自 `v1.6` 分支最新构建。
+- 若只有静态页异常，优先排查 CDN / 反向代理缓存，而不是后端接口。
+
 ### 外部密码保护加密邮件打不开
 - 先确认 secure link 指向的公开页面为：
   - `/share/mail/{token}`
@@ -161,4 +178,6 @@
 - 手动确认：
   - 管理员可打开 `/settings/system-health`
   - `/actuator/prometheus` 可导出核心指标
+  - `/suite?section=boundary` 与 `support boundaries` 文档一致
+  - `/labs` 默认 curated catalog 与主线策略一致
   - 最近错误与后台任务列表非空时能正确展示

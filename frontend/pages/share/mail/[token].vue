@@ -49,6 +49,7 @@ const pageSubtitle = computed(() => {
 })
 
 const shareAttachments = computed(() => share.value?.attachments || [])
+const pageTitleId = 'public-mail-page-title'
 
 async function loadShare(): Promise<void> {
   if (!token.value) {
@@ -127,11 +128,15 @@ function resolveDecryptErrorKey(error: unknown, fallbackKey: string): string {
 
 <template>
   <div class="public-mail-page">
-    <section class="public-mail-shell mm-card" :aria-busy="loading ? 'true' : 'false'">
+    <section
+      class="public-mail-shell mm-card"
+      :aria-busy="loading ? 'true' : 'false'"
+      :aria-labelledby="pageTitleId"
+    >
       <header class="public-mail-head">
         <div class="public-mail-copy">
           <p class="public-mail-badge">{{ t('mailPublicShare.badge') }}</p>
-          <h1>{{ pageTitle }}</h1>
+          <h1 :id="pageTitleId">{{ pageTitle }}</h1>
           <p class="public-mail-subtitle" :class="{ error: !share && !loading }" aria-live="polite">{{ pageSubtitle }}</p>
         </div>
         <el-button plain :loading="loading" @click="loadShare">{{ t('mailPublicShare.actions.refresh') }}</el-button>

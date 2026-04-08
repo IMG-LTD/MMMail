@@ -1,34 +1,36 @@
 <script setup lang="ts">
 import { computed } from 'vue'
-import SuiteCapabilityMatrixPanel from '~/components/suite/SuiteCapabilityMatrixPanel.vue'
-import SuiteBillingCenterPanel from '~/components/suite/SuiteBillingCenterPanel.vue'
-import SuiteBillingOverviewPanel from '~/components/suite/SuiteBillingOverviewPanel.vue'
-import SuiteCommandSearchPanel from '~/components/suite/SuiteCommandSearchPanel.vue'
-import SuiteCheckoutPanel from '~/components/suite/SuiteCheckoutPanel.vue'
-import SuiteGovernancePanel from '~/components/suite/SuiteGovernancePanel.vue'
-import SuitePlanCatalogPanel from '~/components/suite/SuitePlanCatalogPanel.vue'
+import SuiteBillingSection from '~/components/suite/SuiteBillingSection.vue'
+import SuiteBoundarySection from '~/components/suite/SuiteBoundarySection.vue'
+import SuiteOperationsSection from '~/components/suite/SuiteOperationsSection.vue'
+import SuiteOverviewSection from '~/components/suite/SuiteOverviewSection.vue'
+import SuitePlansSection from '~/components/suite/SuitePlansSection.vue'
 import SuitePlansHero from '~/components/suite/SuitePlansHero.vue'
-import SuitePricingComparePanel from '~/components/suite/SuitePricingComparePanel.vue'
-import SuiteProductHubPanel from '~/components/suite/SuiteProductHubPanel.vue'
-import SuiteReleaseBoundaryPanel from '~/components/suite/SuiteReleaseBoundaryPanel.vue'
-import SuiteReadinessSecurityPanel from '~/components/suite/SuiteReadinessSecurityPanel.vue'
-import SuiteRemediationPanel from '~/components/suite/SuiteRemediationPanel.vue'
+import SuiteSectionNav from '~/components/suite/SuiteSectionNav.vue'
 import { useI18n } from '~/composables/useI18n'
 import { useSuiteBillingCenterWorkspace } from '~/composables/useSuiteBillingCenterWorkspace'
 import { useSuiteBillingWorkspace } from '~/composables/useSuiteBillingWorkspace'
 import { useSuiteOperationsWorkspace } from '~/composables/useSuiteOperationsWorkspace'
 import { useSuitePlansWorkspace } from '~/composables/useSuitePlansWorkspace'
 import type { SuitePlanCode } from '~/types/suite-lumo'
+import {
+  buildSuiteSectionQuery,
+  resolveSuiteSection,
+  SUITE_SECTIONS,
+  type SuiteSectionCode
+} from '~/utils/suite-sections'
 
 definePageMeta({
   layout: 'default'
 })
 
 const { t } = useI18n()
+const route = useRoute()
 const billingWorkspace = useSuiteBillingWorkspace()
 const billingCenterWorkspace = useSuiteBillingCenterWorkspace()
 const plansWorkspace = useSuitePlansWorkspace()
 const operationsWorkspace = useSuiteOperationsWorkspace()
+const activeSection = computed(() => resolveSuiteSection(route.query.section))
 
 const pageLoading = computed(() => {
   return billingWorkspace.loading.value
@@ -47,6 +49,18 @@ useHead(() => ({
   ]
 }))
 
+async function onSelectSection(section: SuiteSectionCode): Promise<void> {
+  if (section === activeSection.value) {
+    return
+  }
+  await navigateTo({
+    path: '/suite',
+    query: buildSuiteSectionQuery(route.query, section)
+  }, {
+    replace: true
+  })
+}
+
 async function onChangePlan(planCode: SuitePlanCode): Promise<boolean> {
   const changed = await plansWorkspace.onChangePlan(planCode)
   if (!changed) {
@@ -62,46 +76,6 @@ async function onSaveDraft(): Promise<void> {
   await billingWorkspace.saveDraft()
   await billingCenterWorkspace.loadBillingCenter()
 }
-
-function onReadinessRiskFilterChange(value: 'ALL' | 'LOW' | 'MEDIUM' | 'HIGH' | 'CRITICAL'): void {
-  operationsWorkspace.readinessRiskFilter.value = value
-}
-
-function onCommandKeywordChange(value: string): void {
-  operationsWorkspace.commandKeyword.value = value
-}
-
-function onSelectedTemplateCodeChange(value: string): void {
-  operationsWorkspace.selectedTemplateCode.value = value
-}
-
-function onGovernanceReasonChange(value: string): void {
-  operationsWorkspace.governanceReason.value = value
-}
-
-function onGovernanceScopeTypeChange(value: 'PERSONAL' | 'ORG'): void {
-  operationsWorkspace.governanceScopeType.value = value
-}
-
-function onGovernanceScopeOrgIdChange(value: string): void {
-  operationsWorkspace.governanceScopeOrgId.value = value
-}
-
-function onGovernanceSecondReviewerChange(value: string): void {
-  operationsWorkspace.governanceSecondReviewerUserId.value = value
-}
-
-function onReviewNoteChange(value: string): void {
-  operationsWorkspace.reviewNote.value = value
-}
-
-function onApprovalNoteChange(value: string): void {
-  operationsWorkspace.approvalNote.value = value
-}
-
-function onRollbackReasonChange(value: string): void {
-  operationsWorkspace.rollbackReason.value = value
-}
 </script>
 
 <template>
@@ -115,127 +89,45 @@ function onRollbackReasonChange(value: string): void {
         :resolve-status-label="plansWorkspace.resolveSubscriptionStatusLabel"
       />
 
-      <SuiteProductHubPanel :products="plansWorkspace.visibleProducts.value" />
-
-      <SuiteBillingOverviewPanel
-        :overview="billingWorkspace.overview.value"
-        :selected-offer-code="billingWorkspace.selectedOfferCode.value"
-        :restore-latest-draft="billingWorkspace.restoreLatestDraft"
+      <SuiteSectionNav
+        :active-section="activeSection"
+        :sections="SUITE_SECTIONS"
+        @select="void onSelectSection($event)"
       />
 
-      <SuitePricingComparePanel
-        :sections="billingWorkspace.pricingSections.value"
-        :active-plan-code="billingWorkspace.overview.value?.activePlanCode || null"
-        :selected-offer-code="billingWorkspace.selectedOfferCode.value"
-        :select-offer="billingWorkspace.onSelectOffer"
-      />
+      <div
+        class="suite-section-shell"
+        :data-section="activeSection"
+        data-testid="suite-section-shell"
+      >
+        <SuiteOverviewSection
+          v-if="activeSection === 'overview'"
+          :products="plansWorkspace.visibleProducts.value"
+          :sections="SUITE_SECTIONS"
+          @select="void onSelectSection($event)"
+        />
 
-      <SuiteCheckoutPanel
-        :selected-offer="billingWorkspace.selectedOffer.value"
-        :selected-billing-cycle="billingWorkspace.selectedBillingCycle.value"
-        :seat-count="billingWorkspace.seatCount.value"
-        :organization-name="billingWorkspace.organizationName.value"
-        :domain-name="billingWorkspace.domainName.value"
-        :quote="billingWorkspace.quote.value"
-        :quote-loading="billingWorkspace.quoteLoading.value"
-        :draft-loading="billingWorkspace.draftLoading.value"
-        :show-organization-fields="billingWorkspace.showOrganizationFields.value"
-        :refresh-quote="billingWorkspace.refreshQuote"
-        :save-draft="onSaveDraft"
-        @update:selected-billing-cycle="billingWorkspace.selectedBillingCycle.value = $event"
-        @update:seat-count="billingWorkspace.seatCount.value = $event"
-        @update:organization-name="billingWorkspace.organizationName.value = $event"
-        @update:domain-name="billingWorkspace.domainName.value = $event"
-      />
+        <SuitePlansSection
+          v-else-if="activeSection === 'plans'"
+          :plans-workspace="plansWorkspace"
+          :change-plan="onChangePlan"
+        />
 
-      <SuiteBillingCenterPanel
-        :center="billingCenterWorkspace.center.value"
-        :payment-method-saving="billingCenterWorkspace.paymentMethodSaving.value"
-        :action-loading-code="billingCenterWorkspace.actionLoadingCode.value"
-        :add-payment-method="billingCenterWorkspace.addPaymentMethod"
-        :set-default-payment-method="billingCenterWorkspace.setDefaultPaymentMethod"
-        :execute-subscription-action="billingCenterWorkspace.executeSubscriptionAction"
-      />
+        <SuiteBillingSection
+          v-else-if="activeSection === 'billing'"
+          :billing-workspace="billingWorkspace"
+          :billing-center-workspace="billingCenterWorkspace"
+          :save-draft="onSaveDraft"
+        />
 
-      <SuiteReleaseBoundaryPanel />
+        <SuiteOperationsSection
+          v-else-if="activeSection === 'operations'"
+          :plans-workspace="plansWorkspace"
+          :operations-workspace="operationsWorkspace"
+        />
 
-      <SuitePlanCatalogPanel
-        :sections="plansWorkspace.planSections.value"
-        :changing-plan="plansWorkspace.changingPlan.value"
-        :is-current-plan="plansWorkspace.isCurrentPlan"
-        :plan-quota-rows="plansWorkspace.planQuotaRows"
-        :change-plan="onChangePlan"
-      />
-
-      <SuiteCapabilityMatrixPanel
-        :plans="plansWorkspace.plans.value"
-        :product-columns="plansWorkspace.productColumns.value"
-      />
-
-      <SuiteCommandSearchPanel
-        :command-keyword="operationsWorkspace.commandKeyword.value"
-        :command-search-loading="operationsWorkspace.commandSearchLoading.value"
-        :command-search-summary="plansWorkspace.commandSearchSummary.value"
-        :command-search-result="operationsWorkspace.visibleCommandSearchResult.value"
-        :search-command="operationsWorkspace.onCommandSearch"
-        :clear-command="operationsWorkspace.onClearCommandSearch"
-        :open-command-result="operationsWorkspace.onOpenCommandResult"
-        @update-command-keyword="onCommandKeywordChange"
-      />
-
-      <SuiteReadinessSecurityPanel
-        :loading="operationsWorkspace.loading.value"
-        :readiness="operationsWorkspace.visibleReadiness.value"
-        :wallet-readiness="operationsWorkspace.walletReadiness.value"
-        :readiness-risk-filter="operationsWorkspace.readinessRiskFilter.value"
-        :filtered-readiness-items="operationsWorkspace.filteredReadinessItems.value"
-        :security-posture="operationsWorkspace.visibleSecurityPosture.value"
-        :refresh-operations="operationsWorkspace.loadOperationsData"
-        @update-readiness-risk-filter="onReadinessRiskFilterChange"
-      />
-
-      <SuiteGovernancePanel
-        :loading="operationsWorkspace.loading.value"
-        :governance-overview-cards="operationsWorkspace.governanceOverviewCards.value"
-        :governance-templates="operationsWorkspace.governanceTemplates.value"
-        :governance-requests="operationsWorkspace.governanceRequests.value"
-        :managed-organizations="operationsWorkspace.managedOrganizations.value"
-        :selected-template-code="operationsWorkspace.selectedTemplateCode.value"
-        :governance-reason="operationsWorkspace.governanceReason.value"
-        :governance-scope-type="operationsWorkspace.governanceScopeType.value"
-        :governance-scope-org-id="operationsWorkspace.governanceScopeOrgId.value"
-        :governance-second-reviewer-user-id="operationsWorkspace.governanceSecondReviewerUserId.value"
-        :governance-reviewer-options="operationsWorkspace.governanceReviewerOptions.value"
-        :review-note="operationsWorkspace.reviewNote.value"
-        :approval-note="operationsWorkspace.approvalNote.value"
-        :rollback-reason="operationsWorkspace.rollbackReason.value"
-        :creating-governance-request="operationsWorkspace.creatingGovernanceRequest.value"
-        :can-create-governance-request="operationsWorkspace.canCreateGovernanceRequest.value"
-        :selected-governance-template="operationsWorkspace.selectedGovernanceTemplate.value"
-        :current-session-id="operationsWorkspace.currentSessionId.value"
-        :governance-action-loading-request-id="operationsWorkspace.governanceActionLoadingRequestId.value"
-        :governance-action-loading-type="operationsWorkspace.governanceActionLoadingType.value"
-        :refresh-operations="operationsWorkspace.loadOperationsData"
-        :create-governance-request="operationsWorkspace.onCreateGovernanceRequest"
-        :review-governance-request="operationsWorkspace.onReviewGovernanceRequest"
-        :execute-governance-request="operationsWorkspace.onExecuteGovernanceRequest"
-        :rollback-governance-request="operationsWorkspace.onRollbackGovernanceRequest"
-        @update-selected-template-code="onSelectedTemplateCodeChange"
-        @update-governance-reason="onGovernanceReasonChange"
-        @update-governance-scope-type="onGovernanceScopeTypeChange"
-        @update-governance-scope-org-id="onGovernanceScopeOrgIdChange"
-        @update-governance-second-reviewer-user-id="onGovernanceSecondReviewerChange"
-        @update-review-note="onReviewNoteChange"
-        @update-approval-note="onApprovalNoteChange"
-        @update-rollback-reason="onRollbackReasonChange"
-      />
-
-      <SuiteRemediationPanel
-        :priority-actions="operationsWorkspace.priorityActions.value"
-        :last-execution-result="operationsWorkspace.lastExecutionResult.value"
-        :running-action-code="operationsWorkspace.runningActionCode.value"
-        :execute-action="operationsWorkspace.onExecuteAction"
-      />
+        <SuiteBoundarySection v-else />
+      </div>
     </section>
   </div>
 </template>
@@ -244,6 +136,11 @@ function onRollbackReasonChange(value: string): void {
 .suite-shell {
   display: flex;
   flex-direction: column;
+  gap: 16px;
+}
+
+.suite-section-shell {
+  display: grid;
   gap: 16px;
 }
 </style>

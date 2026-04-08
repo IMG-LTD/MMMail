@@ -134,6 +134,11 @@ import {
   suiteBillingCenterZhCN,
   suiteBillingCenterZhTW
 } from './suite-billing-center'
+import {
+  suiteNavigationEn,
+  suiteNavigationZhCN,
+  suiteNavigationZhTW
+} from './suite-navigation'
 import { suitePlansEn, suitePlansZhCN, suitePlansZhTW } from './suite-plans'
 import {
   suiteOperationsEn,
@@ -207,6 +212,7 @@ export const messages: TranslationCatalog = {
     ...lumoEn,
     ...suiteBillingEn,
     ...suiteBillingCenterEn,
+    ...suiteNavigationEn,
     ...suitePlansEn,
     ...suiteOperationsEn,
     ...vpnEn,
@@ -258,6 +264,7 @@ export const messages: TranslationCatalog = {
     ...lumoZhCN,
     ...suiteBillingZhCN,
     ...suiteBillingCenterZhCN,
+    ...suiteNavigationZhCN,
     ...suitePlansZhCN,
     ...suiteOperationsZhCN,
     ...vpnZhCN,
@@ -309,6 +316,7 @@ export const messages: TranslationCatalog = {
     ...lumoZhTW,
     ...suiteBillingZhTW,
     ...suiteBillingCenterZhTW,
+    ...suiteNavigationZhTW,
     ...suitePlansZhTW,
     ...suiteOperationsZhTW,
     ...vpnZhTW,

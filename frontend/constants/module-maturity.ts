@@ -39,6 +39,17 @@ export const COMMUNITY_V1_MODULES: ReadonlyArray<CommunityModuleDefinition> = [
 
 export const COMMUNITY_V1_PREVIEW_MODULES = COMMUNITY_V1_MODULES.filter(item => item.maturity === 'PREVIEW')
 export const COMMUNITY_V1_LABS_MODULES = COMMUNITY_V1_MODULES.filter(item => item.surface === 'LABS')
+export const COMMUNITY_V1_CURATED_LABS_MODULE_CODES = [
+  'PASS',
+  'AUTHENTICATOR',
+  'SIMPLELOGIN',
+  'STANDARD_NOTES'
+] as const
+export const COMMUNITY_V1_CURATED_LABS_MODULES = COMMUNITY_V1_LABS_MODULES.filter(item => {
+  return COMMUNITY_V1_CURATED_LABS_MODULE_CODES.includes(
+    item.code as typeof COMMUNITY_V1_CURATED_LABS_MODULE_CODES[number]
+  )
+})
 
 export const COMMUNITY_V1_HOME_ROUTE_CANDIDATES: ReadonlyArray<{ to: string; productKey?: OrgProductKey }> = [
   { to: '/inbox', productKey: 'MAIL' },
