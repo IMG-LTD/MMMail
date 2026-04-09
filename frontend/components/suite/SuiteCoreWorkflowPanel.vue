@@ -2,7 +2,7 @@
 import { computed } from 'vue'
 import {
   COMMUNITY_V1_CORE_WORKFLOW_MODULES,
-  filterCommunityCoreProductItems
+  filterCommunityMainlineProductItems
 } from '~/constants/module-maturity'
 import { useI18n } from '~/composables/useI18n'
 import type { SuiteProductItem } from '~/types/api'
@@ -14,7 +14,7 @@ const props = defineProps<{
 const { t } = useI18n()
 
 const workflowItems = computed(() => {
-  const visibleCodes = new Set(filterCommunityCoreProductItems(props.products).map(item => item.code))
+  const visibleCodes = new Set(filterCommunityMainlineProductItems(props.products).map(item => item.code))
   return COMMUNITY_V1_CORE_WORKFLOW_MODULES.filter(item => visibleCodes.has(item.productCode))
 })
 </script>

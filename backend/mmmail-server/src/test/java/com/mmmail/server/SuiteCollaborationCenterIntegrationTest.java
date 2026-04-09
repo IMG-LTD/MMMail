@@ -7,20 +7,26 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
+import org.springframework.mock.web.MockMultipartFile;
+import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
 
+import java.nio.charset.StandardCharsets;
 import java.util.HashSet;
 import java.util.Set;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.multipart;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @SpringBootTest
 @AutoConfigureMockMvc
+@ActiveProfiles("test")
 class SuiteCollaborationCenterIntegrationTest {
 
     @Autowired
@@ -30,48 +36,41 @@ class SuiteCollaborationCenterIntegrationTest {
     private ObjectMapper objectMapper;
 
     @Test
-    void suiteCollaborationCenterShouldAggregateDocsDriveMeetEvents() throws Exception {
+    void suiteCollaborationCenterShouldAggregateMainlineMailCalendarDriveAndPassEvents() throws Exception {
         String suffix = String.valueOf(System.nanoTime());
         String ownerEmail = "v62-owner-%s@mmmail.local".formatted(suffix);
         String collaboratorEmail = "v62-collab-%s@mmmail.local".formatted(suffix);
         String ownerToken = register(ownerEmail, "Password@123", "V62 Owner");
-        String collaboratorToken = register(collaboratorEmail, "Password@123", "V62 Collaborator");
-
-        String noteId = createNote(ownerToken, "v62-suite-note", "hello-suite");
-        createDocsShare(ownerToken, noteId, collaboratorEmail, "EDIT");
-        String folderId = createDriveFolder(ownerToken, "v62-collab-folder");
-        String roomId = createMeetRoom(ownerToken, "V62 Collaboration Room", "PUBLIC", 8);
+        register(collaboratorEmail, "Password@123", "V62 Collaborator");
 
         JsonNode initialCenter = getCollaborationCenter(ownerToken);
         long initialCursor = initialCenter.path("syncCursor").asLong();
 
+        setUndoSendSeconds(ownerToken, "V62 Owner", 0);
+        String draftId = saveDraft(ownerToken, collaboratorEmail, "v62 secure handoff", "v62 collaboration body");
+        uploadDraftAttachment(ownerToken, draftId, "handoff.txt", "handoff-payload");
+        sendMail(ownerToken, draftId, collaboratorEmail, "v62 secure handoff", "v62 collaboration body", "suite-collab-send-" + suffix);
+
+        String eventId = createCalendarEvent(ownerToken, collaboratorEmail);
+        createCalendarShare(ownerToken, eventId, collaboratorEmail);
+
+        String folderId = createDriveFolder(ownerToken, "v62-collab-folder");
         createDriveShare(ownerToken, folderId, "EDIT");
-        createComment(collaboratorToken, noteId, "Need review", "Please update the action items");
-        endMeetRoom(ownerToken, roomId);
+
+        createPassItem(ownerToken, "V62 Root Secret");
 
         JsonNode center = getCollaborationCenter(ownerToken);
-        Set<String> productCodes = new HashSet<>();
-        for (JsonNode item : center.path("items")) {
-            productCodes.add(item.path("productCode").asText());
-        }
-        assertThat(productCodes).contains("DOCS", "DRIVE", "MEET");
-        assertThat(center.path("productCounts").path("DOCS").asInt()).isGreaterThan(0);
+        Set<String> productCodes = collectFieldValues(center.path("items"), "productCode");
+        assertThat(productCodes).contains("MAIL", "CALENDAR", "DRIVE", "PASS");
+        assertThat(center.path("productCounts").path("MAIL").asInt()).isGreaterThan(0);
+        assertThat(center.path("productCounts").path("CALENDAR").asInt()).isGreaterThan(0);
         assertThat(center.path("productCounts").path("DRIVE").asInt()).isGreaterThan(0);
-        assertThat(center.path("productCounts").path("MEET").asInt()).isGreaterThan(0);
+        assertThat(center.path("productCounts").path("PASS").asInt()).isGreaterThan(0);
 
         JsonNode sync = getCollaborationSync(ownerToken, initialCursor);
         assertThat(sync.path("hasUpdates").asBoolean()).isTrue();
-
-        Set<String> eventTypes = new HashSet<>();
-        String docsActorEmail = null;
-        for (JsonNode item : sync.path("items")) {
-            eventTypes.add(item.path("eventType").asText());
-            if ("DOCS_NOTE_COMMENT_ADD".equals(item.path("eventType").asText())) {
-                docsActorEmail = item.path("actorEmail").asText();
-            }
-        }
-        assertThat(eventTypes).contains("DOCS_NOTE_COMMENT_ADD", "DRIVE_SHARE_CREATE", "MEET_ROOM_END");
-        assertThat(docsActorEmail).isEqualTo(collaboratorEmail);
+        Set<String> eventTypes = collectFieldValues(sync.path("items"), "eventType");
+        assertThat(eventTypes).contains("MAIL_SENT", "CAL_SHARE_CREATE", "DRIVE_SHARE_CREATE", "PASS_ITEM_CREATE");
     }
 
     private String register(String email, String password, String displayName) throws Exception {
@@ -89,33 +88,112 @@ class SuiteCollaborationCenterIntegrationTest {
         return objectMapper.readTree(result.getResponse().getContentAsString()).at("/data/accessToken").asText();
     }
 
-    private String createNote(String token, String title, String content) throws Exception {
-        MvcResult result = mockMvc.perform(post("/api/v1/docs/notes")
+    private void setUndoSendSeconds(String token, String displayName, int undoSeconds) throws Exception {
+        mockMvc.perform(put("/api/v1/settings/profile")
                         .header("Authorization", "Bearer " + token)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
                                 {
-                                  "title": "%s",
-                                  "content": "%s"
+                                  "displayName": "%s",
+                                  "signature": "",
+                                  "timezone": "UTC",
+                                  "autoSaveSeconds": 15,
+                                  "undoSendSeconds": %d,
+                                  "driveVersionRetentionCount": 50,
+                                  "driveVersionRetentionDays": 365
                                 }
-                                """.formatted(title, content)))
+                                """.formatted(displayName, undoSeconds)))
+                .andExpect(status().isOk());
+    }
+
+    private String saveDraft(String token, String toEmail, String subject, String body) throws Exception {
+        MvcResult result = mockMvc.perform(post("/api/v1/mails/drafts")
+                        .header("Authorization", "Bearer " + token)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {
+                                  "toEmail": "%s",
+                                  "subject": "%s",
+                                  "body": "%s"
+                                }
+                                """.formatted(toEmail, subject, body)))
+                .andExpect(status().isOk())
+                .andReturn();
+        return objectMapper.readTree(result.getResponse().getContentAsString()).at("/data/draftId").asText();
+    }
+
+    private void uploadDraftAttachment(String token, String draftId, String fileName, String content) throws Exception {
+        MockMultipartFile file = new MockMultipartFile(
+                "file",
+                fileName,
+                MediaType.TEXT_PLAIN_VALUE,
+                content.getBytes(StandardCharsets.UTF_8)
+        );
+        mockMvc.perform(multipart("/api/v1/mails/drafts/" + draftId + "/attachments")
+                        .file(file)
+                        .header("Authorization", "Bearer " + token))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.draftId").value(draftId));
+    }
+
+    private void sendMail(
+            String token,
+            String draftId,
+            String toEmail,
+            String subject,
+            String body,
+            String idempotencyKey
+    ) throws Exception {
+        mockMvc.perform(post("/api/v1/mails/send")
+                        .header("Authorization", "Bearer " + token)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {
+                                  "draftId": %s,
+                                  "toEmail": "%s",
+                                  "subject": "%s",
+                                  "body": "%s",
+                                  "idempotencyKey": "%s",
+                                  "labels": []
+                                }
+                                """.formatted(draftId, toEmail, subject, body, idempotencyKey)))
+                .andExpect(status().isOk());
+    }
+
+    private String createCalendarEvent(String token, String attendeeEmail) throws Exception {
+        MvcResult result = mockMvc.perform(post("/api/v1/calendar/events")
+                        .header("Authorization", "Bearer " + token)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {
+                                  "title": "V62 review checkpoint",
+                                  "location": "Ops Room",
+                                  "startAt": "2026-04-20T10:00:00",
+                                  "endAt": "2026-04-20T11:00:00",
+                                  "timezone": "UTC",
+                                  "reminderMinutes": 15,
+                                  "attendees": [
+                                    {"email": "%s", "displayName": "Reviewer"}
+                                  ]
+                                }
+                                """.formatted(attendeeEmail)))
                 .andExpect(status().isOk())
                 .andReturn();
         return objectMapper.readTree(result.getResponse().getContentAsString()).at("/data/id").asText();
     }
 
-    private void createDocsShare(String token, String noteId, String email, String permission) throws Exception {
-        mockMvc.perform(post("/api/v1/docs/notes/" + noteId + "/shares")
+    private void createCalendarShare(String token, String eventId, String targetEmail) throws Exception {
+        mockMvc.perform(post("/api/v1/calendar/events/" + eventId + "/shares")
                         .header("Authorization", "Bearer " + token)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
                                 {
-                                  "collaboratorEmail": "%s",
-                                  "permission": "%s"
+                                  "targetEmail": "%s",
+                                  "permission": "EDIT"
                                 }
-                                """.formatted(email, permission)))
+                                """.formatted(targetEmail)))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.data.permission").value(permission));
+                .andExpect(jsonPath("$.data.permission").value("EDIT"));
     }
 
     private String createDriveFolder(String token, String name) throws Exception {
@@ -145,41 +223,22 @@ class SuiteCollaborationCenterIntegrationTest {
                 .andExpect(jsonPath("$.data.permission").value(permission));
     }
 
-    private String createMeetRoom(String token, String topic, String accessLevel, int maxParticipants) throws Exception {
-        MvcResult result = mockMvc.perform(post("/api/v1/meet/rooms")
+    private void createPassItem(String token, String title) throws Exception {
+        mockMvc.perform(post("/api/v1/pass/items")
                         .header("Authorization", "Bearer " + token)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
                                 {
-                                  "topic": "%s",
-                                  "accessLevel": "%s",
-                                  "maxParticipants": %d
+                                  "title": "%s",
+                                  "itemType": "LOGIN",
+                                  "website": "https://release.example.com",
+                                  "username": "release@example.com",
+                                  "secretCiphertext": "Team#123456A",
+                                  "note": "suite collaboration pass item"
                                 }
-                                """.formatted(topic, accessLevel, maxParticipants)))
+                                """.formatted(title)))
                 .andExpect(status().isOk())
-                .andReturn();
-        return objectMapper.readTree(result.getResponse().getContentAsString()).at("/data/roomId").asText();
-    }
-
-    private void endMeetRoom(String token, String roomId) throws Exception {
-        mockMvc.perform(post("/api/v1/meet/rooms/" + roomId + "/end")
-                        .header("Authorization", "Bearer " + token))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.data.status").value("ENDED"));
-    }
-
-    private void createComment(String token, String noteId, String excerpt, String content) throws Exception {
-        mockMvc.perform(post("/api/v1/docs/notes/" + noteId + "/comments")
-                        .header("Authorization", "Bearer " + token)
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content("""
-                                {
-                                  "excerpt": "%s",
-                                  "content": "%s"
-                                }
-                                """.formatted(excerpt, content)))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.data.excerpt").value(excerpt));
+                .andExpect(jsonPath("$.data.id").exists());
     }
 
     private JsonNode getCollaborationCenter(String token) throws Exception {
@@ -199,5 +258,13 @@ class SuiteCollaborationCenterIntegrationTest {
                 .andExpect(status().isOk())
                 .andReturn();
         return objectMapper.readTree(result.getResponse().getContentAsString()).path("data");
+    }
+
+    private Set<String> collectFieldValues(JsonNode nodes, String fieldName) {
+        Set<String> values = new HashSet<>();
+        for (JsonNode node : nodes) {
+            values.add(node.path(fieldName).asText());
+        }
+        return values;
     }
 }

@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed } from 'vue'
-import { filterCommunityCoreProductItems } from '~/constants/module-maturity'
+import { filterCommunityMainlineProductItems } from '~/constants/module-maturity'
 import type { SuiteProductItem } from '~/types/api'
 import { useI18n } from '~/composables/useI18n'
 import type { SuiteSectionCode, SuiteSectionDefinition } from '~/utils/suite-sections'
@@ -20,7 +20,7 @@ const emit = defineEmits<{
 const { t } = useI18n()
 
 const jumpSections = computed(() => props.sections.filter(section => section.code !== 'overview'))
-const coreProducts = computed(() => filterCommunityCoreProductItems(props.products))
+const mainlineProducts = computed(() => filterCommunityMainlineProductItems(props.products))
 
 function onSelect(section: SuiteSectionCode): void {
   emit('select', section)
@@ -50,11 +50,11 @@ function onSelect(section: SuiteSectionCode): void {
       </button>
     </div>
 
-    <SuiteMainlineJourneyPanel :products="coreProducts" />
+    <SuiteMainlineJourneyPanel :products="mainlineProducts" />
 
-    <SuiteCoreWorkflowPanel :products="coreProducts" />
+    <SuiteCoreWorkflowPanel :products="mainlineProducts" />
 
-    <SuiteProductHubPanel :products="coreProducts" />
+    <SuiteProductHubPanel :products="mainlineProducts" />
   </section>
 </template>
 

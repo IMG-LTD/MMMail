@@ -1,4 +1,10 @@
 import type { OrgProductKey } from '~/types/organization-admin'
+import {
+  COMMUNITY_V1_CURATED_PREVIEW_MODULE_CODES,
+  COMMUNITY_V1_PREVIEW_REGISTRY,
+  getPreviewRegistryEntry,
+  type PreviewRegistryStrategy
+} from '~/constants/preview-registry'
 
 export type ModuleMaturity = 'GA' | 'BETA' | 'PREVIEW'
 export type ModuleSurface = 'DEFAULT_NAV' | 'SUITE' | 'LABS'
@@ -10,6 +16,11 @@ export interface CommunityModuleDefinition {
   maturity: ModuleMaturity
   surface: ModuleSurface
   productKey?: OrgProductKey
+}
+
+export interface CommunityLabsCatalogItem extends CommunityModuleDefinition {
+  previewStrategy: PreviewRegistryStrategy
+  curatedDefault: boolean
 }
 
 export const COMMUNITY_V1_MODULES: ReadonlyArray<CommunityModuleDefinition> = [
@@ -25,30 +36,29 @@ export const COMMUNITY_V1_MODULES: ReadonlyArray<CommunityModuleDefinition> = [
   { code: 'SHEETS', route: '/sheets', labelKey: 'nav.sheets', maturity: 'BETA', surface: 'DEFAULT_NAV', productKey: 'SHEETS' },
   { code: 'BILLING_CENTER', route: '/suite', labelKey: 'suite.billing.center.badge', maturity: 'BETA', surface: 'SUITE' },
   { code: 'PASS', route: '/pass', labelKey: 'nav.pass', maturity: 'BETA', surface: 'DEFAULT_NAV', productKey: 'PASS' },
-  { code: 'AUTHENTICATOR', route: '/authenticator', labelKey: 'nav.authenticator', maturity: 'PREVIEW', surface: 'LABS', productKey: 'AUTHENTICATOR' },
-  { code: 'SIMPLELOGIN', route: '/simplelogin', labelKey: 'nav.simpleLogin', maturity: 'PREVIEW', surface: 'LABS', productKey: 'SIMPLELOGIN' },
-  { code: 'STANDARD_NOTES', route: '/standard-notes', labelKey: 'nav.standardNotes', maturity: 'PREVIEW', surface: 'LABS', productKey: 'STANDARD_NOTES' },
-  { code: 'VPN', route: '/vpn', labelKey: 'nav.vpn', maturity: 'PREVIEW', surface: 'LABS', productKey: 'VPN' },
-  { code: 'MEET', route: '/meet', labelKey: 'nav.meet', maturity: 'PREVIEW', surface: 'LABS', productKey: 'MEET' },
-  { code: 'WALLET', route: '/wallet', labelKey: 'nav.wallet', maturity: 'PREVIEW', surface: 'LABS', productKey: 'WALLET' },
-  { code: 'LUMO', route: '/lumo', labelKey: 'nav.lumo', maturity: 'PREVIEW', surface: 'LABS', productKey: 'LUMO' },
-  { code: 'COLLABORATION', route: '/collaboration', labelKey: 'nav.collaboration', maturity: 'PREVIEW', surface: 'LABS' },
-  { code: 'COMMAND_CENTER', route: '/command-center', labelKey: 'nav.commandCenter', maturity: 'PREVIEW', surface: 'LABS' },
-  { code: 'NOTIFICATIONS', route: '/notifications', labelKey: 'nav.notifications', maturity: 'PREVIEW', surface: 'LABS' }
+  ...COMMUNITY_V1_PREVIEW_REGISTRY.map(({ code, route, labelKey, productKey }) => ({
+    code,
+    route,
+    labelKey,
+    maturity: 'PREVIEW' as const,
+    surface: 'LABS' as const,
+    productKey
+  }))
 ]
 
 export const COMMUNITY_V1_PREVIEW_MODULES = COMMUNITY_V1_MODULES.filter(item => item.maturity === 'PREVIEW')
 export const COMMUNITY_V1_LABS_MODULES = COMMUNITY_V1_MODULES.filter(item => item.surface === 'LABS')
-export const COMMUNITY_V1_CURATED_LABS_MODULE_CODES = [
-  'AUTHENTICATOR',
-  'SIMPLELOGIN',
-  'STANDARD_NOTES'
-] as const
-export const COMMUNITY_V1_CURATED_LABS_MODULES = COMMUNITY_V1_LABS_MODULES.filter(item => {
-  return COMMUNITY_V1_CURATED_LABS_MODULE_CODES.includes(
-    item.code as typeof COMMUNITY_V1_CURATED_LABS_MODULE_CODES[number]
-  )
+export const COMMUNITY_V1_CURATED_LABS_MODULE_CODES = COMMUNITY_V1_CURATED_PREVIEW_MODULE_CODES
+export const COMMUNITY_V1_LABS_CATALOG: ReadonlyArray<CommunityLabsCatalogItem> = COMMUNITY_V1_LABS_MODULES.map((item) => {
+  const registryEntry = getPreviewRegistryEntry(item.code)
+  return {
+    ...item,
+    previewStrategy: registryEntry.strategy,
+    curatedDefault: registryEntry.curatedDefault
+  }
 })
+export const COMMUNITY_V1_CURATED_LABS_MODULES = COMMUNITY_V1_LABS_CATALOG.filter(item => item.curatedDefault)
+export const COMMUNITY_V1_DEFERRED_LABS_MODULES = COMMUNITY_V1_LABS_CATALOG.filter(item => !item.curatedDefault)
 
 export const COMMUNITY_V1_HOME_ROUTE_CANDIDATES: ReadonlyArray<{ to: string; productKey?: OrgProductKey }> = [
   { to: '/inbox', productKey: 'MAIL' },
@@ -72,6 +82,15 @@ export const COMMUNITY_V1_CORE_PRODUCT_CODES = [
 
 export type CommunityCoreProductCode = typeof COMMUNITY_V1_CORE_PRODUCT_CODES[number]
 
+export const COMMUNITY_V1_MAINLINE_PRODUCT_CODES = [
+  'MAIL',
+  'CALENDAR',
+  'DRIVE',
+  'PASS'
+] as const satisfies readonly OrgProductKey[]
+
+export type CommunityMainlineProductCode = typeof COMMUNITY_V1_MAINLINE_PRODUCT_CODES[number]
+
 export interface CommunityCoreWorkflowDefinition {
   productCode: CommunityCoreProductCode
   route: string
@@ -83,7 +102,7 @@ export interface CommunityCoreWorkflowDefinition {
 }
 
 export interface CommunityMainlineJourneyStageDefinition {
-  productCode: CommunityCoreProductCode
+  productCode: CommunityMainlineProductCode
   route: string
   titleKey: string
   descriptionKey: string
@@ -102,6 +121,7 @@ export interface CommunityAdoptionChecklistItem {
 }
 
 const COMMUNITY_V1_CORE_PRODUCT_CODE_SET = new Set<string>(COMMUNITY_V1_CORE_PRODUCT_CODES)
+const COMMUNITY_V1_MAINLINE_PRODUCT_CODE_SET = new Set<string>(COMMUNITY_V1_MAINLINE_PRODUCT_CODES)
 
 export const COMMUNITY_V1_CORE_WORKFLOW_MODULES: ReadonlyArray<CommunityCoreWorkflowDefinition> = [
   {
@@ -228,14 +248,30 @@ export function isCommunityCoreProductCode(code: string | null | undefined): cod
   return Boolean(code && COMMUNITY_V1_CORE_PRODUCT_CODE_SET.has(code))
 }
 
+export function isCommunityMainlineProductCode(
+  code: string | null | undefined
+): code is CommunityMainlineProductCode {
+  return Boolean(code && COMMUNITY_V1_MAINLINE_PRODUCT_CODE_SET.has(code))
+}
+
 export function filterCommunityCoreProductItems<T extends { code: string }>(items: readonly T[]): T[] {
   return items.filter(item => isCommunityCoreProductCode(item.code))
+}
+
+export function filterCommunityMainlineProductItems<T extends { code: string }>(items: readonly T[]): T[] {
+  return items.filter(item => isCommunityMainlineProductCode(item.code))
 }
 
 export function filterCommunityCoreScopedItems<T extends { productCode: string | null | undefined }>(
   items: readonly T[]
 ): T[] {
   return items.filter(item => isCommunityCoreProductCode(item.productCode))
+}
+
+export function filterCommunityMainlineScopedItems<T extends { productCode: string | null | undefined }>(
+  items: readonly T[]
+): T[] {
+  return items.filter(item => isCommunityMainlineProductCode(item.productCode))
 }
 
 export function findCommunityModuleByRoute(route: string): CommunityModuleDefinition | null {

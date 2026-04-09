@@ -1,7 +1,11 @@
 import { describe, expect, it } from 'vitest'
 import type { SuiteCollaborationEvent } from '../types/api'
 import { messages } from '../locales'
-import { buildCollaborationCounts, filterCollaborationEvents } from '../utils/collaboration'
+import {
+  buildCollaborationCounts,
+  filterCollaborationEvents,
+  filterMainlineCollaborationItems
+} from '../utils/collaboration'
 import { translate } from '../utils/i18n'
 import { extractWorkbookIdFromRoute, filterSheetsCollaborationEvents } from '../utils/sheets-collaboration'
 
@@ -53,17 +57,15 @@ const collaborationItems: SuiteCollaborationEvent[] = [
 ]
 
 describe('Drive / Docs / Sheets v86 regression', () => {
-  it('counts and filters collaboration events including SHEETS', () => {
-    expect(filterCollaborationEvents(collaborationItems, 'SHEETS')).toEqual([
-      collaborationItems[1],
-      collaborationItems[2]
-    ])
+  it('keeps suite collaboration scoped to mainline while sheets stay module-local', () => {
+    expect(filterMainlineCollaborationItems(collaborationItems)).toEqual([collaborationItems[3]])
+    expect(filterCollaborationEvents(collaborationItems, 'ALL')).toEqual([collaborationItems[3]])
     expect(buildCollaborationCounts(collaborationItems)).toEqual({
-      ALL: 4,
-      DOCS: 1,
+      ALL: 1,
+      MAIL: 0,
+      CALENDAR: 0,
       DRIVE: 1,
-      SHEETS: 2,
-      MEET: 0
+      PASS: 0
     })
   })
 

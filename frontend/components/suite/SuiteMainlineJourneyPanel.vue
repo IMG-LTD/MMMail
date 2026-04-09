@@ -2,7 +2,7 @@
 import { computed } from 'vue'
 import {
   COMMUNITY_V1_MAINLINE_JOURNEY_STAGES,
-  filterCommunityCoreProductItems
+  filterCommunityMainlineProductItems
 } from '~/constants/module-maturity'
 import { useI18n } from '~/composables/useI18n'
 import type { SuiteProductItem } from '~/types/api'
@@ -14,7 +14,7 @@ const props = defineProps<{
 const { t } = useI18n()
 
 const stages = computed(() => {
-  const visibleCodes = new Set(filterCommunityCoreProductItems(props.products).map(item => item.code))
+  const visibleCodes = new Set(filterCommunityMainlineProductItems(props.products).map(item => item.code))
   return COMMUNITY_V1_MAINLINE_JOURNEY_STAGES.filter(stage => visibleCodes.has(stage.productCode))
 })
 </script>

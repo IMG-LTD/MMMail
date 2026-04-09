@@ -70,6 +70,13 @@
         </ul>
       </article>
       <article class="card">
+        <h3>Identity readiness</h3>
+        <ul>
+          <li>Keep SSO / SCIM / LDAP as readiness topics, not shipped login promises.</li>
+          <li>Prepare IdP ownership, fallback admins, and rollout expectations before enterprise requests arrive.</li>
+        </ul>
+      </article>
+      <article class="card">
         <h3>Developer handoff</h3>
         <ul>
           <li>Align the operator sequence before wiring integrations.</li>
@@ -84,8 +91,9 @@
     <ol>
       <li>Open Settings and complete the Mail E2EE and PWA baseline.</li>
       <li>Open Suite Overview and run the mainline once end to end.</li>
+      <li>Use the team guide to capture pilot roles, proof points, and rollout sequence.</li>
       <li>Use Drive or Pass to prove one secure handoff that another teammate can consume.</li>
-      <li>Review the boundary page so adoption stays aligned with shipped Community scope.</li>
+      <li>Review the identity readiness page so SSO / SCIM / LDAP requests stay aligned with current scope.</li>
       <li>Give developers the API page and OpenAPI schema for the running backend.</li>
     </ol>
   </section>
@@ -94,6 +102,8 @@
     <h2>Quick links / 快速入口</h2>
     <div class="actions">
       <a class="button" href="/suite?section=overview" target="_blank" rel="noopener noreferrer">Open mainline overview</a>
+      <a class="button secondary" href="/self-hosted/team.html" target="_blank" rel="noopener noreferrer">Team enablement</a>
+      <a class="button secondary" href="/self-hosted/identity.html" target="_blank" rel="noopener noreferrer">Identity readiness</a>
       <a class="button secondary" href="/self-hosted/install.html" target="_blank" rel="noopener noreferrer">Install guide</a>
       <a class="button secondary" href="/self-hosted/runbook.html" target="_blank" rel="noopener noreferrer">Runbook</a>
       <a class="button secondary" href="/self-hosted/api.html" target="_blank" rel="noopener noreferrer">API guide</a>
@@ -104,7 +114,7 @@
     <h2>Current boundary / 当前边界</h2>
     <p>
       Community v1.6.1 focuses on mainline definition, collaboration depth, and adoption experience.
-      It still does not ship enterprise identity management, browser extension autofill, or non-mainline
+      It still does not ship enterprise identity automation, browser extension autofill, or non-mainline
       preview engines as part of the default support promise.
     </p>
   </section>

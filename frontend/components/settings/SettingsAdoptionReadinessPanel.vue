@@ -4,6 +4,36 @@ import { COMMUNITY_V1_ADOPTION_CHECKLIST_ITEMS } from '~/constants/module-maturi
 import { useI18n } from '~/composables/useI18n'
 import { resolveApiBase } from '~/utils/api-base'
 
+interface AdoptionTrack {
+  code: string
+  titleKey: string
+  descriptionKey: string
+  checkpointKeys: readonly string[]
+  primaryHref: string
+  primaryExternal: boolean
+  primaryActionKey: string
+  secondaryHref: string
+  secondaryExternal: boolean
+  secondaryActionKey: string
+}
+
+interface AdoptionCardAction {
+  key: string
+  href: string
+  external: boolean
+  actionKey: string
+  primary?: boolean
+}
+
+interface AdoptionCard {
+  code: string
+  titleKey: string
+  descriptionKey: string
+  metaKey: string
+  metaParams?: Record<string, string>
+  actions: readonly AdoptionCardAction[]
+}
+
 const runtimeConfig = useRuntimeConfig()
 const { t } = useI18n()
 
@@ -11,6 +41,8 @@ const apiGuidePath = '/self-hosted/api.html'
 const adoptionGuideUrl = '/self-hosted/adoption.html'
 const selfHostedInstallGuideUrl = '/self-hosted/install.html'
 const selfHostedRunbookUrl = '/self-hosted/runbook.html'
+const teamEnablementGuideUrl = '/self-hosted/team.html'
+const identityReadinessGuideUrl = '/self-hosted/identity.html'
 
 const apiBase = computed(() => resolveApiBase(runtimeConfig.public.apiBase))
 const normalizedApiBase = computed(() => apiBase.value.replace(/\/+$/, ''))
@@ -18,15 +50,12 @@ const apiGuideUrl = computed(() => `${apiGuidePath}?${new URLSearchParams({ apiB
 const swaggerUiUrl = computed(() => new URL('/swagger-ui.html', normalizedApiBase.value).toString())
 const openApiJsonUrl = computed(() => new URL('/v3/api-docs', normalizedApiBase.value).toString())
 const checklistItems = COMMUNITY_V1_ADOPTION_CHECKLIST_ITEMS
-const launchTracks = computed(() => ([
+const launchTracks = computed<readonly AdoptionTrack[]>(() => [
   {
     code: 'ADMIN_BASELINE',
     titleKey: 'settings.adoption.tracks.admin.title',
     descriptionKey: 'settings.adoption.tracks.admin.description',
-    checkpointKeys: [
-      'settings.adoption.tracks.admin.checkpoints.keys',
-      'settings.adoption.tracks.admin.checkpoints.boundary'
-    ],
+    checkpointKeys: ['settings.adoption.tracks.admin.checkpoints.keys', 'settings.adoption.tracks.admin.checkpoints.boundary'],
     primaryHref: '/settings#settings-mail-e2ee-panel',
     primaryExternal: false,
     primaryActionKey: 'settings.adoption.tracks.admin.primary',
@@ -38,25 +67,31 @@ const launchTracks = computed(() => ([
     code: 'TEAM_HANDOFF',
     titleKey: 'settings.adoption.tracks.team.title',
     descriptionKey: 'settings.adoption.tracks.team.description',
-    checkpointKeys: [
-      'settings.adoption.tracks.team.checkpoints.overview',
-      'settings.adoption.tracks.team.checkpoints.pass'
-    ],
+    checkpointKeys: ['settings.adoption.tracks.team.checkpoints.overview', 'settings.adoption.tracks.team.checkpoints.pass'],
     primaryHref: '/suite?section=overview',
     primaryExternal: false,
     primaryActionKey: 'settings.adoption.tracks.team.primary',
-    secondaryHref: '/pass',
-    secondaryExternal: false,
+    secondaryHref: teamEnablementGuideUrl,
+    secondaryExternal: true,
     secondaryActionKey: 'settings.adoption.tracks.team.secondary'
+  },
+  {
+    code: 'IDENTITY_READINESS',
+    titleKey: 'settings.adoption.tracks.identity.title',
+    descriptionKey: 'settings.adoption.tracks.identity.description',
+    checkpointKeys: ['settings.adoption.tracks.identity.checkpoints.scope', 'settings.adoption.tracks.identity.checkpoints.readiness'],
+    primaryHref: identityReadinessGuideUrl,
+    primaryExternal: true,
+    primaryActionKey: 'settings.adoption.tracks.identity.primary',
+    secondaryHref: teamEnablementGuideUrl,
+    secondaryExternal: true,
+    secondaryActionKey: 'settings.adoption.tracks.identity.secondary'
   },
   {
     code: 'DEVELOPER_HANDOFF',
     titleKey: 'settings.adoption.tracks.developer.title',
     descriptionKey: 'settings.adoption.tracks.developer.description',
-    checkpointKeys: [
-      'settings.adoption.tracks.developer.checkpoints.adoption',
-      'settings.adoption.tracks.developer.checkpoints.api'
-    ],
+    checkpointKeys: ['settings.adoption.tracks.developer.checkpoints.adoption', 'settings.adoption.tracks.developer.checkpoints.api'],
     primaryHref: adoptionGuideUrl,
     primaryExternal: true,
     primaryActionKey: 'settings.adoption.tracks.developer.primary',
@@ -64,7 +99,66 @@ const launchTracks = computed(() => ([
     secondaryExternal: true,
     secondaryActionKey: 'settings.adoption.tracks.developer.secondary'
   }
-]))
+])
+
+const resourceCards = computed<readonly AdoptionCard[]>(() => [
+  {
+    code: 'guide',
+    titleKey: 'settings.adoption.cards.adoption.title',
+    descriptionKey: 'settings.adoption.cards.adoption.description',
+    metaKey: 'settings.adoption.cards.adoption.meta',
+    actions: [
+      { key: 'settings-adoption-guide-link', href: adoptionGuideUrl, external: true, actionKey: 'settings.adoption.cards.adoption.primary', primary: true },
+      { key: 'settings-adoption-mainline-link', href: '/suite?section=overview', external: false, actionKey: 'settings.adoption.cards.adoption.secondary' }
+    ]
+  },
+  {
+    code: 'team',
+    titleKey: 'settings.adoption.cards.team.title',
+    descriptionKey: 'settings.adoption.cards.team.description',
+    metaKey: 'settings.adoption.cards.team.meta',
+    actions: [
+      { key: 'settings-adoption-team-guide-link', href: teamEnablementGuideUrl, external: true, actionKey: 'settings.adoption.cards.team.primary', primary: true },
+      { key: 'settings-adoption-team-pass-link', href: '/pass', external: false, actionKey: 'settings.adoption.cards.team.secondary' }
+    ]
+  },
+  {
+    code: 'identity',
+    titleKey: 'settings.adoption.cards.identity.title',
+    descriptionKey: 'settings.adoption.cards.identity.description',
+    metaKey: 'settings.adoption.cards.identity.meta',
+    actions: [
+      { key: 'settings-adoption-identity-guide-link', href: identityReadinessGuideUrl, external: true, actionKey: 'settings.adoption.cards.identity.primary', primary: true },
+      { key: 'settings-adoption-identity-team-link', href: teamEnablementGuideUrl, external: true, actionKey: 'settings.adoption.cards.identity.secondary' }
+    ]
+  },
+  {
+    code: 'api',
+    titleKey: 'settings.adoption.cards.api.title',
+    descriptionKey: 'settings.adoption.cards.api.description',
+    metaKey: 'settings.adoption.cards.api.meta',
+    metaParams: { value: normalizedApiBase.value },
+    actions: [
+      { key: 'settings-adoption-api-guide-link', href: apiGuideUrl.value, external: true, actionKey: 'settings.adoption.cards.api.guide', primary: true },
+      { key: 'settings-adoption-swagger-link', href: swaggerUiUrl.value, external: true, actionKey: 'settings.adoption.cards.api.primary' },
+      { key: 'settings-adoption-openapi-link', href: openApiJsonUrl.value, external: true, actionKey: 'settings.adoption.cards.api.secondary' }
+    ]
+  },
+  {
+    code: 'self-hosted',
+    titleKey: 'settings.adoption.cards.selfHosted.title',
+    descriptionKey: 'settings.adoption.cards.selfHosted.description',
+    metaKey: 'settings.adoption.cards.selfHosted.meta',
+    actions: [
+      { key: 'settings-adoption-install-guide-link', href: selfHostedInstallGuideUrl, external: true, actionKey: 'settings.adoption.cards.selfHosted.primary', primary: true },
+      { key: 'settings-adoption-runbook-link', href: selfHostedRunbookUrl, external: true, actionKey: 'settings.adoption.cards.selfHosted.secondary' }
+    ]
+  }
+])
+
+function resolveCardMeta(card: AdoptionCard): string {
+  return card.metaParams ? t(card.metaKey, card.metaParams) : t(card.metaKey)
+}
 </script>
 
 <template>
@@ -178,100 +272,40 @@ const launchTracks = computed(() => ([
     </article>
 
     <div class="adoption-panel__grid">
-      <article class="adoption-panel__card" data-testid="settings-adoption-guide-card">
+      <article
+        v-for="card in resourceCards"
+        :key="card.code"
+        class="adoption-panel__card"
+        :data-testid="`settings-adoption-${card.code}-card`"
+      >
         <div class="adoption-panel__card-copy">
-          <strong>{{ t('settings.adoption.cards.adoption.title') }}</strong>
-          <p>{{ t('settings.adoption.cards.adoption.description') }}</p>
+          <strong>{{ t(card.titleKey) }}</strong>
+          <p>{{ t(card.descriptionKey) }}</p>
         </div>
         <div class="adoption-panel__actions">
-          <a
-            class="adoption-panel__action adoption-panel__action--primary"
-            data-testid="settings-adoption-guide-link"
-            :href="adoptionGuideUrl"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            {{ t('settings.adoption.cards.adoption.primary') }}
-          </a>
-          <NuxtLink
-            class="adoption-panel__action"
-            data-testid="settings-adoption-mainline-link"
-            to="/suite?section=overview"
-          >
-            {{ t('settings.adoption.cards.adoption.secondary') }}
-          </NuxtLink>
+          <template v-for="action in card.actions" :key="action.key">
+            <a
+              v-if="action.external"
+              :class="['adoption-panel__action', { 'adoption-panel__action--primary': action.primary }]"
+              :data-testid="action.key"
+              :href="action.href"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              {{ t(action.actionKey) }}
+            </a>
+            <NuxtLink
+              v-else
+              :class="['adoption-panel__action', { 'adoption-panel__action--primary': action.primary }]"
+              :data-testid="action.key"
+              :to="action.href"
+            >
+              {{ t(action.actionKey) }}
+            </NuxtLink>
+          </template>
         </div>
-        <p class="adoption-panel__meta" data-testid="settings-adoption-guide-meta">
-          {{ t('settings.adoption.cards.adoption.meta') }}
-        </p>
-      </article>
-
-      <article class="adoption-panel__card" data-testid="settings-adoption-api-card">
-        <div class="adoption-panel__card-copy">
-          <strong>{{ t('settings.adoption.cards.api.title') }}</strong>
-          <p>{{ t('settings.adoption.cards.api.description') }}</p>
-        </div>
-        <div class="adoption-panel__actions">
-          <a
-            class="adoption-panel__action adoption-panel__action--primary"
-            data-testid="settings-adoption-api-guide-link"
-            :href="apiGuideUrl"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            {{ t('settings.adoption.cards.api.guide') }}
-          </a>
-          <a
-            class="adoption-panel__action"
-            data-testid="settings-adoption-swagger-link"
-            :href="swaggerUiUrl"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            {{ t('settings.adoption.cards.api.primary') }}
-          </a>
-          <a
-            class="adoption-panel__action"
-            data-testid="settings-adoption-openapi-link"
-            :href="openApiJsonUrl"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            {{ t('settings.adoption.cards.api.secondary') }}
-          </a>
-        </div>
-        <p class="adoption-panel__meta" data-testid="settings-adoption-api-meta">
-          {{ t('settings.adoption.cards.api.meta', { value: normalizedApiBase }) }}
-        </p>
-      </article>
-
-      <article class="adoption-panel__card" data-testid="settings-adoption-self-hosted-card">
-        <div class="adoption-panel__card-copy">
-          <strong>{{ t('settings.adoption.cards.selfHosted.title') }}</strong>
-          <p>{{ t('settings.adoption.cards.selfHosted.description') }}</p>
-        </div>
-        <div class="adoption-panel__actions">
-          <a
-            class="adoption-panel__action adoption-panel__action--primary"
-            data-testid="settings-adoption-install-guide-link"
-            :href="selfHostedInstallGuideUrl"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            {{ t('settings.adoption.cards.selfHosted.primary') }}
-          </a>
-          <a
-            class="adoption-panel__action"
-            data-testid="settings-adoption-runbook-link"
-            :href="selfHostedRunbookUrl"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            {{ t('settings.adoption.cards.selfHosted.secondary') }}
-          </a>
-        </div>
-        <p class="adoption-panel__meta" data-testid="settings-adoption-self-hosted-meta">
-          {{ t('settings.adoption.cards.selfHosted.meta') }}
+        <p class="adoption-panel__meta" :data-testid="`settings-adoption-${card.code}-meta`">
+          {{ resolveCardMeta(card) }}
         </p>
       </article>
     </div>
