@@ -3,11 +3,12 @@
 隐私导向、模块化、可自托管的协作套件。当前 Community 主线坚持 `Web-first` 协作、明确能力边界与 `Labs` 预览隔离，不把未交付能力包装成正式承诺。
 
 ## 当前发布状态
-- `main`：当前公开发布主线；当前正式发布切点为 `v1.6.0`
+- `main`：当前公开发布主线；当前正式发布切点为 `v1.6.1`
 - `dev/v1.6`：`v1.6.0` release source branch，已完成合并回 `main`
+- `dev/v1.6.1-mainline-depth`：`v1.6.1` 收口分支，承接主线协作深度、采用入口与治理同步
 - `release/v1.2`：保留 `v1.2.x` 历史发布线
-- 状态说明：`v1.6.0` 已正式发布，聚焦 `Product Focus & IA Refinement`
-- 权威路线：`docs/release/community-v1-v1.6-plan.md`、`docs/release/community-v1-v1.6-mainline-roadmap.md`、`docs/release/community-v1-support-boundaries.md`
+- 状态说明：`v1.6.1` 已正式发布，聚焦 `mainline collaboration depth + adoption guidance + governance alignment`
+- 权威路线：`docs/release/community-v1-v1.6-plan.md`、`docs/release/community-v1-v1.6-mainline-roadmap.md`、`docs/release/community-v1-v1.6.1-closure-plan.md`、`docs/release/community-v1-support-boundaries.md`
 
 ## 当前版本节奏
 - `v1.0.0-rc1`：历史候选基线，反馈已完成分流。
@@ -20,7 +21,8 @@
 - `v1.4.0`：已正式发布，范围冻结为 `Mail 外部密码保护加密投递`。
 - `v1.5.0`：已正式发布，聚焦 `Mail external secure attachments + draft reopen + public secure share trust UX`。
 - `v1.6.0`：已正式发布，聚焦 `Suite sectioned IA + curated Labs catalog + boundary alignment + runtime a11y gates`。
-- `v1.6.x`：当前延续批次聚焦 `mainline collaboration depth + Pass visible beta surface + adoption guidance`。
+- `v1.6.1`：已正式发布，聚焦 `mainline collaboration depth + Pass visible beta surface + developer station / team enablement + governance alignment`。
+- `v1.6.x`：后续只承接 `release-blocking / security / metadata / adoption friction` 收口，不再横向扩 Preview 宽度。
 - GitHub milestones：`v1.0.0`、`v1.2`、`v1.3`、`v1.4`、`v1.5`、`v1.6`
 - 不在当前版本节奏中推进 `VPN / Meet / Wallet / Lumo` 等 `Preview` 模块深化。
 
@@ -39,7 +41,7 @@
   - `Drive E2EE foundation` 与单文件 `readable-share` E2EE foundation
   - `SMTP outbound adapter`、`Calendar internal invitation orchestration`、`Pass Beta readiness`
 - 受限交付：
-  - 当前公开发布主线已切到 `v1.6.0`；后续只接收 `v1.6.x` 级别的 `release-blocking / security / metadata` 修复
+  - 当前公开发布主线已切到 `v1.6.1`；后续只接收 `v1.6.x` 级别的 `release-blocking / security / metadata / adoption friction` 修复
   - 外部密码保护加密投递当前仍是 `public secure link` 模式，不是完整 MIME 级外部邮箱互通
   - `/labs` 的收敛只影响默认 curated catalog，不改动底层 raw registry / source-of-truth
   - `Pass` 虽已进入默认导航，但仍保持 `Beta` 口径，不作为正式发布阻塞，也不进入 home fallback
@@ -87,10 +89,12 @@
 - Mail protocol stack discovery：`docs/architecture/mail-protocol-stack-discovery.md`
 - `v1.6` 规划基线：`docs/release/community-v1-v1.6-plan.md`
 - `v1.6` 主线路线：`docs/release/community-v1-v1.6-mainline-roadmap.md`
+- `v1.6.1` 收口计划：`docs/release/community-v1-v1.6.1-closure-plan.md`
 - `v1.6` release checklist：`docs/release/community-v1-v1.6-release-checklist.md`
 - `v1.6` release manager brief：`docs/release/community-v1-v1.6-release-manager-brief.md`
 - `v1.6` final signoff：`docs/release/community-v1-v1.6-final-signoff.md`
 - `v1.6.0` release notes：`docs/release/community-v1-v1.6.0-release-notes.md`
+- `v1.6.1` release notes：`docs/release/community-v1-v1.6.1-release-notes.md`
 - 支持边界：`docs/release/community-v1-support-boundaries.md`
 - Community / Hosted 边界入口：`/suite` 中的 `Release boundary map`
 - 首发范围：`docs/release/community-v1-scope.md`

@@ -1,14 +1,15 @@
 # Community Edition Support Boundaries
 
-**版本**: `v1.6-mainline`
+**版本**: `v1.6.1-mainline`
 **日期**: `2026-04-09`
 **作者**: `Codex`
 
 ## 当前分支状态
-- `main`：`v1.6.0` 当前公开基线
-- `dev/v1.6`：`v1.6-mainline` release source branch，已完成合并回 `main`
+- `main`：`v1.6.1` 当前公开基线
+- `dev/v1.6`：`v1.6.0` release source branch，已完成合并回 `main`
+- `dev/v1.6.1-mainline-depth`：`v1.6.1` 收口分支，承接主线协作深度、adoption guidance 与治理同步
 - `release/v1.2`：历史维护分支
-- 含义：`main` 已承接 `v1.6.0` 的产品聚焦、信息架构收敛与可信边界同步；`dev/v1.6` 保留为本次 release source branch 的历史上下文。
+- 含义：`main` 已承接 `v1.6.1` 的主线协作深度、Pass 可见 Beta、采用入口与治理同步；`dev/v1.6*` 分支只保留历史 release source 上下文。
 
 ## 支持范围
 ### GA
@@ -80,7 +81,7 @@
 ## 自托管责任边界
 ### 维护者负责
 - 代码、文档、脚本、默认门禁
-- `v1.6-mainline` 已实现能力的真实边界说明
+- `v1.6.1-mainline` 已实现能力的真实边界说明
 
 ### 部署者负责
 - 真实 secrets 管理

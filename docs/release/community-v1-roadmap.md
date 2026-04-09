@@ -1,39 +1,39 @@
-# Community Edition v1.0 Roadmap
+# Community Edition v1.6.1 Roadmap
 
-**版本**: `v1.0-roadmap`
-**日期**: `2026-03-28`
+**版本**: `v1.6.1-roadmap`
+**日期**: `2026-04-09`
 **作者**: `Codex`
 
 ## 当前阶段
-- 当前正式状态为 `RC1_READY`，首发范围、门禁、交接材料已经收口。
-- `release/v1.0` 已从 `6f86864` 切出，承接 `v1.0.0` 与 `v1.0.x`。
-- `dev/community-v1` 已转入 `v1.1` 集成开发，不再作为 `v1.0.0` 直接发布基线。
+- 当前公开基线：`main` → `v1.6.1`
+- 当前主线定位：`mainline collaboration depth + adoption guidance + governance alignment`
+- `dev/v1.6` 保留为 `v1.6.0` 历史 release source branch；`dev/v1.6.1-mainline-depth` 为本批收口分支历史上下文
 
-## `v1.0.0-rc1`
-- 完成 Gate 0 ~ Gate 7 的 release closeout。
-- 完成 RC 检查清单、威胁模型、治理模板、门禁证据归档。
-- 保持 `GA` 范围冻结，不再扩 `Mail / Calendar / Drive / Admin` 功能。
+## 已在 `v1.6.1` 收口的事项
+- `Mail → Calendar → Drive → Pass` 主线协作链路已从单纯文案推进到可见 handoff / evidence / next-step 的产品面。
+- `Pass` 已保持默认导航可见 `Beta` 入口，不再作为长期 `Labs-only` 叙事。
+- 浏览器内 `Developer station / Team enablement / Adoption guide / API docs` 已形成 post-deploy enablement 入口。
+- `README`、support boundaries、feedback intake、issue templates、CI 触发器与 threat model 已切到 `v1.6.1` 口径。
 
-## `v1.0.0`
-- 保持 `release/v1.0` 最新 head 的 `MMMail CI` 全绿。
-- 基于 `release/v1.0` 完成 `v1.0.0` 正式发布。
-- 进入短周期 GA 稳定窗口，只处理 release-blocking regression。
-- 收敛首批自托管安装、升级、备份恢复、运维反馈。
-- 输出首个公开 `v1.0.0` release notes。
+## 当前优先级
+### `P0`
+- 把 `Mail → Calendar → Drive → Pass` 做成一条真实、可复跑、可被第二位成员消费的团队任务流。
+- 优先修复主线中的权限、认知、入口、通知、恢复断点，而不是继续扩大产品面。
 
-## `v1.0.x`
-- 沿 `release/v1.0` 维护线接收 release-blocking backport。
-- 安全修复优先，其次为自托管阻断与最小文档勘误。
-- 不回灌 `Docs / Sheets` Beta 能力增强。
+### `P1`
+- 继续加深 `Drive E2EE` 交付表达，降低 secure delivery / readable-share 的理解和恢复成本。
+- 把 `Pass` 从“可见 Beta”继续推进到“可信交接面”，但不夸大为已交付扩展、自动填充或 passkey ceremony。
 
-## `v1.1`
-- 按 `Docs → i18n → Community / Hosted → Sheets` 的顺序推进。
-- `Docs / Sheets` 从当前 `BETA` 提升到稳定的单人编辑 / 轻协作能力。
-- 国际化治理进入工程化（简体中文 / 繁体中文 / 英语）。
-- 继续明确 `Billing` 的 Community / Hosted 边界，不把真实支付链路混入 Community GA。
-- 根据首批部署反馈补强安装模板、运维文档和默认观测面板。
+### `P2`
+- 把 `SSO / SCIM / LDAP readiness`、开发者文档站、部署后团队启用路径继续明确化和任务化。
+- 保持这些能力作为 readiness / guidance，而不是包装成已交付企业自动化。
 
-## `v1.2+`
-- 仅在有真实使用数据与运维反馈支撑时，评估 `Preview` 模块升级条件。
-- 不把 `VPN / Meet / Wallet / Lumo` 作为短期补丁或版本冲刺目标。
-- 若进入商业托管阶段，再单独评估 `Billing`、多区域部署与运营能力。
+### `P3`
+- 非主线 `Preview` 模块继续走 pluginization / externalization 路线。
+- 不让 `VPN / Meet / Wallet / Lumo / Command Center / Notifications` 重新进入默认 rollout 承诺。
+
+## 当前不推进的方向
+- 不在 `v1.6.x` 内交付真实 `SSO / SCIM / LDAP` 自动化。
+- 不在 `v1.6.x` 内交付 `SMTP inbound / IMAP / Bridge`、零知识全栈邮件、原生客户端。
+- 不把真实支付、税费、发票下载和订阅结算混入 Community 承诺。
+- 不为了对齐更宽的产品矩阵而牺牲主线深度和边界诚实度。

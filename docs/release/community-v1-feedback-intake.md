@@ -1,29 +1,32 @@
-# Community Edition v1.0 Feedback Intake
+# Community Edition v1.6.1 Feedback Intake
 
-**版本**: `v1.0-feedback-intake`
-**日期**: `2026-03-28`
+**版本**: `v1.6.1-feedback-intake`
+**日期**: `2026-04-09`
 **作者**: `Codex`
 
 ## 目标
-- 以 `v1.0.0` 正式版为默认反馈基线。
+- 以 `v1.6.1` 当前公开基线为默认反馈基线。
 - 将反馈严格分流到：
   - `release-blocking`
-  - `v1.0.x` 文档 / 安装勘误
-  - `v1.1`
-  - `post-v1.1`
+  - `docs / self-hosting correction`
+  - `P0 / P1 / P2 / P3 backlog`
+  - `Hosted backlog`
 
 ## 当前基线
-- Tag：`v1.0.0`
-- Release：`https://github.com/IMG-LTD/MMMail/releases/tag/v1.0.0`
-- 正式提交：`829c60b99d15c331949a12e45be564da51ec3791`
-- 正式发布分支：`release/v1.0`
-- `v1.1` 集成分支：`dev/community-v1`
-- 历史候选基线：`v1.0.0-rc1` / `6cd3bbc`
+- 公开基线：`main` / `Community Edition v1.6.1`
+- 当前收口分支：`dev/v1.6.1-mainline-depth`
+- 权威 release 说明：
+  - `docs/release/community-v1-v1.6.1-release-notes.md`
+  - `docs/release/community-v1-v1.6.1-closure-plan.md`
+  - `docs/release/community-v1-support-boundaries.md`
 
 ## GitHub milestones
-- `v1.0.0`：`release-blocking` 与自托管阻断项
-- `v1.1`：`Docs / Sheets / i18n / Community / Hosted`
-- `post-v1.1`：`Preview` 与延后能力
+- `release-blocking`：当前公开基线断裂或安全 / 数据风险
+- `P0`：主线协作闭环深度
+- `P1`：`Drive E2EE / Pass Beta` 深化
+- `P2`：identity readiness、developer docs、team enablement
+- `P3`：Preview pluginization / externalization
+- `Hosted backlog`：真实支付、商业 SLA、企业自动化等不进入 Community 的能力
 
 ## 提交入口
 ### `release-blocking` 回归
@@ -32,7 +35,7 @@
   - `GA` 主路径失败
   - 安装 / 升级 / 恢复阻断
   - 安全或越权回归
-  - `release/v1.0` 最新 green head 变红且影响发布
+  - 最新 `main` 或活跃 `dev/v*` workflow 失绿且影响公开基线
 
 ### 一般缺陷
 - 使用模板：`.github/ISSUE_TEMPLATE/bug-report.md`
@@ -52,26 +55,26 @@
 ### 需求与 backlog
 - 使用模板：`.github/ISSUE_TEMPLATE/feature-request.md`
 - 适用场景：
-  - `Docs / Sheets`
-  - 国际化
-  - Community / Hosted 边界
-  - 其他 post-v1.0 能力
-- 分诊手册：`docs/release/community-v1-ga-triage-playbook.md`
-- `v1.1` backlog seed：`docs/release/community-v1-v1.1-backlog-seed.md`
+  - `P0 / P1 / P2 / P3` 对应主线
+  - Hosted-only 商业能力
+  - 其他当前公开边界外能力
+- 分流与优先级说明：`docs/release/community-v1-roadmap.md`
 
 ## 分流矩阵
 | 反馈 | 归类 | 动作 |
 |---|---|---|
-| `Mail / Calendar / Drive / Auth / RBAC` 主路径断裂 | `release-blocking` | 进入 `v1.0.x` |
-| Docker Compose / install / upgrade / backup / restore 无法按文档完成 | `release-blocking` 或文档勘误 | 先判定是否阻断 |
-| `Docs / Sheets` 编辑体验不足 | `v1.1` | 不阻塞 |
-| 简繁英缺失、术语不统一 | `v1.1` | 不阻塞 |
-| `Billing` 真实支付需求 | `Hosted backlog` | 不进入 Community `v1.0.0` |
-| `VPN / Meet / Wallet / Lumo` 建议 | `post-v1.1` | 不阻塞 |
+| `Mail / Calendar / Drive / Auth / RBAC` 主路径断裂 | `release-blocking` | 立即进入当前公开基线修复 |
+| Docker Compose / install / upgrade / backup / restore 无法按文档完成 | `release-blocking` 或 `docs / self-hosting correction` | 先判定是否阻断 |
+| `Mail → Calendar → Drive → Pass` 交接链路有明显断点 | `P0` | 不混入 Preview 宽度需求 |
+| `Drive E2EE` 消费 / 恢复 / readable-share 体验不足 | `P1` | 进入主线深化，不扩新模块 |
+| `Pass` 交接体验、secret handoff 或 Beta 边界表达不足 | `P1` | 进入主线深化，不夸大未交付能力 |
+| `SSO / SCIM / LDAP readiness`、developer docs、team enablement 不清楚 | `P2` | 作为 readiness / guidance backlog |
+| `Billing` 真实支付、税费、发票下载、商业结算 | `Hosted backlog` | 不进入 Community `v1.6.1` |
+| `VPN / Meet / Wallet / Lumo` 建议 | `P3` 或更后 | 默认不阻塞当前主线 |
 
 ## 必要信息
 提交 issue 时至少提供：
-- 版本：`v1.0.0` / `v1.0.x` 或具体 commit
+- 版本：`v1.6.1`、具体 commit 或当前 `main`
 - 部署方式：Docker Compose / 本地开发 / CI
 - 环境信息：浏览器、OS、数据库版本
 - 复现步骤
@@ -83,8 +86,8 @@
   - 对应 workflow run 链接
 
 ## 当前处理原则
-- `v1.0.x` 只接收 release-blocking 修复与最小必要勘误。
+- 当前公开基线只接收 release-blocking 修复与最小必要勘误。
 - 非阻塞问题不混入当前发布窗口。
 - 无法证明影响 `GA` 主路径的问题，不升级为 release-blocking。
 - 自托管反馈优先使用专用模板，避免与功能缺陷、功能需求混在一起。
-- `v1.1` backlog 仅允许进入 `Docs / Sheets / i18n / Community / Hosted` 四条主线。
+- backlog 以 `P0 → P1 → P2 → P3` 顺序进入，不因 Preview 宽度打断主线收口。

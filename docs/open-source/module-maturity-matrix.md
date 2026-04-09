@@ -1,6 +1,6 @@
 # Module Maturity Matrix
 
-**版本**: `v1.6-mainline`
+**版本**: `v1.6.1-mainline`
 **日期**: `2026-04-09`
 **作者**: `Codex`
 

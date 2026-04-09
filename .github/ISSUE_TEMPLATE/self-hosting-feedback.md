@@ -17,9 +17,9 @@ assignees: ""
 - [ ] 文档不准确
 
 ## Impact
-- [ ] 阻塞 `v1.0.0`
-- [ ] 不阻塞，但需要修正文档
-- [ ] 进入 `v1.1` backlog
+- [ ] 阻塞当前 `v1.6.1` 自托管基线
+- [ ] 不阻塞，但需要修正 install / runbook / adoption 文档
+- [ ] 进入 `v1.6.x` 收口 backlog
 
 ## Deployment context
 - Version / tag:

@@ -1,6 +1,6 @@
-# Community Edition v1.6 安装说明
+# Community Edition v1.6.1 安装说明
 
-**版本**: `v1.6-mainline`
+**版本**: `v1.6.1-mainline`
 **日期**: `2026-04-09`
 **作者**: `Codex`
 
