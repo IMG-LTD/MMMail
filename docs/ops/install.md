@@ -31,34 +31,45 @@
 ## 前置条件
 - `Docker` + `Docker Compose v2`
 - 至少 `4 CPU / 8 GB RAM`
-- 可用端口：`3001`、`8080`、`3306`、`6379`、`8848`
+- 标准模式端口：`3001`、`8080`、`3306`、`6379`、`8848`
+- 最小模式端口：`3001`、`8080`、`3306`、`6379`
 
 ## 1. 准备运行时环境
 1. 复制模板：
    - `cp .env.example .env`
-2. 编辑 `.env`，至少替换以下占位值：
-   - `MMMAIL_JWT_SECRET`
-   - `SPRING_DATASOURCE_PASSWORD`
-   - `SPRING_REDIS_PASSWORD`
-   - `NACOS_USERNAME`
-   - `NACOS_PASSWORD`
-   - `MYSQL_ROOT_PASSWORD`
-3. 对 isolated local 环境，`NACOS_USERNAME` / `NACOS_PASSWORD` 可设置为本地默认 `nacos`；不要把该值回写到仓库模板。
+2. 选择启动模式：
+   - 标准模式：保留 `MMMAIL_NACOS_ENABLED=true`
+   - 最小模式：设置 `MMMAIL_NACOS_ENABLED=false`
+3. 编辑 `.env`，至少替换以下占位值：
+   - 两种模式都必须替换：
+     - `MMMAIL_JWT_SECRET`
+     - `SPRING_DATASOURCE_PASSWORD`
+     - `SPRING_REDIS_PASSWORD`
+     - `MYSQL_ROOT_PASSWORD`
+   - 仅标准模式必须替换：
+     - `NACOS_USERNAME`
+     - `NACOS_PASSWORD`
+4. 对 isolated local 标准模式，`NACOS_USERNAME` / `NACOS_PASSWORD` 可设置为本地默认 `nacos`；不要把该值回写到仓库模板。
 
 ## 2. 启动前校验
 - 执行：
   - `./scripts/validate-runtime-env.sh .env`
 
-校验通过后才允许继续启动；若脚本报 placeholder / missing，必须先修正 `.env`。
+校验通过后才允许继续启动；若脚本报 placeholder / missing，必须先修正 `.env`。当 `MMMAIL_NACOS_ENABLED=false` 时，脚本会显式跳过 Nacos 凭据要求。
 
 ## 3. 启动 Compose
-- 构建并启动：
+- 标准模式：
   - `docker compose --env-file .env up -d --build`
+- 最小模式：
+  - `docker compose --env-file .env -f docker-compose.minimal.yml up -d --build`
 - 查看状态：
-  - `docker compose ps`
+  - 标准模式：`docker compose ps`
+  - 最小模式：`docker compose -f docker-compose.minimal.yml ps`
 - 查看日志：
-  - `docker compose logs -f backend`
-  - `docker compose logs -f frontend`
+  - 标准模式：`docker compose logs -f backend`
+  - 最小模式：`docker compose -f docker-compose.minimal.yml logs -f backend`
+  - 标准模式前端：`docker compose logs -f frontend`
+  - 最小模式前端：`docker compose -f docker-compose.minimal.yml logs -f frontend`
 
 ## 4. 验证服务
 - Frontend：
@@ -107,13 +118,17 @@
 
 ## 5. 停止与清理
 - 停止：
-  - `docker compose down`
+  - 标准模式：`docker compose down`
+  - 最小模式：`docker compose -f docker-compose.minimal.yml down`
 - 连同卷一起清理：
-  - `docker compose down -v`
+  - 标准模式：`docker compose down -v`
+  - 最小模式：`docker compose -f docker-compose.minimal.yml down -v`
 
 ## 6. 常见问题
 - `validate-runtime-env.sh` 失败：
   - `.env` 仍保留 `replace-with-*` 占位值。
+- 最小模式仍要求 Nacos 凭据：
+  - 先确认 `.env` 里的 `MMMAIL_NACOS_ENABLED=false`，再重新运行 `./scripts/validate-runtime-env.sh .env`。
 - Backend 无法连接 MySQL：
   - 检查 `SPRING_DATASOURCE_PASSWORD` 与 `MYSQL_ROOT_PASSWORD` 是否已正确设置。
 - Frontend 页面打开但 API `403 / 500`：

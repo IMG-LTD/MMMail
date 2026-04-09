@@ -35,19 +35,6 @@ services:
       timeout: 5s
       retries: 12
 
-  nacos:
-    image: nacos/nacos-server:v2.4.2
-    container_name: mmmail-nacos
-    restart: unless-stopped
-    environment:
-      MODE: standalone
-      PREFER_HOST_MODE: hostname
-      NACOS_AUTH_ENABLE: "false"
-    ports:
-      - "8848:8848"
-    volumes:
-      - mmmail-nacos-data:/home/nacos/data
-
   backend:
     build:
       context: .
@@ -67,12 +54,7 @@ services:
       SPRING_REDIS_DATABASE: ${SPRING_REDIS_DATABASE}
       SPRING_REDIS_TIMEOUT: ${SPRING_REDIS_TIMEOUT}
       SPRING_KAFKA_BOOTSTRAP_SERVERS: 127.0.0.1:9092
-      MMMAIL_NACOS_ENABLED: "true"
-      NACOS_SERVER_ADDR: nacos:8848
-      NACOS_USERNAME: ${NACOS_USERNAME}
-      NACOS_PASSWORD: ${NACOS_PASSWORD}
-      NACOS_NAMESPACE: ${NACOS_NAMESPACE}
-      NACOS_GROUP: ${NACOS_GROUP}
+      MMMAIL_NACOS_ENABLED: "false"
       MMMAIL_JWT_SECRET: ${MMMAIL_JWT_SECRET}
       MMMAIL_AUTH_CSRF_COOKIE_NAME: ${MMMAIL_AUTH_CSRF_COOKIE_NAME}
       MMMAIL_AUTH_REFRESH_COOKIE_NAME: ${MMMAIL_AUTH_REFRESH_COOKIE_NAME}
@@ -84,8 +66,6 @@ services:
         condition: service_healthy
       redis:
         condition: service_healthy
-      nacos:
-        condition: service_started
     ports:
       - "8080:8080"
     volumes:
@@ -126,5 +106,4 @@ services:
 volumes:
   mmmail-mysql-data:
   mmmail-redis-data:
-  mmmail-nacos-data:
   mmmail-drive-data:

@@ -15,12 +15,34 @@ if [[ -f "$ENV_FILE" ]]; then
   load_env_file "$ENV_FILE"
 fi
 
+normalize_boolean() {
+  local raw_value="${1:-}"
+  local key="$2"
+  local normalized
+  normalized="$(printf '%s' "$raw_value" | tr '[:upper:]' '[:lower:]')"
+  case "$normalized" in
+    true|false)
+      printf '%s' "$normalized"
+      ;;
+    *)
+      echo "$key must be 'true' or 'false'" >&2
+      exit 1
+      ;;
+  esac
+}
+
 required_keys=(
   SPRING_DATASOURCE_PASSWORD
   MMMAIL_JWT_SECRET
-  NACOS_USERNAME
-  NACOS_PASSWORD
 )
+
+nacos_enabled="$(normalize_boolean "${MMMAIL_NACOS_ENABLED:-true}" "MMMAIL_NACOS_ENABLED")"
+if [[ "$nacos_enabled" == "true" ]]; then
+  required_keys+=(
+    NACOS_USERNAME
+    NACOS_PASSWORD
+  )
+fi
 
 errors=()
 for key in "${required_keys[@]}"; do
@@ -41,4 +63,4 @@ if (( ${#errors[@]} > 0 )); then
   exit 1
 fi
 
-echo "backend test env validation passed"
+echo "backend test env validation passed (MMMAIL_NACOS_ENABLED=$nacos_enabled)"

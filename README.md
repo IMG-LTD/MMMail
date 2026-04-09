@@ -22,7 +22,7 @@
 - `v1.5.0`：已正式发布，聚焦 `Mail external secure attachments + draft reopen + public secure share trust UX`。
 - `v1.6.0`：已正式发布，聚焦 `Suite sectioned IA + curated Labs catalog + boundary alignment + runtime a11y gates`。
 - `v1.6.1`：已正式发布，聚焦 `mainline collaboration depth + Pass visible beta surface + developer station / team enablement + governance alignment`。
-- `v1.6.x`：后续只承接 `release-blocking / security / metadata / adoption friction` 收口，不再横向扩 Preview 宽度。
+- `v1.6.x`：后续只承接 `release-blocking / security / metadata / adoption friction` 收口，不再横向扩 Preview 宽度；当前已补 `minimal self-host` 启动路径。
 - GitHub milestones：`v1.0.0`、`v1.2`、`v1.3`、`v1.4`、`v1.5`、`v1.6`
 - 不在当前版本节奏中推进 `VPN / Meet / Wallet / Lumo` 等 `Preview` 模块深化。
 
@@ -53,12 +53,15 @@
 ## 快速启动
 1. 准备运行时环境：
    - `cp .env.example .env`
-   - 编辑 `.env`，替换所有 `replace-with-*` 占位值
-2. 运行环境校验：
+2. 选择启动模式并编辑 `.env`：
+   - 标准模式：保留 `MMMAIL_NACOS_ENABLED=true`，并替换所有 `replace-with-*` 占位值
+   - 最小模式：设置 `MMMAIL_NACOS_ENABLED=false`，至少替换 `MMMAIL_JWT_SECRET`、数据库和 Redis 密码；`NACOS_USERNAME` / `NACOS_PASSWORD` 可保留模板占位值
+3. 运行环境校验：
    - `./scripts/validate-runtime-env.sh .env`
-3. 启动 Community Edition：
-   - `docker compose --env-file .env up -d --build`
-4. 验证：
+4. 启动 Community Edition：
+   - 标准模式：`docker compose --env-file .env up -d --build`
+   - 最小模式：`docker compose --env-file .env -f docker-compose.minimal.yml up -d --build`
+5. 验证：
    - Frontend：`http://127.0.0.1:3001`
    - Backend：`http://127.0.0.1:8080/actuator/health`
 
@@ -76,6 +79,7 @@
 
 ## 文档
 - 安装说明：`docs/ops/install.md`
+- 最小自托管 Compose：`docker-compose.minimal.yml`
 - 升级说明：`docs/ops/upgrade.md`
 - 备份恢复：`docs/ops/backup-restore.md`
 - 运维 Runbook：`docs/ops/runbook.md`

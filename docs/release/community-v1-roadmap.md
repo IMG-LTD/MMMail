@@ -14,6 +14,7 @@
 - `Pass` 已保持默认导航可见 `Beta` 入口，不再作为长期 `Labs-only` 叙事。
 - 浏览器内 `Developer station / Team enablement / Adoption guide / API docs` 已形成 post-deploy enablement 入口。
 - `README`、support boundaries、feedback intake、issue templates、CI 触发器与 threat model 已切到 `v1.6.1` 口径。
+- `v1.6.x` 当前 adoption friction 收口已补一条显式 `minimal self-host` 路径：`MMMAIL_NACOS_ENABLED=false` 时可使用 `docker-compose.minimal.yml` 与运行时脚本完成更轻量的本地部署。
 
 ## 当前优先级
 ### `P0`
