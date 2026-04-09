@@ -43,6 +43,7 @@
 - `Collaboration` 与 `Drive` 复用同一条主线 handoff 视图，显式暴露当前交接状态。
 - `Drive` 启动面展示 owner-side E2EE readiness、share readiness 和 `Pass` handoff CTA。
 - `Developer station / Team enablement / Adoption guide / API docs` 形成 post-deploy enablement 闭环。
+- 自托管入口补齐显式 `minimal self-host` 模式：当 `MMMAIL_NACOS_ENABLED=false` 时，模板、校验脚本和 `docker-compose.minimal.yml` 允许团队先以更轻量的依赖面启动 Community。
 - `README`、support boundaries、feedback intake、roadmap、known issues、CI、Issue 模板与 threat model 统一到 `v1.6.1`。
 
 ## 非目标
@@ -62,6 +63,9 @@
   - team enablement
   - identity readiness
   - developer/API handoff
+- 运维入口可以明确区分：
+  - 标准模式（含 Nacos）
+  - 最小模式（关闭 Nacos）
 - 顶层文档和治理入口不再停留在 `v1.0` 或 `dev/community-v1` 口径。
 - 定向前端验证与 `typecheck` 通过。
 

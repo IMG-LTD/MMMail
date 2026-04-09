@@ -130,6 +130,7 @@ required=(
   LICENSE
   CONTRIBUTING.md
   docker-compose.yml
+  docker-compose.minimal.yml
   backend/Dockerfile
   frontend/Dockerfile
   backend/pom.xml
@@ -163,12 +164,15 @@ done
 
 echo "[validate-local] sanitized secrets in config templates"
 placeholder_checks=(
+  ".env.example|MMMAIL_NACOS_ENABLED=true"
   ".env.example|NUXT_PUBLIC_ENABLE_PREVIEW_MODULES=false"
   ".env.example|MMMAIL_JWT_SECRET=replace-with-32-plus-char-random-secret"
+  "config/backend.env.example|MMMAIL_NACOS_ENABLED=true"
   "config/backend.env.example|SPRING_DATASOURCE_PASSWORD=replace-with-db-password"
   "config/backend.env.example|SPRING_REDIS_PASSWORD=replace-with-redis-password"
   "config/backend.env.example|NACOS_PASSWORD=replace-with-nacos-password"
   "config/backend.env.example|MMMAIL_JWT_SECRET=replace-with-32-plus-char-random-secret"
+  "backend/mmmail-server/src/main/resources/application-local.yml|      enabled: \${MMMAIL_NACOS_ENABLED:true}"
   "backend/mmmail-server/src/main/resources/application-local.yml|    password: \${SPRING_DATASOURCE_PASSWORD:replace-with-db-password}"
   "backend/mmmail-server/src/main/resources/application-local.yml|      password: \${SPRING_REDIS_PASSWORD:replace-with-redis-password}"
   "backend/mmmail-server/src/main/resources/application-local.yml|    bootstrap-servers: \${SPRING_KAFKA_BOOTSTRAP_SERVERS:127.0.0.1:9092}"
@@ -187,6 +191,7 @@ done
 
 echo "[validate-local] env templates include required keys"
 required_env_keys=(
+  MMMAIL_NACOS_ENABLED
   MMMAIL_JWT_SECRET
   MMMAIL_CORS_ALLOWED_ORIGINS
   SPRING_DATASOURCE_URL
@@ -204,20 +209,31 @@ for key in "${required_env_keys[@]}"; do
 done
 
 echo "[validate-local] runtime env template"
-tmp_env="$(mktemp)"
-trap 'rm -f "$tmp_env"' EXIT
-cp .env.example "$tmp_env"
-sed -i 's/replace-with-32-plus-char-random-secret/0123456789abcdef0123456789abcdef/' "$tmp_env"
-sed -i 's/replace-with-db-password/DbPassword123!/' "$tmp_env"
-sed -i 's/replace-with-mysql-root-password/MySqlRoot123!/' "$tmp_env"
-sed -i 's/replace-with-redis-password/RedisPassword123!/' "$tmp_env"
-sed -i 's/replace-with-nacos-user/nacos/' "$tmp_env"
-sed -i 's/replace-with-nacos-password/nacos/' "$tmp_env"
-bash scripts/validate-runtime-env.sh "$tmp_env" >/tmp/mmmail-runtime-env.log 2>&1
+tmp_env_standard="$(mktemp)"
+tmp_env_minimal="$(mktemp)"
+trap 'rm -f "$tmp_env_standard" "$tmp_env_minimal"' EXIT
+cp .env.example "$tmp_env_standard"
+sed -i 's/replace-with-32-plus-char-random-secret/0123456789abcdef0123456789abcdef/' "$tmp_env_standard"
+sed -i 's/replace-with-db-password/DbPassword123!/' "$tmp_env_standard"
+sed -i 's/replace-with-mysql-root-password/MySqlRoot123!/' "$tmp_env_standard"
+sed -i 's/replace-with-redis-password/RedisPassword123!/' "$tmp_env_standard"
+sed -i 's/replace-with-nacos-user/nacos/' "$tmp_env_standard"
+sed -i 's/replace-with-nacos-password/nacos/' "$tmp_env_standard"
+bash scripts/validate-runtime-env.sh "$tmp_env_standard" >/tmp/mmmail-runtime-env.log 2>&1
+
+echo "[validate-local] runtime env template (minimal mode)"
+cp .env.example "$tmp_env_minimal"
+sed -i 's/replace-with-32-plus-char-random-secret/0123456789abcdef0123456789abcdef/' "$tmp_env_minimal"
+sed -i 's/replace-with-db-password/DbPassword123!/' "$tmp_env_minimal"
+sed -i 's/replace-with-mysql-root-password/MySqlRoot123!/' "$tmp_env_minimal"
+sed -i 's/replace-with-redis-password/RedisPassword123!/' "$tmp_env_minimal"
+sed -i 's/MMMAIL_NACOS_ENABLED=true/MMMAIL_NACOS_ENABLED=false/' "$tmp_env_minimal"
+bash scripts/validate-runtime-env.sh "$tmp_env_minimal" >/tmp/mmmail-runtime-env-minimal.log 2>&1
 
 echo "[validate-local] compose assets"
 if command -v docker >/dev/null 2>&1 && docker_client_available; then
-  docker compose --env-file "$tmp_env" -f docker-compose.yml config >/tmp/mmmail-docker-compose.log 2>&1
+  docker compose --env-file "$tmp_env_standard" -f docker-compose.yml config >/tmp/mmmail-docker-compose.log 2>&1
+  docker compose --env-file "$tmp_env_minimal" -f docker-compose.minimal.yml config >/tmp/mmmail-docker-compose-minimal.log 2>&1
 else
   echo "[validate-local] skip docker compose config: docker daemon unavailable"
 fi

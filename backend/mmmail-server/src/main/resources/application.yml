@@ -27,14 +27,18 @@ spring:
   kafka:
     bootstrap-servers: ${SPRING_KAFKA_BOOTSTRAP_SERVERS:127.0.0.1:9092}
   cloud:
+    discovery:
+      enabled: ${MMMAIL_NACOS_ENABLED:true}
     nacos:
       server-addr: ${NACOS_SERVER_ADDR:127.0.0.1:8848}
-      username: ${NACOS_USERNAME}
-      password: ${NACOS_PASSWORD}
+      username: ${NACOS_USERNAME:}
+      password: ${NACOS_PASSWORD:}
       discovery:
+        enabled: ${MMMAIL_NACOS_ENABLED:true}
         namespace: ${NACOS_NAMESPACE:public}
         group: ${NACOS_GROUP:DEFAULT_GROUP}
       config:
+        enabled: ${MMMAIL_NACOS_ENABLED:true}
         namespace: ${NACOS_NAMESPACE:public}
         group: ${NACOS_GROUP:DEFAULT_GROUP}
   sql:
@@ -75,6 +79,8 @@ logging:
       console: logstash
 
 mmmail:
+  runtime:
+    nacos-enabled: ${MMMAIL_NACOS_ENABLED:true}
   observability:
     app-version: ${MMMAIL_APP_VERSION:0.1.0-SNAPSHOT}
   jwt-secret: ${MMMAIL_JWT_SECRET}

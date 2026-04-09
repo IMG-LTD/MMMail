@@ -14,14 +14,18 @@ spring:
   kafka:
     bootstrap-servers: ${SPRING_KAFKA_BOOTSTRAP_SERVERS:127.0.0.1:9092}
   cloud:
+    discovery:
+      enabled: ${MMMAIL_NACOS_ENABLED:true}
     nacos:
       server-addr: ${NACOS_SERVER_ADDR:127.0.0.1:8848}
       username: ${NACOS_USERNAME:replace-with-nacos-user}
       password: ${NACOS_PASSWORD:replace-with-nacos-password}
       discovery:
+        enabled: ${MMMAIL_NACOS_ENABLED:true}
         namespace: ${NACOS_NAMESPACE:public}
         group: ${NACOS_GROUP:DEFAULT_GROUP}
       config:
+        enabled: ${MMMAIL_NACOS_ENABLED:true}
         namespace: ${NACOS_NAMESPACE:public}
         group: ${NACOS_GROUP:DEFAULT_GROUP}
   sql:
@@ -34,6 +38,8 @@ spring:
       max-request-size: ${SPRING_SERVLET_MULTIPART_MAX_REQUEST_SIZE:25MB}
 
 mmmail:
+  runtime:
+    nacos-enabled: ${MMMAIL_NACOS_ENABLED:true}
   jwt-secret: ${MMMAIL_JWT_SECRET:replace-with-32-plus-char-random-secret}
   cors-allowed-origins: ${MMMAIL_CORS_ALLOWED_ORIGINS:http://localhost:5173,http://127.0.0.1:5173,http://localhost:3000,http://127.0.0.1:3000,http://localhost:3001,http://127.0.0.1:3001,http://localhost:3002,http://127.0.0.1:3002,http://localhost:3003,http://127.0.0.1:3003}
   auth:

@@ -8,6 +8,22 @@ if [[ ! -f "$ENV_FILE" ]]; then
   exit 1
 fi
 
+normalize_boolean() {
+  local raw_value="${1:-}"
+  local key="$2"
+  local normalized
+  normalized="$(printf '%s' "$raw_value" | tr '[:upper:]' '[:lower:]')"
+  case "$normalized" in
+    true|false)
+      printf '%s' "$normalized"
+      ;;
+    *)
+      echo "$key must be 'true' or 'false'" >&2
+      exit 1
+      ;;
+  esac
+}
+
 while IFS= read -r line || [[ -n "$line" ]]; do
   [[ -z "$line" || "${line#\#}" != "$line" ]] && continue
   key="${line%%=*}"
@@ -21,10 +37,16 @@ required_keys=(
   SPRING_DATASOURCE_USERNAME
   SPRING_DATASOURCE_PASSWORD
   SPRING_REDIS_PASSWORD
-  NACOS_USERNAME
-  NACOS_PASSWORD
   MYSQL_ROOT_PASSWORD
 )
+
+nacos_enabled="$(normalize_boolean "${MMMAIL_NACOS_ENABLED:-true}" "MMMAIL_NACOS_ENABLED")"
+if [[ "$nacos_enabled" == "true" ]]; then
+  required_keys+=(
+    NACOS_USERNAME
+    NACOS_PASSWORD
+  )
+fi
 
 errors=()
 for key in "${required_keys[@]}"; do
@@ -48,4 +70,4 @@ if (( ${#errors[@]} > 0 )); then
   exit 1
 fi
 
-echo "runtime env validation passed: $ENV_FILE"
+echo "runtime env validation passed: $ENV_FILE (MMMAIL_NACOS_ENABLED=$nacos_enabled)"

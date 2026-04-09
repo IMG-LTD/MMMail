@@ -38,10 +38,13 @@ public class StartupConfigValidator {
     @Value("${spring.datasource.password}")
     private String datasourcePassword;
 
-    @Value("${spring.cloud.nacos.username}")
+    @Value("${mmmail.runtime.nacos-enabled:true}")
+    private boolean nacosEnabled;
+
+    @Value("${spring.cloud.nacos.username:}")
     private String nacosUsername;
 
-    @Value("${spring.cloud.nacos.password}")
+    @Value("${spring.cloud.nacos.password:}")
     private String nacosPassword;
 
     @Value("${mmmail.drive.storage-root}")
@@ -81,35 +84,55 @@ public class StartupConfigValidator {
             errors.add("`mmmail.cors-allowed-origins` cannot contain wildcard `*`");
         }
 
-        validateNotBlank("spring.datasource.url", datasourceUrl, errors);
-        validateNotBlank("spring.datasource.username", datasourceUsername, errors);
-        validateNotBlank("spring.datasource.password", datasourcePassword, errors);
-        validateNotBlank("spring.cloud.nacos.username", nacosUsername, errors);
-        validateNotBlank("spring.cloud.nacos.password", nacosPassword, errors);
-        validateNotBlank("mmmail.drive.storage-root", driveStorageRoot, errors);
-        validatePositive("mmmail.drive.recycle-bin.retention-days", driveRecycleBinRetentionDays, errors);
-        validatePositive("mmmail.drive.preview-text-max-bytes", drivePreviewTextMaxBytes, errors);
-        validatePositive("mmmail.drive.public-share-rate-limit.window-seconds", drivePublicShareRateLimitWindowSeconds, errors);
-        validatePositive("mmmail.drive.public-share-rate-limit.max-requests", drivePublicShareRateLimitMaxRequests, errors);
-        validateNotBlank("mmmail.drive.public-share-rate-limit.redis-key-prefix", drivePublicShareRateLimitRedisKeyPrefix, errors);
+        validateCoreConfig(errors);
+        validateNacosConfig(prodProfile, errors);
+        validateProdSecurity(prodProfile, errors);
 
-        if (prodProfile) {
-            validateNotForbidden("spring.datasource.password", datasourcePassword, errors);
-            validateNotForbidden("spring.cloud.nacos.username", nacosUsername, errors);
-            validateNotForbidden("spring.cloud.nacos.password", nacosPassword, errors);
-            validateNotForbidden("mmmail.jwt-secret", jwtSecret, errors);
-
-            if (corsAllowedOrigins != null) {
-                String normalized = corsAllowedOrigins.toLowerCase();
-                if (normalized.contains("localhost") || normalized.contains("127.0.0.1")) {
-                    errors.add("`mmmail.cors-allowed-origins` must not include localhost in prod profile");
-                }
+        if (prodProfile && corsAllowedOrigins != null) {
+            String normalized = corsAllowedOrigins.toLowerCase();
+            if (normalized.contains("localhost") || normalized.contains("127.0.0.1")) {
+                errors.add("`mmmail.cors-allowed-origins` must not include localhost in prod profile");
             }
         }
 
         if (!errors.isEmpty()) {
             throw new IllegalStateException("Startup configuration validation failed: " + String.join("; ", errors));
         }
+    }
+
+    private void validateCoreConfig(List<String> errors) {
+        validateNotBlank("spring.datasource.url", datasourceUrl, errors);
+        validateNotBlank("spring.datasource.username", datasourceUsername, errors);
+        validateNotBlank("spring.datasource.password", datasourcePassword, errors);
+        validateNotBlank("mmmail.drive.storage-root", driveStorageRoot, errors);
+        validatePositive("mmmail.drive.recycle-bin.retention-days", driveRecycleBinRetentionDays, errors);
+        validatePositive("mmmail.drive.preview-text-max-bytes", drivePreviewTextMaxBytes, errors);
+        validatePositive("mmmail.drive.public-share-rate-limit.window-seconds", drivePublicShareRateLimitWindowSeconds, errors);
+        validatePositive("mmmail.drive.public-share-rate-limit.max-requests", drivePublicShareRateLimitMaxRequests, errors);
+        validateNotBlank("mmmail.drive.public-share-rate-limit.redis-key-prefix", drivePublicShareRateLimitRedisKeyPrefix, errors);
+    }
+
+    private void validateNacosConfig(boolean prodProfile, List<String> errors) {
+        if (!nacosEnabled) {
+            return;
+        }
+
+        validateNotBlank("spring.cloud.nacos.username", nacosUsername, errors);
+        validateNotBlank("spring.cloud.nacos.password", nacosPassword, errors);
+
+        if (prodProfile) {
+            validateNotForbidden("spring.cloud.nacos.username", nacosUsername, errors);
+            validateNotForbidden("spring.cloud.nacos.password", nacosPassword, errors);
+        }
+    }
+
+    private void validateProdSecurity(boolean prodProfile, List<String> errors) {
+        if (!prodProfile) {
+            return;
+        }
+
+        validateNotForbidden("spring.datasource.password", datasourcePassword, errors);
+        validateNotForbidden("mmmail.jwt-secret", jwtSecret, errors);
     }
 
     private static void validateNotBlank(String field, String value, List<String> errors) {
