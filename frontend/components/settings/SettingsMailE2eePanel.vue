@@ -78,7 +78,7 @@ onMounted(() => {
 </script>
 
 <template>
-  <section class="mm-card mail-e2ee-panel" data-testid="settings-mail-e2ee-panel">
+  <section id="settings-mail-e2ee-panel" class="mm-card mail-e2ee-panel" data-testid="settings-mail-e2ee-panel">
     <div class="mail-e2ee-panel__copy">
       <span class="mail-e2ee-panel__eyebrow">{{ t('settings.mailE2ee.eyebrow') }}</span>
       <h2 class="mm-section-title">{{ t('settings.mailE2ee.title') }}</h2>

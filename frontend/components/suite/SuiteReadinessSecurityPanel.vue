@@ -6,7 +6,7 @@ import { riskLevelLabel, riskTagType } from '~/utils/suite-operations'
 interface Props {
   loading: boolean
   readiness: SuiteReadinessReport | null
-  walletReadiness: SuiteReadinessItem | null
+  featuredReadinessItem: SuiteReadinessItem | null
   readinessRiskFilter: 'ALL' | 'LOW' | 'MEDIUM' | 'HIGH' | 'CRITICAL'
   filteredReadinessItems: SuiteReadinessItem[]
   securityPosture: SuiteSecurityPosture | null
@@ -19,11 +19,14 @@ const emit = defineEmits<{
 }>()
 const { t } = useI18n()
 
-function signalValue(item: SuiteReadinessItem | null, key: string): number {
+function visibleSignals(item: SuiteReadinessItem | null): Array<{ key: string; value: number }> {
   if (!item) {
-    return 0
+    return []
   }
-  return item.signals.find(signal => signal.key === key)?.value || 0
+  return item.signals
+    .filter(signal => signal.value > 0)
+    .slice(0, 4)
+    .map(signal => ({ key: signal.key, value: signal.value }))
 }
 
 function onRiskFilterChange(value: string | number | boolean): void {
@@ -65,20 +68,39 @@ function onRiskFilterChange(value: string | number | boolean): void {
       </article>
     </div>
 
-    <div v-if="props.walletReadiness" class="wallet-risk-card">
+    <div v-if="props.featuredReadinessItem" class="featured-risk-card" data-testid="suite-readiness-featured-card">
       <div class="panel-head">
-        <h3 class="mm-section-subtitle">{{ t('suite.operations.readiness.wallet.title') }}</h3>
-        <el-tag :type="riskTagType(props.walletReadiness.riskLevel)">{{ riskLevelLabel(props.walletReadiness.riskLevel, t) }}</el-tag>
+        <div>
+          <h3 class="mm-section-subtitle">{{ t('suite.operations.readiness.featured.title') }}</h3>
+          <p class="mm-muted">
+            {{ t('suite.operations.readiness.featured.description', { product: props.featuredReadinessItem.productName }) }}
+          </p>
+        </div>
+        <el-tag :type="riskTagType(props.featuredReadinessItem.riskLevel)">
+          {{ riskLevelLabel(props.featuredReadinessItem.riskLevel, t) }}
+        </el-tag>
       </div>
-      <div class="wallet-risk-metrics">
-        <el-tag type="warning">{{ t('suite.operations.readiness.wallet.metrics.pending', { count: signalValue(props.walletReadiness, 'pending_tx_count') }) }}</el-tag>
-        <el-tag type="info">{{ t('suite.operations.readiness.wallet.metrics.signed', { count: signalValue(props.walletReadiness, 'signed_tx_count') }) }}</el-tag>
-        <el-tag type="info">{{ t('suite.operations.readiness.wallet.metrics.broadcasted', { count: signalValue(props.walletReadiness, 'broadcasted_tx_count') }) }}</el-tag>
-        <el-tag type="danger">{{ t('suite.operations.readiness.wallet.metrics.blocked', { count: signalValue(props.walletReadiness, 'blocked_mid_stage_count') }) }}</el-tag>
-        <el-tag type="danger">{{ t('suite.operations.readiness.wallet.metrics.failed', { count: signalValue(props.walletReadiness, 'failed_tx_count') }) }}</el-tag>
+      <div class="featured-risk-meta">
+        <el-tag type="info">{{ t('suite.operations.readiness.card.score', { value: props.featuredReadinessItem.score }) }}</el-tag>
+        <el-tag type="info">{{ t('suite.operations.readiness.card.category', { value: props.featuredReadinessItem.category }) }}</el-tag>
+        <el-tag type="info">
+          {{ t('suite.operations.readiness.card.planAccess', { value: t(`suite.operations.values.${props.featuredReadinessItem.enabledByPlan ? 'yes' : 'no'}`) }) }}
+        </el-tag>
       </div>
-      <ul v-if="props.walletReadiness.actions.length" class="action-list">
-        <li v-for="action in props.walletReadiness.actions.slice(0, 3)" :key="`wallet-${action.action}`">
+      <div v-if="visibleSignals(props.featuredReadinessItem).length" class="featured-risk-block">
+        <span class="featured-risk-label">{{ t('suite.operations.readiness.featured.signals') }}</span>
+        <div class="featured-risk-metrics">
+          <el-tag
+            v-for="signal in visibleSignals(props.featuredReadinessItem)"
+            :key="`${props.featuredReadinessItem.productCode}-${signal.key}`"
+            type="warning"
+          >
+            {{ signal.key }}={{ signal.value }}
+          </el-tag>
+        </div>
+      </div>
+      <ul v-if="props.featuredReadinessItem.actions.length" class="action-list">
+        <li v-for="action in props.featuredReadinessItem.actions.slice(0, 3)" :key="`featured-${action.action}`">
           <el-tag size="small" :type="action.priority === 'P0' ? 'danger' : action.priority === 'P1' ? 'warning' : 'info'">
             {{ action.priority }}
           </el-tag>
@@ -207,7 +229,7 @@ function onRiskFilterChange(value: string | number | boolean): void {
   margin-top: 14px;
 }
 
-.wallet-risk-card {
+.featured-risk-card {
   margin-top: 14px;
   border: 1px solid var(--mm-line);
   border-radius: 10px;
@@ -218,11 +240,23 @@ function onRiskFilterChange(value: string | number | boolean): void {
   gap: 10px;
 }
 
-.wallet-risk-metrics,
+.featured-risk-meta,
+.featured-risk-metrics,
 .signal-list {
   display: flex;
   flex-wrap: wrap;
   gap: 8px;
+}
+
+.featured-risk-block {
+  display: grid;
+  gap: 8px;
+}
+
+.featured-risk-label {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--mm-muted);
 }
 
 .readiness-grid {

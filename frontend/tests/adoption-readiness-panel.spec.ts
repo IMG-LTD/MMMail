@@ -26,9 +26,14 @@ describe('SettingsAdoptionReadinessPanel', () => {
     vi.clearAllMocks()
   })
 
-  it('renders concrete API docs and self-hosted guide links', async () => {
+  it('renders start-here checklist and concrete resource links', async () => {
     const panel = await mountPanel()
 
+    expect(panel.get('[data-testid="settings-adoption-checklist-link-mail_e2ee"]').attributes('href')).toBe('/settings#settings-mail-e2ee-panel')
+    expect(panel.get('[data-testid="settings-adoption-checklist-link-pwa_web_push"]').attributes('href')).toBe('/settings#settings-pwa-panel')
+    expect(panel.get('[data-testid="settings-adoption-checklist-link-boundary_map"]').attributes('href')).toBe('/suite?section=boundary')
+    expect(panel.get('[data-testid="settings-adoption-checklist-link-self_hosted_guide"]').attributes('href')).toBe('/self-hosted/install.html')
+    expect(panel.get('[data-testid="settings-adoption-checklist-link-secure_share"]').attributes('href')).toBe('/drive')
     expect(panel.get('[data-testid="settings-adoption-api-guide-link"]').attributes('href')).toBe('/self-hosted/api.html?apiBase=http%3A%2F%2Flocalhost%3A8080')
     expect(panel.get('[data-testid="settings-adoption-swagger-link"]').attributes('href')).toBe('http://localhost:8080/swagger-ui.html')
     expect(panel.get('[data-testid="settings-adoption-openapi-link"]').attributes('href')).toBe('http://localhost:8080/v3/api-docs')
@@ -43,6 +48,10 @@ async function mountPanel() {
   return mount(SettingsAdoptionReadinessPanel, {
     global: {
       stubs: {
+        NuxtLink: {
+          props: ['to'],
+          template: '<a :href="to"><slot /></a>'
+        },
         ElAlert: {
           props: ['title', 'description'],
           template: '<div><span>{{ title }}</span><span>{{ description }}</span></div>'

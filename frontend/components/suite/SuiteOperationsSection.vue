@@ -38,7 +38,7 @@ const props = defineProps({
     <SuiteReadinessSecurityPanel
       :loading="props.operationsWorkspace.loading.value"
       :readiness="props.operationsWorkspace.visibleReadiness.value"
-      :wallet-readiness="props.operationsWorkspace.walletReadiness.value"
+      :featured-readiness-item="props.operationsWorkspace.featuredReadinessItem.value"
       :readiness-risk-filter="props.operationsWorkspace.readinessRiskFilter.value"
       :filtered-readiness-items="props.operationsWorkspace.filteredReadinessItems.value"
       :security-posture="props.operationsWorkspace.visibleSecurityPosture.value"

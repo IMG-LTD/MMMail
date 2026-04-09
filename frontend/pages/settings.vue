@@ -2,6 +2,7 @@
 import { computed, onMounted, reactive, ref } from 'vue'
 import { ElMessage } from 'element-plus'
 import { LOCALE_OPTIONS } from '~/constants/i18n'
+import { COMMUNITY_V1_CORE_PRODUCT_CODES } from '~/constants/module-maturity'
 import type { MailAddressMode, PreferredLocale } from '~/types/api'
 import { useI18n } from '~/composables/useI18n'
 import { useSettingsApi } from '~/composables/useSettingsApi'
@@ -22,17 +23,9 @@ const lockedProducts = computed(() => [
   t('organizations.products.MAIL'),
   t('organizations.products.CALENDAR')
 ])
-const availableProducts = computed(() => [
-  t('organizations.products.DRIVE'),
-  t('organizations.products.DOCS'),
-  t('organizations.products.SHEETS'),
-  t('organizations.products.PASS'),
-  t('organizations.products.SIMPLELOGIN'),
-  t('organizations.products.VPN'),
-  t('organizations.products.AUTHENTICATOR'),
-  t('organizations.products.WALLET'),
-  t('organizations.products.LUMO')
-])
+const availableProducts = computed(() => COMMUNITY_V1_CORE_PRODUCT_CODES
+  .filter(code => code !== 'MAIL' && code !== 'CALENDAR')
+  .map(code => t(`organizations.products.${code}`)))
 
 const form = reactive<{
   displayName: string

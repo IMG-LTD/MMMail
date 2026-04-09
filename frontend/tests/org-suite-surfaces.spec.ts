@@ -1,4 +1,9 @@
 import { describe, expect, it } from 'vitest'
+import {
+  filterCommunityCoreProductItems,
+  filterCommunityCoreScopedItems,
+  isCommunityCoreProductCode
+} from '../constants/module-maturity'
 import type {
   SuiteCollaborationCenter,
   SuiteCollaborationSync,
@@ -25,6 +30,28 @@ function buildResolver(enabledProducts: OrgProductKey[]) {
 }
 
 describe('org suite surfaces', () => {
+  it('defines a stable community mainline product set', () => {
+    expect(isCommunityCoreProductCode('MAIL')).toBe(true)
+    expect(isCommunityCoreProductCode('PASS')).toBe(true)
+    expect(isCommunityCoreProductCode('WALLET')).toBe(false)
+    expect(filterCommunityCoreProductItems([
+      { code: 'MAIL' },
+      { code: 'PASS' },
+      { code: 'WALLET' }
+    ])).toEqual([
+      { code: 'MAIL' },
+      { code: 'PASS' }
+    ])
+    expect(filterCommunityCoreScopedItems([
+      { productCode: 'MAIL' },
+      { productCode: 'DRIVE' },
+      { productCode: 'VPN' }
+    ])).toEqual([
+      { productCode: 'MAIL' },
+      { productCode: 'DRIVE' }
+    ])
+  })
+
   it('filters suite products, readiness, posture, and unified search by org access', () => {
     const products: SuiteProductItem[] = [
       {

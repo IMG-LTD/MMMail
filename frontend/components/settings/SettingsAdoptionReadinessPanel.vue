@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { computed } from 'vue'
+import { COMMUNITY_V1_ADOPTION_CHECKLIST_ITEMS } from '~/constants/module-maturity'
 import { useI18n } from '~/composables/useI18n'
 import { resolveApiBase } from '~/utils/api-base'
 
@@ -15,6 +16,7 @@ const normalizedApiBase = computed(() => apiBase.value.replace(/\/+$/, ''))
 const apiGuideUrl = computed(() => `${apiGuidePath}?${new URLSearchParams({ apiBase: normalizedApiBase.value }).toString()}`)
 const swaggerUiUrl = computed(() => new URL('/swagger-ui.html', normalizedApiBase.value).toString())
 const openApiJsonUrl = computed(() => new URL('/v3/api-docs', normalizedApiBase.value).toString())
+const checklistItems = COMMUNITY_V1_ADOPTION_CHECKLIST_ITEMS
 </script>
 
 <template>
@@ -24,6 +26,44 @@ const openApiJsonUrl = computed(() => new URL('/v3/api-docs', normalizedApiBase.
       <h2 class="mm-section-title">{{ t('settings.adoption.title') }}</h2>
       <p>{{ t('settings.adoption.description') }}</p>
     </div>
+
+    <article class="adoption-panel__checklist" data-testid="settings-adoption-checklist">
+      <div class="adoption-panel__card-copy">
+        <strong>{{ t('settings.adoption.checklist.title') }}</strong>
+        <p>{{ t('settings.adoption.checklist.description') }}</p>
+      </div>
+      <div class="adoption-panel__checklist-list">
+        <div
+          v-for="item in checklistItems"
+          :key="item.code"
+          class="adoption-panel__checklist-item"
+          :data-testid="`settings-adoption-checklist-${item.code.toLowerCase()}`"
+        >
+          <div>
+            <strong>{{ t(item.titleKey) }}</strong>
+            <p>{{ t(item.descriptionKey) }}</p>
+          </div>
+          <a
+            v-if="item.external"
+            class="adoption-panel__action adoption-panel__action--primary"
+            :data-testid="`settings-adoption-checklist-link-${item.code.toLowerCase()}`"
+            :href="item.href"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            {{ t(item.actionKey) }}
+          </a>
+          <NuxtLink
+            v-else
+            class="adoption-panel__action adoption-panel__action--primary"
+            :data-testid="`settings-adoption-checklist-link-${item.code.toLowerCase()}`"
+            :to="item.href"
+          >
+            {{ t(item.actionKey) }}
+          </NuxtLink>
+        </div>
+      </div>
+    </article>
 
     <div class="adoption-panel__grid">
       <article class="adoption-panel__card" data-testid="settings-adoption-api-card">
@@ -111,6 +151,10 @@ const openApiJsonUrl = computed(() => new URL('/v3/api-docs', normalizedApiBase.
   display: grid;
   gap: 16px;
   padding: 20px;
+  border: 1px solid rgba(12, 90, 90, 0.12);
+  background:
+    radial-gradient(circle at top right, rgba(18, 126, 120, 0.1), transparent 40%),
+    linear-gradient(180deg, rgba(250, 253, 252, 0.98), rgba(255, 255, 255, 0.96));
 }
 
 .adoption-panel__copy {
@@ -138,6 +182,16 @@ const openApiJsonUrl = computed(() => new URL('/v3/api-docs', normalizedApiBase.
   gap: 12px;
 }
 
+.adoption-panel__checklist {
+  display: grid;
+  gap: 14px;
+  padding: 16px;
+  border-radius: 18px;
+  border: 1px solid rgba(15, 110, 110, 0.14);
+  background: rgba(255, 255, 255, 0.96);
+  box-shadow: 0 14px 32px rgba(15, 79, 75, 0.06);
+}
+
 .adoption-panel__card {
   display: grid;
   gap: 12px;
@@ -150,6 +204,28 @@ const openApiJsonUrl = computed(() => new URL('/v3/api-docs', normalizedApiBase.
 .adoption-panel__card-copy {
   display: grid;
   gap: 8px;
+}
+
+.adoption-panel__checklist-list {
+  display: grid;
+  gap: 10px;
+}
+
+.adoption-panel__checklist-item {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  align-items: flex-start;
+  padding: 14px;
+  border-radius: 16px;
+  border: 1px solid rgba(12, 90, 90, 0.1);
+  background: rgba(12, 90, 90, 0.04);
+}
+
+.adoption-panel__checklist-item p {
+  margin: 8px 0 0;
+  color: var(--mm-muted);
+  line-height: 1.6;
 }
 
 .adoption-panel__card-copy p,
@@ -182,5 +258,11 @@ const openApiJsonUrl = computed(() => new URL('/v3/api-docs', normalizedApiBase.
   color: #fff;
   background: var(--mm-accent, #0c5a5a);
   border-color: transparent;
+}
+
+@media (max-width: 900px) {
+  .adoption-panel__checklist-item {
+    flex-direction: column;
+  }
 }
 </style>
