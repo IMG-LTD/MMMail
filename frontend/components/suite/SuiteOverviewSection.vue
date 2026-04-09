@@ -5,6 +5,7 @@ import type { SuiteProductItem } from '~/types/api'
 import { useI18n } from '~/composables/useI18n'
 import type { SuiteSectionCode, SuiteSectionDefinition } from '~/utils/suite-sections'
 import SuiteCoreWorkflowPanel from '~/components/suite/SuiteCoreWorkflowPanel.vue'
+import SuiteMainlineJourneyPanel from '~/components/suite/SuiteMainlineJourneyPanel.vue'
 import SuiteProductHubPanel from '~/components/suite/SuiteProductHubPanel.vue'
 
 const props = defineProps<{
@@ -48,6 +49,8 @@ function onSelect(section: SuiteSectionCode): void {
         <span class="suite-overview__description">{{ t(section.descriptionKey) }}</span>
       </button>
     </div>
+
+    <SuiteMainlineJourneyPanel :products="coreProducts" />
 
     <SuiteCoreWorkflowPanel :products="coreProducts" />
 

@@ -1,7 +1,7 @@
 # Module Maturity Matrix
 
 **版本**: `v1.6-mainline`
-**日期**: `2026-04-08`
+**日期**: `2026-04-09`
 **作者**: `Codex`
 
 | 模块 | 路由 / 入口 | 成熟度 | 默认导航 | 当前说明 |
@@ -16,7 +16,7 @@
 | Docs | `/docs` | `BETA` | 是 | 保留为单人 / 轻协作，不作为正式发布阻塞。 |
 | Sheets | `/sheets` | `BETA` | 是 | 保留为单人 / 轻协作，不作为正式发布阻塞。 |
 | Billing | `Suite > Billing center` | `BETA` | 否 | Community 仅承载报价 / 草稿 / 账单状态，不承诺真实支付闭环。 |
-| Pass | `/pass` | `BETA` | 否 | 仅通过 `Labs` 暴露；当前 Beta 只覆盖个人 / 共享工作台、mailbox / alias、secure link、monitor 等已验证主路径，并继续保留在默认 curated Labs catalog 中。 |
+| Pass | `/pass` | `BETA` | 是 | 已进入默认导航，作为主线可见 Beta 入口；当前只覆盖个人 / 共享工作台、mailbox / alias、secure link、monitor 等已验证主路径，不进入 home fallback，也不作为正式发布阻塞。 |
 | Authenticator | `/authenticator` | `PREVIEW` | 否 | `Labs`。 |
 | SimpleLogin | `/simplelogin` | `PREVIEW` | 否 | `Labs`。 |
 | Standard Notes | `/standard-notes` | `PREVIEW` | 否 | `Labs`。 |
@@ -28,5 +28,5 @@
 
 ## 管理规则
 - `GA`：正式承诺能力，必须进入 release gate。
-- `BETA`：可见、可用，但不作为正式发布阻塞；若 `surface = LABS`，仍不得进入默认导航。
+- `BETA`：可见、可用，但不作为正式发布阻塞；可位于默认导航或 `Suite`，若仍位于 `LABS` 面，则不得进入默认导航。
 - `PREVIEW`：默认导航隐藏，只能通过 `Labs` 或显式调试路径进入。

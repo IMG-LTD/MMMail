@@ -24,7 +24,7 @@ export const COMMUNITY_V1_MODULES: ReadonlyArray<CommunityModuleDefinition> = [
   { code: 'DOCS', route: '/docs', labelKey: 'nav.docs', maturity: 'BETA', surface: 'DEFAULT_NAV', productKey: 'DOCS' },
   { code: 'SHEETS', route: '/sheets', labelKey: 'nav.sheets', maturity: 'BETA', surface: 'DEFAULT_NAV', productKey: 'SHEETS' },
   { code: 'BILLING_CENTER', route: '/suite', labelKey: 'suite.billing.center.badge', maturity: 'BETA', surface: 'SUITE' },
-  { code: 'PASS', route: '/pass', labelKey: 'nav.pass', maturity: 'BETA', surface: 'LABS', productKey: 'PASS' },
+  { code: 'PASS', route: '/pass', labelKey: 'nav.pass', maturity: 'BETA', surface: 'DEFAULT_NAV', productKey: 'PASS' },
   { code: 'AUTHENTICATOR', route: '/authenticator', labelKey: 'nav.authenticator', maturity: 'PREVIEW', surface: 'LABS', productKey: 'AUTHENTICATOR' },
   { code: 'SIMPLELOGIN', route: '/simplelogin', labelKey: 'nav.simpleLogin', maturity: 'PREVIEW', surface: 'LABS', productKey: 'SIMPLELOGIN' },
   { code: 'STANDARD_NOTES', route: '/standard-notes', labelKey: 'nav.standardNotes', maturity: 'PREVIEW', surface: 'LABS', productKey: 'STANDARD_NOTES' },
@@ -40,7 +40,6 @@ export const COMMUNITY_V1_MODULES: ReadonlyArray<CommunityModuleDefinition> = [
 export const COMMUNITY_V1_PREVIEW_MODULES = COMMUNITY_V1_MODULES.filter(item => item.maturity === 'PREVIEW')
 export const COMMUNITY_V1_LABS_MODULES = COMMUNITY_V1_MODULES.filter(item => item.surface === 'LABS')
 export const COMMUNITY_V1_CURATED_LABS_MODULE_CODES = [
-  'PASS',
   'AUTHENTICATOR',
   'SIMPLELOGIN',
   'STANDARD_NOTES'
@@ -80,6 +79,16 @@ export interface CommunityCoreWorkflowDefinition {
   descriptionKey: string
   statusKey: string
   boundaryKey: string
+  actionKey: string
+}
+
+export interface CommunityMainlineJourneyStageDefinition {
+  productCode: CommunityCoreProductCode
+  route: string
+  titleKey: string
+  descriptionKey: string
+  proofKey: string
+  handoffKey: string
   actionKey: string
 }
 
@@ -130,6 +139,45 @@ export const COMMUNITY_V1_CORE_WORKFLOW_MODULES: ReadonlyArray<CommunityCoreWork
     statusKey: 'suite.sectionOverview.workflows.pass.status',
     boundaryKey: 'suite.sectionOverview.workflows.pass.boundary',
     actionKey: 'suite.sectionOverview.workflows.pass.action'
+  }
+]
+
+export const COMMUNITY_V1_MAINLINE_JOURNEY_STAGES: ReadonlyArray<CommunityMainlineJourneyStageDefinition> = [
+  {
+    productCode: 'MAIL',
+    route: '/compose',
+    titleKey: 'suite.sectionOverview.mainline.mail.title',
+    descriptionKey: 'suite.sectionOverview.mainline.mail.description',
+    proofKey: 'suite.sectionOverview.mainline.mail.proof',
+    handoffKey: 'suite.sectionOverview.mainline.mail.handoff',
+    actionKey: 'suite.sectionOverview.mainline.mail.action'
+  },
+  {
+    productCode: 'CALENDAR',
+    route: '/calendar',
+    titleKey: 'suite.sectionOverview.mainline.calendar.title',
+    descriptionKey: 'suite.sectionOverview.mainline.calendar.description',
+    proofKey: 'suite.sectionOverview.mainline.calendar.proof',
+    handoffKey: 'suite.sectionOverview.mainline.calendar.handoff',
+    actionKey: 'suite.sectionOverview.mainline.calendar.action'
+  },
+  {
+    productCode: 'DRIVE',
+    route: '/drive',
+    titleKey: 'suite.sectionOverview.mainline.drive.title',
+    descriptionKey: 'suite.sectionOverview.mainline.drive.description',
+    proofKey: 'suite.sectionOverview.mainline.drive.proof',
+    handoffKey: 'suite.sectionOverview.mainline.drive.handoff',
+    actionKey: 'suite.sectionOverview.mainline.drive.action'
+  },
+  {
+    productCode: 'PASS',
+    route: '/pass',
+    titleKey: 'suite.sectionOverview.mainline.pass.title',
+    descriptionKey: 'suite.sectionOverview.mainline.pass.description',
+    proofKey: 'suite.sectionOverview.mainline.pass.proof',
+    handoffKey: 'suite.sectionOverview.mainline.pass.handoff',
+    actionKey: 'suite.sectionOverview.mainline.pass.action'
   }
 ]
 

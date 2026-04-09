@@ -1,14 +1,16 @@
 # Community Edition v1.6 安装说明
 
-**版本**: `v1.6-mainline`  
-**日期**: `2026-04-08`  
+**版本**: `v1.6-mainline`
+**日期**: `2026-04-09`
 **作者**: `Codex`
 
 ## 当前边界
-- 当前版本是 `Community Edition v1.6` 主线，继续保留 `Mail / Calendar / Drive / Workspace Shell` 的既有交付能力，同时把 `Suite` 信息架构、`Labs` 默认目录和 release boundary 说明收敛到更可信的产品面。
+- 当前版本是 `Community Edition v1.6` 主线延续批次，继续保留 `Mail / Calendar / Drive / Workspace Shell` 的既有交付能力，并进一步把主线协作链路、`Pass` 的可见 Beta 入口和采用说明收敛到更可信的产品面。
 - 浏览器侧已经交付：
   - `/suite` 的 `Overview / Plans / Billing / Operations / Boundary` 分区视图
-  - `/labs` 默认 curated catalog（`Pass / Authenticator / SimpleLogin / Standard Notes`）
+  - `/suite` 总览中的 `Mail → Calendar → Drive → Pass` 主线协作链路
+  - `Pass` 默认导航可见 `Beta` 入口
+  - `/labs` 默认 curated catalog（`Authenticator / SimpleLogin / Standard Notes`）
   - `PWA` manifest、Service Worker 注册与安装入口
   - `Mail E2EE` 当前闭环（key profile、READY 内部路由正文加密、草稿加密、附件加密、详情本地解密、密钥恢复）
   - `Mail` 外部密码保护安全投递（浏览器内加密正文 / 附件、草稿恢复、公开页本地解密下载）
@@ -17,6 +19,7 @@
   - `SMTP outbound adapter`
   - `Calendar internal invitation orchestration`
   - `Pass Beta readiness`
+  - 浏览器内 `adoption guide`
   - 关键公开面运行时 a11y 自动化门禁
 - 仍未交付：
   - `SMTP inbound / IMAP / Bridge`
@@ -69,6 +72,7 @@
   - `curl -sf http://127.0.0.1:8080/v3/api-docs`
 - Frontend bundled API quick page：
   - `http://127.0.0.1:3001/self-hosted/api.html`
+  - `http://127.0.0.1:3001/self-hosted/adoption.html`
 - 数据迁移状态：
   - `./scripts/db-upgrade.sh .env info`
 
@@ -77,13 +81,17 @@
   - `http://127.0.0.1:3001/settings`
   - `http://127.0.0.1:3001/suite?section=boundary`
   - `http://127.0.0.1:3001/labs`
+  - `http://127.0.0.1:3001/pass`
 - 确认以下面板 / 页面状态符合预期：
   - `Mail E2EE foundation`
   - `Adoption readiness`
   - `PWA readiness`
   - `Release boundary map`
-  - `Labs` 默认 catalog 只展示 `Pass / Authenticator / SimpleLogin / Standard Notes`
+  - `Suite Overview` 可见主线协作链路
+  - `Pass` 已出现在默认导航
+  - `Labs` 默认 catalog 只展示 `Authenticator / SimpleLogin / Standard Notes`
 - `Adoption readiness` 面板会直接暴露：
+  - 浏览器内 `adoption guide`
   - 内置 `API quick page`
   - 后端 `Swagger UI`
   - 后端 `OpenAPI JSON`

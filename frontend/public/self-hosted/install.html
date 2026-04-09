@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>MMMail Community v1.6 Self-hosted Install Guide</title>
+  <title>MMMail Community v1.6.1 Self-hosted Install Guide</title>
   <style>
     :root { color-scheme: light; }
     body { margin: 0; font-family: Inter, Arial, sans-serif; background: #f6f8fb; color: #102a43; }
@@ -17,12 +17,12 @@
 </head>
 <body>
 <main>
-  <h1>MMMail Community v1.6 自托管安装说明 / Self-hosted Install Guide</h1>
+  <h1>MMMail Community v1.6.1 自托管安装说明 / Self-hosted Install Guide</h1>
   <section>
     <h2>基线 / Baseline</h2>
     <ul>
-      <li>当前页面对应 <code>Community v1.6 mainline</code>，已交付聚焦后的 <code>Suite</code> 分区视图、收敛后的 <code>Labs</code> 默认目录、关键公开面的 runtime a11y 门禁，以及既有的 PWA、Mail E2EE、外部密码保护安全投递、Drive E2EE foundation、Web Push、SMTP outbound adapter 与 Calendar internal invitation orchestration。</li>
-      <li>This page follows <code>Community v1.6 mainline</code>, including the focused Suite sections, curated Labs catalog, runtime a11y gates on key public surfaces, plus the existing PWA, Mail E2EE loop, password-protected external secure delivery, Drive E2EE foundation, Web Push, SMTP outbound adapter, and Calendar internal invitation orchestration.</li>
+      <li>当前页面对应 <code>Community v1.6.1 mainline continuation</code>，已补齐 <code>Suite</code> 主线协作链路、默认导航中的 <code>Pass Beta</code>、收敛后的 <code>Labs</code> 默认目录，以及既有的 PWA、Mail E2EE、外部密码保护安全投递、Drive E2EE foundation、Web Push、SMTP outbound adapter 与 Calendar internal invitation orchestration。</li>
+      <li>This page follows <code>Community v1.6.1 mainline continuation</code>, including the Suite mainline journey, a visible <code>Pass Beta</code> entry in default navigation, the narrowed Labs catalog, plus the existing PWA, Mail E2EE loop, password-protected external secure delivery, Drive E2EE foundation, Web Push, SMTP outbound adapter, and Calendar internal invitation orchestration.</li>
       <li>仍不承诺 <code>SMTP inbound / IMAP / Bridge</code>、零知识邮件架构、完整 MIME 级外部 E2EE 或 Hosted 自动化 onboarding。</li>
       <li>It still does not claim <code>SMTP inbound / IMAP / Bridge</code>, zero-knowledge mail, full MIME-grade external E2EE interoperability, or hosted onboarding automation.</li>
     </ul>
@@ -43,16 +43,19 @@
     <ul>
       <li>前端：访问 <code>http://127.0.0.1:3001</code>，确认 <code>/manifest.webmanifest</code> 可访问，设置页能看到 PWA 与 Mail E2EE foundation 面板。</li>
       <li>Frontend: open <code>http://127.0.0.1:3001</code>, confirm <code>/manifest.webmanifest</code> resolves, and check the Settings page for PWA, Mail E2EE, and Adoption readiness panels.</li>
+      <li>采用入口：确认 <code>/suite?section=overview</code> 已显示 Mail → Calendar → Drive → Pass 主线，且 <code>/pass</code> 已进入默认导航。</li>
+      <li>Adoption entry: confirm <code>/suite?section=overview</code> shows the Mail → Calendar → Drive → Pass chain and <code>/pass</code> is visible in the default navigation.</li>
       <li>后端健康：<code>curl -sf http://127.0.0.1:8080/actuator/health</code></li>
       <li>API 文档：后端默认暴露 <code>/swagger-ui.html</code> 与 <code>/v3/api-docs</code>。</li>
       <li>API docs: the backend exposes <code>/swagger-ui.html</code> and <code>/v3/api-docs</code> by default.</li>
+      <li>浏览器内 adoption guide：<a href="/self-hosted/adoption.html" rel="noopener noreferrer" target="_blank"><code>/self-hosted/adoption.html</code></a></li>
       <li>浏览器内 API quick page：<a href="/self-hosted/api.html" rel="noopener noreferrer" target="_blank"><code>/self-hosted/api.html</code></a></li>
     </ul>
   </section>
   <section>
     <h2>权威文档 / Authoritative Docs</h2>
-    <p>仓库中的权威说明位于 <code>docs/ops/install.md</code> 与 <code>docs/ops/runbook.md</code>；API 文档聚合入口位于 <a href="/self-hosted/api.html" rel="noopener noreferrer" target="_blank"><code>/self-hosted/api.html</code></a>。本页是浏览器内快速入口，不替代仓库运维文档。</p>
-    <p>The authoritative repository guides live in <code>docs/ops/install.md</code> and <code>docs/ops/runbook.md</code>; the bundled API entry point is <a href="/self-hosted/api.html" rel="noopener noreferrer" target="_blank"><code>/self-hosted/api.html</code></a>. This page is a browser quick entry, not a replacement for repo operations docs.</p>
+    <p>仓库中的权威说明位于 <code>docs/ops/install.md</code> 与 <code>docs/ops/runbook.md</code>；采用入口位于 <a href="/self-hosted/adoption.html" rel="noopener noreferrer" target="_blank"><code>/self-hosted/adoption.html</code></a>，API 文档聚合入口位于 <a href="/self-hosted/api.html" rel="noopener noreferrer" target="_blank"><code>/self-hosted/api.html</code></a>。本页是浏览器内快速入口，不替代仓库运维文档。</p>
+    <p>The authoritative repository guides live in <code>docs/ops/install.md</code> and <code>docs/ops/runbook.md</code>; the adoption entry is <a href="/self-hosted/adoption.html" rel="noopener noreferrer" target="_blank"><code>/self-hosted/adoption.html</code></a> and the bundled API entry point is <a href="/self-hosted/api.html" rel="noopener noreferrer" target="_blank"><code>/self-hosted/api.html</code></a>. This page is a browser quick entry, not a replacement for repo operations docs.</p>
   </section>
 </main>
 </body>

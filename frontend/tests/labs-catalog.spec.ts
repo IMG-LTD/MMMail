@@ -50,7 +50,6 @@ describe('labs catalog', () => {
   it('keeps the raw labs registry broader than the curated default catalog', () => {
     expect(COMMUNITY_V1_LABS_MODULES.length).toBeGreaterThan(COMMUNITY_V1_CURATED_LABS_MODULES.length)
     expect(COMMUNITY_V1_CURATED_LABS_MODULES.map(item => item.code)).toEqual([
-      'PASS',
       'AUTHENTICATOR',
       'SIMPLELOGIN',
       'STANDARD_NOTES'
@@ -61,11 +60,11 @@ describe('labs catalog', () => {
     const page = await mountPage()
     const text = page.text()
 
-    expect(text).toContain('nav.pass')
     expect(text).toContain('nav.authenticator')
     expect(text).toContain('nav.simpleLogin')
     expect(text).toContain('nav.standardNotes')
 
+    expect(text).not.toContain('nav.pass')
     expect(text).not.toContain('nav.vpn')
     expect(text).not.toContain('nav.meet')
     expect(text).not.toContain('nav.wallet')

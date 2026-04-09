@@ -28,6 +28,7 @@ export const DEFAULT_NAV_ITEMS: DefaultNavItem[] = [
   { labelKey: 'nav.calendar', to: '/calendar', productKey: 'CALENDAR' },
   { labelKey: 'nav.contacts', to: '/contacts', productKey: 'MAIL' },
   { labelKey: 'nav.drive', to: '/drive', productKey: 'DRIVE' },
+  { labelKey: 'nav.pass', to: '/pass', productKey: 'PASS' },
   { labelKey: 'nav.docs', to: '/docs', productKey: 'DOCS' },
   { labelKey: 'nav.sheets', to: '/sheets', productKey: 'SHEETS' },
   { labelKey: 'nav.suite', to: '/suite' },

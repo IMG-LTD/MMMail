@@ -20,15 +20,19 @@
 - `v1.4.0`：已正式发布，范围冻结为 `Mail 外部密码保护加密投递`。
 - `v1.5.0`：已正式发布，聚焦 `Mail external secure attachments + draft reopen + public secure share trust UX`。
 - `v1.6.0`：已正式发布，聚焦 `Suite sectioned IA + curated Labs catalog + boundary alignment + runtime a11y gates`。
+- `v1.6.x`：当前延续批次聚焦 `mainline collaboration depth + Pass visible beta surface + adoption guidance`。
 - GitHub milestones：`v1.0.0`、`v1.2`、`v1.3`、`v1.4`、`v1.5`、`v1.6`
 - 不在当前版本节奏中推进 `VPN / Meet / Wallet / Lumo` 等 `Preview` 模块深化。
 
 ## `v1.6` 能力边界快照
 - 已交付：
   - `/suite` 已从长页混排改为 `Overview / Plans / Billing / Operations / Boundary` 分区视图
-  - `/labs` 默认 curated catalog 已收敛为 `Pass / Authenticator / SimpleLogin / Standard Notes`
+  - `/suite` 总览新增 `Mail → Calendar → Drive → Pass` 主线协作链路表达
+  - `Pass` 已提升为默认导航中的可见 `Beta` 入口，不再长期停留在 `Labs-only`
+  - `/labs` 默认 curated catalog 已收敛为 `Authenticator / SimpleLogin / Standard Notes`
   - `Release boundary map`、canonical docs、locale 文案与模块成熟度已切到 `v1.6`
   - 运行时无障碍门禁已覆盖关键公开面与核心信息架构入口
+  - `/settings` 的 `Adoption readiness` 已补齐管理员 / 团队 / 开发者三条 launch track 与浏览器内 `adoption guide`
   - `PWA` installability、`manifest`、`Service Worker` 注册与浏览器侧 `Web Push`
   - `Mail E2EE` key profile、recipient readiness、`READY` 内部路由正文加密、草稿加密、附件加密、恢复包与详情页本地解密
   - `Mail` 外部密码保护加密投递：浏览器内加密正文与附件、服务端保存密文正文 / 附件与 secure link metadata、草稿恢复 external secure delivery 状态、公开 secure link 页面本地解密正文并下载解密附件
@@ -38,7 +42,7 @@
   - 当前公开发布主线已切到 `v1.6.0`；后续只接收 `v1.6.x` 级别的 `release-blocking / security / metadata` 修复
   - 外部密码保护加密投递当前仍是 `public secure link` 模式，不是完整 MIME 级外部邮箱互通
   - `/labs` 的收敛只影响默认 curated catalog，不改动底层 raw registry / source-of-truth
-  - `Pass` 虽已到 `Beta` 口径，但仍只通过 `Labs` 暴露
+  - `Pass` 虽已进入默认导航，但仍保持 `Beta` 口径，不作为正式发布阻塞，也不进入 home fallback
   - Community `Billing` 只承载报价 / 草稿 / 账单状态，不承诺真实支付闭环
 - 预研中：零知识邮件路线、`SMTP / IMAP / Bridge`
 - 尚未交付：`iOS / Android / Desktop` 原生客户端、离线写入同步、完整外部 E2EE 协议栈、完整零知识元数据与搜索
@@ -73,6 +77,7 @@
 - 升级说明：`docs/ops/upgrade.md`
 - 备份恢复：`docs/ops/backup-restore.md`
 - 运维 Runbook：`docs/ops/runbook.md`
+- 浏览器内 adoption guide：`/self-hosted/adoption.html`
 - 部署拓扑：`docs/architecture/deployment-topology.md`
 - 迁移策略：`docs/architecture/database-migration-strategy.md`
 - Mail E2EE foundation：`docs/architecture/mail-e2ee-foundation.md`

@@ -41,11 +41,16 @@ describe('SuiteOverviewSection', () => {
       }
     })
 
-    expect(panel.get('[data-testid="suite-core-workflow-mail"]').text()).toContain('suite.sectionOverview.workflows.mail.title')
+    expect(panel.get('[data-testid="suite-core-workflow-mail"]').text())
+      .toContain('suite.sectionOverview.workflows.mail.title')
     expect(panel.get('[data-testid="suite-core-workflow-mail"] a').attributes('href')).toBe('/compose')
     expect(panel.get('[data-testid="suite-core-workflow-calendar"] a').attributes('href')).toBe('/calendar')
     expect(panel.get('[data-testid="suite-core-workflow-drive"] a').attributes('href')).toBe('/drive')
     expect(panel.get('[data-testid="suite-core-workflow-pass"] a').attributes('href')).toBe('/pass')
+    expect(panel.get('[data-testid="suite-mainline-stage-mail"] a').attributes('href')).toBe('/compose')
+    expect(panel.get('[data-testid="suite-mainline-stage-pass"] a').attributes('href')).toBe('/pass')
+    expect(panel.get('[data-testid="suite-mainline-journey-panel"]').text())
+      .toContain('suite.sectionOverview.mainline.title')
     expect(panel.find('[data-testid="suite-core-workflow-wallet"]').exists()).toBe(false)
     expect(panel.get('[data-testid="suite-product-hub-stub"]').text()).toBe('MAIL,CALENDAR,DRIVE,PASS')
   })
