@@ -1,13 +1,13 @@
-# Community Edition v1.0 Threat Model
+# Community Edition v1.6.1 Threat Model
 
-**版本**: `v1.0-draft`  
-**日期**: `2026-03-13`  
+**版本**: `v1.6.1-threat-model`
+**日期**: `2026-04-09`
 **作者**: `Codex`
 
 ## 保护资产
 - 用户身份、访问令牌、刷新令牌、会话状态
 - 组织与租户边界、RBAC、管理员能力
-- Mail / Calendar / Drive 主数据与附件
+- Mail / Calendar / Drive / Pass 主数据、附件与安全交接对象
 - 备份数据、迁移脚本、部署配置
 - 审计日志、运行时错误事件、系统健康信息
 
@@ -23,7 +23,7 @@
 3. 应用服务 ↔ MySQL / Redis / 对象存储路径
 4. 本地与 CI 验证链 ↔ 发布产物与运维脚本
 
-## 已覆盖的首发控制
+## 已覆盖的当前控制
 - `JWT + refresh token` 会话校验与 token rotation
 - `CSRF` 校验仅对 refresh cookie 路径开启
 - `RBAC + org scope` 保护管理员接口与组织边界
@@ -33,10 +33,11 @@
 - secrets 防回归扫描与后端依赖漏洞扫描门禁
 - 审计日志、请求追踪、Prometheus 指标、system-health 可见性
 
-## 首发未覆盖 / 明确不承诺
+## 当前未覆盖 / 明确不承诺
 - 分布式限流一致性：当前为节点内窗口计数，适合 Community Edition 单实例/轻量部署
 - 完整 DAST / WAF / Bot 管理能力
 - 外部 IdP / SSO / 硬件密钥体系
+- `Pass` 浏览器扩展、自动填充、真实 `WebAuthn / passkey ceremony`
 - Preview 模块的深引擎安全评估（VPN / Meet / Wallet / Lumo）
 - 多区域灾备和密钥托管服务
 

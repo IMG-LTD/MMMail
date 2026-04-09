@@ -11,11 +11,11 @@ assignees: ""
 ## Why
 
 ## Scope alignment
-- [ ] `v1.1 Docs`
-- [ ] `v1.1 Sheets`
-- [ ] `v1.1 i18n`
-- [ ] `v1.1 Community / Hosted`
-- [ ] `Post-v1.1 / Preview`
+- [ ] `P0 Mainline collaboration depth`
+- [ ] `P1 Drive E2EE / Pass handoff depth`
+- [ ] `P2 Identity readiness / developer docs / team enablement`
+- [ ] `P3 Preview pluginization / externalization`
+- [ ] `Hosted-only / commercial`
 
 ## Acceptance criteria
 - [ ]
@@ -24,6 +24,7 @@ assignees: ""
 - [ ]
 
 ## Why now
-- [ ] 影响 `v1.1` 主线目标
-- [ ] 属于 `Docs / Sheets / i18n / Community-Hosted` 范围
-- [ ] 不要求将 `Preview` 模块升级为 `GA`
+- [ ] 影响当前 `Mail → Calendar → Drive → Pass` 主线闭环
+- [ ] 能显著降低自托管采用或开发者接入摩擦
+- [ ] 能提高当前边界诚实度或治理一致性
+- [ ] 不要求将 `Preview` 模块直接升级为 `GA`

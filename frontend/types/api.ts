@@ -1273,7 +1273,14 @@ export interface SuiteNotificationItem {
   assignedToDisplayName: string | null
 }
 
-export type SuiteCollaborationProductCode = 'DOCS' | 'DRIVE' | 'SHEETS' | 'MEET'
+export type SuiteCollaborationProductCode =
+  | 'MAIL'
+  | 'CALENDAR'
+  | 'DOCS'
+  | 'DRIVE'
+  | 'PASS'
+  | 'SHEETS'
+  | 'MEET'
 
 export interface SuiteCollaborationEvent {
   eventId: number

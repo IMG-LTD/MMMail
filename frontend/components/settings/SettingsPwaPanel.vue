@@ -181,7 +181,7 @@ onMounted(() => {
 </script>
 
 <template>
-  <section class="mm-card pwa-panel" data-testid="settings-pwa-panel">
+  <section id="settings-pwa-panel" class="mm-card pwa-panel" data-testid="settings-pwa-panel">
     <div class="pwa-panel__copy">
       <span class="pwa-panel__eyebrow">{{ t('settings.pwa.eyebrow') }}</span>
       <h2 class="mm-section-title">{{ t('settings.pwa.title') }}</h2>

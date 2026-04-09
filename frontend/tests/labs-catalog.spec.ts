@@ -1,9 +1,12 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { mount } from '@vue/test-utils'
 import {
+  COMMUNITY_V1_DEFERRED_LABS_MODULES,
   COMMUNITY_V1_CURATED_LABS_MODULES,
+  COMMUNITY_V1_LABS_CATALOG,
   COMMUNITY_V1_LABS_MODULES
 } from '../constants/module-maturity'
+import { COMMUNITY_V1_PREVIEW_REGISTRY } from '../constants/preview-registry'
 
 vi.mock('~/composables/useI18n', () => ({
   useI18n: () => ({
@@ -48,31 +51,35 @@ describe('labs catalog', () => {
   })
 
   it('keeps the raw labs registry broader than the curated default catalog', () => {
+    expect(COMMUNITY_V1_PREVIEW_REGISTRY.length).toBe(COMMUNITY_V1_LABS_MODULES.length)
     expect(COMMUNITY_V1_LABS_MODULES.length).toBeGreaterThan(COMMUNITY_V1_CURATED_LABS_MODULES.length)
     expect(COMMUNITY_V1_CURATED_LABS_MODULES.map(item => item.code)).toEqual([
-      'PASS',
       'AUTHENTICATOR',
       'SIMPLELOGIN',
       'STANDARD_NOTES'
     ])
+    expect(COMMUNITY_V1_DEFERRED_LABS_MODULES.find(item => item.code === 'VPN')?.previewStrategy).toBe('EXTERNALIZED')
+    expect(COMMUNITY_V1_LABS_CATALOG.find(item => item.code === 'COMMAND_CENTER')?.previewStrategy).toBe('EXPERIMENT')
   })
 
-  it('renders only curated strategy-adjacent modules on the labs page', async () => {
+  it('renders curated modules and deferred registry strategy states on the labs page', async () => {
     const page = await mountPage()
     const text = page.text()
 
-    expect(text).toContain('nav.pass')
     expect(text).toContain('nav.authenticator')
     expect(text).toContain('nav.simpleLogin')
     expect(text).toContain('nav.standardNotes')
-
-    expect(text).not.toContain('nav.vpn')
-    expect(text).not.toContain('nav.meet')
-    expect(text).not.toContain('nav.wallet')
-    expect(text).not.toContain('nav.lumo')
-    expect(text).not.toContain('nav.collaboration')
-    expect(text).not.toContain('nav.commandCenter')
-    expect(text).not.toContain('nav.notifications')
+    expect(text).not.toContain('nav.pass')
+    expect(text).toContain('nav.vpn')
+    expect(text).toContain('nav.meet')
+    expect(text).toContain('nav.wallet')
+    expect(text).toContain('nav.lumo')
+    expect(text).toContain('nav.collaboration')
+    expect(text).toContain('nav.commandCenter')
+    expect(text).toContain('nav.notifications')
+    expect(text).toContain('labs.strategy.PLUGIN')
+    expect(text).toContain('labs.strategy.EXTERNALIZED')
+    expect(text).toContain('labs.strategy.EXPERIMENT')
   })
 })
 

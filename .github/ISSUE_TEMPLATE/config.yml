@@ -1,14 +1,14 @@
 blank_issues_enabled: false
 contact_links:
-  - name: GA stabilization policy
-    url: https://github.com/IMG-LTD/MMMail/blob/dev/community-v1/docs/release/community-v1-ga-stabilization.md
-    about: 查看 v1.0.0 GA 稳定窗口允许和禁止的改动
-  - name: RC feedback intake
-    url: https://github.com/IMG-LTD/MMMail/blob/dev/community-v1/docs/release/community-v1-feedback-intake.md
-    about: 查看 RC1 反馈收集、分流与所需证据
-  - name: GA release checklist
-    url: https://github.com/IMG-LTD/MMMail/blob/dev/community-v1/docs/release/community-v1-ga-release-checklist.md
-    about: 查看 v1.0.0 正式发布前的最终检查项
-  - name: v1.1 planning baseline
-    url: https://github.com/IMG-LTD/MMMail/blob/dev/community-v1/docs/release/community-v1-v1.1-plan.md
-    about: 查看 v1.1 仅允许推进的范围
+  - name: v1.6.1 support boundaries
+    url: https://github.com/IMG-LTD/MMMail/blob/main/docs/release/community-v1-support-boundaries.md
+    about: 查看当前 Community / Hosted、GA / Beta / Preview 边界
+  - name: v1.6.1 feedback intake
+    url: https://github.com/IMG-LTD/MMMail/blob/main/docs/release/community-v1-feedback-intake.md
+    about: 查看当前反馈分流、release-blocking 判定与 backlog 路由
+  - name: v1.6.1 closure plan
+    url: https://github.com/IMG-LTD/MMMail/blob/main/docs/release/community-v1-v1.6.1-closure-plan.md
+    about: 查看当前版本收口目标、优先级与非目标
+  - name: v1.6.1 release notes
+    url: https://github.com/IMG-LTD/MMMail/blob/main/docs/release/community-v1-v1.6.1-release-notes.md
+    about: 查看当前公开基线的新增能力、限制与验证证据

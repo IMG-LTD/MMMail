@@ -1,7 +1,7 @@
-# Community Edition v1.6 运维 Runbook
+# Community Edition v1.6.1 运维 Runbook
 
-**版本**: `v1.6-mainline`  
-**日期**: `2026-04-08`  
+**版本**: `v1.6.1-mainline`
+**日期**: `2026-04-09`
 **作者**: `Codex`
 
 ## 1. 入口清单
@@ -13,6 +13,8 @@
   - `/swagger-ui.html`
 - 浏览器内 API quick page：
   - `/self-hosted/api.html`
+- 浏览器内 adoption guide：
+  - `/self-hosted/adoption.html`
 - Suite boundary 入口：
   - `/suite?section=boundary`
 - Labs curated catalog：
@@ -33,16 +35,19 @@
 - Adoption readiness：
   - 使用管理员账号登录后访问 `/settings`
   - 确认可打开：
+    - `adoption guide`
     - `API quick page`
     - `Swagger UI`
     - `OpenAPI JSON`
     - 自托管安装说明 / Runbook 快速页
+  - 打开 `/suite?section=overview`
+  - 确认主线协作链路可见，且 `Pass` 已作为 `Beta` 入口出现在默认导航
 - Suite boundary：
   - 打开 `/suite?section=boundary`
   - 确认 `GA / Beta / Preview / Hosted-only` 说明与 `support boundaries` 文档一致
 - Labs curated catalog：
   - 打开 `/labs`
-  - 确认默认只显示 `Pass / Authenticator / SimpleLogin / Standard Notes`
+  - 确认默认只显示 `Authenticator / SimpleLogin / Standard Notes`
 
 ### Mail E2EE foundation
 - 当前只验证已交付主路径：

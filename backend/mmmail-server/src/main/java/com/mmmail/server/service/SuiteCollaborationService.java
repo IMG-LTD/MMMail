@@ -40,10 +40,25 @@ public class SuiteCollaborationService {
     private static final String KIND_BOOTSTRAP = "BOOTSTRAP";
     private static final String KIND_SYNC = "SYNC";
     private static final String KIND_UPDATE = "UPDATE";
+    private static final String PRODUCT_MAIL = "MAIL";
+    private static final String PRODUCT_CALENDAR = "CALENDAR";
     private static final String PRODUCT_DOCS = "DOCS";
     private static final String PRODUCT_DRIVE = "DRIVE";
+    private static final String PRODUCT_PASS = "PASS";
     private static final String PRODUCT_SHEETS = "SHEETS";
     private static final String PRODUCT_MEET = "MEET";
+    private static final Set<String> MAIL_EVENT_TYPES = Set.of(
+            "MAIL_SENT",
+            "MAIL_SCHEDULED",
+            "MAIL_OUTBOX_QUEUED",
+            "MAIL_UNDO_SEND",
+            "MAIL_ATTACHMENT_UPLOAD"
+    );
+    private static final Set<String> CALENDAR_EVENT_TYPES = Set.of(
+            "CAL_EVENT_CREATE",
+            "CAL_SHARE_CREATE",
+            "CAL_INVITE_RESPONSE"
+    );
     private static final Set<String> DOCS_EVENT_TYPES = Set.of(
             "DOCS_NOTE_CREATE",
             "DOCS_NOTE_UPDATE",
@@ -101,6 +116,12 @@ public class SuiteCollaborationService {
             "MEET_PARTICIPANT_JOIN",
             "MEET_PARTICIPANT_REMOVE",
             "MEET_HOST_TRANSFER"
+    );
+    private static final Set<String> PASS_EVENT_TYPES = Set.of(
+            "PASS_ITEM_CREATE",
+            "PASS_ALIAS_CREATE",
+            "PASS_ITEM_SHARE_CREATE",
+            "PASS_SECURE_LINK_CREATE"
     );
 
     private final AuditService auditService;
@@ -170,7 +191,10 @@ public class SuiteCollaborationService {
     }
 
     public long getCurrentCursor(Long userId) {
-        long cursor = latestActorEventId(userId, DRIVE_EVENT_TYPES);
+        long cursor = latestActorEventId(userId, MAIL_EVENT_TYPES);
+        cursor = Math.max(cursor, latestActorEventId(userId, CALENDAR_EVENT_TYPES));
+        cursor = Math.max(cursor, latestActorEventId(userId, PASS_EVENT_TYPES));
+        cursor = Math.max(cursor, latestActorEventId(userId, DRIVE_EVENT_TYPES));
         cursor = Math.max(cursor, latestActorEventId(userId, SHEETS_EVENT_TYPES));
         cursor = Math.max(cursor, latestActorEventId(userId, MEET_EVENT_TYPES));
         for (DocsNoteSummaryVo note : docsAccessService.listVisibleNotes(userId, null, MAX_DOCS_VISIBLE_NOTES)) {
@@ -227,6 +251,20 @@ public class SuiteCollaborationService {
         boolean incremental = afterEventId != null && afterEventId > 0;
         String currentUserEmail = loadUserEmail(userId);
         Map<Long, SuiteCollaborationEventVo> merged = new LinkedHashMap<>();
+        mergeEvents(merged, mapActorEvents(currentUserEmail, PRODUCT_MAIL, auditService.listActorEvents(
+                userId,
+                MAIL_EVENT_TYPES,
+                afterEventId,
+                limit,
+                incremental
+        )));
+        mergeEvents(merged, mapActorEvents(currentUserEmail, PRODUCT_CALENDAR, auditService.listActorEvents(
+                userId,
+                CALENDAR_EVENT_TYPES,
+                afterEventId,
+                limit,
+                incremental
+        )));
         mergeEvents(merged, loadDocsEvents(userId, afterEventId, incremental));
         mergeEvents(merged, mapActorEvents(currentUserEmail, PRODUCT_DRIVE, auditService.listActorEvents(
                 userId,
@@ -245,6 +283,13 @@ public class SuiteCollaborationService {
         mergeEvents(merged, mapActorEvents(currentUserEmail, PRODUCT_MEET, auditService.listActorEvents(
                 userId,
                 MEET_EVENT_TYPES,
+                afterEventId,
+                limit,
+                incremental
+        )));
+        mergeEvents(merged, mapActorEvents(currentUserEmail, PRODUCT_PASS, auditService.listActorEvents(
+                userId,
+                PASS_EVENT_TYPES,
                 afterEventId,
                 limit,
                 incremental
@@ -293,7 +338,10 @@ public class SuiteCollaborationService {
         List<SuiteCollaborationEventVo> items = new ArrayList<>();
         for (AuditEventVo event : events) {
             SuiteCollaborationEventVo item = switch (productCode) {
+                case PRODUCT_MAIL -> toMailEventVo(event, currentUserEmail);
+                case PRODUCT_CALENDAR -> toCalendarEventVo(event, currentUserEmail);
                 case PRODUCT_DRIVE -> toDriveEventVo(event, currentUserEmail);
+                case PRODUCT_PASS -> toPassEventVo(event, currentUserEmail);
                 case PRODUCT_SHEETS -> toSheetsEventVo(event, currentUserEmail);
                 case PRODUCT_MEET -> toMeetEventVo(event, currentUserEmail);
                 default -> null;
@@ -313,8 +361,17 @@ public class SuiteCollaborationService {
             return toDocsEventVo(event);
         }
         String currentUserEmail = loadUserEmail(userId);
+        if (MAIL_EVENT_TYPES.contains(event.eventType())) {
+            return toMailEventVo(event, currentUserEmail);
+        }
+        if (CALENDAR_EVENT_TYPES.contains(event.eventType())) {
+            return toCalendarEventVo(event, currentUserEmail);
+        }
         if (DRIVE_EVENT_TYPES.contains(event.eventType())) {
             return toDriveEventVo(event, currentUserEmail);
+        }
+        if (PASS_EVENT_TYPES.contains(event.eventType())) {
+            return toPassEventVo(event, currentUserEmail);
         }
         if (SHEETS_EVENT_TYPES.contains(event.eventType())) {
             return toSheetsEventVo(event, currentUserEmail);
@@ -343,6 +400,34 @@ public class SuiteCollaborationService {
         );
     }
 
+    private SuiteCollaborationEventVo toMailEventVo(AuditEventVo event, String currentUserEmail) {
+        return new SuiteCollaborationEventVo(
+                safeEventId(event),
+                PRODUCT_MAIL,
+                event.eventType(),
+                resolveMailTitle(event.eventType()),
+                resolveMailSummary(event),
+                resolveMailRoute(event),
+                currentUserEmail,
+                parseNullableDetail(event.detail(), "sessionId"),
+                event.createdAt()
+        );
+    }
+
+    private SuiteCollaborationEventVo toCalendarEventVo(AuditEventVo event, String currentUserEmail) {
+        return new SuiteCollaborationEventVo(
+                safeEventId(event),
+                PRODUCT_CALENDAR,
+                event.eventType(),
+                resolveCalendarTitle(event.eventType()),
+                resolveCalendarSummary(event),
+                resolveCalendarRoute(event),
+                currentUserEmail,
+                parseNullableDetail(event.detail(), "sessionId"),
+                event.createdAt()
+        );
+    }
+
     private SuiteCollaborationEventVo toDriveEventVo(AuditEventVo event, String currentUserEmail) {
         String itemId = parseDetailValue(event.detail(), "itemId");
         return new SuiteCollaborationEventVo(
@@ -352,6 +437,20 @@ public class SuiteCollaborationService {
                 resolveDriveTitle(event.eventType()),
                 resolveDriveSummary(event),
                 StringUtils.hasText(itemId) ? "/drive?itemId=" + itemId : "/drive",
+                currentUserEmail,
+                parseNullableDetail(event.detail(), "sessionId"),
+                event.createdAt()
+        );
+    }
+
+    private SuiteCollaborationEventVo toPassEventVo(AuditEventVo event, String currentUserEmail) {
+        return new SuiteCollaborationEventVo(
+                safeEventId(event),
+                PRODUCT_PASS,
+                event.eventType(),
+                resolvePassTitle(event.eventType()),
+                resolvePassSummary(event),
+                resolvePassRoute(event),
                 currentUserEmail,
                 parseNullableDetail(event.detail(), "sessionId"),
                 event.createdAt()
@@ -405,6 +504,26 @@ public class SuiteCollaborationService {
         };
     }
 
+    private String resolveMailTitle(String eventType) {
+        return switch (eventType) {
+            case "MAIL_SENT" -> "Mail sent";
+            case "MAIL_SCHEDULED" -> "Mail scheduled";
+            case "MAIL_OUTBOX_QUEUED" -> "Mail queued in outbox";
+            case "MAIL_UNDO_SEND" -> "Send undone";
+            case "MAIL_ATTACHMENT_UPLOAD" -> "Draft attachment uploaded";
+            default -> "Mail activity";
+        };
+    }
+
+    private String resolveCalendarTitle(String eventType) {
+        return switch (eventType) {
+            case "CAL_EVENT_CREATE" -> "Event created";
+            case "CAL_SHARE_CREATE" -> "Calendar share created";
+            case "CAL_INVITE_RESPONSE" -> "Invitation response updated";
+            default -> "Calendar activity";
+        };
+    }
+
     private String resolveDriveTitle(String eventType) {
         return switch (eventType) {
             case "DRIVE_ITEM_CREATE" -> "Drive item created";
@@ -424,6 +543,16 @@ public class SuiteCollaborationService {
             case "DRIVE_FILE_VERSION_RESTORE" -> "File version restored";
             case "DRIVE_ITEM_DELETE" -> "Drive item deleted";
             default -> "Drive activity";
+        };
+    }
+
+    private String resolvePassTitle(String eventType) {
+        return switch (eventType) {
+            case "PASS_ITEM_CREATE" -> "Pass item created";
+            case "PASS_ALIAS_CREATE" -> "Pass alias created";
+            case "PASS_ITEM_SHARE_CREATE" -> "Pass share created";
+            case "PASS_SECURE_LINK_CREATE" -> "Secure link created";
+            default -> "Pass activity";
         };
     }
 
@@ -485,6 +614,37 @@ public class SuiteCollaborationService {
         };
     }
 
+    private String resolveMailSummary(AuditEventVo event) {
+        String detail = nullableLabel(event.detail(), "Mail activity updated");
+        String mailId = parseNullableDetail(event.detail(), "mail");
+        String draftId = parseNullableDetail(event.detail(), "draft");
+        String attachmentId = parseNullableDetail(event.detail(), "attachment");
+        return switch (event.eventType()) {
+            case "MAIL_SENT" -> detail;
+            case "MAIL_SCHEDULED" -> detail;
+            case "MAIL_OUTBOX_QUEUED" -> detail;
+            case "MAIL_UNDO_SEND" -> "Returned queued mail " + nullableLabel(mailId, "-") + " to drafts";
+            case "MAIL_ATTACHMENT_UPLOAD" -> "Uploaded attachment " + nullableLabel(attachmentId, "-")
+                    + " to draft " + nullableLabel(draftId, "-");
+            default -> detail;
+        };
+    }
+
+    private String resolveCalendarSummary(AuditEventVo event) {
+        String eventId = parseNullableDetail(event.detail(), "eventId");
+        String shareId = parseNullableDetail(event.detail(), "shareId");
+        String target = parseNullableDetail(event.detail(), "target");
+        String status = parseNullableDetail(event.detail(), "status");
+        return switch (event.eventType()) {
+            case "CAL_EVENT_CREATE" -> "Created event " + nullableLabel(eventId, "-");
+            case "CAL_SHARE_CREATE" -> "Shared event " + nullableLabel(eventId, "-")
+                    + " with " + nullableLabel(target, "participant");
+            case "CAL_INVITE_RESPONSE" -> "Recorded invite response " + nullableLabel(status, "NEEDS_ACTION")
+                    + " for share " + nullableLabel(shareId, "-");
+            default -> "Calendar activity updated";
+        };
+    }
+
     private String resolveDriveSummary(AuditEventVo event) {
         String itemId = parseNullableDetail(event.detail(), "itemId");
         String type = parseNullableDetail(event.detail(), "itemType");
@@ -520,6 +680,23 @@ public class SuiteCollaborationService {
             case "DRIVE_FILE_VERSION_RESTORE" -> "Restored version " + nullableLabel(versionId, "-") + " for item " + nullableLabel(itemId, "-");
             case "DRIVE_ITEM_DELETE" -> "Moved item " + nullableLabel(itemId, "-") + " to trash";
             default -> "Updated drive item " + nullableLabel(itemId, "-");
+        };
+    }
+
+    private String resolvePassSummary(AuditEventVo event) {
+        String itemId = parseNullableDetail(event.detail(), "itemId");
+        String itemType = parseNullableDetail(event.detail(), "itemType");
+        String target = parseNullableDetail(event.detail(), "target");
+        String alias = parseNullableDetail(event.detail(), "alias");
+        String linkId = parseNullableDetail(event.detail(), "linkId");
+        return switch (event.eventType()) {
+            case "PASS_ITEM_CREATE" -> "Created " + nullableLabel(itemType, "vault") + " item " + nullableLabel(itemId, "-");
+            case "PASS_ALIAS_CREATE" -> "Created alias " + nullableLabel(alias, "-");
+            case "PASS_ITEM_SHARE_CREATE" -> "Shared item " + nullableLabel(itemId, "-")
+                    + " with " + nullableLabel(target, "member");
+            case "PASS_SECURE_LINK_CREATE" -> "Created secure link " + nullableLabel(linkId, "-")
+                    + " for item " + nullableLabel(itemId, "-");
+            default -> "Pass activity updated";
         };
     }
 
@@ -584,11 +761,54 @@ public class SuiteCollaborationService {
         };
     }
 
+    private String resolveMailRoute(AuditEventVo event) {
+        String draftId = parseNullableDetail(event.detail(), "draft");
+        String mailId = parseNullableDetail(event.detail(), "mail");
+        return switch (event.eventType()) {
+            case "MAIL_SENT" -> "/sent";
+            case "MAIL_SCHEDULED" -> "/scheduled";
+            case "MAIL_OUTBOX_QUEUED" -> "/outbox";
+            case "MAIL_UNDO_SEND" -> StringUtils.hasText(mailId) ? "/compose?draftId=" + mailId : "/drafts";
+            case "MAIL_ATTACHMENT_UPLOAD" -> StringUtils.hasText(draftId) ? "/compose?draftId=" + draftId : "/compose";
+            default -> "/inbox";
+        };
+    }
+
+    private String resolveCalendarRoute(AuditEventVo event) {
+        String eventId = parseNullableDetail(event.detail(), "eventId");
+        String shareId = parseNullableDetail(event.detail(), "shareId");
+        if (StringUtils.hasText(eventId)) {
+            return "/calendar?eventId=" + eventId;
+        }
+        if (StringUtils.hasText(shareId)) {
+            return "/calendar?shareId=" + shareId;
+        }
+        return "/calendar";
+    }
+
+    private String resolvePassRoute(AuditEventVo event) {
+        String itemId = parseNullableDetail(event.detail(), "itemId");
+        return switch (event.eventType()) {
+            case "PASS_ALIAS_CREATE" -> "/pass?tab=aliases";
+            case "PASS_SECURE_LINK_CREATE" -> StringUtils.hasText(itemId)
+                    ? "/pass?tab=secure-links&itemId=" + itemId
+                    : "/pass?tab=secure-links";
+            case "PASS_ITEM_SHARE_CREATE" -> StringUtils.hasText(itemId)
+                    ? "/pass?itemId=" + itemId
+                    : "/pass";
+            case "PASS_ITEM_CREATE" -> StringUtils.hasText(itemId) ? "/pass?itemId=" + itemId : "/pass";
+            default -> "/pass";
+        };
+    }
+
     private Map<String, Integer> buildProductCounts(List<SuiteCollaborationEventVo> items) {
         Map<String, Integer> result = new LinkedHashMap<>();
         result.put("ALL", items.size());
+        result.put(PRODUCT_MAIL, 0);
+        result.put(PRODUCT_CALENDAR, 0);
         result.put(PRODUCT_DOCS, 0);
         result.put(PRODUCT_DRIVE, 0);
+        result.put(PRODUCT_PASS, 0);
         result.put(PRODUCT_SHEETS, 0);
         result.put(PRODUCT_MEET, 0);
         for (SuiteCollaborationEventVo item : items) {

@@ -1,8 +1,9 @@
 # Contributing to MMMail
 
 ## Scope
-- `Community Edition v1.0` 的首发范围以 `docs/release/community-v1-scope.md` 为准。
-- `GA` 模块的回归、文档、运维能力属于首发阻塞；`Beta / Preview` 改动不得破坏 `GA` 门禁。
+- 当前公开协作基线以 `Community Edition v1.6.1` 为准，权威范围见 `README.md`、`docs/release/community-v1-support-boundaries.md` 与 `docs/open-source/module-maturity-matrix.md`。
+- `GA` 模块的回归、文档、运维能力属于当前 release-blocking 范围；`Beta / Preview` 改动不得破坏 `GA` 门禁，也不得夸大未交付能力。
+- 当前 `v1.6.x` 主线优先级以 `Mail → Calendar → Drive → Pass` 协作闭环、`Drive E2EE` 深化、`Pass Beta` 交接面与 adoption / governance 收口为准。
 
 ## Before You Open a PR
 1. 阅读 `README.md`、`SECURITY.md`、`docs/release/community-v1-gate.md`。
@@ -26,7 +27,7 @@
 - 前端改动需要类型检查；后端改动需要定向 Maven 测试。
 
 ## PR Checklist
-- [ ] 改动范围仍在 Community Edition v1.0 首发范围内
+- [ ] 改动范围仍在 Community Edition `v1.6.1` 当前公开支持边界内
 - [ ] 对应测试已更新并通过
 - [ ] 文档已同步更新
 - [ ] 无真实 secrets / token / password 写入仓库

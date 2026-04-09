@@ -38,6 +38,10 @@ import {
   getDriveShareAccessStatusI18nKey
 } from '~/utils/drive-share'
 import { countPendingDriveIncomingShares } from '~/utils/drive-collaboration'
+import {
+  filterMainlineCollaborationItems,
+  type MainlineCollaborationEvent
+} from '~/utils/collaboration'
 
 const route = useRoute()
 const { t } = useI18n()
@@ -148,6 +152,12 @@ const creatingDoc = ref(false)
 const creatingSheet = ref(false)
 const collaborationLoading = ref(false)
 const collaborationItems = ref<SuiteCollaborationEvent[]>([])
+const mainlineCollaborationItems = ref<MainlineCollaborationEvent[]>([])
+const driveOwnerE2eeReady = ref<boolean | null>(null)
+const driveOwnerE2eeLoading = ref(false)
+const driveOwnerE2eeError = ref('')
+
+const DRIVE_LAUNCHPAD_CONTEXT_PRODUCT_CODES = new Set(['DOCS', 'DRIVE', 'SHEETS'])
 
 const {
   listItems,
@@ -647,16 +657,38 @@ function buildCollaborativeTitle(kind: 'docs' | 'sheets'): string {
   return `${prefix} ${new Date().toLocaleString()}`
 }
 
+function filterDriveLaunchpadItems(items: readonly SuiteCollaborationEvent[]): SuiteCollaborationEvent[] {
+  return items.filter(item => DRIVE_LAUNCHPAD_CONTEXT_PRODUCT_CODES.has(item.productCode))
+}
+
+async function loadDriveOwnerE2eeReadiness(): Promise<void> {
+  driveOwnerE2eeLoading.value = true
+  driveOwnerE2eeError.value = ''
+  try {
+    driveOwnerE2eeReady.value = await isDriveFileEncryptionEnabled()
+  } catch (error) {
+    driveOwnerE2eeReady.value = null
+    driveOwnerE2eeError.value = resolveErrorMessage(error, t('drive.launcher.readiness.e2ee.error'))
+  } finally {
+    driveOwnerE2eeLoading.value = false
+  }
+}
+
 async function loadCollaborationLaunchpad(): Promise<void> {
   collaborationLoading.value = true
   try {
-    const center = await getCollaborationCenter(16)
-    collaborationItems.value = center.items.filter((item) => ['DOCS', 'DRIVE', 'SHEETS'].includes(item.productCode))
+    const center = await getCollaborationCenter(24)
+    collaborationItems.value = filterDriveLaunchpadItems(center.items)
+    mainlineCollaborationItems.value = filterMainlineCollaborationItems(center.items)
   } catch (error) {
     ElMessage.error((error as Error).message || t('drive.messages.loadCollaborationFailed'))
   } finally {
     collaborationLoading.value = false
   }
+}
+
+async function loadLaunchpadSurface(): Promise<void> {
+  await Promise.all([loadCollaborationLaunchpad(), loadDriveOwnerE2eeReadiness()])
 }
 
 async function onRefreshDashboard(): Promise<void> {
@@ -665,7 +697,7 @@ async function onRefreshDashboard(): Promise<void> {
     loadSharedWithMe(),
     loadCollaboratorIncomingShares(),
     loadCollaboratorSharedEntries(),
-    loadCollaborationLaunchpad()
+    loadLaunchpadSurface()
   ])
   await refreshCollaboratorWorkspaceIfNeeded()
 }
@@ -700,6 +732,10 @@ async function onCreateSheet(): Promise<void> {
 
 async function onOpenLaunchpadItem(item: SuiteCollaborationEvent): Promise<void> {
   await navigateTo(item.routePath || '/drive')
+}
+
+async function onOpenPassLaunchpad(): Promise<void> {
+  await navigateTo('/pass')
 }
 
 async function loadWorkspace(): Promise<void> {
@@ -1592,12 +1628,17 @@ onBeforeUnmount(() => {
     <section class="mm-card panel">
       <DriveCollaborationLaunchpad
         :items="collaborationItems"
+        :handoff-items="mainlineCollaborationItems"
         :loading="collaborationLoading"
         :creating-doc="creatingDoc"
         :creating-sheet="creatingSheet"
+        :owner-e2ee-ready="driveOwnerE2eeReady"
+        :owner-e2ee-loading="driveOwnerE2eeLoading"
+        :owner-e2ee-error="driveOwnerE2eeError"
         @create-doc="onCreateDoc"
         @create-sheet="onCreateSheet"
         @open-item="onOpenLaunchpadItem"
+        @open-pass="void onOpenPassLaunchpad()"
       />
 
       <div class="head-row">
@@ -1608,7 +1649,7 @@ onBeforeUnmount(() => {
         <div class="head-actions">
           <el-button @click="openAccessLogDrawer">{{ t('drive.actions.accessLogs') }}</el-button>
           <el-button @click="openTrashDrawer">{{ t('drive.actions.trash') }}</el-button>
-          <el-button :loading="loading || collaborationLoading" @click="onRefreshDashboard">{{ t('common.actions.refresh') }}</el-button>
+          <el-button :loading="loading || collaborationLoading || driveOwnerE2eeLoading" @click="onRefreshDashboard">{{ t('common.actions.refresh') }}</el-button>
         </div>
       </div>
 

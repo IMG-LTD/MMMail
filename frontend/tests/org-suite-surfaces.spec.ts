@@ -1,4 +1,12 @@
 import { describe, expect, it } from 'vitest'
+import {
+  filterCommunityCoreProductItems,
+  filterCommunityMainlineProductItems,
+  filterCommunityMainlineScopedItems,
+  filterCommunityCoreScopedItems,
+  isCommunityCoreProductCode,
+  isCommunityMainlineProductCode
+} from '../constants/module-maturity'
 import type {
   SuiteCollaborationCenter,
   SuiteCollaborationSync,
@@ -25,6 +33,46 @@ function buildResolver(enabledProducts: OrgProductKey[]) {
 }
 
 describe('org suite surfaces', () => {
+  it('defines a stable community mainline product set', () => {
+    expect(isCommunityCoreProductCode('MAIL')).toBe(true)
+    expect(isCommunityCoreProductCode('PASS')).toBe(true)
+    expect(isCommunityCoreProductCode('WALLET')).toBe(false)
+    expect(isCommunityMainlineProductCode('MAIL')).toBe(true)
+    expect(isCommunityMainlineProductCode('DOCS')).toBe(false)
+    expect(filterCommunityCoreProductItems([
+      { code: 'MAIL' },
+      { code: 'PASS' },
+      { code: 'WALLET' }
+    ])).toEqual([
+      { code: 'MAIL' },
+      { code: 'PASS' }
+    ])
+    expect(filterCommunityMainlineProductItems([
+      { code: 'MAIL' },
+      { code: 'DOCS' },
+      { code: 'PASS' }
+    ])).toEqual([
+      { code: 'MAIL' },
+      { code: 'PASS' }
+    ])
+    expect(filterCommunityCoreScopedItems([
+      { productCode: 'MAIL' },
+      { productCode: 'DRIVE' },
+      { productCode: 'VPN' }
+    ])).toEqual([
+      { productCode: 'MAIL' },
+      { productCode: 'DRIVE' }
+    ])
+    expect(filterCommunityMainlineScopedItems([
+      { productCode: 'MAIL' },
+      { productCode: 'DOCS' },
+      { productCode: 'DRIVE' }
+    ])).toEqual([
+      { productCode: 'MAIL' },
+      { productCode: 'DRIVE' }
+    ])
+  })
+
   it('filters suite products, readiness, posture, and unified search by org access', () => {
     const products: SuiteProductItem[] = [
       {
@@ -236,22 +284,22 @@ describe('org suite surfaces', () => {
       ]
     }
 
-    const collaborationCenter: SuiteCollaborationCenter = {
+    const collaborationCenter = {
       generatedAt: '2026-03-10T10:04:00',
       limit: 20,
       total: 3,
-      productCounts: { ALL: 3, DOCS: 1, DRIVE: 1, MEET: 1 },
+      productCounts: { ALL: 3, MAIL: 1, DRIVE: 1, PASS: 1 },
       syncCursor: 88,
       syncVersion: 'COLLAB-88',
       items: [
         {
           eventId: 1,
-          productCode: 'DOCS',
-          eventType: 'DOCS_NOTE_COMMENT_ADD',
-          title: 'Docs comment',
-          summary: 'docs',
-          routePath: '/docs',
-          actorEmail: 'docs@mmmail.local',
+          productCode: 'MAIL',
+          eventType: 'MAIL_SENT',
+          title: 'Mail sent',
+          summary: 'mail',
+          routePath: '/sent',
+          actorEmail: 'mail@mmmail.local',
           sessionId: 's1',
           createdAt: '2026-03-10T10:00:00'
         },
@@ -268,19 +316,19 @@ describe('org suite surfaces', () => {
         },
         {
           eventId: 3,
-          productCode: 'MEET',
-          eventType: 'MEET_ROOM_END',
-          title: 'Meet ended',
-          summary: 'meet',
-          routePath: '/meet',
-          actorEmail: 'meet@mmmail.local',
+          productCode: 'PASS',
+          eventType: 'PASS_SECURE_LINK_CREATE',
+          title: 'Secure link',
+          summary: 'pass',
+          routePath: '/pass',
+          actorEmail: 'pass@mmmail.local',
           sessionId: 's3',
           createdAt: '2026-03-10T09:58:00'
         }
       ]
-    }
+    } as unknown as SuiteCollaborationCenter
 
-    const collaborationSync: SuiteCollaborationSync = {
+    const collaborationSync = {
       kind: 'UPDATE',
       generatedAt: '2026-03-10T10:05:00',
       syncCursor: 89,
@@ -288,7 +336,7 @@ describe('org suite surfaces', () => {
       hasUpdates: true,
       total: 3,
       items: collaborationCenter.items
-    }
+    } as unknown as SuiteCollaborationSync
 
     const resolver = buildResolver(['DRIVE', 'WALLET'])
 
@@ -302,10 +350,10 @@ describe('org suite surfaces', () => {
     expect(visibleCollaboration?.total).toBe(1)
     expect(visibleCollaboration?.productCounts).toEqual({
       ALL: 1,
-      DOCS: 0,
+      MAIL: 0,
+      CALENDAR: 0,
       DRIVE: 1,
-      MEET: 0,
-      SHEETS: 0
+      PASS: 0
     })
     expect(visibleCollaboration?.items.map((item) => item.productCode)).toEqual(['DRIVE'])
 

@@ -1,0 +1,104 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>MMMail Community v1.6.1 Team Enablement</title>
+  <style>
+    :root { color-scheme: light; }
+    body { margin: 0; font-family: Inter, Arial, sans-serif; background: #f6f8fb; color: #102a43; }
+    main { max-width: 920px; margin: 0 auto; padding: 40px 20px 64px; }
+    section { background: #fff; border: 1px solid #d9e2ec; border-radius: 18px; padding: 20px; margin-top: 16px; }
+    h1, h2, h3 { margin: 0 0 12px; }
+    p, li { line-height: 1.7; }
+    ul, ol { margin: 0; padding-left: 20px; }
+    code { font-family: "SFMono-Regular", Consolas, monospace; background: #f0f4f8; padding: 2px 6px; border-radius: 6px; }
+    .grid { display: grid; gap: 16px; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); }
+    .card { border: 1px solid #d9e2ec; border-radius: 16px; padding: 16px; background: #fcfdfd; }
+    .eyebrow { font-size: 12px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: #0c5a5a; }
+    .actions { display: flex; gap: 12px; flex-wrap: wrap; margin-top: 14px; }
+    .button { display: inline-flex; align-items: center; justify-content: center; min-height: 40px; padding: 0 16px; border-radius: 999px; background: #0c5a5a; color: #fff; text-decoration: none; }
+    .button.secondary { background: #fff; color: #0c5a5a; border: 1px solid #0c5a5a; }
+  </style>
+</head>
+<body>
+<main>
+  <p class="eyebrow">MMMail Community v1.6.1</p>
+  <h1>Team Enablement / 团队启用指引</h1>
+  <p>
+    This page turns the current Community mainline into a concrete team rollout sequence:
+    <code>Mail → Calendar → Drive → Pass</code>.
+    It is for self-hosted pilots and operators, not a hosted onboarding portal.
+  </p>
+
+  <section>
+    <h2>Who should use this / 适用角色</h2>
+    <div class="grid">
+      <article class="card">
+        <h3>Platform admin</h3>
+        <p>Owns security baseline, boundary messaging, and pilot scope.</p>
+      </article>
+      <article class="card">
+        <h3>Team lead</h3>
+        <p>Turns the mainline into a repeatable handoff that the pilot team can actually use.</p>
+      </article>
+      <article class="card">
+        <h3>Pilot members</h3>
+        <p>Validate the real collaboration path with actual files, events, and secrets.</p>
+      </article>
+    </div>
+  </section>
+
+  <section>
+    <h2>Recommended rollout / 推荐 rollout</h2>
+    <ol>
+      <li>Finish administrator baseline: Mail E2EE, PWA / Web Push, boundary review.</li>
+      <li>Select a real pilot task instead of demo data.</li>
+      <li>Use Mail to start the handoff, Calendar to schedule it, Drive to deliver the artifact, and Pass to close the loop.</li>
+      <li>Require a second teammate to consume or confirm the handoff.</li>
+      <li>Record the failure points before scaling beyond the pilot.</li>
+    </ol>
+  </section>
+
+  <section>
+    <h2>Priority focus / 优先级焦点</h2>
+    <ul>
+      <li><strong>P0</strong> — make one real Mail → Calendar → Drive → Pass task flow work for the team.</li>
+      <li><strong>P1</strong> — deepen Drive delivery confidence and use Pass as the visible final handoff, not a hidden Labs detour.</li>
+      <li><strong>P2</strong> — keep identity readiness and developer handoff available as rollout support layers.</li>
+      <li><strong>P3</strong> — keep non-mainline Preview modules outside the pilot promise.</li>
+    </ul>
+  </section>
+
+  <section>
+    <h2>Proof checklist / 证据清单</h2>
+    <ul>
+      <li>One mainline mail thread</li>
+      <li>One calendar checkpoint or share record</li>
+      <li>One drive delivery or secure artifact</li>
+      <li>One pass secret handoff or secure link</li>
+      <li>One short pilot retro</li>
+    </ul>
+  </section>
+
+  <section>
+    <h2>Current boundary / 当前边界</h2>
+    <p>
+      Team enablement in Community v1.6.1 does not include enterprise identity automation,
+      Bridge, IMAP, or non-mainline preview engines as rollout commitments.
+    </p>
+  </section>
+
+  <section>
+    <h2>Quick links / 快速入口</h2>
+    <div class="actions">
+      <a class="button" href="/suite?section=overview" target="_blank" rel="noopener noreferrer">Open mainline overview</a>
+      <a class="button secondary" href="/pass" target="_blank" rel="noopener noreferrer">Open Pass handoff</a>
+      <a class="button secondary" href="/self-hosted/developer.html" target="_blank" rel="noopener noreferrer">Developer station</a>
+      <a class="button secondary" href="/self-hosted/adoption.html" target="_blank" rel="noopener noreferrer">Adoption guide</a>
+      <a class="button secondary" href="/self-hosted/identity.html" target="_blank" rel="noopener noreferrer">Identity readiness</a>
+    </div>
+  </section>
+</main>
+</body>
+</html>

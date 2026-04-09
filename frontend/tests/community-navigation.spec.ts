@@ -24,10 +24,18 @@ describe('community v1 navigation', () => {
     const passModule = COMMUNITY_V1_MODULES.find(item => item.code === 'PASS')
 
     expect(passModule?.maturity).toBe('BETA')
-    expect(passModule?.surface).toBe('LABS')
+    expect(passModule?.surface).toBe('DEFAULT_NAV')
     expect(COMMUNITY_V1_HOME_ROUTE_CANDIDATES.some(item => item.to === '/inbox')).toBe(true)
     expect(COMMUNITY_V1_HOME_ROUTE_CANDIDATES.some(item => item.to === '/pass')).toBe(false)
     expect(resolveHomeRoute(productKey => productKey === 'PASS')).toBe('/suite')
+  })
+
+  it('surfaces pass as a beta mainline route while keeping it out of labs and home fallback', () => {
+    const navRoutes = new Set(DEFAULT_NAV_ITEMS.map(item => item.to))
+
+    expect(navRoutes.has('/pass')).toBe(true)
+    expect(COMMUNITY_V1_LABS_MODULES.some(item => item.code === 'PASS')).toBe(false)
+    expect(COMMUNITY_V1_HOME_ROUTE_CANDIDATES.some(item => item.to === '/pass')).toBe(false)
   })
 
   it('keeps suite-only beta entries out of default nav', () => {

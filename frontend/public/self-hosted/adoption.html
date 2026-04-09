@@ -1,0 +1,134 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>MMMail Community v1.6.1 Adoption Guide</title>
+  <style>
+    :root { color-scheme: light; }
+    body { margin: 0; font-family: Inter, Arial, sans-serif; background: #f6f8fb; color: #102a43; }
+    main { max-width: 920px; margin: 0 auto; padding: 40px 20px 64px; }
+    section { background: #fff; border: 1px solid #d9e2ec; border-radius: 18px; padding: 20px; margin-top: 16px; }
+    h1, h2, h3 { margin: 0 0 12px; }
+    p, li { line-height: 1.7; }
+    ul { margin: 0; padding-left: 20px; }
+    code { font-family: "SFMono-Regular", Consolas, monospace; background: #f0f4f8; padding: 2px 6px; border-radius: 6px; }
+    .grid { display: grid; gap: 16px; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); }
+    .card { border: 1px solid #d9e2ec; border-radius: 16px; padding: 16px; background: #fcfdfd; }
+    .eyebrow { font-size: 12px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: #0c5a5a; }
+    .actions { display: flex; gap: 12px; flex-wrap: wrap; margin-top: 14px; }
+    .button {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 40px;
+      padding: 0 16px;
+      border-radius: 999px;
+      background: #0c5a5a;
+      color: #fff;
+      text-decoration: none;
+    }
+    .button.secondary { background: #fff; color: #0c5a5a; border: 1px solid #0c5a5a; }
+  </style>
+</head>
+<body>
+<main>
+  <p class="eyebrow">MMMail Community v1.6.1</p>
+  <h1>Adoption Guide / 采用指引</h1>
+  <p>
+    This quick page explains the current self-hosted mainline for Community:
+    <code>Mail → Calendar → Drive → Pass</code>. It is not a hosted onboarding portal,
+    and it does not claim <code>SMTP inbound / IMAP / Bridge</code>, zero-knowledge mail,
+    or enterprise identity automation.
+  </p>
+
+  <section>
+    <h2>Mainline definition / 主线定义</h2>
+    <ul>
+      <li><strong>Mail</strong> — establish the protected context, recipients, and subject.</li>
+      <li><strong>Calendar</strong> — turn that context into an internal checkpoint with RSVP visibility.</li>
+      <li><strong>Drive</strong> — deliver the encrypted file, artifact, or recovery package.</li>
+      <li><strong>Pass</strong> — hand over the final credential, secure link, alias route, or secret detail.</li>
+    </ul>
+  </section>
+
+  <section>
+    <h2>Current priority order / 当前优先级</h2>
+    <ul>
+      <li><strong>P0</strong> — deepen the shipped team mainline until Mail, Calendar, Drive, and Pass form one continuous handoff.</li>
+      <li><strong>P1</strong> — keep pushing Drive E2EE delivery depth and keep Pass visible as the default-nav Beta handoff surface.</li>
+      <li><strong>P2</strong> — keep identity readiness, developer docs, and post-deploy enablement explicit without turning them into shipped enterprise promises.</li>
+      <li><strong>P3</strong> — keep non-mainline Preview modules outside the default rollout promise while pluginization / externalization stays future work.</li>
+    </ul>
+  </section>
+
+  <section>
+    <h2>Launch tracks / 启动轨道</h2>
+    <div class="grid">
+      <article class="card">
+        <h3>Administrator baseline</h3>
+        <ul>
+          <li>Generate the Mail E2EE key profile and recovery package.</li>
+          <li>Confirm the release boundary before promising capabilities to the team.</li>
+        </ul>
+      </article>
+      <article class="card">
+        <h3>Team first collaboration</h3>
+        <ul>
+          <li>Run one real handoff through Mail, Calendar, Drive, and Pass in order.</li>
+          <li>Use shipped web surfaces only; keep Beta boundaries explicit.</li>
+        </ul>
+      </article>
+      <article class="card">
+        <h3>Identity readiness</h3>
+        <ul>
+          <li>Keep SSO / SCIM / LDAP as readiness topics, not shipped login promises.</li>
+          <li>Prepare IdP ownership, fallback admins, and rollout expectations before enterprise requests arrive.</li>
+        </ul>
+      </article>
+      <article class="card">
+        <h3>Developer handoff</h3>
+        <ul>
+          <li>Align the operator sequence before wiring integrations.</li>
+          <li>Use Swagger UI and OpenAPI from the actual deployment target.</li>
+        </ul>
+      </article>
+    </div>
+  </section>
+
+  <section>
+    <h2>Recommended proof sequence / 推荐验证顺序</h2>
+    <ol>
+      <li>Open Settings and complete the Mail E2EE and PWA baseline.</li>
+      <li>Open Suite Overview and run the mainline once end to end.</li>
+      <li>Use the team guide to capture pilot roles, proof points, and rollout sequence.</li>
+      <li>Use Drive or Pass to prove one secure handoff that another teammate can consume.</li>
+      <li>Review the identity readiness page so SSO / SCIM / LDAP requests stay aligned with current scope.</li>
+      <li>Give developers the API page and OpenAPI schema for the running backend.</li>
+    </ol>
+  </section>
+
+  <section>
+    <h2>Quick links / 快速入口</h2>
+    <div class="actions">
+      <a class="button" href="/suite?section=overview" target="_blank" rel="noopener noreferrer">Open mainline overview</a>
+      <a class="button secondary" href="/self-hosted/developer.html" target="_blank" rel="noopener noreferrer">Developer station</a>
+      <a class="button secondary" href="/self-hosted/team.html" target="_blank" rel="noopener noreferrer">Team enablement</a>
+      <a class="button secondary" href="/self-hosted/identity.html" target="_blank" rel="noopener noreferrer">Identity readiness</a>
+      <a class="button secondary" href="/self-hosted/install.html" target="_blank" rel="noopener noreferrer">Install guide</a>
+      <a class="button secondary" href="/self-hosted/runbook.html" target="_blank" rel="noopener noreferrer">Runbook</a>
+      <a class="button secondary" href="/self-hosted/api.html" target="_blank" rel="noopener noreferrer">API guide</a>
+    </div>
+  </section>
+
+  <section>
+    <h2>Current boundary / 当前边界</h2>
+    <p>
+      Community v1.6.1 focuses on mainline definition, collaboration depth, and adoption experience.
+      It still does not ship enterprise identity automation, browser extension autofill, or non-mainline
+      preview engines as part of the default support promise.
+    </p>
+  </section>
+</main>
+</body>
+</html>

@@ -1,5 +1,6 @@
 import { computed, onMounted, ref, watch } from 'vue'
 import { ElMessage } from 'element-plus'
+import { filterCommunityCoreScopedItems } from '~/constants/module-maturity'
 import { useSuiteApi } from '~/composables/useSuiteApi'
 import { useOrganizationApi } from '~/composables/useOrganizationApi'
 import { useI18n } from '~/composables/useI18n'
@@ -42,6 +43,58 @@ function messageFromError(error: unknown, fallbackMessage: string): string {
 
 function formatGovernanceReviewerLabel(member: OrgMember, t: ReturnType<typeof useI18n>['t']): string {
   return `${member.userEmail} (${organizationRoleLabel(member.role, t)})`
+}
+
+function normalizeMainlineReadiness(report: SuiteReadinessReport | null): SuiteReadinessReport | null {
+  if (!report) {
+    return null
+  }
+  const items = filterCommunityCoreScopedItems(report.items)
+  const overallScore = items.length === 0
+    ? 0
+    : Math.round(items.reduce((sum, item) => sum + item.score, 0) / items.length)
+
+  return {
+    ...report,
+    overallScore,
+    overallRiskLevel: resolveRiskLevel(overallScore),
+    highRiskProductCount: items.filter(item => item.riskLevel === 'HIGH').length,
+    criticalRiskProductCount: items.filter(item => item.riskLevel === 'CRITICAL').length,
+    items
+  }
+}
+
+function normalizeMainlineSecurityPosture(posture: SuiteSecurityPosture | null): SuiteSecurityPosture | null {
+  if (!posture) {
+    return null
+  }
+  return {
+    ...posture,
+    recommendedActions: filterCommunityCoreScopedItems(posture.recommendedActions)
+  }
+}
+
+function resolveRiskLevel(score: number): SuiteRiskLevel {
+  if (score < 45) {
+    return 'CRITICAL'
+  }
+  if (score < 65) {
+    return 'HIGH'
+  }
+  if (score < 80) {
+    return 'MEDIUM'
+  }
+  return 'LOW'
+}
+
+function readinessSeverityRank(riskLevel: SuiteRiskLevel): number {
+  const order: Record<SuiteRiskLevel, number> = {
+    CRITICAL: 0,
+    HIGH: 1,
+    MEDIUM: 2,
+    LOW: 3
+  }
+  return order[riskLevel]
 }
 
 export function useSuiteOperationsWorkspace() {
@@ -90,21 +143,27 @@ export function useSuiteOperationsWorkspace() {
   const lastExecutionResult = ref<SuiteRemediationExecutionResult | null>(null)
   const currentSessionId = ref('')
 
-  const visibleReadiness = computed(() => filterSuiteReadinessByAccess(
+  const visibleReadiness = computed(() => normalizeMainlineReadiness(filterSuiteReadinessByAccess(
     readiness.value,
     orgAccessStore.isProductEnabled
-  ))
-  const visibleSecurityPosture = computed(() => filterSuiteSecurityPostureByAccess(
+  )))
+  const visibleSecurityPosture = computed(() => normalizeMainlineSecurityPosture(filterSuiteSecurityPostureByAccess(
     securityPosture.value,
     orgAccessStore.isProductEnabled
-  ))
+  )))
   const visibleCommandSearchResult = computed(() => filterSuiteUnifiedSearchByAccess(
     commandSearchResult.value,
     orgAccessStore.isProductEnabled
   ))
   const readinessItems = computed<SuiteReadinessItem[]>(() => visibleReadiness.value?.items ?? [])
-  const walletReadiness = computed(() => {
-    return readinessItems.value.find(item => item.productCode === 'WALLET') ?? null
+  const featuredReadinessItem = computed(() => {
+    return [...readinessItems.value].sort((left, right) => {
+      const riskOrder = readinessSeverityRank(left.riskLevel) - readinessSeverityRank(right.riskLevel)
+      if (riskOrder !== 0) {
+        return riskOrder
+      }
+      return left.score - right.score
+    })[0] ?? null
   })
   const filteredReadinessItems = computed(() => {
     if (readinessRiskFilter.value === 'ALL') {
@@ -448,7 +507,7 @@ export function useSuiteOperationsWorkspace() {
     governanceRequests,
     managedOrganizations,
     readinessRiskFilter,
-    walletReadiness,
+    featuredReadinessItem,
     filteredReadinessItems,
     priorityActions,
     runningActionCode,

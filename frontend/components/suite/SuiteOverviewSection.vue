@@ -1,13 +1,21 @@
 <script setup lang="ts">
 import { computed } from 'vue'
+import { filterCommunityMainlineProductItems } from '~/constants/module-maturity'
 import type { SuiteProductItem } from '~/types/api'
 import { useI18n } from '~/composables/useI18n'
+import type { MainlineCollaborationEvent } from '~/utils/collaboration'
+import { buildMainlineHandoffRun } from '~/utils/mainline-handoff'
 import type { SuiteSectionCode, SuiteSectionDefinition } from '~/utils/suite-sections'
+import SuiteCoreWorkflowPanel from '~/components/suite/SuiteCoreWorkflowPanel.vue'
+import SuiteMainlineHandoffPanel from '~/components/suite/SuiteMainlineHandoffPanel.vue'
+import SuiteMainlineJourneyPanel from '~/components/suite/SuiteMainlineJourneyPanel.vue'
 import SuiteProductHubPanel from '~/components/suite/SuiteProductHubPanel.vue'
 
 const props = defineProps<{
   products: SuiteProductItem[]
   sections: readonly SuiteSectionDefinition[]
+  collaborationItems: MainlineCollaborationEvent[]
+  collaborationLoading: boolean
 }>()
 
 const emit = defineEmits<{
@@ -17,6 +25,11 @@ const emit = defineEmits<{
 const { t } = useI18n()
 
 const jumpSections = computed(() => props.sections.filter(section => section.code !== 'overview'))
+const mainlineProducts = computed(() => filterCommunityMainlineProductItems(props.products))
+const handoffRun = computed(() => buildMainlineHandoffRun(
+  props.collaborationItems,
+  mainlineProducts.value.map(item => item.code)
+))
 
 function onSelect(section: SuiteSectionCode): void {
   emit('select', section)
@@ -46,7 +59,16 @@ function onSelect(section: SuiteSectionCode): void {
       </button>
     </div>
 
-    <SuiteProductHubPanel :products="props.products" />
+    <SuiteMainlineJourneyPanel :products="mainlineProducts" />
+
+    <SuiteMainlineHandoffPanel
+      :run="handoffRun"
+      :loading="collaborationLoading"
+    />
+
+    <SuiteCoreWorkflowPanel :products="mainlineProducts" />
+
+    <SuiteProductHubPanel :products="mainlineProducts" />
   </section>
 </template>
 
