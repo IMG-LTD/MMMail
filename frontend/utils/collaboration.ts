@@ -1,8 +1,12 @@
+import {
+  COMMUNITY_V1_MAINLINE_PRODUCT_CODES,
+  type CommunityMainlineProductCode
+} from '~/constants/module-maturity'
 import type { ProductEnabledResolver } from '~/types/org-access'
 
-export const COLLABORATION_PRODUCT_CODES = ['MAIL', 'CALENDAR', 'DRIVE', 'PASS'] as const
+export const COLLABORATION_PRODUCT_CODES = COMMUNITY_V1_MAINLINE_PRODUCT_CODES
 
-export type MainlineCollaborationProductCode = typeof COLLABORATION_PRODUCT_CODES[number]
+export type MainlineCollaborationProductCode = CommunityMainlineProductCode
 
 export type CollaborationFilter = 'ALL' | MainlineCollaborationProductCode
 
@@ -11,8 +15,9 @@ export interface CollaborationEventLike {
   sessionId?: string | null
 }
 
-export interface MainlineCollaborationEvent extends CollaborationEventLike {
+export interface MainlineCollaborationEvent extends Omit<CollaborationEventLike, 'productCode'> {
   eventId: number
+  productCode: MainlineCollaborationProductCode
   eventType: string
   title: string
   summary: string
@@ -46,8 +51,12 @@ export function isMainlineCollaborationProductCode(
   return Boolean(productCode && COLLABORATION_PRODUCT_CODE_SET.has(productCode))
 }
 
-export function filterMainlineCollaborationItems<T extends CollaborationEventLike>(items: readonly T[]): T[] {
-  return items.filter((item) => isMainlineCollaborationProductCode(item.productCode))
+export function filterMainlineCollaborationItems<T extends CollaborationEventLike>(
+  items: readonly T[]
+): Array<T & { productCode: MainlineCollaborationProductCode }> {
+  return items.filter((item): item is T & { productCode: MainlineCollaborationProductCode } => {
+    return isMainlineCollaborationProductCode(item.productCode)
+  })
 }
 
 export function filterMainlineCollaborationProducts<T extends CollaborationCodeLike>(items: readonly T[]): T[] {

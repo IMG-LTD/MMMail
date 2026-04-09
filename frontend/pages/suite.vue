@@ -11,6 +11,7 @@ import { useI18n } from '~/composables/useI18n'
 import { useSuiteBillingCenterWorkspace } from '~/composables/useSuiteBillingCenterWorkspace'
 import { useSuiteBillingWorkspace } from '~/composables/useSuiteBillingWorkspace'
 import { useSuiteOperationsWorkspace } from '~/composables/useSuiteOperationsWorkspace'
+import { useSuiteOverviewWorkspace } from '~/composables/useSuiteOverviewWorkspace'
 import { useSuitePlansWorkspace } from '~/composables/useSuitePlansWorkspace'
 import type { SuitePlanCode } from '~/types/suite-lumo'
 import {
@@ -30,6 +31,7 @@ const billingWorkspace = useSuiteBillingWorkspace()
 const billingCenterWorkspace = useSuiteBillingCenterWorkspace()
 const plansWorkspace = useSuitePlansWorkspace()
 const operationsWorkspace = useSuiteOperationsWorkspace()
+const overviewWorkspace = useSuiteOverviewWorkspace()
 const activeSection = computed(() => resolveSuiteSection(route.query.section))
 
 const pageLoading = computed(() => {
@@ -37,6 +39,7 @@ const pageLoading = computed(() => {
     || billingCenterWorkspace.loading.value
     || plansWorkspace.loading.value
     || operationsWorkspace.loading.value
+    || overviewWorkspace.loading.value
 })
 
 useHead(() => ({
@@ -104,6 +107,8 @@ async function onSaveDraft(): Promise<void> {
           v-if="activeSection === 'overview'"
           :products="plansWorkspace.visibleProducts.value"
           :sections="SUITE_SECTIONS"
+          :collaboration-items="overviewWorkspace.collaborationItems.value"
+          :collaboration-loading="overviewWorkspace.loading.value"
           @select="void onSelectSection($event)"
         />
 

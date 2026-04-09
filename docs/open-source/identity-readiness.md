@@ -23,6 +23,10 @@ The goal of readiness is narrower:
 2. prepare deployment decisions in advance
 3. reduce rework when identity automation eventually lands
 
+Within the current `v1.6.1` continuation order, this document belongs to `P2`:
+it supports rollout preparation, but it does not outrank the shipped
+`Mail -> Calendar -> Drive -> Pass` mainline.
+
 ## Current boundary
 
 Community v1.6.1 still uses local MMMail accounts for sign-in and lifecycle.
@@ -75,3 +79,9 @@ Use this wording with evaluators:
 - `docs/ops/team-enablement.md`
 - `docs/open-source/module-maturity-matrix.md`
 
+## Browser quick pages
+
+- `frontend/public/self-hosted/identity.html` keeps the readiness boundary explicit for operators.
+- `frontend/public/self-hosted/team.html` shows how identity planning fits into a real pilot workflow.
+- `frontend/public/self-hosted/developer.html` gives implementation owners a single browser hub before they wire integrations.
+- `frontend/public/self-hosted/api.html` remains the backend contract page once the deployment target is known.

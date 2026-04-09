@@ -5,12 +5,14 @@ import type { SuiteCollaborationCenter, SuiteCollaborationSync } from '~/types/a
 import CollaborationRealtimePanel from '~/components/collaboration/CollaborationRealtimePanel.vue'
 import CollaborationSignalRail from '~/components/collaboration/CollaborationSignalRail.vue'
 import CollaborationStreamPanel from '~/components/collaboration/CollaborationStreamPanel.vue'
+import SuiteMainlineHandoffPanel from '~/components/suite/SuiteMainlineHandoffPanel.vue'
 import { useSuiteApi } from '~/composables/useSuiteApi'
 import { useCollaborationSyncStream } from '~/composables/useCollaborationSyncStream'
 import { useI18n } from '~/composables/useI18n'
 import { useAuthStore } from '~/stores/auth'
 import { useOrgAccessStore } from '~/stores/org-access'
 import { resolveSessionIdFromAccessToken } from '~/utils/auth-session'
+import { buildMainlineHandoffRun } from '~/utils/mainline-handoff'
 import {
   buildCollaborationCounts,
   COLLABORATION_PRODUCT_LABELS,
@@ -76,6 +78,10 @@ const productCounts = computed(() => {
 })
 
 const visibleProductCodes = computed(() => listVisibleCollaborationProductCodes(orgAccessStore.isProductEnabled))
+const mainlineRun = computed(() => buildMainlineHandoffRun(
+  visibleCollaborationCenter.value?.items ?? [],
+  visibleProductCodes.value
+))
 
 const filterOptions = computed<CollaborationFilterOption[]>(() => {
   return [
@@ -271,6 +277,12 @@ watch(
       class="notice"
     />
 
+    <SuiteMainlineHandoffPanel
+      class="mainline-panel"
+      :run="mainlineRun"
+      :loading="loading"
+    />
+
     <div class="layout-grid">
       <CollaborationSignalRail
         :filter-options="filterOptions"
@@ -348,6 +360,10 @@ watch(
 
 .notice {
   border: none;
+}
+
+.mainline-panel {
+  color: initial;
 }
 
 .layout-grid {

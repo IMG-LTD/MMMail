@@ -39,6 +39,7 @@ const { t } = useI18n()
 
 const apiGuidePath = '/self-hosted/api.html'
 const adoptionGuideUrl = '/self-hosted/adoption.html'
+const developerStationUrl = '/self-hosted/developer.html'
 const selfHostedInstallGuideUrl = '/self-hosted/install.html'
 const selfHostedRunbookUrl = '/self-hosted/runbook.html'
 const teamEnablementGuideUrl = '/self-hosted/team.html'
@@ -92,7 +93,7 @@ const launchTracks = computed<readonly AdoptionTrack[]>(() => [
     titleKey: 'settings.adoption.tracks.developer.title',
     descriptionKey: 'settings.adoption.tracks.developer.description',
     checkpointKeys: ['settings.adoption.tracks.developer.checkpoints.adoption', 'settings.adoption.tracks.developer.checkpoints.api'],
-    primaryHref: adoptionGuideUrl,
+    primaryHref: developerStationUrl,
     primaryExternal: true,
     primaryActionKey: 'settings.adoption.tracks.developer.primary',
     secondaryHref: apiGuideUrl.value,
@@ -139,7 +140,7 @@ const resourceCards = computed<readonly AdoptionCard[]>(() => [
     metaKey: 'settings.adoption.cards.api.meta',
     metaParams: { value: normalizedApiBase.value },
     actions: [
-      { key: 'settings-adoption-api-guide-link', href: apiGuideUrl.value, external: true, actionKey: 'settings.adoption.cards.api.guide', primary: true },
+      { key: 'settings-adoption-api-guide-link', href: developerStationUrl, external: true, actionKey: 'settings.adoption.cards.api.guide', primary: true },
       { key: 'settings-adoption-swagger-link', href: swaggerUiUrl.value, external: true, actionKey: 'settings.adoption.cards.api.primary' },
       { key: 'settings-adoption-openapi-link', href: openApiJsonUrl.value, external: true, actionKey: 'settings.adoption.cards.api.secondary' }
     ]

@@ -49,6 +49,13 @@
 - 记录失败点：权限、认知、入口、通知、恢复
 - 把失败点回填到 runbook 或培训材料，而不是口头记忆
 
+## 当前优先级
+
+- `P0`：把 `Mail -> Calendar -> Drive -> Pass` 做成一条真实、可复跑、可被第二位成员消费的团队任务流。
+- `P1`：继续加深 `Drive E2EE` 交付表达，并保持 `Pass` 作为默认导航中的 `Beta` 主线交接面，而不是长期停留在 `Labs-only` 叙事。
+- `P2`：把 `SSO / SCIM / LDAP readiness`、开发者文档站和部署后的团队启用路径讲清楚，但不把它们包装成已交付能力。
+- `P3`：非主线 `Preview` 模块继续保持插件化 / 仓库外置化方向，不进入当前团队默认承诺。
+
 ## 推荐证据
 
 - 一封主线邮件
@@ -64,10 +71,17 @@
 - Pass 已进入默认导航，但仍保持 `Beta` 口径
 - 非主线 Preview 模块不应进入团队默认承诺
 
+## 浏览器入口
+
+- `frontend/public/self-hosted/adoption.html`：主线定义与采用顺序
+- `frontend/public/self-hosted/team.html`：团队 rollout quick page
+- `frontend/public/self-hosted/identity.html`：identity readiness 快速说明
+- `frontend/public/self-hosted/developer.html`：给实现方的浏览器入口，统一 adoption / team / identity / API 文档站
+- `frontend/public/self-hosted/api.html`：后端契约、Swagger UI 与 OpenAPI 入口
+
 ## 对外表述建议
 
 建议使用以下口径：
 
 > 我们当前先上线 MMMail 的主线协作闭环：Mail、Calendar、Drive、Pass。
 > 企业身份自动化和非主线预览能力仍在 readiness / planning 阶段，不在当前上线承诺内。
-

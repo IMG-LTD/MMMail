@@ -1,6 +1,7 @@
 import { mount } from '@vue/test-utils'
 import { describe, expect, it, vi } from 'vitest'
 import type { SuiteProductItem } from '~/types/api'
+import type { MainlineCollaborationEvent } from '~/utils/collaboration'
 
 vi.mock('~/composables/useI18n', () => ({
   useI18n: () => ({
@@ -14,6 +15,8 @@ describe('SuiteOverviewSection', () => {
     const panel = mount(SuiteOverviewSection, {
       props: {
         products: buildProducts(),
+        collaborationItems: buildCollaborationItems(),
+        collaborationLoading: false,
         sections: [
           {
             code: 'overview',
@@ -51,6 +54,9 @@ describe('SuiteOverviewSection', () => {
     expect(panel.get('[data-testid="suite-mainline-stage-pass"] a').attributes('href')).toBe('/pass')
     expect(panel.get('[data-testid="suite-mainline-journey-panel"]').text())
       .toContain('suite.sectionOverview.mainline.title')
+    expect(panel.get('[data-testid="suite-mainline-handoff-panel"]').attributes('data-status')).toBe('active')
+    expect(panel.get('[data-testid="suite-mainline-handoff-stage-drive"]').attributes('data-status')).toBe('active')
+    expect(panel.get('[data-testid="suite-mainline-handoff-stage-pass"]').attributes('data-status')).toBe('next')
     expect(panel.find('[data-testid="suite-core-workflow-wallet"]').exists()).toBe(false)
     expect(panel.get('[data-testid="suite-product-hub-stub"]').text()).toBe('MAIL,CALENDAR,DRIVE,PASS')
   })
@@ -76,4 +82,53 @@ function buildProduct(code: string, name: string): SuiteProductItem {
     description: name,
     highlights: [name]
   }
+}
+
+function buildCollaborationItems(): MainlineCollaborationEvent[] {
+  return [
+    {
+      eventId: 101,
+      productCode: 'MAIL',
+      eventType: 'MAIL_SENT',
+      title: 'Mail sent',
+      summary: 'Sent secure kickoff',
+      routePath: '/compose',
+      actorEmail: 'mail@mmmail.local',
+      sessionId: 'suite-1',
+      createdAt: '2026-04-09T10:00:00'
+    },
+    {
+      eventId: 102,
+      productCode: 'CALENDAR',
+      eventType: 'CAL_SHARE_CREATE',
+      title: 'Calendar shared',
+      summary: 'Shared review checkpoint',
+      routePath: '/calendar',
+      actorEmail: 'calendar@mmmail.local',
+      sessionId: 'suite-1',
+      createdAt: '2026-04-09T10:03:00'
+    },
+    {
+      eventId: 103,
+      productCode: 'DRIVE',
+      eventType: 'DRIVE_SHARE_CREATE',
+      title: 'Drive share created',
+      summary: 'Shared encrypted file',
+      routePath: '/drive',
+      actorEmail: 'drive@mmmail.local',
+      sessionId: 'suite-1',
+      createdAt: '2026-04-09T10:05:00'
+    },
+    {
+      eventId: 104,
+      productCode: 'PASS',
+      eventType: 'PASS_ITEM_CREATE',
+      title: 'Pass item created',
+      summary: 'Old credential handoff',
+      routePath: '/pass',
+      actorEmail: 'pass@mmmail.local',
+      sessionId: 'suite-0',
+      createdAt: '2026-04-09T09:55:00'
+    }
+  ]
 }

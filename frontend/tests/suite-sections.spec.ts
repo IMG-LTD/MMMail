@@ -40,6 +40,12 @@ const operationsWorkspace = {
   reloadAfterPlanChange: vi.fn(async () => undefined)
 }
 
+const overviewWorkspace = {
+  loading: ref(false),
+  collaborationItems: ref([]),
+  loadCollaborationCenter: vi.fn(async () => undefined)
+}
+
 vi.mock('~/composables/useI18n', () => ({
   useI18n: () => ({
     t: (key: string) => key
@@ -60,6 +66,10 @@ vi.mock('~/composables/useSuitePlansWorkspace', () => ({
 
 vi.mock('~/composables/useSuiteOperationsWorkspace', () => ({
   useSuiteOperationsWorkspace: () => operationsWorkspace
+}))
+
+vi.mock('~/composables/useSuiteOverviewWorkspace', () => ({
+  useSuiteOverviewWorkspace: () => overviewWorkspace
 }))
 
 vi.mock('~/components/suite/SuitePlansHero.vue', () => ({
