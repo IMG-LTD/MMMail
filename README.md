@@ -54,17 +54,14 @@
 ## 快速启动
 1. 准备运行时环境：
    - `cp .env.example .env`
-2. 选择启动模式并编辑 `.env`：
-   - 标准模式：保留 `MMMAIL_NACOS_ENABLED=true`，并替换所有 `replace-with-*` 占位值
-   - 最小模式：设置 `MMMAIL_NACOS_ENABLED=false`，至少替换 `MMMAIL_JWT_SECRET`、数据库和 Redis 密码；`NACOS_USERNAME` / `NACOS_PASSWORD` 可保留模板占位值
+2. 推荐首次采用最小模式：
+   - 确认 `MMMAIL_NACOS_ENABLED=false`
+   - 至少替换 `MMMAIL_JWT_SECRET`、数据库和 Redis 密码
 3. 运行环境校验：
    - `./scripts/validate-runtime-env.sh .env`
 4. 启动 Community Edition：
-   - 标准模式：`docker compose --env-file .env up -d --build`
-   - 最小模式：`docker compose --env-file .env -f docker-compose.minimal.yml up -d --build`
-5. 验证：
-   - Frontend：`http://127.0.0.1:3001`
-   - Backend：`http://127.0.0.1:8080/actuator/health`
+   - `docker compose --env-file .env -f docker-compose.minimal.yml up -d --build`
+5. 如需标准模式，再启用 `MMMAIL_NACOS_ENABLED=true` 并补全 Nacos 凭据。
 
 ## 本地与 CI 门禁
 - 默认本地门禁：`bash scripts/validate-local.sh`

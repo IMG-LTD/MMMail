@@ -1,8 +1,8 @@
 # Security Policy
 
 ## Scope
-- `Community Edition v1.0` is currently in pre-release hardening.
-- Security fixes that affect authentication, organization isolation, data access, storage, and deployment are treated as release blockers.
+- `Community Edition v1.6.1` is the current public baseline.
+- Security fixes that affect authentication, organization isolation, data access, storage, self-hosted deployment, and documented GA capabilities are treated as release blockers.
 
 ## Reporting a Vulnerability
 - Do **not** open a public GitHub issue for a live security vulnerability.
@@ -31,7 +31,7 @@
   - audit visibility where applicable
   - updated validation or regression coverage
 
-## Community Edition v1.0 Baseline
+## Community Edition v1.6.1 Baseline
 - `scripts/security-secret-scan.sh`：扫描工作树文件中的 secrets 回归
 - `scripts/validate-security.sh`：执行 secrets scan + 安全回归
 - `scripts/security-backend-dependency-scan.sh`：执行后端 OWASP Dependency-Check
@@ -43,12 +43,6 @@
   - 轮转 `.env` 中全部 secrets
   - 限制 `actuator` 与管理接口暴露范围
 
-## Current Community v1.0 Status
-- `Batch 0` removes exposed example credentials from tracked files.
-- `Release Closeout Batch` adds:
-  - 登录失败限流
-  - 客户端错误上报限流
-  - API 响应安全头
-  - secrets regression scan
-  - backend dependency scan gate
+## Current Community v1.6.1 Status
+- The repository baseline includes secret scanning, backend dependency scanning, login/client-error rate limiting, and documented deployment hardening.
 - Remaining release blockers are tracked in `docs/release/community-v1-gate.md`.
