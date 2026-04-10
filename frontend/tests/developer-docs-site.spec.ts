@@ -16,6 +16,7 @@ describe('self-hosted developer station', () => {
     expect(page).toContain('/self-hosted/adoption.html')
     expect(page).toContain('/self-hosted/team.html')
     expect(page).toContain('/self-hosted/identity.html')
+    expect(page).toContain('/self-hosted/architecture.html')
     expect(page).toContain('/self-hosted/api.html')
     expect(page).toContain('/swagger-ui.html')
     expect(page).toContain('/v3/api-docs')

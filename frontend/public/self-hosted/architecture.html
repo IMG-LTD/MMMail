@@ -1,0 +1,125 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>MMMail Community v1.6.1 Runtime Architecture</title>
+  <style>
+    :root { color-scheme: light; }
+    body { margin: 0; font-family: Inter, Arial, sans-serif; background: #f6f8fb; color: #102a43; }
+    main { max-width: 980px; margin: 0 auto; padding: 40px 20px 64px; }
+    section { background: #fff; border: 1px solid #d9e2ec; border-radius: 18px; padding: 20px; margin-top: 16px; }
+    h1, h2, h3 { margin: 0 0 12px; }
+    p, li { line-height: 1.7; }
+    ul { margin: 0; padding-left: 20px; }
+    code { font-family: "SFMono-Regular", Consolas, monospace; background: #f0f4f8; padding: 2px 6px; border-radius: 6px; }
+    table { width: 100%; border-collapse: collapse; margin-top: 12px; }
+    th, td { text-align: left; padding: 10px 12px; border-bottom: 1px solid #d9e2ec; vertical-align: top; }
+    .eyebrow { font-size: 12px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: #0c5a5a; }
+    .grid { display: grid; gap: 16px; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); }
+    .card { border: 1px solid #d9e2ec; border-radius: 16px; padding: 16px; background: #fcfdfd; }
+  </style>
+</head>
+<body>
+<main>
+  <p class="eyebrow">MMMail Community v1.6.1</p>
+  <h1>Runtime Architecture / 运行时架构</h1>
+  <p>
+    This page explains the runtime model that the current repository actually ships.
+    It exists so self-hosted adopters and contributors do not confuse standard-mode
+    dependencies with a delivered microservice platform.
+  </p>
+
+  <section>
+    <h2>Current runtime model / 当前运行模型</h2>
+    <div class="grid">
+      <article class="card">
+        <h3>Frontend</h3>
+        <p>One <code>Nuxt 3</code> web application provides the workspace shell and product surfaces.</p>
+      </article>
+      <article class="card">
+        <h3>Backend</h3>
+        <p>One <code>Spring Boot</code> backend process exposes the current Community API surface.</p>
+      </article>
+      <article class="card">
+        <h3>State</h3>
+        <p><code>MySQL</code> and <code>Redis</code> remain the default persistence and cache baseline.</p>
+      </article>
+      <article class="card">
+        <h3>Modes</h3>
+        <p>Standard mode can include <code>Nacos</code>; minimal mode can disable it with <code>MMMAIL_NACOS_ENABLED=false</code>.</p>
+      </article>
+    </div>
+  </section>
+
+  <section>
+    <h2>What standard mode means / 标准模式意味着什么</h2>
+    <p>
+      Standard mode currently adds a local <code>Nacos</code> dependency placeholder for configuration and
+      discovery alignment. It does <strong>not</strong> mean the repository already ships a true microservice mesh,
+      service gateway layer, or event-bus-driven runtime.
+    </p>
+    <table>
+      <thead>
+      <tr>
+        <th>Layer</th>
+        <th>Current status</th>
+        <th>What it is not</th>
+      </tr>
+      </thead>
+      <tbody>
+      <tr>
+        <td>Web shell</td>
+        <td>Single Nuxt deployment</td>
+        <td>Not multiple independently deployed frontend apps</td>
+      </tr>
+      <tr>
+        <td>Backend API</td>
+        <td>Single Spring Boot runtime</td>
+        <td>Not a split Spring Cloud service fleet</td>
+      </tr>
+      <tr>
+        <td>Nacos</td>
+        <td>Optional standard-mode dependency</td>
+        <td>Not proof of shipped service-discovery architecture</td>
+      </tr>
+      <tr>
+        <td>Kafka</td>
+        <td>Only a reserved config placeholder in current runtime files</td>
+        <td>Not an active, delivered message bus dependency in this repo</td>
+      </tr>
+      </tbody>
+    </table>
+  </section>
+
+  <section>
+    <h2>Minimal mode / 最小模式</h2>
+    <ul>
+      <li>Set <code>MMMAIL_NACOS_ENABLED=false</code> to remove Nacos from the local adoption path.</li>
+      <li>Use <code>docker-compose.minimal.yml</code> when the team wants the lightest self-hosted baseline for evaluation or local rollout.</li>
+      <li>Minimal mode lowers dependency weight; it does not claim a replacement config-center product or new distributed-runtime design.</li>
+    </ul>
+  </section>
+
+  <section>
+    <h2>Why this matters / 为什么要显式写清楚</h2>
+    <ul>
+      <li>Open-source adopters need to know whether they are evaluating a modular web suite or a distributed platform.</li>
+      <li>Contributors need a stable narrative before touching deployment docs, onboarding, or identity readiness work.</li>
+      <li>Enterprise evaluation should stay honest: current value is in the shipped mainline, not in implied infrastructure breadth.</li>
+    </ul>
+  </section>
+
+  <section>
+    <h2>Next reads / 继续阅读</h2>
+    <ul>
+      <li><a href="/self-hosted/developer.html" rel="noopener noreferrer" target="_blank"><code>/self-hosted/developer.html</code></a></li>
+      <li><a href="/self-hosted/install.html" rel="noopener noreferrer" target="_blank"><code>/self-hosted/install.html</code></a></li>
+      <li><a href="/self-hosted/runbook.html" rel="noopener noreferrer" target="_blank"><code>/self-hosted/runbook.html</code></a></li>
+      <li><code>docs/architecture/deployment-topology.md</code></li>
+      <li><code>docs/release/community-v1-support-boundaries.md</code></li>
+    </ul>
+  </section>
+</main>
+</body>
+</html>

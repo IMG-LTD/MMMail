@@ -98,6 +98,13 @@
         </div>
       </article>
       <article class="card">
+        <h3>Architecture model</h3>
+        <p>Confirm the current self-hosted runtime model before anyone assumes the repo already ships a microservice platform.</p>
+        <div class="actions">
+          <a class="button secondary" href="/self-hosted/architecture.html" target="_blank" rel="noopener noreferrer">Open architecture guide</a>
+        </div>
+      </article>
+      <article class="card">
         <h3>Operator references</h3>
         <p>Use install and runbook docs for deployment verification, recovery, and current support boundaries.</p>
         <div class="actions">
@@ -124,15 +131,17 @@
       <li>Open the adoption guide and confirm the current mainline and support boundary.</li>
       <li>Review team enablement so the first rollout task matches a real Mail → Calendar → Drive → Pass handoff.</li>
       <li>Review identity readiness before anyone implies enterprise sign-in or provisioning exists today.</li>
+      <li>Review the architecture guide so the deployment model stays anchored to the shipped single-backend runtime.</li>
       <li>Point this station at the real backend origin, then branch into Swagger UI, OpenAPI JSON, and the API guide.</li>
       <li>Keep unsupported areas explicit: no hosted portal promise, no SDK guarantee, no enterprise identity automation claim.</li>
     </ol>
   </section>
 
   <section>
-    <h2>Current boundary / 当前边界</h2>
+  <h2>Current boundary / 当前边界</h2>
     <ul>
       <li>Community v1.6.1 ships a browser developer station, not a public developer platform.</li>
+      <li>The current self-hosted runtime is a Nuxt web app plus one Spring Boot backend process, not a shipped microservice mesh.</li>
       <li>`SMTP inbound / IMAP / Bridge` and enterprise identity automation are still outside the shipped mainline.</li>
       <li>`Pass` is visible in default navigation, but remains `Beta` and should be described that way in developer-facing docs.</li>
     </ul>

@@ -6,6 +6,8 @@
 
 ## 当前边界
 - 当前版本是 `Community Edition v1.6` 主线延续批次，继续保留 `Mail / Calendar / Drive / Workspace Shell` 的既有交付能力，并进一步把主线协作链路、`Pass` 的可见 Beta 入口和采用说明收敛到更可信的产品面。
+- 当前自托管运行模型仍然是 `Nuxt Web + 单个 Spring Boot 后端进程 + MySQL / Redis`。
+- 标准模式可以包含 `Nacos`，但这不代表仓库已交付真正的 `Spring Cloud` 微服务网格；最小模式只是把本地依赖收敛到更轻量的采用路径。
 - 浏览器侧已经交付：
   - `/suite` 的 `Overview / Plans / Billing / Operations / Boundary` 分区视图
   - `/suite` 总览中的 `Mail → Calendar → Drive → Pass` 主线协作链路
@@ -84,6 +86,7 @@
 - Frontend bundled API quick page：
   - `http://127.0.0.1:3001/self-hosted/api.html`
   - `http://127.0.0.1:3001/self-hosted/adoption.html`
+  - `http://127.0.0.1:3001/self-hosted/architecture.html`
 - 数据迁移状态：
   - `./scripts/db-upgrade.sh .env info`
 
@@ -103,6 +106,7 @@
   - `Labs` 默认 catalog 只展示 `Authenticator / SimpleLogin / Standard Notes`
 - `Adoption readiness` 面板会直接暴露：
   - 浏览器内 `adoption guide`
+  - 浏览器内 `self-hosted architecture guide`
   - 内置 `API quick page`
   - 后端 `Swagger UI`
   - 后端 `OpenAPI JSON`
