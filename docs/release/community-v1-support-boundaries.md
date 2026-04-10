@@ -32,6 +32,7 @@
 ## Community 与 Hosted 边界
 ### Community
 - 自托管部署、升级、备份恢复
+- 当前自托管运行模型是 `Nuxt Web + 单个 Spring Boot 后端进程 + MySQL / Redis`；标准模式可带 `Nacos`，但不等于已交付微服务部署形态
 - `Mail / Calendar / Drive / Admin / Workspace Shell / Settings`
 - `Mail E2EE` 当前为 `GA` 邮件主路径上的受限增强：覆盖 key profile、recipient readiness、`READY` 内部路由正文加密、草稿加密、附件加密、恢复包、详情本地解密，以及外部密码保护安全投递的草稿恢复与附件闭环
 - 外部密码保护加密投递当前语义：
@@ -86,7 +87,7 @@
 ### 部署者负责
 - 真实 secrets 管理
 - TLS / 反向代理
-- 数据库 / Redis / Nacos / Docker 运行环境
+- 数据库 / Redis / Docker 运行环境，以及标准模式下可选的 `Nacos`
 - 备份保留策略
 - 远端 CI secrets 与 Docker-capable runner 能力
 

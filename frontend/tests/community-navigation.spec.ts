@@ -4,6 +4,7 @@ import {
   COMMUNITY_V1_LABS_MODULES,
   COMMUNITY_V1_MODULES
 } from '../constants/module-maturity'
+import { resolveDefaultNavMaturityBadge } from '../utils/default-nav-maturity'
 import { DEFAULT_NAV_ITEMS } from '../utils/default-nav'
 import { resolveHomeRoute } from '../utils/org-product-access'
 
@@ -36,6 +37,14 @@ describe('community v1 navigation', () => {
     expect(navRoutes.has('/pass')).toBe(true)
     expect(COMMUNITY_V1_LABS_MODULES.some(item => item.code === 'PASS')).toBe(false)
     expect(COMMUNITY_V1_HOME_ROUTE_CANDIDATES.some(item => item.to === '/pass')).toBe(false)
+  })
+
+  it('maps beta pills only onto beta routes in the default navigation', () => {
+    expect(resolveDefaultNavMaturityBadge('/pass')?.labelKey).toBe('shell.nav.maturity.beta')
+    expect(resolveDefaultNavMaturityBadge('/docs')?.labelKey).toBe('shell.nav.maturity.beta')
+    expect(resolveDefaultNavMaturityBadge('/sheets')?.labelKey).toBe('shell.nav.maturity.beta')
+    expect(resolveDefaultNavMaturityBadge('/suite')).toBeNull()
+    expect(resolveDefaultNavMaturityBadge('/labs')).toBeNull()
   })
 
   it('keeps suite-only beta entries out of default nav', () => {

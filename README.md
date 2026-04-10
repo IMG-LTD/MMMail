@@ -42,6 +42,7 @@
   - `SMTP outbound adapter`、`Calendar internal invitation orchestration`、`Pass Beta readiness`
 - 受限交付：
   - 当前公开发布主线已切到 `v1.6.1`；后续只接收 `v1.6.x` 级别的 `release-blocking / security / metadata / adoption friction` 修复
+  - 当前自托管运行模型仍是 `Nuxt Web + 单个 Spring Boot 后端进程 + MySQL / Redis`；标准模式中的 `Nacos` 只是可选依赖占位，不等于仓库已交付真实微服务网格
   - 外部密码保护加密投递当前仍是 `public secure link` 模式，不是完整 MIME 级外部邮箱互通
   - `/labs` 的收敛只影响默认 curated catalog，不改动底层 raw registry / source-of-truth
   - `Pass` 虽已进入默认导航，但仍保持 `Beta` 口径，不作为正式发布阻塞，也不进入 home fallback
@@ -84,6 +85,7 @@
 - 备份恢复：`docs/ops/backup-restore.md`
 - 运维 Runbook：`docs/ops/runbook.md`
 - 浏览器内 adoption guide：`/self-hosted/adoption.html`
+- 浏览器内 runtime architecture guide：`/self-hosted/architecture.html`
 - 部署拓扑：`docs/architecture/deployment-topology.md`
 - 迁移策略：`docs/architecture/database-migration-strategy.md`
 - Mail E2EE foundation：`docs/architecture/mail-e2ee-foundation.md`
@@ -94,6 +96,7 @@
 - `v1.6` 规划基线：`docs/release/community-v1-v1.6-plan.md`
 - `v1.6` 主线路线：`docs/release/community-v1-v1.6-mainline-roadmap.md`
 - `v1.6.1` 收口计划：`docs/release/community-v1-v1.6.1-closure-plan.md`
+- `v1.6.1` OSS 执行批次：`docs/release/community-v1-v1.6.1-oss-execution.md`
 - `v1.6` release checklist：`docs/release/community-v1-v1.6-release-checklist.md`
 - `v1.6` release manager brief：`docs/release/community-v1-v1.6-release-manager-brief.md`
 - `v1.6` final signoff：`docs/release/community-v1-v1.6-final-signoff.md`

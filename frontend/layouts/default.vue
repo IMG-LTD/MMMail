@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { computed, onMounted, ref } from 'vue'
+import ShellNavLink from '~/components/shell/ShellNavLink.vue'
 import type { SystemMailFolder } from '~/types/api'
 import { useAuthStore } from '~/stores/auth'
 import { useMailStore } from '~/stores/mail'
@@ -8,6 +9,7 @@ import { useMailApi } from '~/composables/useMailApi'
 import { useMailFolderApi } from '~/composables/useMailFolderApi'
 import { useKeyboardShortcuts } from '~/composables/useKeyboardShortcuts'
 import { useI18n } from '~/composables/useI18n'
+import { resolveDefaultNavMaturityBadge } from '~/utils/default-nav-maturity'
 import { DEFAULT_NAV_ITEMS } from '~/utils/default-nav'
 import { flattenMailFolderTree } from '~/utils/mail-folders'
 import { buildMailAddressBlockedQuery } from '~/utils/org-access-recovery'
@@ -40,7 +42,15 @@ const localizedAccessibleNavItems = computed(() => filterNavItemsByAccess(
   authStore.user?.mailAddressMode
 ).map(item => ({
   ...item,
-  label: t(item.labelKey)
+  label: t(item.labelKey),
+  badgeValue: item.folder
+    ? folderCount(item.folder)
+    : item.unread
+      ? unreadBadgeCount()
+      : item.starred
+        ? starredCount()
+        : undefined,
+  maturityBadge: resolveDefaultNavMaturityBadge(item.to)
 })))
 const customFolderItems = computed(() => flattenMailFolderTree(mailStore.customFolders))
 
@@ -57,6 +67,11 @@ function starredCount(): number {
 
 function unreadBadgeCount(): number {
   return mailStore.unreadCount || 0
+}
+
+function buildNavItemTestId(routePath: string): string {
+  const token = routePath.replace(/[^a-z0-9]+/gi, '-').replace(/^-+|-+$/g, '').toLowerCase()
+  return `default-nav-${token || 'root'}`
 }
 
 async function loadStats(): Promise<void> {
@@ -147,18 +162,16 @@ onMounted(async () => {
     <div class="shell">
       <aside class="sidebar mm-card">
         <nav class="sidebar-nav" :aria-label="t('shell.a11y.mainNavigation')">
-          <NuxtLink
+          <ShellNavLink
             v-for="item in localizedAccessibleNavItems"
             :key="item.to"
             :to="item.to"
-            class="nav-item"
-            active-class="active"
-          >
-            <span>{{ item.label }}</span>
-            <el-badge v-if="item.folder" :value="folderCount(item.folder)" :max="9999" class="badge" />
-            <el-badge v-else-if="item.unread" :value="unreadBadgeCount()" :max="9999" class="badge" />
-            <el-badge v-else-if="item.starred" :value="starredCount()" :max="9999" class="badge" />
-          </NuxtLink>
+            :label="item.label"
+            :badge-value="item.badgeValue"
+            :maturity-label="item.maturityBadge ? t(item.maturityBadge.labelKey) : null"
+            :maturity-tone="item.maturityBadge?.tone || null"
+            :data-testid="buildNavItemTestId(item.to)"
+          />
           <div class="custom-folder-rail" v-if="mailEnabled && customFolderItems.length">
             <div class="custom-folder-head">{{ t('mailFolders.sidebar.title') }}</div>
             <NuxtLink

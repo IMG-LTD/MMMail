@@ -14,6 +14,7 @@ describe('self-hosted api docs site', () => {
     expect(page).toContain('id="api-base-input"')
     expect(page).toContain('No backend API base provided')
     expect(page).toContain('/self-hosted/developer.html')
+    expect(page).toContain('/self-hosted/architecture.html')
     expect(page).toContain('/swagger-ui.html')
     expect(page).toContain('/v3/api-docs')
     expect(page).toContain('/self-hosted/install.html')
