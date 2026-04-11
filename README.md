@@ -111,6 +111,10 @@
 - 外部执行清单：`docs/release/external-execution-checklist.md`
 - 外部失败分诊：`docs/release/external-failure-triage.md`
 
+## English entry points
+- Overview: `docs/open-source/README.en.md`
+- Install quickstart: `docs/ops/install.en.md`
+
 ## 可观测性入口
 - 健康检查：`http://127.0.0.1:8080/actuator/health`
 - Prometheus 导出：`http://127.0.0.1:8080/actuator/prometheus`
