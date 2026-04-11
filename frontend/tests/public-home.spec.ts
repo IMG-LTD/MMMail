@@ -165,4 +165,3 @@ describe('public home page', () => {
     expect(wrapper.text()).not.toContain(__marketingMessages.en['marketing.shots.mail.title'])
   })
 })
-
