@@ -16,8 +16,8 @@ describe('community v1 navigation', () => {
       expect(navRoutes.has(module.route)).toBe(false)
     }
 
-    expect(navRoutes.has('/docs')).toBe(true)
-    expect(navRoutes.has('/sheets')).toBe(true)
+    expect(navRoutes.has('/docs')).toBe(false)
+    expect(navRoutes.has('/sheets')).toBe(false)
     expect(navRoutes.has('/labs')).toBe(true)
   })
 
