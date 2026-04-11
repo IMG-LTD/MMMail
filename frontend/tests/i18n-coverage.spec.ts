@@ -45,7 +45,7 @@ describe('i18n page coverage', () => {
     expect(report.pageReports.find((item) => item.route === '/calendar')?.keyPrefixes).toContain('calendar')
     expect(report.pageReports.find((item) => item.route === '/inbox')?.hasTranslationBinding).toBe(true)
     expect(report.pageReports.find((item) => item.route === '/archive')?.keyPrefixes).toContain('nav')
-    expect(report.pageReports.find((item) => item.route === '/')?.keyPrefixes).toContain('page')
+    expect(report.pageReports.find((item) => item.route === '/')?.keyPrefixes).toContain('marketing')
     expect(report.pageReports.find((item) => item.route === '/conversations')?.keyPrefixes).toContain('mailWorkspace')
     expect(report.pageReports.find((item) => item.route === '/contacts')?.keyPrefixes).toContain('contacts')
     expect(report.pageReports.find((item) => item.route === '/mail/[id]')?.hasTranslationBinding).toBe(true)

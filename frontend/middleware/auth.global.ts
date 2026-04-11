@@ -1,7 +1,7 @@
 import { useAuthStore } from '~/stores/auth'
 import { useAuthApi } from '~/composables/useAuthApi'
 
-const publicRoutes = new Set<string>(['/login', '/register'])
+const publicRoutes = new Set<string>(['/', '/login', '/register'])
 
 export default defineNuxtRouteMiddleware(async (to) => {
   const authStore = useAuthStore()
