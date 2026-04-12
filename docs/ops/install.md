@@ -1,6 +1,6 @@
 # Community Edition v1.6.1 安装说明
 
-**版本**: `v1.6.1-mainline`
+**版本**: `v1.6.1`
 **日期**: `2026-04-09`
 **作者**: `Codex`
 
@@ -145,7 +145,7 @@
 - Frontend 页面打开但 API `403 / 500`：
   - 先看 `docker compose logs backend`，再检查 `MMMAIL_JWT_SECRET` 与数据库初始化日志。
 - `Release boundary map` 与 `/labs` 页面不符合预期：
-  - 先确认构建产物来自 `v1.6` 分支代码
+  - 先确认构建产物来自当前 `v1.6.1` 发布代码
   - 再确认前端静态资源没有被旧 CDN / 反向代理缓存污染
 - 外部密码保护加密邮件无法打开：
   - 先确认 SMTP 通知邮件中的 secure link 使用了正确 `public base URL`
