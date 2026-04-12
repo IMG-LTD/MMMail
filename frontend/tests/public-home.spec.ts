@@ -1,8 +1,9 @@
 import { flushPromises, mount } from '@vue/test-utils'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { defineComponent, h, nextTick, Suspense } from 'vue'
+import type { MailAddressMode } from '~/types/api'
 
-const authState = { isAuthenticated: false, user: null }
+const authState: { isAuthenticated: boolean; user: { mailAddressMode: MailAddressMode } | null } = { isAuthenticated: false, user: null }
 const ensureLoadedMock = vi.fn()
 const navigateToMock = vi.fn(async () => undefined)
 
@@ -137,6 +138,17 @@ describe('public home page', () => {
     expect(loginLink.text()).toContain(__marketingMessages.en['marketing.hero.primary'])
     expect(boundaryLink.text()).toContain(__marketingMessages.en['marketing.hero.secondary'])
     expect(wrapper.get('[data-testid="marketing-mainline-flow"] h2').text()).toBe(__marketingMessages.en['marketing.mainline.title'])
+  })
+
+  it('redirects authenticated users to their resolved home route', async () => {
+    authState.isAuthenticated = true
+    authState.user = { mailAddressMode: 'PROTON_ADDRESS' }
+
+    await mountPublicHome()
+    await flushPromises()
+
+    expect(ensureLoadedMock).toHaveBeenCalledTimes(1)
+    expect(navigateToMock).toHaveBeenCalledWith('/inbox')
   })
 
   it('updates translated marketing sections when locale changes after mount', async () => {
