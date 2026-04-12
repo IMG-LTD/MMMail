@@ -120,6 +120,19 @@ function parseLocaleBlocks(source: string, fileName: string): LocaleBlock[] {
       continue
     }
 
+    const coreLocaleConstMatch = line.match(/^const \w+ = \{$/)
+    if (coreLocaleConstMatch) {
+      const localeName = basename(fileName, '.ts')
+      if (isDefaultExportLocaleName(localeName)) {
+        activeBlock = {
+          moduleId: 'core',
+          locale: DEFAULT_EXPORT_LOCALE_MAP[localeName],
+          entries: []
+        }
+        continue
+      }
+    }
+
     const defaultExportMatch = line.match(/^export default \{$/)
     if (defaultExportMatch) {
       const localeName = basename(fileName, '.ts')

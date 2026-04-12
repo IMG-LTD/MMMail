@@ -71,6 +71,10 @@ export const adoptionEn = {
   'settings.adoption.cards.selfHosted.primary': 'Open install guide',
   'settings.adoption.cards.selfHosted.secondary': 'Open runbook',
   'settings.adoption.cards.selfHosted.meta': 'Authoritative repo docs: `docs/ops/install.md` · `docs/ops/runbook.md`',
+  'settings.adoption.cards.boundary.title': 'Release boundary map',
+  'settings.adoption.cards.boundary.description': 'Use the same GA/Beta/Preview contract in the product and the repository before onboarding a team.',
+  'settings.adoption.cards.boundary.meta': 'Recommended before broader rollout',
+  'settings.adoption.cards.boundary.primary': 'Open boundary map',
   'settings.adoption.boundaryTitle': 'Current v1.6.1 boundary',
   'settings.adoption.boundaryDescription': 'This batch focuses on mainline definition, core collaboration depth, and self-hosted adoption. Enterprise identity automation, public developer platform promises, hosted automation, and non-mainline preview engines remain outside Community.'
 }
@@ -148,6 +152,10 @@ export const adoptionZhCN = {
   'settings.adoption.cards.selfHosted.primary': '打开安装说明',
   'settings.adoption.cards.selfHosted.secondary': '打开运维 Runbook',
   'settings.adoption.cards.selfHosted.meta': '权威仓库文档：`docs/ops/install.md` · `docs/ops/runbook.md`',
+  'settings.adoption.cards.boundary.title': '发布边界地图',
+  'settings.adoption.cards.boundary.description': '在团队采用前，先对齐产品内与仓库中的 GA/Beta/Preview 契约。',
+  'settings.adoption.cards.boundary.meta': '建议在更广泛推广前完成',
+  'settings.adoption.cards.boundary.primary': '打开边界地图',
   'settings.adoption.boundaryTitle': '当前 v1.6.1 边界',
   'settings.adoption.boundaryDescription': '这一批只深化主线定义、核心协作深度与自托管采用体验，不等于已交付企业身份自动化、公共开发者平台、Hosted 自动化或非主线 Preview 引擎。'
 }
@@ -225,6 +233,10 @@ export const adoptionZhTW = {
   'settings.adoption.cards.selfHosted.primary': '開啟安裝說明',
   'settings.adoption.cards.selfHosted.secondary': '開啟運維 Runbook',
   'settings.adoption.cards.selfHosted.meta': '權威倉庫文件：`docs/ops/install.md` · `docs/ops/runbook.md`',
+  'settings.adoption.cards.boundary.title': '發布邊界地圖',
+  'settings.adoption.cards.boundary.description': '在團隊採用前，先對齊產品內與倉庫中的 GA/Beta/Preview 契約。',
+  'settings.adoption.cards.boundary.meta': '建議在更廣泛推廣前完成',
+  'settings.adoption.cards.boundary.primary': '開啟邊界地圖',
   'settings.adoption.boundaryTitle': '目前 v1.6.1 邊界',
   'settings.adoption.boundaryDescription': '這一批只深化主線定義、核心協作深度與自託管採用體驗，不等於已交付企業身分自動化、公共開發者平台、Hosted 自動化或非主線 Preview 引擎。'
 }

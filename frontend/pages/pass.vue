@@ -1164,6 +1164,14 @@ onMounted(async () => {
       @refresh="refreshWorkspace(true)"
     />
 
+    <el-alert
+      :closable="false"
+      type="warning"
+      data-testid="pass-beta-boundary"
+      :title="t('pass.workspace.betaBoundaryTitle')"
+      :description="t('pass.workspace.betaBoundaryDescription')"
+    />
+
     <section class="mm-card pass-command-bar">
       <el-input v-model="keyword" placeholder="Search items or vaults" @keyup.enter="refreshWorkspace(false)" />
       <el-select v-model="itemTypeFilter" class="filter-select">

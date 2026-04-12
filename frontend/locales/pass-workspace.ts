@@ -117,6 +117,8 @@ const passWorkspaceEn = {
   'pass.hero.status.passkeysBlocked': 'Passkeys blocked',
   'pass.hero.status.aliasesEnabled': 'Aliases enabled',
   'pass.hero.status.aliasesBlocked': 'Aliases blocked',
+  'pass.workspace.betaBoundaryTitle': 'Pass remains a visible Beta surface',
+  'pass.workspace.betaBoundaryDescription': 'Use Pass for the validated mailbox, alias, secure-link, and monitor paths while keeping browser extension, autofill, and passkey ceremony outside the current release promise.',
   'pass.hero.actions.refresh': 'Refresh workspace',
   'pass.hero.orgPlaceholder': 'Select organization'
 }
@@ -240,6 +242,8 @@ const passWorkspaceZhCN = {
   'pass.hero.status.passkeysBlocked': 'Passkeys 已禁用',
   'pass.hero.status.aliasesEnabled': '已启用别名',
   'pass.hero.status.aliasesBlocked': '别名已禁用',
+  'pass.workspace.betaBoundaryTitle': 'Pass 仍是可见 Beta 面',
+  'pass.workspace.betaBoundaryDescription': '当前重点覆盖 mailbox、alias、secure link 与 monitor 主路径；浏览器扩展、自动填充与 passkey ceremony 仍不在当前发布承诺内。',
   'pass.hero.actions.refresh': '刷新工作台',
   'pass.hero.orgPlaceholder': '选择组织'
 }
@@ -363,6 +367,8 @@ const passWorkspaceZhTW = {
   'pass.hero.status.passkeysBlocked': 'Passkeys 已停用',
   'pass.hero.status.aliasesEnabled': '已啟用別名',
   'pass.hero.status.aliasesBlocked': '別名已停用',
+  'pass.workspace.betaBoundaryTitle': 'Pass 仍是可見 Beta 面',
+  'pass.workspace.betaBoundaryDescription': '目前重點覆蓋 mailbox、alias、secure link 與 monitor 主路徑；瀏覽器擴充、自動填充與 passkey ceremony 仍不在目前發布承諾內。',
   'pass.hero.actions.refresh': '重新整理工作台',
   'pass.hero.orgPlaceholder': '選擇組織'
 }

@@ -39,9 +39,9 @@ function onSelect(section: SuiteSectionCode): void {
 <template>
   <section class="suite-overview" data-testid="suite-section-overview">
     <article class="mm-card suite-overview__intro">
-      <p class="eyebrow">{{ t('suite.sectionOverview.badge') }}</p>
+      <p class="eyebrow">{{ t('suite.sectionOverview.mainlineBadge') }}</p>
       <h2 class="mm-section-title">{{ t('suite.sectionOverview.title') }}</h2>
-      <p class="mm-muted">{{ t('suite.sectionOverview.description') }}</p>
+      <p class="mm-muted">{{ t('suite.sectionOverview.mainlineDescription') }}</p>
     </article>
 
     <div class="suite-overview__grid">

@@ -104,6 +104,15 @@ const launchTracks = computed<readonly AdoptionTrack[]>(() => [
 
 const resourceCards = computed<readonly AdoptionCard[]>(() => [
   {
+    code: 'release-boundary',
+    titleKey: 'settings.adoption.cards.boundary.title',
+    descriptionKey: 'settings.adoption.cards.boundary.description',
+    metaKey: 'settings.adoption.cards.boundary.meta',
+    actions: [
+      { key: 'settings-adoption-boundary-link', href: '/suite?section=boundary', external: false, actionKey: 'settings.adoption.cards.boundary.primary', primary: true }
+    ]
+  },
+  {
     code: 'guide',
     titleKey: 'settings.adoption.cards.adoption.title',
     descriptionKey: 'settings.adoption.cards.adoption.description',

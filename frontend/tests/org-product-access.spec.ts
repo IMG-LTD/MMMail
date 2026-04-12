@@ -48,7 +48,7 @@ describe('org product access', () => {
     const filtered = filterNavItemsByAccess(DEFAULT_NAV_ITEMS, (productKey) => productKey !== 'DOCS')
     expect(filtered.some(item => item.to === '/docs')).toBe(false)
     expect(filtered.some(item => item.to === '/calendar')).toBe(true)
-    expect(filtered.some(item => item.to === '/organizations')).toBe(true)
+    expect(filtered.some(item => item.to === '/organizations')).toBe(false)
   })
 
   it('loads scopes, auto-selects a single org, and persists personal fallback', async () => {

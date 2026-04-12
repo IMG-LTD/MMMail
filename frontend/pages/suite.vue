@@ -47,7 +47,7 @@ useHead(() => ({
   meta: [
     {
       name: 'description',
-      content: t('suite.hero.subtitle')
+      content: t('suite.meta.description')
     }
   ]
 }))

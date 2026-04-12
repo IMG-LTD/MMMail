@@ -172,6 +172,12 @@ onMounted(async () => {
             :maturity-tone="item.maturityBadge?.tone || null"
             :data-testid="buildNavItemTestId(item.to)"
           />
+          <div class="sidebar-secondary">
+            <NuxtLink to="/business" class="nav-item nav-item--secondary">{{ t('nav.business') }}</NuxtLink>
+            <NuxtLink to="/organizations" class="nav-item nav-item--secondary">{{ t('nav.organizations') }}</NuxtLink>
+            <NuxtLink to="/docs" class="nav-item nav-item--secondary">{{ t('nav.docs') }}</NuxtLink>
+            <NuxtLink to="/sheets" class="nav-item nav-item--secondary">{{ t('nav.sheets') }}</NuxtLink>
+          </div>
           <div class="custom-folder-rail" v-if="mailEnabled && customFolderItems.length">
             <div class="custom-folder-head">{{ t('mailFolders.sidebar.title') }}</div>
             <NuxtLink
@@ -318,6 +324,19 @@ onMounted(async () => {
 
 .badge {
   margin-left: 8px;
+}
+
+.sidebar-secondary {
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top: 1px solid rgba(18, 54, 58, 0.08);
+  display: grid;
+  gap: 8px;
+}
+
+.nav-item--secondary {
+  opacity: 0.8;
+  font-size: 13px;
 }
 
 .custom-folder-rail {
