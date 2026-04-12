@@ -7,7 +7,7 @@
 
 ## Before You Open a PR
 1. 阅读 `README.md`、`SECURITY.md`、`docs/release/community-v1-gate.md`。
-2. 使用 `.env.example` 或 `config/backend.env.example` 创建本地环境，并执行 `./scripts/validate-runtime-env.sh .env`。
+2. 使用 `.env.example`（最小模式）或 `config/backend.env.example`（标准模式）创建本地 `.env`，并执行 `./scripts/validate-runtime-env.sh .env`。
 3. 运行默认门禁：
    - `bash scripts/validate-local.sh`
 4. 如修改数据库、备份或迁移逻辑，补充：

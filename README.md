@@ -56,7 +56,8 @@
    - `cp .env.example .env`
 2. 推荐首次采用最小模式：
    - 确认 `MMMAIL_NACOS_ENABLED=false`
-   - 至少替换 `MMMAIL_JWT_SECRET`、数据库和 Redis 密码
+   - 至少替换 `MMMAIL_JWT_SECRET`、`SPRING_DATASOURCE_PASSWORD`、`SPRING_REDIS_PASSWORD`、`MYSQL_ROOT_PASSWORD`
+   - 最小模式首次启动不要求填写 `NACOS_USERNAME` / `NACOS_PASSWORD`
 3. 运行环境校验：
    - `./scripts/validate-runtime-env.sh .env`
 4. 启动 Community Edition：

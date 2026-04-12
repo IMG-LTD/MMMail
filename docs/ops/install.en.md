@@ -13,6 +13,11 @@
 5. Start the stack:
    - `docker compose --env-file .env -f docker-compose.minimal.yml up -d --build`
 
+## Need standard mode later?
+- Set `MMMAIL_NACOS_ENABLED=true`
+- Replace `NACOS_USERNAME` and `NACOS_PASSWORD`
+- Start with `docker compose --env-file .env up -d --build`
+
 ## Validate
 - Frontend: `http://127.0.0.1:3001`
 - Backend: `http://127.0.0.1:8080/actuator/health`
