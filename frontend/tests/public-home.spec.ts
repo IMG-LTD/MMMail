@@ -1,5 +1,7 @@
+import { readFileSync } from 'node:fs'
+import { resolve } from 'node:path'
 import { flushPromises, mount } from '@vue/test-utils'
-import { beforeEach, describe, expect, it, vi } from 'vitest'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { defineComponent, h, nextTick, Suspense } from 'vue'
 import type { MailAddressMode } from '~/types/api'
 
@@ -89,9 +91,6 @@ vi.mock('~/utils/org-product-access', () => ({
   resolveHomeRoute: () => '/inbox',
 }))
 
-vi.stubGlobal('navigateTo', navigateToMock)
-vi.stubGlobal('useHead', vi.fn())
-
 async function getMockI18nModule(): Promise<MockI18nModule> {
   return await import('~/composables/useI18n') as unknown as MockI18nModule
 }
@@ -114,14 +113,25 @@ async function mountPublicHome() {
   })
 }
 
+function readSource(path: string) {
+  return readFileSync(resolve(process.cwd(), path), 'utf8')
+}
+
 describe('public home page', () => {
   beforeEach(async () => {
+    vi.stubGlobal('definePageMeta', vi.fn())
+    vi.stubGlobal('navigateTo', navigateToMock)
+    vi.stubGlobal('useHead', vi.fn())
     authState.isAuthenticated = false
     authState.user = null
     ensureLoadedMock.mockReset()
     navigateToMock.mockReset().mockImplementation(async () => undefined)
     const { __setMockLocale } = await getMockI18nModule()
     __setMockLocale('en')
+  })
+
+  afterEach(() => {
+    vi.unstubAllGlobals()
   })
 
   it('renders the signed-out landing page CTAs and translated mainline heading', async () => {
@@ -138,6 +148,12 @@ describe('public home page', () => {
     expect(loginLink.text()).toContain(__marketingMessages.en['marketing.hero.primary'])
     expect(boundaryLink.text()).toContain(__marketingMessages.en['marketing.hero.secondary'])
     expect(wrapper.get('[data-testid="marketing-mainline-flow"] h2').text()).toBe(__marketingMessages.en['marketing.mainline.title'])
+  })
+
+  it('uses a non-default layout so signed-out visitors do not mount the authenticated shell', () => {
+    const source = readSource('pages/index.vue')
+
+    expect(source).toContain("definePageMeta({ layout: 'blank' })")
   })
 
   it('redirects authenticated users to their resolved home route', async () => {

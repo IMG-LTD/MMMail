@@ -13,6 +13,8 @@ const authStore = useAuthStore()
 const orgAccessStore = useOrgAccessStore()
 const { t } = useI18n()
 
+definePageMeta({ layout: 'blank' })
+
 useHead(() => ({ title: t('marketing.hero.title') }))
 
 if (authStore.isAuthenticated) {
