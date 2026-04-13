@@ -1,17 +1,11 @@
 import { useAuthStore } from '~/stores/auth'
 import { useAuthApi } from '~/composables/useAuthApi'
-
-const publicRoutes = new Set<string>(['/', '/login', '/register'])
+import { isPublicEntryRoute, isSharedPublicRoute } from '~/utils/org-product-access'
 
 export default defineNuxtRouteMiddleware(async (to) => {
   const authStore = useAuthStore()
 
-  if (
-    publicRoutes.has(to.path)
-    || to.path.startsWith('/public/drive/shares/')
-    || to.path.startsWith('/share/mail/')
-    || to.path.startsWith('/meet/join/')
-  ) {
+  if (isPublicEntryRoute(to.path) || isSharedPublicRoute(to.path)) {
     return
   }
 

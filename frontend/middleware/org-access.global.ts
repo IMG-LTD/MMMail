@@ -1,25 +1,23 @@
 import { useAuthStore } from '~/stores/auth'
 import { useOrgAccessStore } from '~/stores/org-access'
 import { buildMailAddressBlockedQuery } from '~/utils/org-access-recovery'
-import { isProductEnabledForMailAddressMode, resolveProductKeyFromPath } from '~/utils/org-product-access'
-
-const PUBLIC_ROUTES = new Set(['/login', '/register', '/product-access-blocked'])
+import {
+  isProductEnabledForMailAddressMode,
+  isPublicEntryRoute,
+  isSharedPublicRoute,
+  resolveProductKeyFromPath
+} from '~/utils/org-product-access'
 
 export default defineNuxtRouteMiddleware(async (to) => {
-  if (
-    PUBLIC_ROUTES.has(to.path)
-    || to.path.startsWith('/public/drive/shares/')
-    || to.path.startsWith('/share/mail/')
-    || to.path.startsWith('/meet/join/')
-  ) {
-    return
-  }
-
   const authStore = useAuthStore()
   const orgAccessStore = useOrgAccessStore()
 
   if (!authStore.isAuthenticated) {
     orgAccessStore.clear()
+    return
+  }
+
+  if (to.path === '/product-access-blocked' || isPublicEntryRoute(to.path) || isSharedPublicRoute(to.path)) {
     return
   }
 

@@ -10,7 +10,7 @@ import { useMailFolderApi } from '~/composables/useMailFolderApi'
 import { useKeyboardShortcuts } from '~/composables/useKeyboardShortcuts'
 import { useI18n } from '~/composables/useI18n'
 import { resolveDefaultNavMaturityBadge } from '~/utils/default-nav-maturity'
-import { DEFAULT_NAV_ITEMS } from '~/utils/default-nav'
+import { DEFAULT_NAV_ITEMS, SECONDARY_NAV_ITEMS } from '~/utils/default-nav'
 import { flattenMailFolderTree } from '~/utils/mail-folders'
 import { buildMailAddressBlockedQuery } from '~/utils/org-access-recovery'
 import {
@@ -47,10 +47,16 @@ const localizedAccessibleNavItems = computed(() => filterNavItemsByAccess(
     ? folderCount(item.folder)
     : item.unread
       ? unreadBadgeCount()
-      : item.starred
-        ? starredCount()
-        : undefined,
+      : undefined,
   maturityBadge: resolveDefaultNavMaturityBadge(item.to)
+})))
+const localizedSecondaryNavItems = computed(() => filterNavItemsByAccess(
+  SECONDARY_NAV_ITEMS,
+  orgAccessStore.isProductEnabled,
+  authStore.user?.mailAddressMode
+).map(item => ({
+  ...item,
+  label: t(item.labelKey)
 })))
 const customFolderItems = computed(() => flattenMailFolderTree(mailStore.customFolders))
 
@@ -59,10 +65,6 @@ function folderCount(folder?: SystemMailFolder): number {
     return 0
   }
   return mailStore.counts[folder] || 0
-}
-
-function starredCount(): number {
-  return mailStore.starredCount || 0
 }
 
 function unreadBadgeCount(): number {
@@ -173,10 +175,14 @@ onMounted(async () => {
             :data-testid="buildNavItemTestId(item.to)"
           />
           <div class="sidebar-secondary">
-            <NuxtLink to="/business" class="nav-item nav-item--secondary">{{ t('nav.business') }}</NuxtLink>
-            <NuxtLink to="/organizations" class="nav-item nav-item--secondary">{{ t('nav.organizations') }}</NuxtLink>
-            <NuxtLink to="/docs" class="nav-item nav-item--secondary">{{ t('nav.docs') }}</NuxtLink>
-            <NuxtLink to="/sheets" class="nav-item nav-item--secondary">{{ t('nav.sheets') }}</NuxtLink>
+            <ShellNavLink
+              v-for="item in localizedSecondaryNavItems"
+              :key="item.to"
+              :to="item.to"
+              :label="item.label"
+              class="nav-item--secondary"
+              :data-testid="buildNavItemTestId(item.to)"
+            />
           </div>
           <div class="custom-folder-rail" v-if="mailEnabled && customFolderItems.length">
             <div class="custom-folder-head">{{ t('mailFolders.sidebar.title') }}</div>

@@ -47,6 +47,62 @@ describe('auth global middleware', () => {
     expect(navigateToMock).not.toHaveBeenCalled()
   })
 
+  it('allows signed-out visitors to access /register without refreshing the session', async () => {
+    const middleware = await loadMiddleware()
+
+    await middleware({ path: '/register' })
+
+    expect(refreshSessionMock).not.toHaveBeenCalled()
+    expect(navigateToMock).not.toHaveBeenCalled()
+  })
+
+  it('allows signed-out visitors to access /login without refreshing the session', async () => {
+    const middleware = await loadMiddleware()
+
+    await middleware({ path: '/login' })
+
+    expect(refreshSessionMock).not.toHaveBeenCalled()
+    expect(navigateToMock).not.toHaveBeenCalled()
+  })
+
+  it('allows signed-out visitors to access /boundary without refreshing the session', async () => {
+    const middleware = await loadMiddleware()
+
+    await middleware({ path: '/boundary' })
+
+    expect(refreshSessionMock).not.toHaveBeenCalled()
+    expect(navigateToMock).not.toHaveBeenCalled()
+  })
+
+  it('allows signed-out visitors to access public pass shares without refreshing the session', async () => {
+    const middleware = await loadMiddleware()
+
+    await middleware({ path: '/share/pass/public-token' })
+
+    expect(refreshSessionMock).not.toHaveBeenCalled()
+    expect(navigateToMock).not.toHaveBeenCalled()
+  })
+
+  it('allows restored sessions to stay on / so the landing page can refresh them', async () => {
+    authState.isAuthenticated = true
+    authState.needsSessionRefresh = true
+    const middleware = await loadMiddleware()
+
+    await middleware({ path: '/' })
+
+    expect(refreshSessionMock).not.toHaveBeenCalled()
+    expect(navigateToMock).not.toHaveBeenCalled()
+  })
+
+  it('keeps protected routes when session refresh succeeds', async () => {
+    refreshSessionMock.mockResolvedValueOnce(true)
+    const middleware = await loadMiddleware()
+
+    await expect(middleware({ path: '/inbox' })).resolves.toBeUndefined()
+    expect(refreshSessionMock).toHaveBeenCalledTimes(1)
+    expect(navigateToMock).not.toHaveBeenCalled()
+  })
+
   it('redirects signed-out visitors on protected routes when session refresh fails', async () => {
     const middleware = await loadMiddleware()
 

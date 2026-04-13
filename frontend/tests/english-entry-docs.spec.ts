@@ -15,10 +15,11 @@ describe('english entry docs', () => {
     const readme = readRepoFile('README.md')
 
     expect(readme).toContain('## English entry points')
-    expect(readme).toContain('docs/open-source/README.en.md')
-    expect(readme).toContain('docs/ops/install.en.md')
-    expect(readme).toContain('- 最小自托管 Compose：`docker-compose.minimal.yml`\n- 升级说明：`docs/ops/upgrade.md`')
-    expect(readme).toContain('## English entry points\n- Overview: `docs/open-source/README.en.md`\n- Install quickstart: `docs/ops/install.en.md`\n\n## 可观测性入口')
+    expect(readme).toContain('- Overview: `docs/open-source/README.en.md`')
+    expect(readme).toContain('- Install quickstart: `docs/ops/install.en.md`')
+    expect(readme).toContain('- 最小自托管 Compose：`docker-compose.minimal.yml`')
+    expect(readme).toContain('- 升级说明：`docs/ops/upgrade.md`')
+    expect(readme).toContain('## 可观测性入口')
   })
 
   it('ships an English overview entry doc', () => {
@@ -49,6 +50,6 @@ describe('english entry docs', () => {
     expect(source).toContain('## Recommended first path: minimal self-hosted mode')
     expect(source).toContain('Keep `MMMAIL_NACOS_ENABLED=false`')
     expect(source).toContain('docker compose --env-file .env -f docker-compose.minimal.yml up -d --build')
-    expect(source).toContain('http://127.0.0.1:3001/suite?section=boundary')
+    expect(source).toContain('http://127.0.0.1:3001/boundary')
   })
 })

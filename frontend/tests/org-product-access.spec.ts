@@ -2,7 +2,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { createPinia, setActivePinia } from 'pinia'
 import { useAuthStore } from '../stores/auth'
 import { useOrgAccessStore } from '../stores/org-access'
-import { DEFAULT_NAV_ITEMS } from '../utils/default-nav'
+import { DEFAULT_NAV_ITEMS, SECONDARY_NAV_ITEMS } from '../utils/default-nav'
 import { filterNavItemsByAccess, resolveHomeRoute, resolveProductKeyFromPath } from '../utils/org-product-access'
 import type { OrgAccessScope } from '../types/org-access'
 
@@ -37,18 +37,26 @@ describe('org product access', () => {
     window.localStorage.removeItem(STORAGE_KEY)
   })
 
-  it('maps product routes and resolves a safe home route', () => {
+  it('maps product routes and resolves a safe home route', async () => {
+    const { isSharedPublicRoute } = await import('../utils/org-product-access')
+
     expect(resolveProductKeyFromPath('/docs')).toBe('DOCS')
     expect(resolveProductKeyFromPath('/folders/123')).toBe('MAIL')
     expect(resolveProductKeyFromPath('/organizations')).toBeNull()
     expect(resolveHomeRoute((productKey) => productKey !== 'MAIL')).toBe('/calendar')
+    expect(isSharedPublicRoute('/share/pass/public-token')).toBe(true)
   })
 
   it('filters nav items by enabled products', () => {
     const filtered = filterNavItemsByAccess(DEFAULT_NAV_ITEMS, (productKey) => productKey !== 'DOCS')
+    const filteredSecondary = filterNavItemsByAccess(SECONDARY_NAV_ITEMS, (productKey) => productKey !== 'DOCS')
     expect(filtered.some(item => item.to === '/docs')).toBe(false)
     expect(filtered.some(item => item.to === '/calendar')).toBe(true)
     expect(filtered.some(item => item.to === '/organizations')).toBe(false)
+    expect(filteredSecondary.some(item => item.to === '/docs')).toBe(false)
+    expect(filteredSecondary.some(item => item.to === '/organizations')).toBe(true)
+    expect(filteredSecondary.some(item => item.to === '/starred')).toBe(true)
+    expect(filteredSecondary.some(item => item.to === '/labels')).toBe(true)
   })
 
   it('loads scopes, auto-selects a single org, and persists personal fallback', async () => {

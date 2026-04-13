@@ -3,10 +3,12 @@ import { useAuthStore } from '~/stores/auth'
 import { useSettingsApi } from '~/composables/useSettingsApi'
 import { useI18n } from '~/composables/useI18n'
 import { useSettingsStore } from '~/stores/settings'
+import { useOrgAccessStore } from '~/stores/org-access'
 
 export function useAuthApi() {
   const { $apiClient } = useNuxtApp()
   const authStore = useAuthStore()
+  const orgAccessStore = useOrgAccessStore()
   const settingsStore = useSettingsStore()
   const { fetchProfile } = useSettingsApi()
   const { applyProfileLocale } = useI18n()
@@ -47,6 +49,7 @@ export function useAuthApi() {
       return true
     } catch {
       if (!authStore.refreshToken) {
+        orgAccessStore.clear()
         authStore.clearSession()
         return false
       }
@@ -58,6 +61,7 @@ export function useAuthApi() {
         await syncProfilePreference()
         return true
       } catch {
+        orgAccessStore.clear()
         authStore.clearSession()
         return false
       }

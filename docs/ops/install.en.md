@@ -21,4 +21,4 @@
 ## Validate
 - Frontend: `http://127.0.0.1:3001`
 - Backend: `http://127.0.0.1:8080/actuator/health`
-- Product boundary: `http://127.0.0.1:3001/suite?section=boundary`
+- Product boundary: `http://127.0.0.1:3001/boundary`

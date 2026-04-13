@@ -6,7 +6,6 @@ export interface DefaultNavItem {
   to: string
   folder?: SystemMailFolder
   unread?: boolean
-  starred?: boolean
   productKey?: OrgProductKey
 }
 
@@ -24,4 +23,13 @@ export const DEFAULT_NAV_ITEMS: DefaultNavItem[] = [
   { labelKey: 'nav.settings', to: '/settings' },
   { labelKey: 'nav.security', to: '/security' },
   { labelKey: 'nav.labs', to: '/labs' }
+]
+
+export const SECONDARY_NAV_ITEMS: DefaultNavItem[] = [
+  { labelKey: 'nav.starred', to: '/starred', productKey: 'MAIL' },
+  { labelKey: 'nav.labels', to: '/labels', productKey: 'MAIL' },
+  { labelKey: 'nav.business', to: '/business' },
+  { labelKey: 'nav.organizations', to: '/organizations' },
+  { labelKey: 'nav.docs', to: '/docs', productKey: 'DOCS' },
+  { labelKey: 'nav.sheets', to: '/sheets', productKey: 'SHEETS' },
 ]

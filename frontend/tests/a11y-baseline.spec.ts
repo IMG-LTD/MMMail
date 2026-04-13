@@ -38,10 +38,9 @@ describe('a11y baseline', () => {
     const communityReleaseLocale = readSource('locales/community-release.ts')
 
     expect(defaultLayout).toContain('sidebar-secondary')
-    expect(defaultLayout).toContain('to="/business"')
-    expect(defaultLayout).toContain('to="/organizations"')
-    expect(defaultLayout).toContain('to="/docs"')
-    expect(defaultLayout).toContain('to="/sheets"')
+    expect(defaultLayout).toContain('SECONDARY_NAV_ITEMS')
+    expect(defaultLayout).toContain('localizedSecondaryNavItems')
+    expect(defaultLayout).toContain('v-for="item in localizedSecondaryNavItems"')
 
     expect(labsPage).toContain('data-testid="labs-secondary-note"')
     expect(labsPage).toContain('labs.secondary.title')

@@ -4,7 +4,7 @@ import path from 'node:path'
 
 const [, , command = 'prepare', ...args] = process.argv
 const cwd = process.cwd()
-const buildDir = '.nuxt'
+const buildDir = command === 'dev' ? '.nuxt-dev' : '.nuxt'
 const shouldCleanBuildDir = new Set(['prepare', 'typecheck', 'build'])
 
 if (shouldCleanBuildDir.has(command)) {

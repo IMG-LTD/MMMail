@@ -70,6 +70,8 @@ const HOME_ROUTE_CANDIDATES: Array<{ to: string; productKey?: OrgProductKey }> =
 ]
 
 const PROTON_ADDRESS_REQUIRED_PRODUCTS = new Set<OrgProductKey>(['MAIL', 'CALENDAR'])
+const PUBLIC_ENTRY_ROUTES = new Set(['/', '/login', '/register', '/boundary'])
+const PUBLIC_SHARED_ROUTE_PREFIXES = ['/public/drive/shares/', '/share/mail/', '/share/pass/', '/meet/join/'] as const
 
 export function resolveProductKeyFromPath(path: string): OrgProductKey | null {
   for (const binding of ROUTE_BINDINGS) {
@@ -87,6 +89,14 @@ export function resolveProductKeyFromApiPath(path: string): OrgProductKey | null
     }
   }
   return null
+}
+
+export function isPublicEntryRoute(path: string): boolean {
+  return PUBLIC_ENTRY_ROUTES.has(path)
+}
+
+export function isSharedPublicRoute(path: string): boolean {
+  return PUBLIC_SHARED_ROUTE_PREFIXES.some(prefix => path.startsWith(prefix))
 }
 
 export function resolveProductLabelKey(productKey: OrgProductKey): string {
