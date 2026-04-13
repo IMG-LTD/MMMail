@@ -98,6 +98,8 @@
   - `./scripts/db-upgrade.sh .env info`
 
 ## 6.1 设置与边界页采用准备度检查
+- 公开边界入口：
+  - `http://127.0.0.1:3001/boundary`
 - 使用管理员账号登录后访问：
   - `http://127.0.0.1:3001/settings`
   - `http://127.0.0.1:3001/suite?section=boundary`
@@ -107,7 +109,8 @@
   - `Mail E2EE foundation`
   - `Adoption readiness`
   - `PWA readiness`
-  - `Release boundary map`
+  - 公开 `/boundary` 页面可直接查看边界说明
+  - 登录后的 `/suite?section=boundary` 仍显示 `Release boundary map`
   - `Suite Overview` 可见主线协作链路
   - `Pass` 已出现在默认导航
   - `Labs` 默认 catalog 只展示 `Authenticator / SimpleLogin / Standard Notes`

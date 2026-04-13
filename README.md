@@ -101,7 +101,7 @@
 - `v1.6.0` release notes：`docs/release/community-v1-v1.6.0-release-notes.md`
 - `v1.6.1` release notes：`docs/release/community-v1-v1.6.1-release-notes.md`
 - 支持边界：`docs/release/community-v1-support-boundaries.md`
-- Community / Hosted 边界入口：`/suite` 中的 `Release boundary map`
+- Community / Hosted 边界入口：公开 `http://127.0.0.1:3001/boundary`，登录后可在 `/suite` 查看 `Release boundary map`
 - 首发范围：`docs/release/community-v1-scope.md`
 - 发布门禁：`docs/release/community-v1-gate.md`
 - RC 检查清单：`docs/release/community-v1-rc-checklist.md`
