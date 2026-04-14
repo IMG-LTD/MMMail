@@ -8,6 +8,6 @@ public class V1__baseline_schema extends BaseJavaMigration {
 
     @Override
     public void migrate(Context context) {
-        SqlScriptMigrationSupport.execute(context.getConnection(), "schema.sql");
+        SqlScriptMigrationSupport.execute(context.getConnection(), "db/baseline/community-v1-schema.sql");
     }
 }

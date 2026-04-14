@@ -45,17 +45,19 @@ class FlywayMigrationIntegrationTest {
 
         MigrateResult result = flyway.migrate();
 
-        assertThat(result.migrationsExecuted).isEqualTo(12);
+        assertThat(result.migrationsExecuted).isEqualTo(13);
         assertThat(queryForLong("select count(*) from user_account")).isEqualTo(2);
         assertThat(queryForLong("select count(*) from user_preference")).isEqualTo(2);
         assertThat(queryForLong("select count(*) from mail_attachment")).isEqualTo(0);
-        assertThat(queryForLong("select count(*) from system_release_metadata where schema_version = '12'")).isEqualTo(1);
-        assertThat(queryForLong("select count(*) from flyway_schema_history where version in ('1', '2', '3', '4', '5', '6', '7', '8', '9', '10', '11', '12') and success = 1")).isEqualTo(12);
+        assertThat(queryForLong("select count(*) from information_schema.columns where table_schema = 'mmmail' and table_name = 'user_preference' and column_name = 'mail_e2ee_recovery_private_key_encrypted'")).isEqualTo(1);
+        assertThat(queryForLong("select count(*) from information_schema.columns where table_schema = 'mmmail' and table_name = 'user_preference' and column_name = 'mail_e2ee_recovery_updated_at'")).isEqualTo(1);
+        assertThat(queryForLong("select count(*) from system_release_metadata where schema_version = '13'")).isEqualTo(1);
+        assertThat(queryForLong("select count(*) from flyway_schema_history where version in ('1', '2', '3', '4', '5', '6', '7', '8', '9', '10', '11', '12', '13') and success = 1")).isEqualTo(13);
     }
 
     @Test
     void existingSchemaShouldBaselineCurrentStateAndApplyUpgradeMigration() throws Exception {
-        executeLegacyScript("schema.sql");
+        executeLegacyScript("db/baseline/community-v1-schema.sql");
         executeLegacyScript("data.sql");
 
         Flyway flyway = MigrationDefaults.apply(
@@ -66,13 +68,15 @@ class FlywayMigrationIntegrationTest {
 
         MigrateResult result = flyway.migrate();
 
-        assertThat(result.migrationsExecuted).isEqualTo(12);
+        assertThat(result.migrationsExecuted).isEqualTo(13);
         assertThat(queryForLong("select count(*) from migration_upgrade_probe")).isEqualTo(1);
         assertThat(queryForLong("select count(*) from mail_attachment")).isEqualTo(0);
-        assertThat(queryForLong("select count(*) from system_release_metadata where schema_version = '12'")).isEqualTo(1);
+        assertThat(queryForLong("select count(*) from information_schema.columns where table_schema = 'mmmail' and table_name = 'user_preference' and column_name = 'mail_e2ee_recovery_private_key_encrypted'")).isEqualTo(1);
+        assertThat(queryForLong("select count(*) from information_schema.columns where table_schema = 'mmmail' and table_name = 'user_preference' and column_name = 'mail_e2ee_recovery_updated_at'")).isEqualTo(1);
+        assertThat(queryForLong("select count(*) from system_release_metadata where schema_version = '13'")).isEqualTo(1);
         assertThat(queryForLong("select count(*) from flyway_schema_history where version = '1' and type = 'BASELINE'")).isEqualTo(1);
-        assertThat(queryForLong("select count(*) from flyway_schema_history where version in ('2', '3', '4', '5', '6', '7', '8', '9', '10', '11', '12', '13') and success = 1")).isEqualTo(12);
-        assertThat(queryForLong("select count(*) from flyway_schema_history where version = '13' and success = 1")).isEqualTo(1);
+        assertThat(queryForLong("select count(*) from flyway_schema_history where version in ('2', '3', '4', '5', '6', '7', '8', '9', '10', '11', '12', '13', '14') and success = 1")).isEqualTo(13);
+        assertThat(queryForLong("select count(*) from flyway_schema_history where version = '14' and success = 1")).isEqualTo(1);
     }
 
     private Flyway defaultFlyway() {
