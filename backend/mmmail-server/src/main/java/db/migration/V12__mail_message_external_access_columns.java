@@ -8,7 +8,7 @@ import java.sql.Connection;
 import java.sql.SQLException;
 import java.sql.Statement;
 
-public class V9__mail_message_external_access_columns extends BaseJavaMigration {
+public class V12__mail_message_external_access_columns extends BaseJavaMigration {
 
     @Override
     public void migrate(Context context) {
@@ -21,7 +21,7 @@ public class V9__mail_message_external_access_columns extends BaseJavaMigration 
         );
         execute(connection, """
                 update system_release_metadata
-                set schema_version = '9',
+                set schema_version = '12',
                     updated_at = current_timestamp
                 where id = 1
                 """);
@@ -31,7 +31,7 @@ public class V9__mail_message_external_access_columns extends BaseJavaMigration 
         try (Statement statement = connection.createStatement()) {
             statement.execute(sql);
         } catch (SQLException exception) {
-            throw new IllegalStateException("Failed to execute V9 migration SQL: " + sql, exception);
+            throw new IllegalStateException("Failed to execute V12 migration SQL: " + sql, exception);
         }
     }
 }

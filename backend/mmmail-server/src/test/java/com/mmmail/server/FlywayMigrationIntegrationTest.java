@@ -45,12 +45,12 @@ class FlywayMigrationIntegrationTest {
 
         MigrateResult result = flyway.migrate();
 
-        assertThat(result.migrationsExecuted).isEqualTo(5);
+        assertThat(result.migrationsExecuted).isEqualTo(12);
         assertThat(queryForLong("select count(*) from user_account")).isEqualTo(2);
         assertThat(queryForLong("select count(*) from user_preference")).isEqualTo(2);
         assertThat(queryForLong("select count(*) from mail_attachment")).isEqualTo(0);
-        assertThat(queryForLong("select count(*) from system_release_metadata where schema_version = '5'")).isEqualTo(1);
-        assertThat(queryForLong("select count(*) from flyway_schema_history where version in ('1', '2', '3', '4', '5') and success = 1")).isEqualTo(5);
+        assertThat(queryForLong("select count(*) from system_release_metadata where schema_version = '12'")).isEqualTo(1);
+        assertThat(queryForLong("select count(*) from flyway_schema_history where version in ('1', '2', '3', '4', '5', '6', '7', '8', '9', '10', '11', '12') and success = 1")).isEqualTo(12);
     }
 
     @Test
@@ -66,16 +66,13 @@ class FlywayMigrationIntegrationTest {
 
         MigrateResult result = flyway.migrate();
 
-        assertThat(result.migrationsExecuted).isEqualTo(5);
+        assertThat(result.migrationsExecuted).isEqualTo(12);
         assertThat(queryForLong("select count(*) from migration_upgrade_probe")).isEqualTo(1);
         assertThat(queryForLong("select count(*) from mail_attachment")).isEqualTo(0);
-        assertThat(queryForLong("select count(*) from system_release_metadata where schema_version = '5'")).isEqualTo(1);
+        assertThat(queryForLong("select count(*) from system_release_metadata where schema_version = '12'")).isEqualTo(1);
         assertThat(queryForLong("select count(*) from flyway_schema_history where version = '1' and type = 'BASELINE'")).isEqualTo(1);
-        assertThat(queryForLong("select count(*) from flyway_schema_history where version = '2' and success = 1")).isEqualTo(1);
-        assertThat(queryForLong("select count(*) from flyway_schema_history where version = '3' and success = 1")).isEqualTo(1);
-        assertThat(queryForLong("select count(*) from flyway_schema_history where version = '4' and success = 1")).isEqualTo(1);
-        assertThat(queryForLong("select count(*) from flyway_schema_history where version = '5' and success = 1")).isEqualTo(1);
-        assertThat(queryForLong("select count(*) from flyway_schema_history where version = '6' and success = 1")).isEqualTo(1);
+        assertThat(queryForLong("select count(*) from flyway_schema_history where version in ('2', '3', '4', '5', '6', '7', '8', '9', '10', '11', '12', '13') and success = 1")).isEqualTo(12);
+        assertThat(queryForLong("select count(*) from flyway_schema_history where version = '13' and success = 1")).isEqualTo(1);
     }
 
     private Flyway defaultFlyway() {

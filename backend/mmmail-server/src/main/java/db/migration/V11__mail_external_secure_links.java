@@ -8,7 +8,7 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 
-public class V8__mail_external_secure_links extends BaseJavaMigration {
+public class V11__mail_external_secure_links extends BaseJavaMigration {
 
     @Override
     public void migrate(Context context) {
@@ -35,7 +35,7 @@ public class V8__mail_external_secure_links extends BaseJavaMigration {
         createIndexIfMissing(connection, "mail_external_secure_link", "idx_mail_external_secure_link_owner", false, "(owner_id, revoked_at, expires_at)");
         execute(connection, """
                 update system_release_metadata
-                set schema_version = '8',
+                set schema_version = '11',
                     updated_at = current_timestamp
                 where id = 1
                 """);
@@ -77,7 +77,7 @@ public class V8__mail_external_secure_links extends BaseJavaMigration {
         try (Statement statement = connection.createStatement()) {
             statement.execute(sql);
         } catch (SQLException exception) {
-            throw new IllegalStateException("Failed to execute V8 migration SQL: " + sql, exception);
+            throw new IllegalStateException("Failed to execute V11 migration SQL: " + sql, exception);
         }
     }
 }
