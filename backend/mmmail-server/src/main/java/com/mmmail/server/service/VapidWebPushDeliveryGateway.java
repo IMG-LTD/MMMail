@@ -4,14 +4,23 @@ import nl.martijndwars.webpush.Notification;
 import nl.martijndwars.webpush.PushService;
 import nl.martijndwars.webpush.Subscription;
 import org.apache.http.HttpResponse;
+import org.bouncycastle.jce.provider.BouncyCastleProvider;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
+
+import java.security.Security;
 
 @Component
 public class VapidWebPushDeliveryGateway implements WebPushDeliveryGateway {
 
     private static final String CONFIG_ERROR = "Web Push VAPID configuration is incomplete";
+
+    static {
+        if (Security.getProvider(BouncyCastleProvider.PROVIDER_NAME) == null) {
+            Security.addProvider(new BouncyCastleProvider());
+        }
+    }
 
     private final String publicKey;
     private final String configurationMessage;

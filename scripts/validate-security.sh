@@ -7,7 +7,7 @@ cd "$ROOT_DIR"
 source "$ROOT_DIR/scripts/lib/java-common.sh"
 
 MVN_BIN="$(resolve_maven_bin "$ROOT_DIR")"
-BACKEND_SECURITY_TESTS="SecurityBaselineIntegrationTest,DriveSecureShareIntegrationTest,DrivePublicFolderShareIntegrationTest,MailAttachmentIntegrationTest"
+BACKEND_SECURITY_TESTS="DependencyVersionGuardTest,VapidWebPushDeliveryGatewayConfigurationTest,SecurityBaselineIntegrationTest,DriveSecureShareIntegrationTest,DrivePublicFolderShareIntegrationTest,MailAttachmentIntegrationTest"
 
 echo "[validate-security] secret regression scan"
 bash scripts/security-secret-scan.sh >/tmp/mmmail-security-secret-scan.log 2>&1
