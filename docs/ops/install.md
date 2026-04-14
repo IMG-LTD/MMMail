@@ -1,6 +1,6 @@
 # Community Edition v1.6.1 安装说明
 
-**版本**: `v1.6.1-mainline`
+**版本**: `v1.6.1`
 **日期**: `2026-04-09`
 **作者**: `Codex`
 
@@ -39,41 +39,48 @@
 ## 1. 准备运行时环境
 1. 复制模板：
    - `cp .env.example .env`
-2. 选择启动模式：
-   - 标准模式：保留 `MMMAIL_NACOS_ENABLED=true`
-   - 最小模式：设置 `MMMAIL_NACOS_ENABLED=false`
-3. 编辑 `.env`，至少替换以下占位值：
+2. 编辑 `.env`，至少替换以下占位值：
    - 两种模式都必须替换：
      - `MMMAIL_JWT_SECRET`
      - `SPRING_DATASOURCE_PASSWORD`
      - `SPRING_REDIS_PASSWORD`
      - `MYSQL_ROOT_PASSWORD`
-   - 仅标准模式必须替换：
-     - `NACOS_USERNAME`
-     - `NACOS_PASSWORD`
-4. 对 isolated local 标准模式，`NACOS_USERNAME` / `NACOS_PASSWORD` 可设置为本地默认 `nacos`；不要把该值回写到仓库模板。
 
-## 2. 启动前校验
+## 2. 推荐首次采用：最小模式
+- 确认 `.env` 中 `MMMAIL_NACOS_ENABLED=false`
+- 最小模式首次启动不要求填写 `NACOS_USERNAME` / `NACOS_PASSWORD`
+- 最小模式把本地依赖收敛为 `Nuxt Web + 单个 Spring Boot 后端进程 + MySQL / Redis`
+
+## 3. 启动前校验
 - 执行：
   - `./scripts/validate-runtime-env.sh .env`
 
 校验通过后才允许继续启动；若脚本报 placeholder / missing，必须先修正 `.env`。当 `MMMAIL_NACOS_ENABLED=false` 时，脚本会显式跳过 Nacos 凭据要求。
 
-## 3. 启动 Compose
-- 标准模式：
-  - `docker compose --env-file .env up -d --build`
+## 4. 启动 Compose
 - 最小模式：
   - `docker compose --env-file .env -f docker-compose.minimal.yml up -d --build`
 - 查看状态：
-  - 标准模式：`docker compose ps`
-  - 最小模式：`docker compose -f docker-compose.minimal.yml ps`
+  - `docker compose -f docker-compose.minimal.yml ps`
 - 查看日志：
-  - 标准模式：`docker compose logs -f backend`
-  - 最小模式：`docker compose -f docker-compose.minimal.yml logs -f backend`
-  - 标准模式前端：`docker compose logs -f frontend`
-  - 最小模式前端：`docker compose -f docker-compose.minimal.yml logs -f frontend`
+  - `docker compose -f docker-compose.minimal.yml logs -f backend`
+  - `docker compose -f docker-compose.minimal.yml logs -f frontend`
 
-## 4. 验证服务
+## 5. 如需标准模式再启用 Nacos
+- 设置 `.env` 中 `MMMAIL_NACOS_ENABLED=true`
+- 额外替换：
+  - `NACOS_USERNAME`
+  - `NACOS_PASSWORD`
+- 对 isolated local 标准模式，`NACOS_USERNAME` / `NACOS_PASSWORD` 可设置为本地默认 `nacos`；不要把该值回写到仓库模板。
+- 启动：
+  - `docker compose --env-file .env up -d --build`
+- 查看状态：
+  - `docker compose ps`
+- 查看日志：
+  - `docker compose logs -f backend`
+  - `docker compose logs -f frontend`
+
+## 6. 验证服务
 - Frontend：
   - `http://127.0.0.1:3001`
 - Frontend PWA manifest：
@@ -90,7 +97,9 @@
 - 数据迁移状态：
   - `./scripts/db-upgrade.sh .env info`
 
-## 4.1 设置与边界页采用准备度检查
+## 6.1 设置与边界页采用准备度检查
+- 公开边界入口：
+  - `http://127.0.0.1:3001/boundary`
 - 使用管理员账号登录后访问：
   - `http://127.0.0.1:3001/settings`
   - `http://127.0.0.1:3001/suite?section=boundary`
@@ -100,7 +109,8 @@
   - `Mail E2EE foundation`
   - `Adoption readiness`
   - `PWA readiness`
-  - `Release boundary map`
+  - 公开 `/boundary` 页面可直接查看边界说明
+  - 登录后的 `/suite?section=boundary` 仍显示 `Release boundary map`
   - `Suite Overview` 可见主线协作链路
   - `Pass` 已出现在默认导航
   - `Labs` 默认 catalog 只展示 `Authenticator / SimpleLogin / Standard Notes`
@@ -112,7 +122,7 @@
   - 后端 `OpenAPI JSON`
   - 内置的自托管安装说明与 Runbook 快速页
 
-## 4.2 RC1 冷启动证据
+## 6.2 RC1 冷启动证据
 - 本机证据入口：
   - `bash scripts/validate-rc1-local.sh`
 - Docker-capable 环境证据入口：
@@ -120,7 +130,7 @@
 - 外部执行说明：
   - `docs/release/external-ci-handoff.md`
 
-## 5. 停止与清理
+## 7. 停止与清理
 - 停止：
   - 标准模式：`docker compose down`
   - 最小模式：`docker compose -f docker-compose.minimal.yml down`
@@ -128,7 +138,7 @@
   - 标准模式：`docker compose down -v`
   - 最小模式：`docker compose -f docker-compose.minimal.yml down -v`
 
-## 6. 常见问题
+## 8. 常见问题
 - `validate-runtime-env.sh` 失败：
   - `.env` 仍保留 `replace-with-*` 占位值。
 - 最小模式仍要求 Nacos 凭据：
@@ -138,7 +148,7 @@
 - Frontend 页面打开但 API `403 / 500`：
   - 先看 `docker compose logs backend`，再检查 `MMMAIL_JWT_SECRET` 与数据库初始化日志。
 - `Release boundary map` 与 `/labs` 页面不符合预期：
-  - 先确认构建产物来自 `v1.6` 分支代码
+  - 先确认构建产物来自当前 `v1.6.1` 发布代码
   - 再确认前端静态资源没有被旧 CDN / 反向代理缓存污染
 - 外部密码保护加密邮件无法打开：
   - 先确认 SMTP 通知邮件中的 secure link 使用了正确 `public base URL`

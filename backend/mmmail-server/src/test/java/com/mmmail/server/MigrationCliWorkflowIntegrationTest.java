@@ -54,11 +54,11 @@ class MigrationCliWorkflowIntegrationTest {
         assertThat(validation).contains("validation=ok");
 
         String migrate = captureOutput(() -> MigrationCli.main(new String[]{"migrate"}));
-        assertThat(migrate).contains("migrations=5");
+        assertThat(migrate).contains("migrations=13");
 
         String finalInfo = captureOutput(() -> MigrationCli.main(new String[]{"info"}));
-        assertThat(finalInfo).contains("current=5");
-        assertThat(queryForLong("select count(*) from system_release_metadata where schema_version = '5'")).isEqualTo(1);
+        assertThat(finalInfo).contains("current=13");
+        assertThat(queryForLong("select count(*) from system_release_metadata where schema_version = '13'")).isEqualTo(1);
     }
 
     private String captureOutput(ThrowingRunnable runnable) throws Exception {

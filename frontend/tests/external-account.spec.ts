@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { DEFAULT_NAV_ITEMS } from '../utils/default-nav'
+import { DEFAULT_NAV_ITEMS, SECONDARY_NAV_ITEMS } from '../utils/default-nav'
 import {
   filterNavItemsByAccess,
   isProductEnabledForMailAddressMode,
@@ -13,9 +13,12 @@ describe('external account boundary', () => {
     expect(isProductEnabledForMailAddressMode('DRIVE', 'EXTERNAL_ACCOUNT')).toBe(true)
 
     const filteredNav = filterNavItemsByAccess(DEFAULT_NAV_ITEMS, () => true, 'EXTERNAL_ACCOUNT')
+    const filteredSecondaryNav = filterNavItemsByAccess(SECONDARY_NAV_ITEMS, () => true, 'EXTERNAL_ACCOUNT')
     expect(filteredNav.some(item => item.to === '/inbox')).toBe(false)
     expect(filteredNav.some(item => item.to === '/calendar')).toBe(false)
     expect(filteredNav.some(item => item.to === '/drive')).toBe(true)
+    expect(filteredSecondaryNav.some(item => item.to === '/docs')).toBe(true)
+    expect(filteredSecondaryNav.some(item => item.to === '/sheets')).toBe(true)
     expect(resolveHomeRoute(() => true, 'EXTERNAL_ACCOUNT')).toBe('/drive')
   })
 

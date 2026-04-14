@@ -51,6 +51,13 @@ useHead(() => ({
         <p class="eyebrow">{{ t('labs.hero.badge') }}</p>
         <h1>{{ t('labs.hero.title') }}</h1>
         <p class="mm-muted">{{ t('labs.hero.description') }}</p>
+        <el-alert
+          :closable="false"
+          type="info"
+          data-testid="labs-secondary-note"
+          :title="t('labs.secondary.title')"
+          :description="t('labs.secondary.description')"
+        />
         <el-tag :type="labsModulesEnabled ? 'warning' : 'info'" effect="dark">
           {{ labsModulesEnabled ? t('labs.flag.enabled') : t('labs.flag.disabled') }}
         </el-tag>

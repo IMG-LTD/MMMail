@@ -21,7 +21,7 @@ if ! docker_client_available; then
 fi
 
 MVN_BIN="$(resolve_maven_bin "$ROOT_DIR")"
-TESTS="FlywayMigrationIntegrationTest,BackupRestoreWorkflowIntegrationTest,MigrationCliWorkflowIntegrationTest"
+TESTS="FlywayMigrationVersionUniquenessTest,FlywayMigrationIntegrationTest,BackupRestoreWorkflowIntegrationTest,MigrationCliWorkflowIntegrationTest"
 
 timeout 180s env \
   SPRING_DATASOURCE_PASSWORD=Batch3Password123! \

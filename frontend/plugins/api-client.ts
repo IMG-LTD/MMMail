@@ -44,12 +44,14 @@ export default defineNuxtPlugin(() => {
     options: { includeAccessToken: boolean }
   ): InternalAxiosRequestConfig {
     const headers = AxiosHeaders.from(request.headers || {})
+    const requestPath = resolveRequestPath(request.url)
+    const isAuthRequest = requestPath.startsWith('/api/v1/auth/')
 
     if (options.includeAccessToken && authStore.accessToken) {
       headers.set('Authorization', `Bearer ${authStore.accessToken}`)
     }
 
-    if (options.includeAccessToken && orgAccessStore.activeOrgId) {
+    if (options.includeAccessToken && orgAccessStore.activeOrgId && !isAuthRequest) {
       headers.set('X-MMMAIL-ORG-ID', orgAccessStore.activeOrgId)
     }
 
@@ -164,6 +166,7 @@ export default defineNuxtPlugin(() => {
       }
 
       if (authExpired || (error instanceof Error && error.message.toLowerCase().includes('unauthorized'))) {
+        orgAccessStore.clear()
         authStore.clearSession()
       }
       return Promise.reject(error)

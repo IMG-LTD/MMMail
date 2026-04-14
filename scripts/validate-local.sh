@@ -164,7 +164,7 @@ done
 
 echo "[validate-local] sanitized secrets in config templates"
 placeholder_checks=(
-  ".env.example|MMMAIL_NACOS_ENABLED=true"
+  ".env.example|MMMAIL_NACOS_ENABLED=false"
   ".env.example|NUXT_PUBLIC_ENABLE_PREVIEW_MODULES=false"
   ".env.example|MMMAIL_JWT_SECRET=replace-with-32-plus-char-random-secret"
   "config/backend.env.example|MMMAIL_NACOS_ENABLED=true"
@@ -217,6 +217,7 @@ sed -i 's/replace-with-32-plus-char-random-secret/0123456789abcdef0123456789abcd
 sed -i 's/replace-with-db-password/DbPassword123!/' "$tmp_env_standard"
 sed -i 's/replace-with-mysql-root-password/MySqlRoot123!/' "$tmp_env_standard"
 sed -i 's/replace-with-redis-password/RedisPassword123!/' "$tmp_env_standard"
+sed -i 's/MMMAIL_NACOS_ENABLED=false/MMMAIL_NACOS_ENABLED=true/' "$tmp_env_standard"
 sed -i 's/replace-with-nacos-user/nacos/' "$tmp_env_standard"
 sed -i 's/replace-with-nacos-password/nacos/' "$tmp_env_standard"
 bash scripts/validate-runtime-env.sh "$tmp_env_standard" >/tmp/mmmail-runtime-env.log 2>&1

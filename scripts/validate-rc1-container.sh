@@ -66,12 +66,13 @@ wait_for_http_ok "http://127.0.0.1:3001" "frontend health" 240
 
 seed_users="$(mysql_cli -N -B -e "select count(*) from user_account")"
 schema_version="$(mysql_cli -N -B -e "select schema_version from system_release_metadata order by id desc limit 1")"
+latest_flyway_version="$(mysql_cli -N -B -e "select coalesce((select version from flyway_schema_history where success = 1 and version is not null order by installed_rank desc limit 1), 'none')")"
 if (( seed_users < 2 )); then
   echo "seed data validation failed: expected at least 2 users, got $seed_users" >&2
   exit 1
 fi
-if [[ "$schema_version" != "5" ]]; then
-  echo "unexpected schema version after upgrade: $schema_version" >&2
+if [[ "$schema_version" != "$latest_flyway_version" ]]; then
+  echo "unexpected schema version after upgrade: metadata=$schema_version flyway=$latest_flyway_version" >&2
   exit 1
 fi
 

@@ -14,6 +14,57 @@ describe('i18n governance', () => {
     expect(report.modulesWithPlaceholderMismatches).toEqual([])
   })
 
+  it('detects missing keys in core locale files exported via const bindings', async () => {
+    const localeDir = await mkdtemp(resolve(tmpdir(), 'mmmail-i18n-governance-core-'))
+
+    await Promise.all([
+      writeFile(resolve(localeDir, 'en.ts'), [
+        'const en = {',
+        "  'core.alpha': 'Alpha',",
+        "  'core.beta': 'Beta',",
+        '}',
+        '',
+        'export default en',
+        '',
+      ].join('\n')),
+      writeFile(resolve(localeDir, 'zh-CN.ts'), [
+        'const zhCN = {',
+        "  'core.alpha': '甲',",
+        "  'core.beta': '乙',",
+        '}',
+        '',
+        'export default zhCN',
+        '',
+      ].join('\n')),
+      writeFile(resolve(localeDir, 'zh-TW.ts'), [
+        'const zhTW = {',
+        "  'core.alpha': '甲',",
+        '}',
+        '',
+        'export default zhTW',
+        '',
+      ].join('\n')),
+    ])
+
+    const report = await collectI18nCatalogReport(localeDir)
+
+    expect(report.totalModules).toBe(1)
+    expect(report.modulesWithGaps).toEqual(['core'])
+    expect(report.moduleReports[0]).toMatchObject({
+      moduleId: 'core',
+      keyCounts: {
+        en: 2,
+        'zh-CN': 2,
+        'zh-TW': 1,
+      },
+      missingKeys: {
+        en: [],
+        'zh-CN': [],
+        'zh-TW': ['core.beta'],
+      },
+    })
+  })
+
   it('detects placeholder mismatches across locales', async () => {
     const localeDir = await mkdtemp(resolve(tmpdir(), 'mmmail-i18n-governance-'))
 

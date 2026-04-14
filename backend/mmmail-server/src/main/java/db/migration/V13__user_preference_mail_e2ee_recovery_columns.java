@@ -8,20 +8,26 @@ import java.sql.Connection;
 import java.sql.SQLException;
 import java.sql.Statement;
 
-public class V9__mail_message_external_access_columns extends BaseJavaMigration {
+public class V13__user_preference_mail_e2ee_recovery_columns extends BaseJavaMigration {
 
     @Override
     public void migrate(Context context) {
         Connection connection = context.getConnection();
         SqlScriptMigrationSupport.addColumnIfMissing(
                 connection,
-                "mail_message",
-                "body_e2ee_external_access_json",
-                "text null"
+                "user_preference",
+                "mail_e2ee_recovery_private_key_encrypted",
+                "longtext null"
+        );
+        SqlScriptMigrationSupport.addColumnIfMissing(
+                connection,
+                "user_preference",
+                "mail_e2ee_recovery_updated_at",
+                "timestamp null"
         );
         execute(connection, """
                 update system_release_metadata
-                set schema_version = '9',
+                set schema_version = '13',
                     updated_at = current_timestamp
                 where id = 1
                 """);
@@ -31,7 +37,7 @@ public class V9__mail_message_external_access_columns extends BaseJavaMigration 
         try (Statement statement = connection.createStatement()) {
             statement.execute(sql);
         } catch (SQLException exception) {
-            throw new IllegalStateException("Failed to execute V9 migration SQL: " + sql, exception);
+            throw new IllegalStateException("Failed to execute V13 migration SQL: " + sql, exception);
         }
     }
 }

@@ -32,6 +32,24 @@ describe('a11y baseline', () => {
     expect(publicPassLayout).toContain("shell.publicPass.a11y.mainLabel")
   })
 
+  it('keeps advanced navigation and labs guidance secondary to the mainline flow', () => {
+    const defaultLayout = readSource('layouts/default.vue')
+    const labsPage = readSource('pages/labs.vue')
+    const communityReleaseLocale = readSource('locales/community-release.ts')
+
+    expect(defaultLayout).toContain('sidebar-secondary')
+    expect(defaultLayout).toContain('SECONDARY_NAV_ITEMS')
+    expect(defaultLayout).toContain('localizedSecondaryNavItems')
+    expect(defaultLayout).toContain('v-for="item in localizedSecondaryNavItems"')
+
+    expect(labsPage).toContain('data-testid="labs-secondary-note"')
+    expect(labsPage).toContain('labs.secondary.title')
+    expect(labsPage).toContain('labs.secondary.description')
+
+    expect(communityReleaseLocale.match(/'labs\.secondary\.title'/g)?.length).toBe(3)
+    expect(communityReleaseLocale.match(/'labs\.secondary\.description'/g)?.length).toBe(3)
+  })
+
   it('keeps public pass share regions labeled for assistive tech', () => {
     const publicSharePage = readSource('pages/share/pass/[token].vue')
 

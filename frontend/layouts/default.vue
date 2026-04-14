@@ -10,7 +10,7 @@ import { useMailFolderApi } from '~/composables/useMailFolderApi'
 import { useKeyboardShortcuts } from '~/composables/useKeyboardShortcuts'
 import { useI18n } from '~/composables/useI18n'
 import { resolveDefaultNavMaturityBadge } from '~/utils/default-nav-maturity'
-import { DEFAULT_NAV_ITEMS } from '~/utils/default-nav'
+import { DEFAULT_NAV_ITEMS, SECONDARY_NAV_ITEMS } from '~/utils/default-nav'
 import { flattenMailFolderTree } from '~/utils/mail-folders'
 import { buildMailAddressBlockedQuery } from '~/utils/org-access-recovery'
 import {
@@ -47,10 +47,16 @@ const localizedAccessibleNavItems = computed(() => filterNavItemsByAccess(
     ? folderCount(item.folder)
     : item.unread
       ? unreadBadgeCount()
-      : item.starred
-        ? starredCount()
-        : undefined,
+      : undefined,
   maturityBadge: resolveDefaultNavMaturityBadge(item.to)
+})))
+const localizedSecondaryNavItems = computed(() => filterNavItemsByAccess(
+  SECONDARY_NAV_ITEMS,
+  orgAccessStore.isProductEnabled,
+  authStore.user?.mailAddressMode
+).map(item => ({
+  ...item,
+  label: t(item.labelKey)
 })))
 const customFolderItems = computed(() => flattenMailFolderTree(mailStore.customFolders))
 
@@ -59,10 +65,6 @@ function folderCount(folder?: SystemMailFolder): number {
     return 0
   }
   return mailStore.counts[folder] || 0
-}
-
-function starredCount(): number {
-  return mailStore.starredCount || 0
 }
 
 function unreadBadgeCount(): number {
@@ -172,6 +174,16 @@ onMounted(async () => {
             :maturity-tone="item.maturityBadge?.tone || null"
             :data-testid="buildNavItemTestId(item.to)"
           />
+          <div class="sidebar-secondary">
+            <ShellNavLink
+              v-for="item in localizedSecondaryNavItems"
+              :key="item.to"
+              :to="item.to"
+              :label="item.label"
+              class="nav-item--secondary"
+              :data-testid="buildNavItemTestId(item.to)"
+            />
+          </div>
           <div class="custom-folder-rail" v-if="mailEnabled && customFolderItems.length">
             <div class="custom-folder-head">{{ t('mailFolders.sidebar.title') }}</div>
             <NuxtLink
@@ -318,6 +330,19 @@ onMounted(async () => {
 
 .badge {
   margin-left: 8px;
+}
+
+.sidebar-secondary {
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top: 1px solid rgba(18, 54, 58, 0.08);
+  display: grid;
+  gap: 8px;
+}
+
+.nav-item--secondary {
+  opacity: 0.8;
+  font-size: 13px;
 }
 
 .custom-folder-rail {

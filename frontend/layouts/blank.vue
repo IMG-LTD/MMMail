@@ -1,20 +1,25 @@
 <script setup lang="ts">
+import { computed } from 'vue'
 import { useI18n } from '~/composables/useI18n'
 
+const route = useRoute()
 const { t } = useI18n()
+
+const isPublicMarketingRoute = computed(() => route.path === '/' || route.path === '/boundary')
+const brandTarget = computed(() => isPublicMarketingRoute.value ? '/' : '/login')
 </script>
 
 <template>
   <div class="blank-layout">
     <header class="blank-header">
       <div>
-        <NuxtLink to="/login" class="brand">MMMail</NuxtLink>
+        <NuxtLink :to="brandTarget" class="brand">MMMail</NuxtLink>
         <p class="brand-subtitle">{{ t('shell.brand.subtitle') }}</p>
       </div>
       <LocaleSwitcher size="small" />
     </header>
-    <main class="blank-main">
-      <section class="auth-rail mm-card">
+    <main class="blank-main" :class="{ 'blank-main--marketing': isPublicMarketingRoute }">
+      <section v-if="!isPublicMarketingRoute" class="auth-rail mm-card">
         <p class="eyebrow">{{ t('shell.auth.badge') }}</p>
         <h2>{{ t('shell.auth.title') }}</h2>
         <p class="summary">{{ t('shell.auth.subtitle') }}</p>
@@ -62,6 +67,10 @@ const { t } = useI18n()
   align-items: center;
   gap: 28px;
   min-height: calc(100vh - 92px);
+}
+
+.blank-main--marketing {
+  grid-template-columns: minmax(320px, 960px);
 }
 
 .auth-rail {
