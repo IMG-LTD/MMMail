@@ -28,11 +28,11 @@
         <spring-cloud.version>2024.0.0</spring-cloud.version>
         <mybatis-plus.version>3.5.9</mybatis-plus.version>
         <springdoc.version>2.7.0</springdoc.version>
-        <swagger-ui.version>5.32.0</swagger-ui.version>
+        <swagger-ui.version>5.32.1</swagger-ui.version>
         <jjwt.version>0.12.6</jjwt.version>
         <flyway.version>10.22.0</flyway.version>
         <testcontainers.version>1.20.4</testcontainers.version>
-        <tomcat.version>10.1.52</tomcat.version>
+        <tomcat.version>10.1.54</tomcat.version>
         <commons-lang3.version>3.20.0</commons-lang3.version>
         <log4j2.version>2.25.3</log4j2.version>
         <netty.version>4.1.132.Final</netty.version>

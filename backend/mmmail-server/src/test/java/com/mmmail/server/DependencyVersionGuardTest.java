@@ -1,6 +1,7 @@
 package com.mmmail.server;
 
 import jakarta.mail.Session;
+import org.apache.catalina.util.ServerInfo;
 import org.apache.maven.artifact.versioning.ComparableVersion;
 import org.jose4j.jwt.JwtClaims;
 import org.junit.jupiter.api.Test;
@@ -48,6 +49,24 @@ class DependencyVersionGuardTest {
 
         assertThat(versionAtLeast(version, "2.0.4"))
                 .as("resolved angus-core version %s should be at least 2.0.4 to clear the CI security gate", version)
+                .isTrue();
+    }
+
+    @Test
+    void tomcatRuntimeShouldStayOnPatchedVersionForSecurityGate() {
+        String version = ServerInfo.getServerNumber().trim();
+
+        assertThat(versionAtLeast(version, "10.1.53.0"))
+                .as("resolved tomcat-embed-core version %s should be at least 10.1.53.0 to clear the CI security gate", version)
+                .isTrue();
+    }
+
+    @Test
+    void swaggerUiRuntimeShouldStayOnPatchedVersionForSecurityGate() throws Exception {
+        String version = readRuntimeVersion(DependencyVersionGuardTest.class, "META-INF/maven/org.webjars/swagger-ui/pom.properties");
+
+        assertThat(versionAtLeast(version, "5.32.1"))
+                .as("resolved swagger-ui version %s should be at least 5.32.1 to clear the CI security gate", version)
                 .isTrue();
     }
 
