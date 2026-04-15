@@ -49,7 +49,7 @@
 | 公开分享滥用 | Drive Public Share | 分享密码、访问日志、访问限流、权限回归 |
 | 客户端错误上报滥用 | Observability | 鉴权保护、会话级限流、错误缓冲上限 |
 | 仓库 secrets 回归 | 配置 / CI | `scripts/security-secret-scan.sh`、模板占位符、SECURITY 要求 |
-| 第三方依赖漏洞 | Frontend / Backend | `pnpm audit --prod --audit-level=high`、OWASP Dependency-Check CI 门禁 |
+| 第三方依赖漏洞 | Frontend / Backend | `pnpm audit --prod --audit-level=high --ignore-registry-errors`、OWASP Dependency-Check CI 门禁 |
 
 ## 自托管默认建议
 - 生产环境启用 HTTPS，并设置 `MMMAIL_AUTH_COOKIE_SECURE=true`

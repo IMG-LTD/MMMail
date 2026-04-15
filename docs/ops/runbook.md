@@ -1,7 +1,7 @@
 # Community Edition v1.6.1 运维 Runbook
 
-**版本**: `v1.6.1-mainline`
-**日期**: `2026-04-09`
+**版本**: `v1.6.1`
+**日期**: `2026-04-15`
 **作者**: `Codex`
 
 ## 1. 入口清单
@@ -20,7 +20,7 @@
 - Labs curated catalog：
   - `/labs`
 - 本地门禁：`bash scripts/validate-local.sh`
-- CI 门禁：`MMMAIL_VALIDATE_CONTAINER_TESTS=true bash scripts/validate-ci.sh`
+- CI 门禁：`bash scripts/validate-ci.sh`
 
 ## 2. 核心检查
 ### 服务存活
@@ -129,7 +129,7 @@
 
 ### `/suite` 或 `/labs` 仍显示旧结构
 - 先确认浏览器未命中旧缓存。
-- 再确认部署产物来自 `v1.6` 分支最新构建。
+- 再确认部署产物来自当前 `v1.6.1` 发布代码。
 - 若只有静态页异常，优先排查 CDN / 反向代理缓存，而不是后端接口。
 
 ### 外部密码保护加密邮件打不开
@@ -179,7 +179,7 @@
 - 本地：
   - `bash scripts/validate-local.sh`
 - CI：
-  - `MMMAIL_VALIDATE_CONTAINER_TESTS=true bash scripts/validate-ci.sh`
+  - `bash scripts/validate-ci.sh`
 - 手动确认：
   - 管理员可打开 `/settings/system-health`
   - `/actuator/prometheus` 可导出核心指标

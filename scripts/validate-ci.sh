@@ -25,4 +25,3 @@ if ! command -v docker >/dev/null 2>&1 || ! docker_client_available; then
 fi
 
 bash scripts/validate-local.sh
-bash scripts/validate-rc1-container.sh

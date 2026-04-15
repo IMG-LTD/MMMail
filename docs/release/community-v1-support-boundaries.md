@@ -1,15 +1,8 @@
 # Community Edition Support Boundaries
 
-**版本**: `v1.6.1-mainline`
-**日期**: `2026-04-09`
+**版本**: `v1.6.1`
+**日期**: `2026-04-15`
 **作者**: `Codex`
-
-## 当前分支状态
-- `main`：`v1.6.1` 当前公开基线
-- `dev/v1.6`：`v1.6.0` release source branch，已完成合并回 `main`
-- `dev/v1.6.1-mainline-depth`：`v1.6.1` 收口分支，承接主线协作深度、adoption guidance 与治理同步
-- `release/v1.2`：历史维护分支
-- 含义：`main` 已承接 `v1.6.1` 的主线协作深度、Pass 可见 Beta、采用入口与治理同步；`dev/v1.6*` 分支只保留历史 release source 上下文。
 
 ## 支持范围
 ### GA
@@ -45,9 +38,9 @@
 - `Web Push` 当前只覆盖 Mail inbox 新邮件的真实浏览器订阅与下发
 - `SMTP outbound adapter` 当前只覆盖最小 external outbound，不承诺 inbound / IMAP / Bridge
 - `Docs / Sheets / Billing center / Pass` 维持 `Beta`；其中 `Pass` 已进入默认导航，作为主线可见 Beta 入口，但仍不进入 home fallback，也不提升为 GA
-- `Suite` 在 `v1.6` 起按 `Overview / Plans / Billing / Operations / Boundary` 分区收口，避免将计划、账单、运营和边界信息混排在同一长页中
-- `Suite Overview` 当前额外强调 `Mail → Calendar → Drive → Pass` 的主线协作链路，作为团队采用的连续任务流
-- `Labs` 在 `v1.6` 起只默认展示与主战略相邻的 `Authenticator / SimpleLogin / Standard Notes`；其余 `Preview` 模块仍保留在底层 registry 中，但不再进入默认 curated catalog
+- `Suite` 按 `Overview / Plans / Billing / Operations / Boundary` 分区收口，避免将计划、账单、运营和边界信息混排在同一长页中
+- `Suite Overview` 当前强调 `Mail → Calendar → Drive → Pass` 的主线协作链路，作为团队采用的连续任务流
+- `Labs` 默认只展示与主战略相邻的 `Authenticator / SimpleLogin / Standard Notes`；其余 `Preview` 模块保留在底层 registry 中，但不再进入默认 curated catalog
 - 设置页暴露 `Swagger UI`、`OpenAPI JSON`、install / runbook / adoption guide 快速页，便于自托管采用
 
 ### Hosted / Commercial
@@ -70,7 +63,7 @@
   - `Launch tracks` 与浏览器内 `adoption guide`
 - `/labs`
   - 暴露 `Labs-only` 模块，不等同于默认支持承诺
-  - `v1.6` 默认 curated catalog 只包含 `Authenticator`、`SimpleLogin` 与 `Standard Notes`
+  - 默认 curated catalog 只包含 `Authenticator`、`SimpleLogin` 与 `Standard Notes`
   - 其余 `Preview` 模块保留在底层 registry，但默认不展示在 curated catalog
 
 ## Pass 当前边界
@@ -82,7 +75,7 @@
 ## 自托管责任边界
 ### 维护者负责
 - 代码、文档、脚本、默认门禁
-- `v1.6.1-mainline` 已实现能力的真实边界说明
+- 当前公开基线已实现能力的真实边界说明
 
 ### 部署者负责
 - 真实 secrets 管理

@@ -1,7 +1,7 @@
-# Community Edition v1.0 数据迁移策略
+# Community Edition v1.6.1 数据迁移策略
 
-**版本**: `v1.0-draft`  
-**日期**: `2026-03-13`  
+**版本**: `v1.6.1`  
+**日期**: `2026-04-15`  
 **作者**: `Codex`
 
 ## 目标
@@ -22,10 +22,8 @@
 
 ## 基线策略
 ### 新部署
-- 空数据库直接执行：
-  - `V1__baseline_schema`
-  - `V2__baseline_seed_data`
-  - `V3__release_metadata`
+- 空数据库会从 `V1__baseline_schema` 开始，并继续执行当前公开基线之前的全部增量迁移。
+- 当前 `Community Edition v1.6.1` 公开基线对应最新 schema 版本 `13`。
 
 ### 存量库
 - 对已存在业务表、但没有 `flyway_schema_history` 的数据库：
@@ -46,7 +44,7 @@
 
 ## 回滚策略
 - 不支持 Flyway down migration。
-- 首发回滚策略固定为：
+- 当前回滚策略固定为：
   1. 升级前执行 `scripts/db-backup.sh`
   2. 若升级失败且不能前滚修复，执行 `scripts/db-rollback.sh`
   3. `db-rollback.sh` 会显式调用 `scripts/db-restore.sh`
@@ -55,7 +53,7 @@
 - MySQL 业务库
 - Drive 文件持久化目录（`MMMAIL_DRIVE_STORAGE_ROOT`）
 
-以下数据当前不纳入首发强制备份：
+以下数据当前不纳入默认强制备份：
 - Redis 会话/限流缓存（可重建）
 - Nacos 本地元数据（开发/单机场景可重建）
 

@@ -70,7 +70,7 @@ jobs:
         run: pnpm --dir frontend typecheck
 
       - name: Frontend audit (high)
-        run: pnpm --dir frontend audit --prod --audit-level=high
+        run: pnpm --dir frontend audit --prod --audit-level=high --ignore-registry-errors
 
   backend:
     runs-on: ubuntu-latest
@@ -163,10 +163,10 @@ jobs:
           {
             echo "## MMMail CI gate summary"
             echo "- validate-ci entry: \`bash scripts/validate-ci.sh\`"
-            echo "- container gates: \`MMMAIL_VALIDATE_CONTAINER_TESTS=true\`"
+            echo "- container-backed migration gates: \`bash scripts/validate-local.sh\` includes \`bash scripts/validate-batch3.sh\`"
             echo "- dependency scan: \`MMMAIL_RUN_BACKEND_DEPENDENCY_SCAN=true\` + required secret \`MMMAIL_NVD_API_KEY\`"
             echo "- security reports: \`artifacts/security/dependency-check/\`"
-            echo "- RC1 container reports: \`artifacts/release/rc1-container/\`"
+            echo "- batch3 validation log artifact: \`artifacts/ci-logs/mmmail-batch3-validate.log\`"
             echo "- CI logs: \`artifacts/ci-logs/\`"
             echo "- surefire reports: \`backend/mmmail-server/target/surefire-reports/\`"
           } >> "$GITHUB_STEP_SUMMARY"

@@ -1,12 +1,13 @@
-# Community Edition v1.0 升级说明
+# Community Edition v1.6.1 升级说明
 
-**版本**: `v1.0-draft`  
-**日期**: `2026-03-13`  
+**版本**: `v1.6.1`
+**日期**: `2026-04-15`
 **作者**: `Codex`
 
 ## 适用范围
-- 适用于 Community Edition v1.0 的数据库 schema 升级。
+- 适用于 Community Edition 当前公开基线的数据库 schema 升级。
 - 当前默认数据库为 MySQL 8。
+- 当前默认运行模型为 `Nuxt Web + 单个 Spring Boot 后端进程 + MySQL / Redis`。
 
 ## 升级前提
 - 已准备可写 `.env`
@@ -33,7 +34,7 @@
   - `./scripts/db-upgrade.sh .env upgrade`
 
 ### 回滚策略：备份恢复
-- 首发不支持自动 down migration。
+- 当前不支持自动 down migration。
 - 若无法前滚修复，使用升级前备份执行完整恢复：
   - `./scripts/db-rollback.sh .env <backup-dir>`
 
@@ -42,9 +43,6 @@
 - `system_release_metadata` 的 `schema_version` 为当前版本
 - 应用健康检查恢复：
   - `curl -sf http://127.0.0.1:8080/actuator/health`
-
-## RC1 证据入口
-- 本机统一证据：
-  - `bash scripts/validate-rc1-local.sh`
-- Docker-capable 升级 / 回滚 / 恢复证据：
-  - `bash scripts/validate-rc1-container.sh`
+- 如需补充运维排查，参考：
+  - `docs/ops/runbook.md`
+  - `docs/architecture/database-migration-strategy.md`
