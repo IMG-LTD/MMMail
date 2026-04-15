@@ -8,6 +8,8 @@ assignees: ""
 
 ## Blocker summary
 
+> 若涉及 live security vulnerability 或未公开披露的越权问题，请不要公开提交 issue，改按 `SECURITY.md` 处理。只有已公开披露或已修复后的安全 / 越权回归才使用本模板。
+
 ## Affected GA module
 - [ ] `Auth / Session / MFA`
 - [ ] `Organization / RBAC / Admin`

@@ -13,7 +13,7 @@ assignees: ""
 ## Scope
 - [ ] `GA`
 - [ ] `Beta`
-- [ ] `Preview`（不会作为首发阻塞）
+- [ ] `Preview / Labs`（不会作为首发阻塞）
 
 ## Steps to Reproduce
 1.

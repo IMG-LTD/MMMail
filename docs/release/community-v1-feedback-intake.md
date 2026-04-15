@@ -40,6 +40,7 @@
 - 适用场景：
   - `GA` 非阻塞缺陷
   - `Beta` 缺陷
+  - `Preview / Labs` 缺陷（不会升级为 `release-blocking`）
   - 非自托管类公开文档错误
 - 若涉及 live security vulnerability 或未公开披露的越权问题，不要公开提交 issue，改按 `SECURITY.md` 处理。
 
