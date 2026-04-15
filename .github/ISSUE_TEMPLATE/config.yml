@@ -1,14 +1,20 @@
 blank_issues_enabled: false
 contact_links:
-  - name: v1.6.1 support boundaries
+  - name: Community support boundaries
     url: https://github.com/IMG-LTD/MMMail/blob/main/docs/release/community-v1-support-boundaries.md
-    about: 查看当前 Community / Hosted、GA / Beta / Preview 边界
-  - name: v1.6.1 feedback intake
+    about: 查看当前 Community / Hosted 与 GA / Beta / Preview 边界
+  - name: Issue routing guide
     url: https://github.com/IMG-LTD/MMMail/blob/main/docs/release/community-v1-feedback-intake.md
-    about: 查看当前反馈分流、release-blocking 判定与 backlog 路由
-  - name: v1.6.1 closure plan
-    url: https://github.com/IMG-LTD/MMMail/blob/main/docs/release/community-v1-v1.6.1-closure-plan.md
-    about: 查看当前版本收口目标、优先级与非目标
-  - name: v1.6.1 release notes
+    about: 查看当前公开基线的分流规则、release-blocking 判定与证据要求
+  - name: Release notes (v1.6.1)
     url: https://github.com/IMG-LTD/MMMail/blob/main/docs/release/community-v1-v1.6.1-release-notes.md
-    about: 查看当前公开基线的新增能力、限制与验证证据
+    about: 查看当前公开基线 v1.6.1 的新增能力、限制与验证口径
+  - name: Module maturity matrix
+    url: https://github.com/IMG-LTD/MMMail/blob/main/docs/open-source/module-maturity-matrix.md
+    about: 查看各模块当前成熟度、默认导航暴露与支持口径
+  - name: Self-host install quickstart
+    url: https://github.com/IMG-LTD/MMMail/blob/main/docs/ops/install.md
+    about: 查看最小自托管启动路径、环境准备与验证方法
+  - name: Security policy
+    url: https://github.com/IMG-LTD/MMMail/blob/main/SECURITY.md
+    about: live 漏洞不要公开提交 issue，先按 policy 请求私密联络通道

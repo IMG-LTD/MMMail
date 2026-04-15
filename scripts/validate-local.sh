@@ -89,6 +89,12 @@ required=(
   LICENSE
   CONTRIBUTING.md
   SECURITY.md
+  .github/ISSUE_TEMPLATE/security-contact-request.md
+  .github/ISSUE_TEMPLATE/config.yml
+  .github/ISSUE_TEMPLATE/bug-report.md
+  .github/ISSUE_TEMPLATE/release-blocking-regression.md
+  .github/ISSUE_TEMPLATE/self-hosting-feedback.md
+  .github/ISSUE_TEMPLATE/feature-request.md
   docs/ops/install.md
   docs/ops/upgrade.md
   docs/ops/backup-restore.md

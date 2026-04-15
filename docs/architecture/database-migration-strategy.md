@@ -2,7 +2,6 @@
 
 **版本**: `v1.6.1`  
 **日期**: `2026-04-15`  
-**作者**: `Codex`
 
 ## 目标
 - 将历史 `schema.sql + data.sql + Spring SQL init` 模式收敛到 Flyway 版本化迁移。
