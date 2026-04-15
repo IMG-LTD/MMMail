@@ -1,6 +1,6 @@
 ---
 name: Feature request
-about: 提交功能请求或首发后 backlog
+about: 提交功能请求或产品 / 文档改进建议
 title: "[Feature] "
 labels: enhancement,needs-triage
 assignees: ""
@@ -11,10 +11,10 @@ assignees: ""
 ## Why
 
 ## Scope alignment
-- [ ] `P0 Mainline collaboration depth`
-- [ ] `P1 Drive E2EE / Pass handoff depth`
-- [ ] `P2 Identity readiness / developer docs / team enablement`
-- [ ] `P3 Preview pluginization / externalization`
+- [ ] `P0 / Mainline collaboration`
+- [ ] `P1 / Drive / Pass / E2EE depth`
+- [ ] `P2 / Self-hosting / docs / developer experience`
+- [ ] `P3 / Preview / Labs exploration`
 - [ ] `Hosted-only / commercial`
 
 ## Acceptance criteria
