@@ -15,9 +15,7 @@ assignees: ""
 - [ ] 我确认没有在此公开 issue 中披露漏洞细节
 
 ## Preferred private reply path
-- Email:
-- GitHub handle:
-- Other private channel:
+- Leave this blank in the public issue if needed. A maintainer will share a private contact path in the first response.
 
 ## Affected area
 - [ ] Auth / Session / MFA
