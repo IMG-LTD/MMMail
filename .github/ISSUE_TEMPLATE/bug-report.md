@@ -8,7 +8,7 @@ assignees: ""
 
 ## Summary
 
-> 若该问题会阻塞当前公开基线，例如 `GA` 主路径不可用、数据错误 / 数据丢失风险、安装 / 升级 / 恢复阻断、安全 / 越权回归，或当前公开基线对应 workflow 失绿，请改用 `Release-blocking regression` 模板。
+> 若该问题会阻塞当前公开基线，请改用 `Release-blocking regression` 模板。若涉及 live security vulnerability 或未公开披露的越权问题，请不要公开提交 issue，改按 `SECURITY.md` 处理。
 
 ## Scope
 - [ ] `GA`

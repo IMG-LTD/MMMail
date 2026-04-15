@@ -22,8 +22,8 @@ assignees: ""
 - [ ] `GA` 主路径不可用
 - [ ] 数据错误或数据丢失风险
 - [ ] 安装 / 升级 / 恢复阻断
-- [ ] 安全 / 越权回归
-- [ ] 最新 `main` 或活跃 release workflow 失绿
+- [ ] 已公开披露或已修复后的安全 / 越权回归
+- [ ] 最新 `main`、活跃 `dev/v*` 或 `release/v*` workflow 失绿
 
 ## Last known good baseline
 - Tag / commit:

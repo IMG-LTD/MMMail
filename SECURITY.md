@@ -6,8 +6,9 @@
 
 ## Reporting a Vulnerability
 - Do **not** open a public GitHub issue for a live security vulnerability.
-- If GitHub private vulnerability reporting is enabled, use it first.
-- Otherwise contact the repository maintainers through a private channel already established outside the repository.
+- GitHub private vulnerability reporting is currently **not enabled** for this repository.
+- Use a private maintainer contact channel listed on the project website or organization profile first. Do not disclose exploit details in public issues, PRs, or discussions.
+- If you do not already have a maintainer contact path, open a minimal public issue using `.github/ISSUE_TEMPLATE/security-contact-request.md` **without** including the vulnerability details, proof of concept, affected secrets, or reproduction steps.
 - Public issues may be used only after the vulnerability is fixed or explicitly approved for disclosure.
 - Threat boundaries are documented in `docs/security/threat-model.md`.
 

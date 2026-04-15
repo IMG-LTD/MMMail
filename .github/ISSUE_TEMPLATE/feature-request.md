@@ -1,6 +1,6 @@
 ---
 name: Feature request
-about: 提交功能请求或产品 / 文档改进建议
+about: 提交功能请求或非阻塞 backlog 建议
 title: "[Feature] "
 labels: enhancement,needs-triage
 assignees: ""
@@ -8,14 +8,16 @@ assignees: ""
 
 ## Requested capability
 
+> 文档错误 / 不准确不要用本模板。自托管 install / upgrade / runbook 勘误请改用 `Self-hosting feedback`，其余公开文档问题请改用 `Bug report`。
+
 ## Why
 
 ## Scope alignment
-- [ ] `P0 / Mainline collaboration`
-- [ ] `P1 / Drive / Pass / E2EE depth`
-- [ ] `P2 / Self-hosting / docs / developer experience`
-- [ ] `P3 / Preview / Labs exploration`
-- [ ] `Hosted-only / commercial`
+- [ ] `P0 / Mainline collaboration depth`
+- [ ] `P1 / Drive E2EE / Pass Beta depth`
+- [ ] `P2 / Identity readiness / developer docs / team enablement`
+- [ ] `P3 / Preview pluginization / externalization`
+- [ ] `Hosted backlog / commercial`
 
 ## Acceptance criteria
 - [ ]
