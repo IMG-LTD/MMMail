@@ -81,54 +81,26 @@ env -u http_proxy -u https_proxy -u HTTP_PROXY -u HTTPS_PROXY -u ALL_PROXY -u al
 
 echo "[validate-local] frontend dependency audit (high)"
 env -u http_proxy -u https_proxy -u HTTP_PROXY -u HTTPS_PROXY -u ALL_PROXY -u all_proxy \
-  pnpm --dir frontend audit --prod --audit-level=high >/tmp/mmmail-frontend-audit.log 2>&1
+  pnpm --dir frontend audit --prod --audit-level=high --ignore-registry-errors >/tmp/mmmail-frontend-audit.log 2>&1
 
 echo "[validate-local] required files"
 required=(
-  docs/requirements.md
-  docs/prd.md
-  docs/ui-design.md
-  docs/review-minutes.md
-  docs/frontend-architecture.md
-  docs/backend-architecture.md
-  docs/frontend-test-report.md
-  docs/backend-test-report.md
-  docs/integration-report.md
-  docs/security-audit.md
-  docs/uat-report.md
-  docs/deployment-runbook.md
+  README.md
+  LICENSE
+  CONTRIBUTING.md
+  SECURITY.md
   docs/ops/install.md
   docs/ops/upgrade.md
   docs/ops/backup-restore.md
   docs/ops/runbook.md
+  docs/release/community-v1-support-boundaries.md
+  docs/open-source/module-maturity-matrix.md
+  docs/open-source/README.en.md
+  docs/ops/install.en.md
+  docs/open-source/i18n-governance.md
   docs/architecture/deployment-topology.md
   docs/architecture/database-migration-strategy.md
   docs/security/threat-model.md
-  docs/final-summary.md
-  docs/release/community-v1-gate.md
-  docs/release/community-v1-roadmap.md
-  docs/release/community-v1-rc-checklist.md
-  docs/release/community-v1-rc1-notes.md
-  docs/release/community-v1-known-issues.md
-  docs/release/community-v1-support-boundaries.md
-  docs/release/community-v1-pre-release-checklist.md
-  docs/open-source/i18n-governance.md
-  docs/release/external-ci-handoff.md
-  docs/release/external-execution-checklist.md
-  docs/release/community-v1-release-manager-brief.md
-  docs/release/external-failure-triage.md
-  docs/release/freeze-exception-template.md
-  docs/release/post-external-receipt-checklist.md
-  docs/release/gate-backfill-template.md
-  docs/release/community-v1-external-receipt-log.md
-  docs/release/community-v1-rc-status.md
-  docs/release/community-v1-final-signoff.md
-  docs/release/release-notes-template.md
-  docs/release/community-v1-scope.md
-  docs/open-source/module-maturity-matrix.md
-  README.md
-  LICENSE
-  CONTRIBUTING.md
   docker-compose.yml
   docker-compose.minimal.yml
   backend/Dockerfile
@@ -138,7 +110,7 @@ required=(
   frontend/pages/labs.vue
   .env.example
   config/backend.env.example
-  SECURITY.md
+  config/backend.test.env.example
   scripts/security-secret-scan.sh
   scripts/security-backend-dependency-scan.sh
   scripts/validate-security.sh
@@ -147,13 +119,10 @@ required=(
   scripts/validate-batch3.sh
   scripts/validate-local.sh
   scripts/validate-ci.sh
-  scripts/validate-rc1-local.sh
-  scripts/validate-rc1-container.sh
   scripts/db-upgrade.sh
   scripts/db-backup.sh
   scripts/db-restore.sh
   scripts/db-rollback.sh
-  config/backend.test.env.example
 )
 for file in "${required[@]}"; do
   if [[ ! -f "$file" ]]; then

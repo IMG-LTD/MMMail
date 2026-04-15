@@ -11,7 +11,7 @@
 - [ ] 相关定向测试
 
 ## Documentation
-- [ ] README / gate / roadmap / ops docs 已同步
+- [ ] README / support boundaries / module maturity / ops docs 已同步
 - [ ] 无需文档更新（说明原因）
 
 ## Security

@@ -1,7 +1,7 @@
-# Community Edition v1.0 备份与恢复
+# Community Edition v1.6.1 备份与恢复
 
-**版本**: `v1.0-draft`  
-**日期**: `2026-03-13`  
+**版本**: `v1.6.1`
+**日期**: `2026-04-15`
 **作者**: `Codex`
 
 ## 备份范围
@@ -38,9 +38,6 @@
   - `./scripts/db-upgrade.sh .env info`
 - 检查 Drive 文件恢复：
   - 对比 `MMMAIL_DRIVE_STORAGE_ROOT` 中关键文件
-
-## RC1 证据入口
-- 本机统一证据：
-  - `bash scripts/validate-rc1-local.sh`
-- Docker-capable 备份 / 恢复 / 回滚证据：
-  - `bash scripts/validate-rc1-container.sh`
+- 如需补充运维排查，参考：
+  - `docs/ops/runbook.md`
+  - `docs/architecture/database-migration-strategy.md`

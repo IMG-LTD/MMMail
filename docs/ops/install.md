@@ -1,11 +1,11 @@
 # Community Edition v1.6.1 安装说明
 
 **版本**: `v1.6.1`
-**日期**: `2026-04-09`
+**日期**: `2026-04-15`
 **作者**: `Codex`
 
 ## 当前边界
-- 当前版本是 `Community Edition v1.6` 主线延续批次，继续保留 `Mail / Calendar / Drive / Workspace Shell` 的既有交付能力，并进一步把主线协作链路、`Pass` 的可见 Beta 入口和采用说明收敛到更可信的产品面。
+- 当前公开基线为 `Community Edition v1.6.1`，对外交付重点是清晰的自托管启动路径、真实能力边界和可验证的默认门禁。
 - 当前自托管运行模型仍然是 `Nuxt Web + 单个 Spring Boot 后端进程 + MySQL / Redis`。
 - 标准模式可以包含 `Nacos`，但这不代表仓库已交付真正的 `Spring Cloud` 微服务网格；最小模式只是把本地依赖收敛到更轻量的采用路径。
 - 浏览器侧已经交付：
@@ -121,14 +121,6 @@
   - 后端 `Swagger UI`
   - 后端 `OpenAPI JSON`
   - 内置的自托管安装说明与 Runbook 快速页
-
-## 6.2 RC1 冷启动证据
-- 本机证据入口：
-  - `bash scripts/validate-rc1-local.sh`
-- Docker-capable 环境证据入口：
-  - `bash scripts/validate-rc1-container.sh`
-- 外部执行说明：
-  - `docs/release/external-ci-handoff.md`
 
 ## 7. 停止与清理
 - 停止：

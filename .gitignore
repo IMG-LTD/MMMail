@@ -14,8 +14,10 @@ config/*.local
 frontend/node_modules/
 frontend/.nuxt/
 frontend/.nuxt-dev/
+frontend/.nuxt-pass-*
 frontend/.output/
 frontend/.cache/
+frontend/--host/
 
 # Backend
 backend/**/target/

@@ -2,14 +2,14 @@
 
 ## Scope
 - `Community Edition v1.6.1` is the current public baseline.
-- Security fixes that affect authentication, organization isolation, data access, storage, self-hosted deployment, and documented GA capabilities are treated as release blockers.
+- Security fixes that affect authentication, organization isolation, data access, storage, self-hosted deployment, or documented `GA` capabilities are treated as release blockers.
 
 ## Reporting a Vulnerability
 - Do **not** open a public GitHub issue for a live security vulnerability.
 - If GitHub private vulnerability reporting is enabled, use it first.
 - Otherwise contact the repository maintainers through a private channel already established outside the repository.
 - Public issues may be used only after the vulnerability is fixed or explicitly approved for disclosure.
-- 详细威胁边界见 `docs/security/threat-model.md`。
+- Threat boundaries are documented in `docs/security/threat-model.md`.
 
 ## Immediate Rotation Required
 - The repository previously contained real-looking local infrastructure credentials in example files.
@@ -31,18 +31,16 @@
   - audit visibility where applicable
   - updated validation or regression coverage
 
-## Community Edition v1.6.1 Baseline
-- `scripts/security-secret-scan.sh`：扫描工作树文件中的 secrets 回归
-- `scripts/validate-security.sh`：执行 secrets scan + 安全回归
-- `scripts/security-backend-dependency-scan.sh`：执行后端 OWASP Dependency-Check
-- CI 必须执行：
+## Security Validation
+- `scripts/security-secret-scan.sh` scans the working tree for secret regressions.
+- `scripts/validate-security.sh` runs secret scanning plus security regressions.
+- `scripts/security-backend-dependency-scan.sh` runs backend OWASP Dependency-Check.
+- CI must run:
   - `MMMAIL_RUN_BACKEND_DEPENDENCY_SCAN=true bash scripts/validate-security.sh`
-- 自托管建议：
-  - 生产环境开启 TLS
-  - 设置 `MMMAIL_AUTH_COOKIE_SECURE=true`
-  - 轮转 `.env` 中全部 secrets
-  - 限制 `actuator` 与管理接口暴露范围
 
-## Current Community v1.6.1 Status
-- The repository baseline includes secret scanning, backend dependency scanning, login/client-error rate limiting, and documented deployment hardening.
-- Remaining release blockers are tracked in `docs/release/community-v1-gate.md`.
+## Self-Hosted Hardening Basics
+- Enable TLS in production.
+- Set `MMMAIL_AUTH_COOKIE_SECURE=true`.
+- Rotate all secrets in `.env` before sharing an environment.
+- Limit `actuator` and management endpoint exposure to trusted networks.
+- Keep deployment and backup procedures aligned with `docs/ops/install.md`, `docs/ops/upgrade.md`, `docs/ops/backup-restore.md`, and `docs/ops/runbook.md`.
