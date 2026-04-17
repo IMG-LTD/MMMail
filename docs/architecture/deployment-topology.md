@@ -1,8 +1,7 @@
 # Community Edition v1.6.1 Deployment Topology
 
-**版本**: `v1.6.1-topology`  
-**日期**: `2026-04-09`  
-**作者**: `Codex`
+**版本**: `v1.6.1`
+**日期**: `2026-04-09`
 
 ## 目标
 - 提供两个可复现的单机 `Docker Compose` 拓扑，覆盖 `v1.6.1` 当前公开主路径。

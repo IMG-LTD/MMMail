@@ -1,8 +1,7 @@
 # Community Edition v1.6.1 Feedback Intake
 
-**版本**: `v1.6.1-feedback-intake`
-**日期**: `2026-04-09`
-**作者**: `Codex`
+**版本**: `v1.6.1`
+**日期**: `2026-04-15`
 
 ## 目标
 - 以 `v1.6.1` 当前公开基线为默认反馈基线。
@@ -14,10 +13,9 @@
 
 ## 当前基线
 - 公开基线：`main` / `Community Edition v1.6.1`
-- 当前收口分支：`dev/v1.6.1-mainline-depth`
+- 当前 issue 分流只服务于当前公开基线，不再公开暴露历史收口分支说明。
 - 权威 release 说明：
   - `docs/release/community-v1-v1.6.1-release-notes.md`
-  - `docs/release/community-v1-v1.6.1-closure-plan.md`
   - `docs/release/community-v1-support-boundaries.md`
 
 ## GitHub milestones
@@ -34,30 +32,35 @@
 - 适用场景：
   - `GA` 主路径失败
   - 安装 / 升级 / 恢复阻断
-  - 安全或越权回归
-  - 最新 `main` 或活跃 `dev/v*` workflow 失绿且影响公开基线
+  - 已公开披露或已修复后的安全 / 越权回归
+  - 最新 `main`、活跃 `dev/v*` 或 `release/v*` workflow 失绿且影响公开基线
 
 ### 一般缺陷
 - 使用模板：`.github/ISSUE_TEMPLATE/bug-report.md`
 - 适用场景：
   - `GA` 非阻塞缺陷
   - `Beta` 缺陷
-  - 文档错误
+  - `Preview / Labs` 缺陷（产品宽度问题不会升级为 `release-blocking`，但安全问题仍按 `SECURITY.md` 处理）
+  - 非自托管类公开文档错误
+- 若涉及 live security vulnerability 或未公开披露的越权问题，不要公开提交 issue，改按 `SECURITY.md` 处理。
 
 ### 自托管反馈
 - 使用模板：`.github/ISSUE_TEMPLATE/self-hosting-feedback.md`
 - 适用场景：
-  - Docker Compose 安装
-  - 升级 / 恢复
+  - 非阻塞的 Docker Compose 安装 / 升级 / 恢复反馈
   - 运维与部署拓扑反馈
-  - 文档与脚本之间的不一致
+  - install / upgrade / runbook 等自托管文档与脚本之间的不一致
+- 若问题阻塞当前公开基线，改走 `.github/ISSUE_TEMPLATE/release-blocking-regression.md`
 
 ### 需求与 backlog
 - 使用模板：`.github/ISSUE_TEMPLATE/feature-request.md`
 - 适用场景：
-  - `P0 / P1 / P2 / P3` 对应主线
-  - Hosted-only 商业能力
-  - 其他当前公开边界外能力
+  - `P0 / Mainline collaboration depth`
+  - `P1 / Drive E2EE / Pass Beta depth`
+  - `P2 / Identity readiness / developer docs / team enablement`
+  - `P3 / Preview pluginization / externalization`
+  - `Hosted backlog / commercial`
+- 文档勘误不要走 feature backlog。
 - 分流与优先级说明：`docs/release/community-v1-roadmap.md`
 
 ## 分流矩阵
