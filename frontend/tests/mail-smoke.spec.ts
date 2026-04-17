@@ -422,12 +422,12 @@ describe('mail smoke', () => {
     })
 
     await flushPromises()
-    expect(mailApiMock.fetchFolder).toHaveBeenCalledWith('inbox', 1, 20, '')
+    expect(mailApiMock.fetchFolder).toHaveBeenCalledWith('inbox', 1, 20, '', {})
 
     await wrapper.get('[data-testid="mail-search-input"]').setValue('release')
     await wrapper.get('[data-testid="mail-search-button"]').trigger('click')
     await flushPromises()
-    expect(mailApiMock.fetchFolder).toHaveBeenNthCalledWith(2, 'inbox', 1, 20, 'release')
+    expect(mailApiMock.fetchFolder).toHaveBeenNthCalledWith(2, 'inbox', 1, 20, 'release', {})
 
     await wrapper.get('[data-testid="open-mail"]').trigger('click')
     expect(navigateToMock).toHaveBeenCalledWith('/mail/m-1')
@@ -438,7 +438,7 @@ describe('mail smoke', () => {
 
     await wrapper.get('[data-testid="mail-next-page"]').trigger('click')
     await flushPromises()
-    expect(mailApiMock.fetchFolder).toHaveBeenLastCalledWith('inbox', 2, 20, 'release')
+    expect(mailApiMock.fetchFolder).toHaveBeenLastCalledWith('inbox', 2, 20, 'release', {})
   })
 
   it('shows empty state and visible error when search reload fails', async () => {
@@ -464,6 +464,53 @@ describe('mail smoke', () => {
     await flushPromises()
     expect(wrapper.get('[data-testid="mail-load-error"]').text()).toContain('Search failed')
     expect(messageErrorMock).toHaveBeenCalledWith('Search failed')
+  })
+
+  it('passes inbox triage filters through FolderMailbox reloads', async () => {
+    mailApiMock.fetchFolder
+      .mockResolvedValueOnce(buildPage(1))
+      .mockResolvedValueOnce(buildPage(1))
+      .mockResolvedValueOnce(buildPage(1))
+
+    const { default: FolderMailbox } = await importFolderMailbox()
+    const wrapper = mount(FolderMailbox, {
+      props: { titleKey: 'nav.inbox', folder: 'inbox' },
+      global: { stubs: { ...elementStubs, MailList: mailListStub } }
+    })
+
+    await flushPromises()
+    expect(wrapper.find('[data-testid="mail-filter-unread"]').exists()).toBe(true)
+    expect(wrapper.find('[data-testid="mail-filter-needsReply"]').exists()).toBe(true)
+    expect(wrapper.find('[data-testid="mail-filter-starred"]').exists()).toBe(true)
+    expect(wrapper.find('[data-testid="mail-filter-attachments"]').exists()).toBe(true)
+    expect(wrapper.find('[data-testid="mail-filter-importantContact"]').exists()).toBe(true)
+
+    await wrapper.get('[data-testid="mail-filter-needsReply"]').trigger('click')
+    await flushPromises()
+    expect(mailApiMock.fetchFolder).toHaveBeenLastCalledWith('inbox', 1, 20, '', {
+      needsReply: true
+    })
+
+    await wrapper.get('[data-testid="mail-search-input"]').setValue('vip')
+    await wrapper.get('[data-testid="mail-search-button"]').trigger('click')
+    await flushPromises()
+    expect(mailApiMock.fetchFolder).toHaveBeenLastCalledWith('inbox', 1, 20, 'vip', {
+      needsReply: true
+    })
+  })
+
+  it('does not render inbox triage filters for non-inbox folders', async () => {
+    mailApiMock.fetchFolder.mockResolvedValueOnce(buildPage(1))
+
+    const { default: FolderMailbox } = await importFolderMailbox()
+    const wrapper = mount(FolderMailbox, {
+      props: { titleKey: 'nav.sent', folder: 'sent' },
+      global: { stubs: { ...elementStubs, MailList: mailListStub } }
+    })
+
+    await flushPromises()
+    expect(wrapper.find('[data-testid="mail-filter-needsReply"]').exists()).toBe(false)
+    expect(mailApiMock.fetchFolder).toHaveBeenCalledWith('sent', 1, 20, '', {})
   })
 
   it('opens reply and forward from detail and downloads attachments', async () => {

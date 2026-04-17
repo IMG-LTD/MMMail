@@ -1,7 +1,7 @@
 <script setup lang="ts">
-import { onMounted, ref } from 'vue'
+import { onMounted, reactive, ref } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
-import type { MailId, MailPage, SystemMailFolder } from '~/types/api'
+import type { MailId, MailPage, MailTriageFilters, SystemMailFolder } from '~/types/api'
 import { useI18n } from '~/composables/useI18n'
 import { useMailApi } from '~/composables/useMailApi'
 import { useMailFolderApi } from '~/composables/useMailFolderApi'
@@ -33,6 +33,13 @@ const mailPage = ref<MailPage>({
   unread: 0
 })
 const loadError = ref('')
+const triageFilters = reactive<MailTriageFilters>({
+  unread: false,
+  needsReply: false,
+  starred: false,
+  hasAttachments: false,
+  importantContact: false
+})
 
 const mailStore = useMailStore()
 const { t } = useI18n()
@@ -71,12 +78,25 @@ const folderMap: Record<Lowercase<SystemMailFolder>, SystemMailFolder> = {
   trash: 'TRASH'
 }
 
+function currentInboxTriageFilters(): MailTriageFilters {
+  if (props.folder !== 'inbox') {
+    return {}
+  }
+  return {
+    ...(triageFilters.unread ? { unread: true } : {}),
+    ...(triageFilters.needsReply ? { needsReply: true } : {}),
+    ...(triageFilters.starred ? { starred: true } : {}),
+    ...(triageFilters.hasAttachments ? { hasAttachments: true } : {}),
+    ...(triageFilters.importantContact ? { importantContact: true } : {})
+  }
+}
+
 async function loadFolder(targetPage = currentPage.value, targetSize = pageSize.value): Promise<void> {
   loading.value = true
   loadError.value = ''
   try {
     const [page, stats, customFolders] = await Promise.all([
-      fetchFolder(props.folder, targetPage, targetSize, keyword.value),
+      fetchFolder(props.folder, targetPage, targetSize, keyword.value, currentInboxTriageFilters()),
       fetchStats(),
       listMailFolders()
     ])
@@ -219,6 +239,11 @@ function onSearch(): void {
   void loadFolder(DEFAULT_PAGE, pageSize.value)
 }
 
+function toggleTriageFilter(key: keyof MailTriageFilters): void {
+  triageFilters[key] = !triageFilters[key]
+  void loadFolder(DEFAULT_PAGE, pageSize.value)
+}
+
 function onPageChange(page: number): void {
   void loadFolder(page, pageSize.value)
 }
@@ -246,6 +271,23 @@ function onPageSizeChange(size: number): void {
         <el-button v-if="props.showTrashBulkActions" type="danger" plain @click="onEmptyTrash">{{ t('mailbox.actions.emptyTrash') }}</el-button>
         <el-button v-if="props.showSpamBulkActions" @click="onRestoreAllSpam">{{ t('mailbox.actions.restoreAll') }}</el-button>
         <el-button v-if="props.showSpamBulkActions" type="danger" plain @click="onEmptySpam">{{ t('mailbox.actions.emptySpam') }}</el-button>
+      </div>
+      <div v-if="props.folder === 'inbox'" class="triage-filters">
+        <el-button data-testid="mail-filter-unread" :type="triageFilters.unread ? 'primary' : 'default'" @click="toggleTriageFilter('unread')">
+          {{ t('mailList.filters.unread') }}
+        </el-button>
+        <el-button data-testid="mail-filter-needsReply" :type="triageFilters.needsReply ? 'primary' : 'default'" @click="toggleTriageFilter('needsReply')">
+          {{ t('mailList.filters.needsReply') }}
+        </el-button>
+        <el-button data-testid="mail-filter-starred" :type="triageFilters.starred ? 'primary' : 'default'" @click="toggleTriageFilter('starred')">
+          {{ t('mailList.filters.starred') }}
+        </el-button>
+        <el-button data-testid="mail-filter-attachments" :type="triageFilters.hasAttachments ? 'primary' : 'default'" @click="toggleTriageFilter('hasAttachments')">
+          {{ t('mailList.filters.attachments') }}
+        </el-button>
+        <el-button data-testid="mail-filter-importantContact" :type="triageFilters.importantContact ? 'primary' : 'default'" @click="toggleTriageFilter('importantContact')">
+          {{ t('mailList.filters.importantContact') }}
+        </el-button>
       </div>
     </section>
     <el-alert
@@ -293,6 +335,13 @@ function onPageSizeChange(size: number): void {
   flex-wrap: wrap;
   align-items: center;
   gap: 8px;
+}
+
+.triage-filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 12px;
 }
 
 .keyword-input {

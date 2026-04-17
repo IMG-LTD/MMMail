@@ -754,6 +754,9 @@ export interface UpdateLumoConversationArchiveRequest {
 
 export type SystemMailFolder = 'INBOX' | 'SENT' | 'DRAFTS' | 'OUTBOX' | 'ARCHIVE' | 'SPAM' | 'TRASH' | 'SCHEDULED' | 'SNOOZED'
 export type MailFolder = SystemMailFolder | 'CUSTOM'
+export type MailSenderType = 'INTERNAL' | 'EXTERNAL' | 'SYSTEM'
+export type MailReplyState = 'NONE' | 'REPLIED' | 'AWAITING_ME' | 'AWAITING_OTHER'
+export type MailLatestActor = 'ME' | 'OTHER'
 export type MailIdentitySource = 'PRIMARY' | 'ORG_CUSTOM_DOMAIN' | 'PASS_ALIAS'
 export type MailIdentityStatus = 'ENABLED' | 'DISABLED'
 
@@ -772,6 +775,22 @@ export interface MailSummary {
   isDraft: boolean
   sentAt: string
   labels: string[]
+  senderDisplayName?: string | null
+  senderType?: MailSenderType | null
+  isImportantContact?: boolean
+  hasAttachments?: boolean
+  replyState?: MailReplyState | null
+  needsReply?: boolean
+  latestActor?: MailLatestActor | null
+  conversationMessageCount?: number | null
+}
+
+export interface MailTriageFilters {
+  unread?: boolean
+  needsReply?: boolean
+  starred?: boolean
+  hasAttachments?: boolean
+  importantContact?: boolean
 }
 
 export interface MailDetail extends MailSummary {

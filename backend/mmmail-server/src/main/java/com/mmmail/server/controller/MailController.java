@@ -64,9 +64,20 @@ public class MailController {
     public Result<MailPageVo> inbox(
             @RequestParam(defaultValue = "1") long page,
             @RequestParam(defaultValue = "20") long size,
-            @RequestParam(defaultValue = "") String keyword
+            @RequestParam(defaultValue = "") String keyword,
+            @RequestParam(required = false) Boolean unread,
+            @RequestParam(required = false) Boolean needsReply,
+            @RequestParam(required = false) Boolean starred,
+            @RequestParam(required = false) Boolean hasAttachments,
+            @RequestParam(required = false) Boolean importantContact
     ) {
-        return Result.success(mailService.listFolder(SecurityUtils.currentUserId(), "INBOX", page, size, keyword));
+        return Result.success(mailService.listInbox(
+                SecurityUtils.currentUserId(),
+                page,
+                size,
+                keyword,
+                new MailService.InboxTriageFilters(unread, needsReply, starred, hasAttachments, importantContact)
+        ));
     }
 
     @GetMapping("/unread")

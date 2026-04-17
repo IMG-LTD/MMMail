@@ -8,6 +8,8 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.mmmail.common.exception.BizException;
 import com.mmmail.common.exception.ErrorCode;
+import com.mmmail.server.mapper.ContactEntryMapper;
+import com.mmmail.server.mapper.MailAttachmentMapper;
 import com.mmmail.server.mapper.MailLabelMapper;
 import com.mmmail.server.mapper.MailMessageMapper;
 import com.mmmail.server.mapper.UserAccountMapper;
@@ -18,6 +20,8 @@ import com.mmmail.server.model.dto.PreviewMailFilterRequest;
 import com.mmmail.server.model.dto.SaveDraftRequest;
 import com.mmmail.server.model.dto.SendMailRequest;
 import com.mmmail.server.model.dto.UploadDraftAttachmentRequest;
+import com.mmmail.server.model.entity.ContactEntry;
+import com.mmmail.server.model.entity.MailAttachment;
 import com.mmmail.server.model.entity.MailLabel;
 import com.mmmail.server.model.entity.MailExternalSecureLink;
 import com.mmmail.server.model.entity.MailMessage;
@@ -97,10 +101,17 @@ public class MailService {
             "MOVE_TRASH"
     );
 
+    private static final Set<String> SYSTEM_SENDER_EMAILS = Set.of(
+            "security@mmmail.local",
+            "no-reply@mmmail.local"
+    );
+
     private final MailMessageMapper mailMessageMapper;
     private final UserAccountMapper userAccountMapper;
     private final UserPreferenceMapper userPreferenceMapper;
     private final MailLabelMapper mailLabelMapper;
+    private final ContactEntryMapper contactEntryMapper;
+    private final MailAttachmentMapper mailAttachmentMapper;
     private final BlockedSenderService blockedSenderService;
     private final TrustedSenderService trustedSenderService;
     private final BlockedDomainService blockedDomainService;
@@ -125,6 +136,8 @@ public class MailService {
             UserAccountMapper userAccountMapper,
             UserPreferenceMapper userPreferenceMapper,
             MailLabelMapper mailLabelMapper,
+            ContactEntryMapper contactEntryMapper,
+            MailAttachmentMapper mailAttachmentMapper,
             BlockedSenderService blockedSenderService,
             TrustedSenderService trustedSenderService,
             BlockedDomainService blockedDomainService,
@@ -148,6 +161,8 @@ public class MailService {
         this.userAccountMapper = userAccountMapper;
         this.userPreferenceMapper = userPreferenceMapper;
         this.mailLabelMapper = mailLabelMapper;
+        this.contactEntryMapper = contactEntryMapper;
+        this.mailAttachmentMapper = mailAttachmentMapper;
         this.blockedSenderService = blockedSenderService;
         this.trustedSenderService = trustedSenderService;
         this.blockedDomainService = blockedDomainService;
@@ -182,6 +197,35 @@ public class MailService {
         long unread = countUnread(userId);
         List<MailSummaryVo> items = toSummaries(userId, pageResult.getRecords());
         return new MailPageVo(items, pageResult.getTotal(), pageResult.getCurrent(), pageResult.getSize(), unread);
+    }
+
+    public MailPageVo listInbox(Long userId, long page, long size, String keyword, InboxTriageFilters filters) {
+        InboxTriageFilters safeFilters = filters == null ? InboxTriageFilters.empty() : filters;
+        if (!safeFilters.hasActiveFilter()) {
+            return listFolder(userId, "INBOX", page, size, keyword);
+        }
+        flushDueMails(userId);
+
+        long safePage = Math.max(1, page);
+        long safeSize = Math.max(1, size);
+        LambdaQueryWrapper<MailMessage> query = new LambdaQueryWrapper<MailMessage>()
+                .eq(MailMessage::getOwnerId, userId)
+                .eq(MailMessage::getFolderType, "INBOX")
+                .orderByDesc(MailMessage::getSentAt);
+        appendKeywordCondition(query, keyword);
+
+        List<MailSummaryVo> filtered = toSummaries(userId, mailMessageMapper.selectList(query)).stream()
+                .filter(summary -> !Boolean.TRUE.equals(safeFilters.unread()) || !summary.isRead())
+                .filter(summary -> !Boolean.TRUE.equals(safeFilters.needsReply()) || summary.needsReply())
+                .filter(summary -> !Boolean.TRUE.equals(safeFilters.starred()) || summary.isStarred())
+                .filter(summary -> !Boolean.TRUE.equals(safeFilters.hasAttachments()) || summary.hasAttachments())
+                .filter(summary -> !Boolean.TRUE.equals(safeFilters.importantContact()) || summary.isImportantContact())
+                .toList();
+
+        int fromIndex = (int) Math.max(0, (safePage - 1) * safeSize);
+        int toIndex = (int) Math.min(filtered.size(), fromIndex + safeSize);
+        List<MailSummaryVo> items = fromIndex >= filtered.size() ? List.of() : filtered.subList(fromIndex, toIndex);
+        return new MailPageVo(items, filtered.size(), safePage, safeSize, countUnread(userId));
     }
 
     public MailPageVo listCustomFolder(Long userId, Long folderId, long page, long size, String keyword) {
@@ -1104,6 +1148,26 @@ public class MailService {
     ) {
     }
 
+    public record InboxTriageFilters(
+            Boolean unread,
+            Boolean needsReply,
+            Boolean starred,
+            Boolean hasAttachments,
+            Boolean importantContact
+    ) {
+        public static InboxTriageFilters empty() {
+            return new InboxTriageFilters(null, null, null, null, null);
+        }
+
+        public boolean hasActiveFilter() {
+            return Boolean.TRUE.equals(unread)
+                    || Boolean.TRUE.equals(needsReply)
+                    || Boolean.TRUE.equals(starred)
+                    || Boolean.TRUE.equals(hasAttachments)
+                    || Boolean.TRUE.equals(importantContact);
+        }
+    }
+
     private String normalizeFolder(String folder) {
         if (!StringUtils.hasText(folder)) {
             throw new BizException(ErrorCode.INVALID_ARGUMENT, "Folder is required");
@@ -1682,9 +1746,17 @@ public class MailService {
     }
 
     private List<MailSummaryVo> toSummaries(Long userId, List<MailMessage> messages) {
+        if (messages.isEmpty()) {
+            return List.of();
+        }
         Map<Long, MailFolderService.MailFolderReference> folderRefs = resolveCustomFolderRefs(userId, messages);
+        SummaryContext summaryContext = buildSummaryContext(userId, messages);
         return messages.stream()
-                .map(message -> toSummary(message, lookupCustomFolderRef(folderRefs, message.getCustomFolderId())))
+                .map(message -> toSummary(
+                        message,
+                        lookupCustomFolderRef(folderRefs, message.getCustomFolderId()),
+                        summaryContext
+                ))
                 .toList();
     }
 
@@ -1719,13 +1791,141 @@ public class MailService {
         return "INBOX".equals(mail.getFolderType()) || "CUSTOM".equals(mail.getFolderType());
     }
 
-    private MailSummaryVo toSummary(MailMessage message, MailFolderService.MailFolderReference folderRef) {
+    private SummaryContext buildSummaryContext(Long userId, List<MailMessage> messages) {
+        Set<String> senderEmails = messages.stream()
+                .map(MailMessage::getSenderEmail)
+                .filter(StringUtils::hasText)
+                .map(this::normalizeEmailValue)
+                .collect(LinkedHashSet::new, Set::add, Set::addAll);
+        Set<Long> mailIds = messages.stream()
+                .map(MailMessage::getId)
+                .collect(LinkedHashSet::new, Set::add, Set::addAll);
+        Set<TriageLookupKey> triageLookupKeys = messages.stream()
+                .map(this::resolveTriageLookupKey)
+                .collect(LinkedHashSet::new, Set::add, Set::addAll);
+
+        Map<String, ContactEntry> contactsByEmail = resolveContactsByEmail(userId, senderEmails);
+        Map<String, UserAccount> accountsByEmail = resolveAccountsByEmail(senderEmails);
+        Set<Long> attachmentMailIds = resolveAttachmentMailIds(userId, mailIds);
+        Map<TriageLookupKey, ConversationTriageState> conversationStates = resolveConversationStates(userId, triageLookupKeys);
+        return new SummaryContext(contactsByEmail, accountsByEmail, attachmentMailIds, conversationStates);
+    }
+
+    private Map<String, ContactEntry> resolveContactsByEmail(Long userId, Set<String> senderEmails) {
+        if (senderEmails.isEmpty()) {
+            return Map.of();
+        }
+        return contactEntryMapper.selectList(new LambdaQueryWrapper<ContactEntry>()
+                        .eq(ContactEntry::getOwnerId, userId)
+                        .in(ContactEntry::getEmail, senderEmails))
+                .stream()
+                .filter(contact -> StringUtils.hasText(contact.getEmail()))
+                .collect(LinkedHashMap::new, (map, contact) -> map.putIfAbsent(normalizeEmailValue(contact.getEmail()), contact), Map::putAll);
+    }
+
+    private Map<String, UserAccount> resolveAccountsByEmail(Set<String> senderEmails) {
+        if (senderEmails.isEmpty()) {
+            return Map.of();
+        }
+        return userAccountMapper.selectActiveByNormalizedEmails(senderEmails)
+                .stream()
+                .filter(account -> StringUtils.hasText(account.getEmail()))
+                .collect(LinkedHashMap::new, (map, account) -> map.putIfAbsent(normalizeEmailValue(account.getEmail()), account), Map::putAll);
+    }
+
+    private Set<Long> resolveAttachmentMailIds(Long userId, Set<Long> mailIds) {
+        if (mailIds.isEmpty()) {
+            return Set.of();
+        }
+        return mailAttachmentMapper.selectList(new LambdaQueryWrapper<MailAttachment>()
+                        .eq(MailAttachment::getOwnerId, userId)
+                        .in(MailAttachment::getMailId, mailIds))
+                .stream()
+                .map(MailAttachment::getMailId)
+                .collect(LinkedHashSet::new, Set::add, Set::addAll);
+    }
+
+    private Map<TriageLookupKey, ConversationTriageState> resolveConversationStates(Long userId, Set<TriageLookupKey> triageLookupKeys) {
+        if (triageLookupKeys.isEmpty()) {
+            return Map.of();
+        }
+        Set<String> conversationKeys = triageLookupKeys.stream()
+                .map(TriageLookupKey::conversationKey)
+                .collect(LinkedHashSet::new, Set::add, Set::addAll);
+        Set<String> participantKeys = triageLookupKeys.stream()
+                .map(TriageLookupKey::participantKey)
+                .collect(LinkedHashSet::new, Set::add, Set::addAll);
+
+        Map<TriageLookupKey, ConversationTriageState> statesByConversation = mailMessageMapper
+                .selectConversationTriageAggregates(userId, NO_SUBJECT_KEY, conversationKeys, participantKeys)
+                .stream()
+                .collect(LinkedHashMap::new,
+                        (map, row) -> map.put(
+                                new TriageLookupKey(row.getConversationKey(), row.getParticipantKey()),
+                                ConversationTriageState.from(row)
+                        ),
+                        Map::putAll);
+
+        Map<TriageLookupKey, ConversationTriageState> states = new LinkedHashMap<>();
+        for (TriageLookupKey triageLookupKey : triageLookupKeys) {
+            states.put(triageLookupKey, statesByConversation.getOrDefault(triageLookupKey, ConversationTriageState.empty()));
+        }
+        return states;
+    }
+
+    private TriageLookupKey resolveTriageLookupKey(MailMessage message) {
+        return new TriageLookupKey(
+                normalizeConversationSubject(message.getSubject()),
+                resolveTriageParticipantKey(message)
+        );
+    }
+
+    private String resolveTriageParticipantKey(MailMessage message) {
+        String peerEmail = normalizeEmailValue(message.getPeerEmail());
+        if (peerEmail != null) {
+            return "email:" + peerEmail;
+        }
+        if (message.getPeerId() != null) {
+            return "peer-id:" + message.getPeerId();
+        }
+        String senderEmail = normalizeEmailValue(message.getSenderEmail());
+        if ("IN".equals(message.getDirection()) && senderEmail != null) {
+            return "email:" + senderEmail;
+        }
+        return message.getId() == null ? "message:null" : "message-id:" + message.getId();
+    }
+
+    private String normalizeEmailValue(String email) {
+        return StringUtils.hasText(email) ? email.trim().toLowerCase(Locale.ROOT) : null;
+    }
+
+    private MailSummaryVo toSummary(
+            MailMessage message,
+            MailFolderService.MailFolderReference folderRef,
+            SummaryContext summaryContext
+    ) {
         String preview = mailE2eeMessageService.resolvePreview(message);
+        String senderEmail = normalizeEmailValue(message.getSenderEmail());
+        ContactEntry contact = senderEmail == null ? null : summaryContext.contactsByEmail().get(senderEmail);
+        UserAccount senderAccount = senderEmail == null ? null : summaryContext.accountsByEmail().get(senderEmail);
+        TriageLookupKey triageLookupKey = resolveTriageLookupKey(message);
+        ConversationTriageState triageState = summaryContext.conversationStates().getOrDefault(
+                triageLookupKey,
+                ConversationTriageState.empty()
+        );
 
         return new MailSummaryVo(
                 String.valueOf(message.getId()),
                 String.valueOf(message.getOwnerId()),
                 message.getSenderEmail(),
+                resolveSenderDisplayName(contact, senderAccount),
+                resolveSenderType(message, senderEmail, senderAccount),
+                contact != null && contact.getIsFavorite() != null && contact.getIsFavorite() == 1,
+                summaryContext.attachmentMailIds().contains(message.getId()),
+                triageState.replyState(),
+                triageState.needsReply(),
+                triageState.latestActor(),
+                triageState.messageCount(),
                 message.getPeerEmail(),
                 message.getFolderType(),
                 folderRef == null ? null : String.valueOf(folderRef.id()),
@@ -1740,6 +1940,88 @@ public class MailService {
         );
     }
 
+    private String resolveSenderDisplayName(ContactEntry contact, UserAccount senderAccount) {
+        if (contact != null && StringUtils.hasText(contact.getDisplayName())) {
+            return contact.getDisplayName();
+        }
+        if (senderAccount != null && StringUtils.hasText(senderAccount.getDisplayName())) {
+            return senderAccount.getDisplayName();
+        }
+        return null;
+    }
+
+    private String resolveSenderType(MailMessage message, String senderEmail, UserAccount senderAccount) {
+        if (senderEmail != null && SYSTEM_SENDER_EMAILS.contains(senderEmail)) {
+            return "SYSTEM";
+        }
+        if (senderAccount != null || message.getPeerId() != null) {
+            return "INTERNAL";
+        }
+        return senderEmail != null ? "EXTERNAL" : null;
+    }
+
+
+    private record SummaryContext(
+            Map<String, ContactEntry> contactsByEmail,
+            Map<String, UserAccount> accountsByEmail,
+            Set<Long> attachmentMailIds,
+            Map<TriageLookupKey, ConversationTriageState> conversationStates
+    ) {
+    }
+
+    private record TriageLookupKey(
+            String conversationKey,
+            String participantKey
+    ) {
+    }
+
+    private record ConversationTriageState(
+            String latestActor,
+            String replyState,
+            boolean needsReply,
+            Integer messageCount
+    ) {
+
+        private static ConversationTriageState from(MailMessageMapper.ConversationTriageAggregateRow row) {
+            if (row == null) {
+                return empty();
+            }
+            String latestActor = resolveLatestActor(row.getLatestDirection());
+            boolean hasInbound = row.getHasInbound() != null && row.getHasInbound() == 1;
+            boolean hasOutbound = row.getHasOutbound() != null && row.getHasOutbound() == 1;
+            String replyState;
+            boolean needsReply;
+            if ("OTHER".equals(latestActor)) {
+                replyState = "AWAITING_ME";
+                needsReply = true;
+            } else if ("ME".equals(latestActor) && hasInbound) {
+                replyState = "AWAITING_OTHER";
+                needsReply = false;
+            } else if (hasOutbound) {
+                replyState = "REPLIED";
+                needsReply = false;
+            } else {
+                replyState = "NONE";
+                needsReply = false;
+            }
+            return new ConversationTriageState(latestActor, replyState, needsReply, row.getMessageCount());
+        }
+
+        private static ConversationTriageState empty() {
+            return new ConversationTriageState(null, "NONE", false, 0);
+        }
+
+        private static String resolveLatestActor(String direction) {
+            if (!StringUtils.hasText(direction)) {
+                return null;
+            }
+            return switch (direction) {
+                case "OUT" -> "ME";
+                case "IN" -> "OTHER";
+                default -> null;
+            };
+        }
+    }
 
     private static final class ConversationAggregate {
         private final String normalizedSubject;
