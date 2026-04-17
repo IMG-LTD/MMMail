@@ -5,6 +5,8 @@ import org.apache.catalina.util.ServerInfo;
 import org.apache.maven.artifact.versioning.ComparableVersion;
 import org.jose4j.jwt.JwtClaims;
 import org.junit.jupiter.api.Test;
+import org.springframework.boot.SpringBootVersion;
+import org.springframework.security.core.SpringSecurityCoreVersion;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -62,11 +64,38 @@ class DependencyVersionGuardTest {
     }
 
     @Test
+    void springBootRuntimeShouldStayOnPatchedVersionForSecurityGate() {
+        String version = SpringBootVersion.getVersion();
+
+        assertThat(versionAtLeast(version, "3.5.13"))
+                .as("resolved spring-boot version %s should be at least 3.5.13 to clear the CI security gate", version)
+                .isTrue();
+    }
+
+    @Test
+    void springSecurityRuntimeShouldStayOnPatchedVersionForSecurityGate() {
+        String version = SpringSecurityCoreVersion.getVersion();
+
+        assertThat(versionAtLeast(version, "6.5.9"))
+                .as("resolved spring-security-core version %s should be at least 6.5.9 to clear the CI security gate", version)
+                .isTrue();
+    }
+
+    @Test
+    void springdocRuntimeShouldStayOnPatchedVersionForSecurityGate() throws Exception {
+        String version = readRuntimeVersion(DependencyVersionGuardTest.class, "META-INF/maven/org.springdoc/springdoc-openapi-starter-webmvc-ui/pom.properties");
+
+        assertThat(versionAtLeast(version, "2.8.17"))
+                .as("resolved springdoc-openapi-starter-webmvc-ui version %s should be at least 2.8.17 to stay compatible with the Boot 3.5 security baseline", version)
+                .isTrue();
+    }
+
+    @Test
     void swaggerUiRuntimeShouldStayOnPatchedVersionForSecurityGate() throws Exception {
         String version = readRuntimeVersion(DependencyVersionGuardTest.class, "META-INF/maven/org.webjars/swagger-ui/pom.properties");
 
-        assertThat(versionAtLeast(version, "5.32.1"))
-                .as("resolved swagger-ui version %s should be at least 5.32.1 to clear the CI security gate", version)
+        assertThat(versionAtLeast(version, "5.32.4"))
+                .as("resolved swagger-ui version %s should be at least 5.32.4 to clear the CI security gate", version)
                 .isTrue();
     }
 
