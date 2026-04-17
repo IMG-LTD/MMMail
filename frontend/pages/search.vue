@@ -36,7 +36,7 @@ const SEARCH_RESULT_LIMIT = 30
 const route = useRoute()
 const { t } = useI18n()
 const mailStore = useMailStore()
-const { fetchSearch, fetchStats, applyAction, applyBatchAction, snoozeUntil } = useMailApi()
+const { fetchSearch, fetchStats, applyAction, applyBatchAction, snoozeUntil, undoSend } = useMailApi()
 const { listLabels } = useLabelApi()
 const {
   listSearchPresets,
@@ -205,6 +205,17 @@ async function onBatchAction(mailIds: MailId[], action: string): Promise<void> {
   mailStore.updateStats(result.stats)
   ElMessage.success(t('search.messages.batchUpdated', { count: result.affected }))
   await runSearch()
+}
+
+async function onUndo(mailId: MailId): Promise<void> {
+  try {
+    await undoSend(mailId)
+    ElMessage.success(t('mailbox.messages.undoSuccess'))
+  } catch (error) {
+    ElMessage.error(resolveErrorMessage(error, t('mailbox.messages.undoFailed')))
+  } finally {
+    await runSearch()
+  }
 }
 
 async function onCustomSnooze(mailId: MailId): Promise<void> {
@@ -397,6 +408,7 @@ function resolveErrorMessage(error: unknown, fallback: string): string {
       @open="openMail"
       @action="onAction"
       @batch-action="onBatchAction"
+      @undo="onUndo"
       @custom-snooze="onCustomSnooze"
     />
 

@@ -10,6 +10,7 @@ import type {
   MailDetail,
   MailPublicSecureLink,
   MailSenderIdentity,
+  MailTriageFilters,
   MailboxStats,
   SearchMailParams,
   SystemMailFolder,
@@ -36,10 +37,24 @@ export function useMailApi() {
     folder: Lowercase<SystemMailFolder>,
     page = 1,
     size = 20,
-    keyword = ''
+    keyword = '',
+    triageFilters: MailTriageFilters = {}
   ): Promise<MailPage> {
     const response = await $apiClient.get<ApiResponse<MailPage>>(`/api/v1/mails/${FOLDER_PATH_MAP[folder]}`, {
-      params: { page, size, keyword }
+      params: {
+        page,
+        size,
+        keyword,
+        ...(folder === 'inbox'
+          ? {
+              unread: triageFilters.unread || undefined,
+              needsReply: triageFilters.needsReply || undefined,
+              starred: triageFilters.starred || undefined,
+              hasAttachments: triageFilters.hasAttachments || undefined,
+              importantContact: triageFilters.importantContact || undefined
+            }
+          : {})
+      }
     })
     return response.data.data
   }

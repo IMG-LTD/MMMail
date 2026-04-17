@@ -1,7 +1,8 @@
 <script setup lang="ts">
-import { computed, ref } from 'vue'
+import { computed, ref, useId, watch } from 'vue'
 import type { MailId, MailSummary } from '~/types/api'
 import { useI18n } from '~/composables/useI18n'
+import MailListItem from '~/components/business/mail-list/MailListItem.vue'
 
 const props = defineProps<{
   title: string
@@ -18,19 +19,37 @@ const emit = defineEmits<{
   customSnooze: [mailId: MailId]
 }>()
 
-const { locale, t } = useI18n()
+const { t } = useI18n()
+const titleId = useId()
 const selectedIds = ref<MailId[]>([])
 const selectedFolderType = computed(() => {
   if (!selectedIds.value.length) {
     return ''
   }
-  const selectedMail = props.mails.find((mail) => mail.id === selectedIds.value[0])
-  return selectedMail?.folderType || ''
+  return props.mails.find((mail) => mail.id === selectedIds.value[0])?.folderType || ''
 })
 const canShowPolicyBatch = computed(() => selectedFolderType.value === 'INBOX' || selectedFolderType.value === 'SPAM')
+const allSelected = computed(() => props.mails.length > 0 && props.mails.every((mail) => selectedIds.value.includes(mail.id)))
+const canBatch = computed(() => props.allowBatchActions !== false)
 
-function onSelectionChange(rows: MailSummary[]): void {
-  selectedIds.value = rows.map((row) => row.id)
+watch(() => props.mails, (mails) => {
+  const visibleIds = new Set(mails.map((mail) => mail.id))
+  selectedIds.value = selectedIds.value.filter((id) => visibleIds.has(id))
+}, { deep: true })
+
+function toggleSelection(mailId: MailId, checked: boolean): void {
+  if (checked) {
+    if (!selectedIds.value.includes(mailId)) {
+      selectedIds.value = [...selectedIds.value, mailId]
+    }
+    return
+  }
+
+  selectedIds.value = selectedIds.value.filter((id) => id !== mailId)
+}
+
+function toggleAllSelection(checked: boolean): void {
+  selectedIds.value = checked ? props.mails.map((mail) => mail.id) : []
 }
 
 function runBatch(action: string): void {
@@ -39,21 +58,24 @@ function runBatch(action: string): void {
   }
   emit('batchAction', [...selectedIds.value], action)
 }
-
-function formatSentAt(value: string): string {
-  return new Date(value).toLocaleString(locale.value)
-}
 </script>
 
 <template>
-  <section class="mm-card mail-list">
+  <section class="mm-card mail-list" :aria-labelledby="titleId">
     <header class="head">
-      <h2>{{ props.title }}</h2>
+      <h2 :id="titleId">{{ props.title }}</h2>
       <span>{{ t('mailList.header.items', { count: props.mails.length }) }}</span>
     </header>
 
-    <div v-if="selectedIds.length && props.allowBatchActions !== false" class="batch-actions">
-      <el-tag type="info">{{ t('mailList.batch.selected', { count: selectedIds.length }) }}</el-tag>
+    <div v-if="selectedIds.length && canBatch" class="batch-actions">
+      <label class="select-all">
+        <input
+          :checked="allSelected"
+          type="checkbox"
+          @change="toggleAllSelection(($event.target as HTMLInputElement).checked)"
+        >
+        <span>{{ t('mailList.batch.selected', { count: selectedIds.length }) }}</span>
+      </label>
       <el-button size="small" @click="runBatch('MARK_READ')">{{ t('mailList.actions.markRead') }}</el-button>
       <el-button size="small" @click="runBatch('MARK_UNREAD')">{{ t('mailList.actions.markUnread') }}</el-button>
       <el-button size="small" @click="runBatch('SNOOZE_24H')">{{ t('mailList.actions.snooze24h') }}</el-button>
@@ -77,95 +99,21 @@ function formatSentAt(value: string): string {
       </el-button>
     </div>
 
-    <el-table
-      v-loading="props.loading"
-      :data="props.mails"
-      row-key="id"
-      style="width: 100%"
-      @selection-change="onSelectionChange"
-    >
-      <el-table-column type="selection" width="48" />
-      <el-table-column :label="t('mailList.columns.subject')" min-width="260">
-        <template #default="scope">
-          <button class="subject-btn" @click="emit('open', scope.row.id)">
-            <span :class="['subject', { unread: !scope.row.isRead && !scope.row.isDraft }]">
-              {{ scope.row.subject || t('mailList.subjectFallback') }}
-            </span>
-            <el-tag v-for="label in scope.row.labels" :key="label" size="small" effect="plain" class="label-tag">
-              {{ label }}
-            </el-tag>
-          </button>
-        </template>
-      </el-table-column>
-      <el-table-column prop="peerEmail" :label="t('mailList.columns.peer')" min-width="180" />
-      <el-table-column :label="t('mailList.columns.flags')" width="140">
-        <template #default="scope">
-          <el-tag v-if="scope.row.isStarred" size="small" type="warning">{{ t('mailList.flags.starred') }}</el-tag>
-          <el-tag v-else-if="!scope.row.isRead" size="small" type="success">{{ t('mailList.flags.unread') }}</el-tag>
-        </template>
-      </el-table-column>
-      <el-table-column :label="t('mailList.columns.time')" min-width="180">
-        <template #default="scope">
-          {{ formatSentAt(scope.row.sentAt) }}
-        </template>
-      </el-table-column>
-      <el-table-column :label="t('mailList.columns.actions')" width="520">
-        <template #default="scope">
-          <div class="row-actions">
-            <template v-if="scope.row.folderType === 'OUTBOX'">
-              <el-button size="small" text @click="emit('undo', scope.row.id)">{{ t('mailList.actions.undoSend') }}</el-button>
-            </template>
-            <template v-else>
-              <el-button size="small" text @click="emit('action', scope.row.id, scope.row.isRead ? 'MARK_UNREAD' : 'MARK_READ')">
-                {{ t(scope.row.isRead ? 'mailList.actions.unread' : 'mailList.actions.read') }}
-              </el-button>
-              <el-button size="small" text @click="emit('action', scope.row.id, scope.row.isStarred ? 'UNSTAR' : 'STAR')">
-                {{ t(scope.row.isStarred ? 'mailList.actions.unstar' : 'mailList.actions.star') }}
-              </el-button>
-              <el-button size="small" text @click="emit('action', scope.row.id, 'SNOOZE_24H')">{{ t('mailList.actions.snooze24h') }}</el-button>
-              <el-button size="small" text @click="emit('action', scope.row.id, 'SNOOZE_7D')">{{ t('mailList.actions.snooze7d') }}</el-button>
-              <el-button size="small" text @click="emit('customSnooze', scope.row.id)">{{ t('mailList.actions.customSnooze') }}</el-button>
-              <el-button size="small" text @click="emit('action', scope.row.id, 'UNSNOOZE')">{{ t('mailList.actions.unsnooze') }}</el-button>
-              <el-button size="small" text @click="emit('action', scope.row.id, 'MOVE_ARCHIVE')">{{ t('mailList.actions.archive') }}</el-button>
-              <el-button size="small" text @click="emit('action', scope.row.id, 'MOVE_SPAM')">{{ t('mailList.actions.spam') }}</el-button>
-              <el-button size="small" text @click="emit('action', scope.row.id, 'MOVE_TRASH')">{{ t('mailList.actions.trash') }}</el-button>
-              <template v-if="scope.row.folderType === 'INBOX' || scope.row.folderType === 'SPAM'">
-                <el-button size="small" text type="danger" @click="emit('action', scope.row.id, 'BLOCK_SENDER')">
-                  {{ t('mailList.actions.blockSender') }}
-                </el-button>
-                <el-button size="small" text type="success" @click="emit('action', scope.row.id, 'TRUST_SENDER')">
-                  {{ t('mailList.actions.trustSender') }}
-                </el-button>
-                <el-button size="small" text type="danger" @click="emit('action', scope.row.id, 'BLOCK_DOMAIN')">
-                  {{ t('mailList.actions.blockDomain') }}
-                </el-button>
-                <el-button size="small" text type="success" @click="emit('action', scope.row.id, 'TRUST_DOMAIN')">
-                  {{ t('mailList.actions.trustDomain') }}
-                </el-button>
-              </template>
-              <el-button
-                v-if="scope.row.folderType === 'SPAM'"
-                size="small"
-                text
-                type="primary"
-                @click="emit('action', scope.row.id, 'REPORT_NOT_PHISHING')"
-              >
-                {{ t('mailList.actions.reportNotPhishing') }}
-              </el-button>
-              <el-button
-                v-else-if="scope.row.folderType !== 'SENT' && scope.row.folderType !== 'DRAFTS'"
-                size="small"
-                text
-                type="danger"
-                @click="emit('action', scope.row.id, 'REPORT_PHISHING')"
-              >
-                {{ t('mailList.actions.reportPhishing') }}
-              </el-button>
-            </template>
-          </div>
-        </template>
-      </el-table-column>
-    </el-table>
+    <div v-if="props.loading" class="list-status">{{ t('mailList.status.loading') }}</div>
+    <el-empty v-else-if="!props.mails.length" :description="t('mailList.empty')" />
+    <ul v-else class="items">
+      <li v-for="mail in props.mails" :key="mail.id" class="item">
+        <MailListItem
+          :mail="mail"
+          :selected="selectedIds.includes(mail.id)"
+          @toggle-selection="toggleSelection(mail.id, $event)"
+          @open="emit('open', mail.id)"
+          @action="emit('action', mail.id, $event)"
+          @undo="emit('undo', mail.id)"
+          @custom-snooze="emit('customSnooze', mail.id)"
+        />
+      </li>
+    </ul>
   </section>
 </template>
 
@@ -178,6 +126,7 @@ function formatSentAt(value: string): string {
   display: flex;
   justify-content: space-between;
   align-items: center;
+  gap: 12px;
   margin-bottom: 12px;
 }
 
@@ -191,33 +140,33 @@ h2 {
   flex-wrap: wrap;
   gap: 8px;
   align-items: center;
-  margin-bottom: 10px;
+  margin-bottom: 12px;
 }
 
-.subject-btn {
-  all: unset;
-  cursor: pointer;
-  display: flex;
+.select-all {
+  display: inline-flex;
   align-items: center;
-  flex-wrap: wrap;
-  gap: 6px;
+  gap: 8px;
+  padding-right: 4px;
+  color: var(--el-text-color-regular, #606266);
 }
 
-.subject {
-  font-weight: 500;
+.list-status {
+  padding: 28px 12px;
+  text-align: center;
+  color: var(--el-text-color-secondary, #909399);
 }
 
-.subject.unread {
-  font-weight: 700;
-}
-
-.label-tag {
-  margin-left: 2px;
-}
-
-.row-actions {
+.items {
   display: flex;
-  flex-wrap: wrap;
-  gap: 6px;
+  flex-direction: column;
+  gap: 12px;
+  padding: 0;
+  margin: 0;
+  list-style: none;
+}
+
+.item {
+  margin: 0;
 }
 </style>

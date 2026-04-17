@@ -94,6 +94,9 @@ public class MailDeliveryRouteService {
             recordAliasRelay(context, alias.getOwnerId(), detail);
             return Optional.of(targets);
         }
+        if (isManagedLocalDomain(resolvedEmail)) {
+            return Optional.empty();
+        }
         return Optional.of(List.of(MailDeliveryTarget.smtp(displayEmail)));
     }
 
@@ -122,6 +125,14 @@ public class MailDeliveryRouteService {
     private BizException rejectUndeliverable(Long senderUserId, String displayEmail, String ipAddress) {
         auditService.record(senderUserId, "MAIL_SEND_REJECTED", "recipient not found: " + displayEmail, ipAddress);
         return new BizException(ErrorCode.INVALID_ARGUMENT, "Unable to deliver mail");
+    }
+
+    private boolean isManagedLocalDomain(String email) {
+        if (!StringUtils.hasText(email) || !email.contains("@")) {
+            return false;
+        }
+        String domain = email.substring(email.indexOf('@') + 1).toLowerCase(Locale.ROOT);
+        return "mmmail.local".equals(domain);
     }
 
     private String normalizeEmail(String emailAddress) {
