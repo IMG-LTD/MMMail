@@ -1,8 +1,17 @@
 <script setup lang="ts">
+import { onMounted } from 'vue'
 import { NButton, NInput } from 'naive-ui'
 import { lt, useLocaleText } from '@/locales'
+import { usePublicShareFlow } from '@/shared/composables/usePublicShareFlow'
 
 const { tr } = useLocaleText()
+const shareFlow = usePublicShareFlow()
+const sharePassword = shareFlow.password
+const shareLoading = shareFlow.loading
+
+onMounted(() => {
+  void shareFlow.loadCapabilities()
+})
 </script>
 
 <template>
@@ -16,12 +25,13 @@ const { tr } = useLocaleText()
 
       <label>{{ tr(lt('访问密码', '存取密碼', 'Access password')) }}</label>
       <n-input
+        v-model:value="sharePassword"
         type="password"
         :placeholder="tr(lt('输入共享密码', '輸入共享密碼', 'Enter share password'))"
       />
 
       <div class="share-pass__actions">
-        <n-button type="primary">{{ tr(lt('解锁条目', '解鎖項目', 'Unlock item')) }}</n-button>
+        <n-button type="primary" :loading="shareLoading" @click="shareFlow.unlock()">{{ tr(lt('解锁条目', '解鎖項目', 'Unlock item')) }}</n-button>
         <n-button secondary>{{ tr(lt('查看访问策略', '查看存取政策', 'Review access policy')) }}</n-button>
       </div>
     </article>

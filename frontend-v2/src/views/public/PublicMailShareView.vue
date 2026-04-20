@@ -1,8 +1,16 @@
 <script setup lang="ts">
+import { onMounted } from 'vue'
 import { NButton, NInput } from 'naive-ui'
 import { lt, useLocaleText } from '@/locales'
+import { usePublicShareFlow } from '@/shared/composables/usePublicShareFlow'
 
 const { tr } = useLocaleText()
+const shareFlow = usePublicShareFlow()
+const sharePassword = shareFlow.password
+
+onMounted(() => {
+  void shareFlow.loadCapabilities()
+})
 </script>
 
 <template>
@@ -13,10 +21,10 @@ const { tr } = useLocaleText()
       <p class="page-subtitle">{{ tr(lt('在你输入共享密码前，此投递会保持加密。附件会在验证后于本地解密。', '在你輸入共享密碼前，此投遞會保持加密。附件會在驗證後於本機解密。', 'This delivery remains encrypted until you enter the share password. Attachments are decrypted locally after verification.')) }}</p>
 
       <label>{{ tr(lt('密码', '密碼', 'Password')) }}</label>
-      <n-input type="password" :placeholder="tr(lt('输入访问密码', '輸入存取密碼', 'Enter access password'))" />
+      <n-input v-model:value="sharePassword" type="password" :placeholder="tr(lt('输入访问密码', '輸入存取密碼', 'Enter access password'))" />
 
       <div class="share-page__auth-actions">
-        <n-button type="primary">{{ tr(lt('解密消息', '解密訊息', 'Decrypt Message')) }}</n-button>
+        <n-button type="primary" @click="shareFlow.unlock()">{{ tr(lt('解密消息', '解密訊息', 'Decrypt Message')) }}</n-button>
         <n-button secondary>{{ tr(lt('查看投递规则', '查看投遞規則', 'Preview delivery rules')) }}</n-button>
       </div>
     </article>

@@ -1,8 +1,15 @@
 <script setup lang="ts">
+import { onMounted } from 'vue'
 import { NButton } from 'naive-ui'
 import { lt, useLocaleText } from '@/locales'
+import { usePublicShareFlow } from '@/shared/composables/usePublicShareFlow'
 
 const { tr } = useLocaleText()
+const shareFlow = usePublicShareFlow()
+
+onMounted(() => {
+  void shareFlow.loadCapabilities()
+})
 </script>
 
 <template>
@@ -19,7 +26,7 @@ const { tr } = useLocaleText()
       </div>
 
       <div class="share-drive__actions">
-        <n-button type="primary">{{ tr(lt('打开共享文件', '開啟共享檔案', 'Open Shared Files')) }}</n-button>
+        <n-button type="primary" @click="shareFlow.unlock()">{{ tr(lt('打开共享文件', '開啟共享檔案', 'Open Shared Files')) }}</n-button>
         <n-button secondary>{{ tr(lt('查看策略', '查看政策', 'Review policy')) }}</n-button>
       </div>
     </article>
