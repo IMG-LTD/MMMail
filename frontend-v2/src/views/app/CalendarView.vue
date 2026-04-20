@@ -1,7 +1,15 @@
 <script setup lang="ts">
+import { onMounted } from 'vue'
 import { lt, useLocaleText } from '@/locales'
+import { useCopilotPanel } from '@/shared/composables/useCopilotPanel'
 
 const { tr } = useLocaleText()
+const copilotPanel = useCopilotPanel()
+const copilotOpen = copilotPanel.open
+
+onMounted(() => {
+  void copilotPanel.loadCapabilities()
+})
 
 const miniCalendarDays = ['29', '30', '31', '1', '2', '3', '4', '5', '6', '7', '8', '9', '10', '11', '12', '13', '14', '15', '16', '17']
 
@@ -38,6 +46,9 @@ const events = [
       <aside class="calendar-sidebar">
         <button class="calendar-sidebar__primary" type="button">{{ tr(lt('+ 新建事件', '+ 新增事件', '+ New Event')) }}</button>
         <button class="calendar-sidebar__secondary" type="button">{{ tr(lt('查找时间', '尋找時間', 'Find a time')) }}</button>
+        <button class="calendar-sidebar__secondary" type="button" @click="copilotPanel.toggle()">
+          {{ copilotOpen ? tr(lt('Copilot 已打开', 'Copilot 已開啟', 'Copilot open')) : tr(lt('切换 Copilot', '切換 Copilot', 'Toggle Copilot')) }}
+        </button>
 
         <article class="calendar-sidebar__panel">
           <header>

@@ -1,8 +1,12 @@
 <script setup lang="ts">
 import CompactPageHeader from '@/shared/components/CompactPageHeader.vue'
 import { lt, useLocaleText } from '@/locales'
+import { useAutomationRunbook } from '@/shared/composables/useAutomationRunbook'
 
 const { tr } = useLocaleText()
+const automationRunbook = useAutomationRunbook()
+const currentView = automationRunbook.currentView
+const setView = automationRunbook.setView
 
 const routes = [lt('收件箱', '收件匣', 'Inbox'), lt('日历', '日曆', 'Calendar'), lt('云盘', '雲端硬碟', 'Drive'), lt('密码监控', '密碼監控', 'Pass Monitor')]
 const history = [lt('组织访问矩阵', '組織存取矩陣', 'org access matrix'), lt('恢复包', '復原包', 'recovery kit'), lt('季度审计', '季度稽核', 'quarterly audit')]
@@ -22,6 +26,30 @@ const feed = [
       :badge="lt('预览', '預覽', 'Preview')"
       badge-tone="preview"
     />
+
+    <div class="command-switcher surface-card">
+      <button
+        type="button"
+        :class="{ 'command-switcher__button--active': currentView === 'overview' }"
+        @click="setView('overview')"
+      >
+        {{ tr(lt('总览', '總覽', 'Overview')) }}
+      </button>
+      <button
+        type="button"
+        :class="{ 'command-switcher__button--active': currentView === 'automation' }"
+        @click="setView('automation')"
+      >
+        {{ tr(lt('自动化', '自動化', 'Automation')) }}
+      </button>
+      <button
+        type="button"
+        :class="{ 'command-switcher__button--active': currentView === 'runs' }"
+        @click="setView('runs')"
+      >
+        {{ tr(lt('运行记录', '執行紀錄', 'Runs')) }}
+      </button>
+    </div>
 
     <div class="command-grid">
       <article class="surface-card command-card">
@@ -53,6 +81,27 @@ const feed = [
 </template>
 
 <style scoped>
+.command-switcher {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  padding: 16px;
+}
+
+.command-switcher button {
+  min-height: 34px;
+  padding: 0 12px;
+  border: 1px solid var(--mm-border);
+  border-radius: 999px;
+  background: var(--mm-card);
+}
+
+.command-switcher__button--active {
+  border-color: var(--mm-accent-border) !important;
+  background: var(--mm-accent-soft) !important;
+  color: var(--mm-primary);
+}
+
 .command-grid {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));

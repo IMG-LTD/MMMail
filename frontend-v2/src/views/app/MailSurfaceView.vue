@@ -1,12 +1,19 @@
 <script setup lang="ts">
-import { computed } from 'vue'
+import { computed, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { lt, type TextLike, useLocaleText } from '@/locales'
+import { useCopilotPanel } from '@/shared/composables/useCopilotPanel'
 import { findSurface, mailFolderSurfaces, type SurfaceOption } from '@/shared/content/route-surfaces'
 
 const route = useRoute()
 const router = useRouter()
 const { tr } = useLocaleText()
+const copilotPanel = useCopilotPanel()
+const copilotOpen = copilotPanel.open
+
+onMounted(() => {
+  void copilotPanel.loadCapabilities()
+})
 
 const messages = [
   {
@@ -113,6 +120,9 @@ function openSurface(item: SurfaceOption) {
         <button type="button">{{ tr(lt('全部', '全部', 'All')) }}</button>
         <button type="button">{{ tr(lt('未读', '未讀', 'Unread')) }}</button>
         <button type="button">{{ tr(lt('排序', '排序', 'Sort')) }}</button>
+        <button type="button" class="metric-chip" @click="copilotPanel.toggle()">
+          {{ copilotOpen ? tr(lt('Copilot 已打开', 'Copilot 已開啟', 'Copilot open')) : tr(lt('切换 Copilot', '切換 Copilot', 'Toggle Copilot')) }}
+        </button>
       </div>
     </header>
 

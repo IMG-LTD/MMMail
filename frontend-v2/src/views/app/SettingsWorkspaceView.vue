@@ -1,8 +1,16 @@
 <script setup lang="ts">
+import { onMounted } from 'vue'
 import CompactPageHeader from '@/shared/components/CompactPageHeader.vue'
 import { lt, type TextLike, useLocaleText } from '@/locales'
+import { useMcpRegistry } from '@/shared/composables/useMcpRegistry'
 
 const { tr } = useLocaleText()
+const mcpRegistry = useMcpRegistry()
+const registryCapabilities = mcpRegistry.capabilities
+
+onMounted(() => {
+  void mcpRegistry.loadCapabilities()
+})
 
 interface SettingsNavItem {
   key: string
@@ -84,6 +92,10 @@ const devices: RegisteredDevice[] = [
           <span class="section-label">{{ tr(lt('隐私与遥测', '隱私與遙測', 'Privacy & Telemetry')) }}</span>
           <strong>{{ tr(lt('隐私与遥测', '隱私與遙測', 'Privacy & Telemetry')) }}</strong>
           <p class="page-subtitle">{{ tr(lt('管理 MMMail 如何收集诊断数据，以在多设备上保护并强化你的隐私。', '管理 MMMail 如何收集診斷資料，以在多裝置上保護並強化你的隱私。', 'Manage how MMMail collects diagnostic data to defend and harden your privacy across devices.')) }}</p>
+
+          <div v-if="registryCapabilities.length" class="settings-capabilities">
+            <span v-for="capability in registryCapabilities" :key="capability" class="metric-chip">{{ capability }}</span>
+          </div>
 
           <div class="settings-choice">
             <div class="settings-choice__item settings-choice__item--active">
@@ -190,6 +202,13 @@ const devices: RegisteredDevice[] = [
 .settings-panel strong {
   display: block;
   margin-top: 8px;
+}
+
+.settings-capabilities {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 16px;
 }
 
 .settings-choice {
