@@ -13,6 +13,9 @@ public class RequestRouteModuleResolver {
         if (path.startsWith("/api/v1/auth")) {
             return "auth";
         }
+        if (path.startsWith("/api/v2/platform")) {
+            return "platform";
+        }
         if (path.startsWith("/api/v1/mails")
                 || path.startsWith("/api/v1/mail-")
                 || path.startsWith("/api/v1/conversations")
