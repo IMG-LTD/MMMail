@@ -1,14 +1,14 @@
 # MMMail v2 Orchestration State
 
-- Current Milestone: `M0`
+- Current Milestone: `M1`
 - Current Branch: `slice/m0/orchestration-phase0-freeze` (orchestration freeze worktree)
-- Current Status: `awaiting-m0-signoff`
+- Current Status: `awaiting-m1-signoff`
 - Last Updated By: `main-agent`
 - Release Target: `v2.0.0`
 
 ## Milestone Gates
 - M0: `completed`
-- M1: `pending`
+- M1: `completed`
 - M2: `pending`
 - M3: `pending`
 - M4: `pending`
@@ -21,7 +21,7 @@
 - none
 
 ## Active Risks
-- none; Phase 0 freeze artifacts are complete and M0 is awaiting signoff
+- none; M1 completion artifacts are complete and M1 is awaiting signoff
 
 ## Next Required Check-in
-- Review existing `m0-report.md` and record M0 signoff outcome
+- Review existing `m1-report.md` and record M1 signoff outcome
