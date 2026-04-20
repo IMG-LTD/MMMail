@@ -20,6 +20,16 @@
 
     <modules>
         <module>mmmail-common</module>
+        <module>mmmail-foundation</module>
+        <module>mmmail-identity</module>
+        <module>mmmail-org-governance</module>
+        <module>mmmail-platform</module>
+        <module>mmmail-mail</module>
+        <module>mmmail-pass</module>
+        <module>mmmail-drive</module>
+        <module>mmmail-workspace</module>
+        <module>mmmail-billing</module>
+        <module>mmmail-labs</module>
         <module>mmmail-server</module>
     </modules>
 
