@@ -1,0 +1,26 @@
+version: 1
+codes:
+  - code: UNAUTHORIZED
+    httpStatus: 401
+    owner: identity
+    message: Authentication is required.
+  - code: FORBIDDEN
+    httpStatus: 403
+    owner: identity
+    message: The current actor is not allowed to perform this action.
+  - code: PRODUCT_ACCESS_BLOCKED
+    httpStatus: 403
+    owner: org-governance
+    message: The current scope does not grant access to this product.
+  - code: SOFT_AUTH_REQUIRED
+    httpStatus: 401
+    owner: platform
+    message: A soft re-authentication step is required before continuing.
+  - code: PUBLIC_SHARE_LOCKED
+    httpStatus: 423
+    owner: public-share
+    message: The public share is temporarily locked.
+  - code: PUBLIC_SHARE_REVOKED
+    httpStatus: 410
+    owner: public-share
+    message: The public share has been revoked.
