@@ -1,13 +1,36 @@
 <script setup lang="ts">
+import { onMounted, ref } from 'vue'
 import CompactPageHeader from '@/shared/components/CompactPageHeader.vue'
 import { lt, useLocaleText } from '@/locales'
+import { httpClient } from '@/service/request/http'
+import type { ApiResponse } from '@/shared/types/api'
+
+interface WorkspaceAggregationSummary {
+  surfaces: string[]
+}
 
 const { tr } = useLocaleText()
+const aggregationSurfaces = ref<string[]>([])
 const notifications = [
   [lt('严重', '嚴重', 'Critical'), lt('云盘共享策略需要复核', '雲端硬碟共享政策需要複核', 'Drive sharing policy needs review'), lt('组织', '組織', 'Organizations'), lt('刚刚', '剛剛', 'Now')],
   [lt('未读', '未讀', 'Unread'), lt('凤凰会议室邀请已接受', '鳳凰會議室邀請已接受', 'Phoenix room invite accepted'), lt('日历', '日曆', 'Calendar'), lt('12 分钟前', '12 分鐘前', '12 min ago')],
   [lt('信息', '資訊', 'Info'), lt('恢复包导出已完成', '復原包匯出已完成', 'Recovery kit export completed'), lt('安全', '安全', 'Security'), lt('昨天', '昨天', 'Yesterday')]
 ]
+
+async function loadAggregationSurfaces() {
+  const response = await httpClient.get<ApiResponse<WorkspaceAggregationSummary>>('/api/v2/workspace/aggregation')
+  return response.data.surfaces
+}
+
+onMounted(() => {
+  void loadAggregationSurfaces()
+    .then(surfaces => {
+      aggregationSurfaces.value = surfaces
+    })
+    .catch(() => {
+      aggregationSurfaces.value = []
+    })
+})
 </script>
 
 <template>
@@ -24,6 +47,7 @@ const notifications = [
       <span class="metric-chip">{{ tr(lt('未读', '未讀', 'Unread')) }}</span>
       <span class="metric-chip">{{ tr(lt('严重程度', '嚴重程度', 'Severity')) }}</span>
       <span class="metric-chip">{{ tr(lt('来源模块', '來源模組', 'Source module')) }}</span>
+      <span v-for="surface in aggregationSurfaces" :key="surface" class="metric-chip">{{ surface }}</span>
       <button class="notifications-mark-all" type="button">{{ tr(lt('全部标为已读', '全部標示為已讀', 'Mark all read')) }}</button>
     </div>
 

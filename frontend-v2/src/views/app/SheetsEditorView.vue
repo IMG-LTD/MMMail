@@ -1,10 +1,21 @@
 <script setup lang="ts">
-import { computed } from 'vue'
+import { computed, onMounted } from 'vue'
 import { useRoute } from 'vue-router'
 import { lt, useLocaleText } from '@/locales'
+import { useCopilotPanel } from '@/shared/composables/useCopilotPanel'
 
 const route = useRoute()
 const { tr } = useLocaleText()
+const copilotPanel = useCopilotPanel()
+const copilotOpen = copilotPanel.open
+
+onMounted(() => {
+  void copilotPanel.loadCapabilities()
+})
+
+function toggleCopilotPanel() {
+  copilotPanel.toggle()
+}
 
 const title = computed(() => {
   return String(route.params.id ?? 'org-access-matrix').replace(/-/g, ' ')
@@ -25,6 +36,9 @@ const rows = [1, 2, 3, 4, 5]
       <div class="sheets-editor__actions">
         <button type="button">{{ tr(lt('格式', '格式', 'Format')) }}</button>
         <button type="button">{{ tr(lt('共享', '共享', 'Share')) }}</button>
+        <button type="button" @click="toggleCopilotPanel()">
+          {{ copilotOpen ? tr(lt('Copilot 已打开', 'Copilot 已開啟', 'Copilot open')) : tr(lt('切换 Copilot', '切換 Copilot', 'Toggle Copilot')) }}
+        </button>
       </div>
     </article>
 

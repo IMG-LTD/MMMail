@@ -1,8 +1,21 @@
 <script setup lang="ts">
+import { onMounted } from 'vue'
 import CompactPageHeader from '@/shared/components/CompactPageHeader.vue'
 import { lt, useLocaleText } from '@/locales'
+import { useCopilotPanel } from '@/shared/composables/useCopilotPanel'
 
 const { tr } = useLocaleText()
+const copilotPanel = useCopilotPanel()
+const copilotOpen = copilotPanel.open
+
+onMounted(() => {
+  void copilotPanel.loadCapabilities()
+})
+
+function toggleCopilotPanel() {
+  copilotPanel.toggle()
+}
+
 const sheets = [
   {
     id: 'org-access-matrix',
@@ -34,7 +47,12 @@ const sheets = [
       :badge="lt('Beta', 'Beta', 'Beta')"
       badge-tone="beta"
     >
-      <button class="page-action" type="button">{{ tr(lt('新建表格', '新增試算表', 'New sheet')) }}</button>
+      <div class="sheets-actions">
+        <button class="page-action" type="button">{{ tr(lt('新建表格', '新增試算表', 'New sheet')) }}</button>
+        <button class="page-action page-action--secondary" type="button" @click="toggleCopilotPanel()">
+          {{ copilotOpen ? tr(lt('Copilot 已打开', 'Copilot 已開啟', 'Copilot open')) : tr(lt('切换 Copilot', '切換 Copilot', 'Toggle Copilot')) }}
+        </button>
+      </div>
     </compact-page-header>
 
     <article class="surface-card sheets-table">
@@ -53,6 +71,12 @@ const sheets = [
 </template>
 
 <style scoped>
+.sheets-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
 .page-action {
   min-height: 34px;
   padding: 0 14px;
@@ -60,6 +84,12 @@ const sheets = [
   border-radius: 10px;
   background: var(--mm-sheets);
   color: #fff;
+}
+
+.page-action--secondary {
+  border: 1px solid var(--mm-border);
+  background: var(--mm-card);
+  color: var(--mm-text);
 }
 
 .sheets-table {

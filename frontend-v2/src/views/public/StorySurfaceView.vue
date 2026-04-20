@@ -4,10 +4,14 @@ import { useRoute } from 'vue-router'
 import { lt, useLocaleText } from '@/locales'
 import { failureModes, findSurface, onboardingStories } from '@/shared/content/route-surfaces'
 
+type StoryGroup = 'onboarding' | 'failure'
+
 const route = useRoute()
 const { tr } = useLocaleText()
 
-const storyGroup = computed(() => String(route.meta.storyGroup ?? 'onboarding'))
+const storyGroup = computed<StoryGroup>(() => {
+  return route.meta.storyGroup === 'failure' ? 'failure' : 'onboarding'
+})
 const storyKey = computed(() => String(route.params.storyKey ?? route.meta.storyKey ?? 'invitation-landing'))
 
 const story = computed(() => {
