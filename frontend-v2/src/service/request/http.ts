@@ -5,6 +5,7 @@ interface RequestOptions {
   headers?: HeadersInit
   method?: 'DELETE' | 'GET' | 'POST' | 'PUT'
   query?: Record<string, QueryValue>
+  scopeHeaders?: Record<string, string>
   token?: string
 }
 
@@ -42,6 +43,10 @@ async function request<T>(path: string, options: RequestOptions = {}) {
   if (options.token) {
     headers.set('Authorization', `Bearer ${options.token}`)
   }
+
+  Object.entries(options.scopeHeaders || {}).forEach(([key, value]) => {
+    headers.set(key, value)
+  })
 
   const response = await fetch(createRequestUrl(path, options.query), {
     body: options.body === undefined ? undefined : JSON.stringify(options.body),

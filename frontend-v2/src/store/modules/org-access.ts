@@ -3,6 +3,7 @@ import { defineStore } from 'pinia'
 import type { OrgAccessScope, OrgProductKey } from '@/shared/types/organization'
 
 const STORAGE_KEY = 'mmmail.active-org-scope.v1'
+const SCOPE_STORAGE_KEY = 'mmmail.active-scope.v2'
 
 interface EnsureLoadedOptions {
   force?: boolean
@@ -46,6 +47,7 @@ function resolveActiveOrgId(scopes: OrgAccessScope[], candidateOrgId: string) {
 export const useOrgAccessStore = defineStore('org-access', () => {
   const accessScopes = ref<OrgAccessScope[]>([])
   const activeOrgId = ref(readPersistedActiveOrgId())
+  const activeScopeId = ref(canUseLocalStorage() ? window.localStorage.getItem(SCOPE_STORAGE_KEY) || '' : '')
   const initialized = ref(false)
   const loading = ref(false)
 
@@ -57,8 +59,12 @@ export const useOrgAccessStore = defineStore('org-access', () => {
   })
 
   function applyScopes(scopes: OrgAccessScope[]) {
+    const nextActiveOrgId = resolveActiveOrgId(scopes, activeOrgId.value)
     accessScopes.value = scopes
-    activeOrgId.value = resolveActiveOrgId(scopes, activeOrgId.value)
+    if (nextActiveOrgId !== activeOrgId.value) {
+      setActiveScopeId('')
+    }
+    activeOrgId.value = nextActiveOrgId
     initialized.value = true
     persistActiveOrgId(activeOrgId.value)
   }
@@ -83,11 +89,24 @@ export const useOrgAccessStore = defineStore('org-access', () => {
 
   function setActiveOrgId(orgId: string) {
     activeOrgId.value = resolveActiveOrgId(accessScopes.value, orgId)
+    setActiveScopeId('')
     persistActiveOrgId(activeOrgId.value)
+  }
+
+  function setActiveScopeId(scopeId: string) {
+    activeScopeId.value = scopeId
+    if (canUseLocalStorage()) {
+      if (scopeId) {
+        window.localStorage.setItem(SCOPE_STORAGE_KEY, scopeId)
+      } else {
+        window.localStorage.removeItem(SCOPE_STORAGE_KEY)
+      }
+    }
   }
 
   function setPersonalScope() {
     activeOrgId.value = ''
+    setActiveScopeId('')
     persistActiveOrgId('')
   }
 
@@ -102,6 +121,7 @@ export const useOrgAccessStore = defineStore('org-access', () => {
   function clear() {
     accessScopes.value = []
     activeOrgId.value = ''
+    setActiveScopeId('')
     initialized.value = false
     persistActiveOrgId('')
   }
@@ -110,6 +130,7 @@ export const useOrgAccessStore = defineStore('org-access', () => {
     accessScopes,
     activeOrgId,
     activeScope,
+    activeScopeId,
     applyScopes,
     clear,
     ensureLoaded,
@@ -118,6 +139,7 @@ export const useOrgAccessStore = defineStore('org-access', () => {
     isProductEnabled,
     loading,
     setActiveOrgId,
+    setActiveScopeId,
     setPersonalScope
   }
 })

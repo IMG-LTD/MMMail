@@ -8,3 +8,12 @@ export const router = createRouter({
     return { top: 0 }
   }
 })
+
+router.beforeEach((to, _from, next) => {
+  if (to.path.startsWith('/share/')) {
+    next()
+    return
+  }
+
+  next()
+})

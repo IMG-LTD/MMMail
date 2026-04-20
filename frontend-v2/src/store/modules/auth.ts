@@ -73,6 +73,7 @@ export const useAuthStore = defineStore('auth', () => {
   const restoredSession = readPersistedSession()
   const accessToken = ref(restoredSession?.accessToken || '')
   const refreshToken = ref('')
+  const softAuthLocked = ref(false)
   const user = ref<UserProfile | null>(restoredSession?.user || null)
   const needsSessionRefresh = ref(Boolean(restoredSession))
 
@@ -99,6 +100,7 @@ export const useAuthStore = defineStore('auth', () => {
 
     accessToken.value = payload.accessToken
     refreshToken.value = payload.refreshToken
+    softAuthLocked.value = false
     user.value = normalizedUser
     needsSessionRefresh.value = false
     persistCurrentSession()
@@ -118,9 +120,14 @@ export const useAuthStore = defineStore('auth', () => {
     persistCurrentSession()
   }
 
+  function setSoftAuthLocked(value: boolean) {
+    softAuthLocked.value = value
+  }
+
   function clearSession() {
     accessToken.value = ''
     refreshToken.value = ''
+    softAuthLocked.value = false
     user.value = null
     needsSessionRefresh.value = false
     persistSession(null)
@@ -134,6 +141,8 @@ export const useAuthStore = defineStore('auth', () => {
     isAuthenticated,
     needsSessionRefresh,
     refreshToken,
+    setSoftAuthLocked,
+    softAuthLocked,
     updateUserProfile,
     user
   }
