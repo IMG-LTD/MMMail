@@ -53,6 +53,10 @@ public class RequestTracingFilter extends OncePerRequestFilter {
         if (StringUtils.hasText(orgId)) {
             MDC.put(TraceContext.ORG_ID_MDC, orgId.trim());
         }
+        String scopeId = request.getHeader("X-MMMAIL-SCOPE-ID");
+        if (StringUtils.hasText(scopeId)) {
+            MDC.put("scopeId", scopeId.trim());
+        }
         request.setAttribute(TraceContext.REQUEST_ID_ATTRIBUTE, requestId);
         response.setHeader(TraceContext.REQUEST_ID_HEADER, requestId);
     }

@@ -5,30 +5,35 @@ import com.mmmail.common.exception.ErrorCode;
 import com.mmmail.common.model.Result;
 import com.mmmail.server.observability.RequestTracingFilter;
 import com.mmmail.server.security.JwtAuthFilter;
+import jakarta.servlet.FilterChain;
+import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.web.servlet.FilterRegistrationBean;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.core.Ordered;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.core.Ordered;
 import org.springframework.security.config.Customizer;
-import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
+import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.AuthenticationEntryPoint;
 import org.springframework.security.web.SecurityFilterChain;
-import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.security.web.access.AccessDeniedHandler;
+import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.security.web.header.writers.ReferrerPolicyHeaderWriter;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
+import org.springframework.web.cors.CorsUtils;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
+import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -119,11 +124,37 @@ public class SecurityConfig {
     }
 
     @Bean
+    public FilterRegistrationBean<OncePerRequestFilter> corsAllowHeadersContractFilterRegistration() {
+        FilterRegistrationBean<OncePerRequestFilter> registration = new FilterRegistrationBean<>(new OncePerRequestFilter() {
+            @Override
+            protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
+                    throws ServletException, IOException {
+                filterChain.doFilter(request, response);
+                normalizeCorsAllowHeaders(request, response);
+            }
+        });
+        registration.setOrder(Ordered.HIGHEST_PRECEDENCE + 1);
+        return registration;
+    }
+
+    @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration config = new CorsConfiguration();
         config.setAllowedOriginPatterns(buildAllowedOriginPatterns());
         config.setAllowedMethods(List.of("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
-        config.setAllowedHeaders(List.of("Authorization", "Content-Type", "X-Requested-With", "X-MMMAIL-CSRF", "X-MMMAIL-ORG-ID", "X-Drive-Share-Password", "Accept", "Origin", "Cache-Control", "Pragma"));
+        config.setAllowedHeaders(List.of(
+                "Authorization",
+                "Content-Type",
+                "X-Requested-With",
+                "X-MMMAIL-CSRF",
+                "X-MMMAIL-ORG-ID",
+                "X-MMMAIL-SCOPE-ID",
+                "X-Drive-Share-Password",
+                "Accept",
+                "Origin",
+                "Cache-Control",
+                "Pragma"
+        ));
         config.setExposedHeaders(List.of("Content-Disposition", "X-Preview-Truncated", "Set-Cookie"));
         config.setAllowCredentials(true);
         config.setMaxAge(3600L);
@@ -148,6 +179,22 @@ public class SecurityConfig {
         }
         response.setHeader("Content-Security-Policy", API_CONTENT_SECURITY_POLICY);
         response.setHeader("Permissions-Policy", API_PERMISSIONS_POLICY);
+    }
+
+    private void normalizeCorsAllowHeaders(HttpServletRequest request, HttpServletResponse response) {
+        if (!CorsUtils.isPreFlightRequest(request)) {
+            return;
+        }
+        String allowHeaders = response.getHeader(HttpHeaders.ACCESS_CONTROL_ALLOW_HEADERS);
+        if (allowHeaders == null || allowHeaders.isBlank()) {
+            return;
+        }
+        String normalized = Arrays.stream(allowHeaders.split(","))
+                .map(String::trim)
+                .filter(header -> !header.isEmpty())
+                .map(header -> header.equalsIgnoreCase("x-mmmail-scope-id") ? "X-MMMAIL-SCOPE-ID" : header)
+                .collect(Collectors.joining(", "));
+        response.setHeader(HttpHeaders.ACCESS_CONTROL_ALLOW_HEADERS, normalized);
     }
 
     private void writeSecurityError(HttpServletResponse response, HttpStatus status, ErrorCode errorCode) throws IOException {
