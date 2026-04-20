@@ -12,14 +12,12 @@ export function useCopilotPanel() {
     runStates.value = response.data.runStates
   }
 
-  function toggle() {
-    open.value = !open.value
-  }
-
   return {
     loadCapabilities,
     open,
     runStates: computed(() => runStates.value),
-    toggle
+    toggle: () => {
+      open.value = !open.value
+    }
   }
 }

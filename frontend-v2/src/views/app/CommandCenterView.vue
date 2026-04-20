@@ -27,47 +27,47 @@ const feed = [
       badge-tone="preview"
     />
 
-    <div class="command-switcher surface-card">
-      <button
-        type="button"
-        :class="{ 'command-switcher__button--active': currentView === 'overview' }"
-        @click="setView('overview')"
-      >
-        {{ tr(lt('总览', '總覽', 'Overview')) }}
-      </button>
-      <button
-        type="button"
-        :class="{ 'command-switcher__button--active': currentView === 'automation' }"
-        @click="setView('automation')"
-      >
-        {{ tr(lt('自动化', '自動化', 'Automation')) }}
-      </button>
-      <button
-        type="button"
-        :class="{ 'command-switcher__button--active': currentView === 'runs' }"
-        @click="setView('runs')"
-      >
-        {{ tr(lt('运行记录', '執行紀錄', 'Runs')) }}
-      </button>
-    </div>
-
     <div class="command-grid">
-      <article class="surface-card command-card">
-        <span class="section-label">{{ tr(lt('快速入口', '快速入口', 'Quick routes')) }}</span>
+      <article class="surface-card command-card" :class="{ 'command-card--active': currentView === 'overview' }">
+        <button
+          type="button"
+          class="section-label command-card__label"
+          :class="{ 'command-card__label--active': currentView === 'overview' }"
+          :aria-pressed="currentView === 'overview'"
+          @click="setView('overview')"
+        >
+          {{ tr(lt('快速入口', '快速入口', 'Quick routes')) }}
+        </button>
         <div class="command-card__chips">
           <span v-for="(item, index) in routes" :key="index" class="metric-chip">{{ tr(item) }}</span>
         </div>
       </article>
 
-      <article class="surface-card command-card">
-        <span class="section-label">{{ tr(lt('最近关键词', '最近關鍵字', 'Recent keywords')) }}</span>
+      <article class="surface-card command-card" :class="{ 'command-card--active': currentView === 'automation' }">
+        <button
+          type="button"
+          class="section-label command-card__label"
+          :class="{ 'command-card__label--active': currentView === 'automation' }"
+          :aria-pressed="currentView === 'automation'"
+          @click="setView('automation')"
+        >
+          {{ tr(lt('最近关键词', '最近關鍵字', 'Recent keywords')) }}
+        </button>
         <div class="command-card__stack">
           <strong v-for="(item, index) in history" :key="index">{{ tr(item) }}</strong>
         </div>
       </article>
 
-      <article class="surface-card command-card command-card--feed">
-        <span class="section-label">{{ tr(lt('动态', '動態', 'Feed')) }}</span>
+      <article class="surface-card command-card command-card--feed" :class="{ 'command-card--active': currentView === 'runs' }">
+        <button
+          type="button"
+          class="section-label command-card__label"
+          :class="{ 'command-card__label--active': currentView === 'runs' }"
+          :aria-pressed="currentView === 'runs'"
+          @click="setView('runs')"
+        >
+          {{ tr(lt('动态', '動態', 'Feed')) }}
+        </button>
         <div v-for="([module, title, time], index) in feed" :key="index" class="command-feed__row">
           <div>
             <strong>{{ tr(module) }}</strong>
@@ -81,27 +81,6 @@ const feed = [
 </template>
 
 <style scoped>
-.command-switcher {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 10px;
-  padding: 16px;
-}
-
-.command-switcher button {
-  min-height: 34px;
-  padding: 0 12px;
-  border: 1px solid var(--mm-border);
-  border-radius: 999px;
-  background: var(--mm-card);
-}
-
-.command-switcher__button--active {
-  border-color: var(--mm-accent-border) !important;
-  background: var(--mm-accent-soft) !important;
-  color: var(--mm-primary);
-}
-
 .command-grid {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
@@ -110,6 +89,24 @@ const feed = [
 
 .command-card {
   padding: 20px;
+}
+
+.command-card--active {
+  border-color: var(--mm-accent-border);
+  box-shadow: 0 0 0 1px var(--mm-accent-border), var(--mm-shadow);
+}
+
+.command-card__label {
+  display: inline-flex;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  cursor: pointer;
+}
+
+.command-card__label--active {
+  color: var(--mm-primary);
 }
 
 .command-card__chips,
