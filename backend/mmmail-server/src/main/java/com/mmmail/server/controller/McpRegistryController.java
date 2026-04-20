@@ -12,7 +12,7 @@ import java.util.Map;
 public class McpRegistryController {
 
     @GetMapping("/registry")
-    public Result<Map<String, Object>> readRegistry() {
+    public Result<Map<String, Object>> readRegistryCapabilities() {
         return Result.success(Map.of(
                 "supportsGrantMatrix", true,
                 "supportsHealthChecks", true,
