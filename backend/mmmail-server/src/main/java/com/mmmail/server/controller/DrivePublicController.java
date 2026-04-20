@@ -27,6 +27,7 @@ import java.util.List;
 @RequestMapping("/api/v1/public/drive/shares")
 public class DrivePublicController {
 
+    private static final String PUBLIC_SHARE_CAPABILITY_PATH = "/api/v2/public-share/capabilities";
     private static final String SHARE_PASSWORD_HEADER = "X-Drive-Share-Password";
 
     private final DriveService driveService;

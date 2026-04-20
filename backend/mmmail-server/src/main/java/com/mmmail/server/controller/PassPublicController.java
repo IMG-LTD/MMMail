@@ -13,6 +13,8 @@ import org.springframework.web.bind.annotation.RestController;
 @RequestMapping("/api/v1/public/pass/secure-links")
 public class PassPublicController {
 
+    private static final String PUBLIC_SHARE_CAPABILITY_PATH = "/api/v2/public-share/capabilities";
+
     private final PassBusinessService passBusinessService;
 
     public PassPublicController(PassBusinessService passBusinessService) {

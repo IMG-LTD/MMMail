@@ -20,6 +20,8 @@ import java.nio.charset.StandardCharsets;
 @RequestMapping("/api/v1/public/mail/secure-links")
 public class MailPublicController {
 
+    private static final String PUBLIC_SHARE_CAPABILITY_PATH = "/api/v2/public-share/capabilities";
+
     private final MailExternalSecureLinkService mailExternalSecureLinkService;
 
     public MailPublicController(MailExternalSecureLinkService mailExternalSecureLinkService) {
