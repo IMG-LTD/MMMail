@@ -1,108 +1,67 @@
-# 部署与运行手册（v100）
+# MMMail v2.0.0 Deployment Runbook
 
-**版本**: `v100.0`  
-**日期**: `2026-03-11`  
-**作者**: `Codex`  
-**主题**: `2FA grace period / blocked → setup → restore`
+**版本**: `v2.0.0`
+**日期**: `2026-04-21`
+**状态**: `released`
 
-## 1. 本地启动顺序
+## 1. 目的
+- 这份 runbook 记录 `v2.0.0` 已发布后的部署与验收基线。
+- `v2.0.0` 已经在 `main` 发布，并已存在 Git tag / GitHub Release；本手册不再包含合并 `release/2.0.0`、创建 `v2.0.0` tag、发布 GitHub Release 等预发布动作。
+- 更完整的安装、升级、备份恢复、运维排障请分别参考：
+  - `docs/ops/install.md`
+  - `docs/ops/upgrade.md`
+  - `docs/ops/backup-restore.md`
+  - `docs/ops/runbook.md`
+  - `docs/ops/team-enablement.md`
 
-### 1.1 后端
-在仓库根目录执行：
+## 2. 适用部署基线
+- 当前 shipped baseline：`main` / tag `v2.0.0`
+- 当前默认自托管运行模型：`Nuxt Web + 单个 Spring Boot 后端进程 + MySQL / Redis`
+- `frontend-v2` 已纳入本地与 CI 发布门禁
 
-- `./scripts/start-backend-local.sh`
+## 3. 部署前检查
+1. 校验运行时环境
+   - `./scripts/validate-runtime-env.sh .env`
+2. 执行本地门禁
+   - `bash scripts/validate-local.sh`
+3. 如需在 CI 环境复核，执行
+   - `bash scripts/validate-ci.sh`
+4. 如需数据库变更前保护，先执行备份
+   - `./scripts/db-backup.sh .env`
 
-等价手动命令：
+## 4. 部署执行
+### 4.1 最小模式
+- `docker compose --env-file .env -f docker-compose.minimal.yml up -d --build`
 
-- `cd backend && timeout 60s mvn -pl mmmail-common -am -DskipTests install`
-- `cd backend/mmmail-server && mvn -DskipTests spring-boot:run -Dspring-boot.run.profiles=local`
+### 4.2 标准模式
+- `docker compose --env-file .env up -d --build`
 
-健康检查：
+### 4.3 数据库升级
+- 查看状态：`./scripts/db-upgrade.sh .env info`
+- 执行升级：`./scripts/db-upgrade.sh .env upgrade`
+- 如需前滚修复：`./scripts/db-upgrade.sh .env repair`
 
-- `curl -sf http://127.0.0.1:8080/actuator/health`
+## 5. 发布后验证
+### 5.1 服务与页面
+- Frontend：`http://127.0.0.1:3001`
+- Backend health：`http://127.0.0.1:8080/actuator/health`
+- Boundary page：`http://127.0.0.1:3001/boundary`
+- Labs catalog：`http://127.0.0.1:3001/labs`
+- Swagger UI：`http://127.0.0.1:8080/swagger-ui.html`
 
-关键说明：
+### 5.2 v2.0.0 重点验收
+- `Mail → Calendar → Drive → Pass` 主线协作链路可见
+- `Pass` 继续以默认导航中的 `Beta` 入口出现
+- `/labs/:moduleKey` 仍承载 preview 模块，不误标成 GA
+- legacy compatibility redirects 保持可用
+- `frontend-v2` 测试与 typecheck 门禁已通过
 
-- `mmmail-server` 依赖 `mmmail-common` 的本地 `SNAPSHOT`。
-- 若直接在 `backend/mmmail-server` 执行 `mvn spring-boot:run`，但本地 Maven 仓库里的 `mmmail-common` 仍是旧版本，会触发 `NoSuchFieldError: ErrorCode.ORG_TWO_FACTOR_REQUIRED`。
-- 因此，本地启动前必须先安装最新 `mmmail-common`，不能只做 `compile`。
+## 6. 故障处理
+- 应用健康异常、指标、后台任务、权限边界等运行态排查，参考 `docs/ops/runbook.md`
+- 数据库升级失败时，优先按 `docs/ops/upgrade.md` 执行前滚修复
+- 需要恢复时，按 `docs/ops/backup-restore.md` 执行恢复或回滚
 
-### 1.2 前端开发模式
-在仓库根目录执行：
-
-- `cd frontend`
-- `pnpm install`
-- `pnpm dev --host 127.0.0.1 --port 3001`
-
-访问地址：
-
-- `http://127.0.0.1:3001/inbox`
-
-### 1.3 前端 UAT / Playwright 模式
-本轮 Playwright 使用生产构建产物验证：
-
-- `cd frontend && pnpm build`
-- `cd frontend && PORT=3001 HOST=127.0.0.1 node .output/server/index.mjs`
-
-关键说明：
-
-- 若 `3001` 端口仍被旧 Nuxt 进程占用，浏览器可能打到旧前端代码。
-- 进行 UAT 前必须先确认旧进程已释放。
-
-## 2. 验证命令
-
-### 2.1 后端
-- `cd backend && timeout 60s mvn -pl mmmail-server -am -Dtest=OrgAuthenticationSecurityIntegrationTest -Dsurefire.failIfNoSpecifiedTests=false test`
-
-### 2.2 前端
-- `cd frontend && pnpm typecheck`
-- `cd frontend && pnpm exec vitest run tests/product-access-blocked.spec.ts tests/authenticator-recovery.spec.ts tests/i18n.spec.ts tests/organizations-auth-security.spec.ts`
-- `cd frontend && pnpm build`
-
-## 3. 运行态基线
-
-### 3.1 组织 2FA 阻断接口
-当组织启用 `All members` 且 `grace period = 0` 时，组织作用域产品接口应返回：
-
-- HTTP：`403`
-- 业务码：`30046`
-- 业务消息：`Organization policy requires two-factor authentication before you can continue. Open /authenticator to recover access.`
-
-### 3.2 恢复链路
-前端应满足：
-
-- 用户访问组织作用域产品后进入 `/product-access-blocked`
-- CTA 显示 `Setup 2FA`
-- 点击后跳转 `/authenticator?recovery=ORG_TWO_FACTOR_REQUIRED...`
-- Authenticator 先切到 personal scope
-- 新建或保存 entry 后自动恢复 org scope 并回跳原产品页面
-
-## 4. 本轮真实问题与规避
-
-### 4.1 后端本地运行态类路径漂移
-- 现象：组织作用域访问产品 API 返回 `500 / 90000`
-- 根因：`mmmail-server` 运行时加载了旧版 `mmmail-common` `SNAPSHOT`
-- 修复：启动前先执行 `mvn -pl mmmail-common -am -DskipTests install`
-
-### 4.2 前端端口打到旧产物
-- 现象：浏览器显示旧页面逻辑，Playwright 结果与源码不一致
-- 根因：`3001` 仍被旧 Nuxt 进程占用
-- 修复：释放旧进程后，用当前 `pnpm build` 产物重新启动
-
-## 5. v100 UAT 完成态基线
-通过时应满足：
-
-- `Organizations -> Authentication security` 可显示 `grace period`
-- owner 可把 `grace period` 在 `1` 和 `0` 之间切换
-- `grace = 1` 时，成员状态显示 `In grace period`
-- `grace = 0` 时，成员状态显示 `Blocked by policy`
-- member 访问 `/docs` 会进入 `product-access-blocked`
-- member 点击 `Setup 2FA` 后进入 recovery 模式的 `/authenticator`
-- member 点击 `New entry` 后自动恢复到 `/docs`
-
-## v2.0.0 release gate
-- merge `release/2.0.0` into `main`
-- run `bash scripts/validate-local.sh`
-- confirm CI is green on `main`
-- create and push annotated tag `v2.0.0`
-- publish GitHub Release from `docs/release/v2.0.0-release-notes.md`
+## 7. 发布工件对齐
+- Release notes source of truth: `docs/release/v2.0.0-release-notes.md`
+- GitHub Release: `https://github.com/IMG-LTD/MMMail/releases/tag/v2.0.0`
+- 若发布说明出现文档漂移，只更新 release notes 文档与现有 GitHub Release notes，不变更 tag
