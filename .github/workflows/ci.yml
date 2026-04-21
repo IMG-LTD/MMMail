@@ -66,8 +66,14 @@ jobs:
       - name: Frontend tests
         run: pnpm --dir frontend test
 
+      - name: Frontend v2 tests
+        run: pnpm --dir frontend-v2 test
+
       - name: Frontend typecheck
         run: pnpm --dir frontend typecheck
+
+      - name: Frontend v2 typecheck
+        run: pnpm --dir frontend-v2 typecheck
 
       - name: Frontend audit (high)
         run: pnpm --dir frontend audit --prod --audit-level=high --ignore-registry-errors

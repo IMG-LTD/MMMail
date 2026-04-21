@@ -83,6 +83,14 @@ echo "[validate-local] frontend dependency audit (high)"
 env -u http_proxy -u https_proxy -u HTTP_PROXY -u HTTPS_PROXY -u ALL_PROXY -u all_proxy \
   pnpm --dir frontend audit --prod --audit-level=high --ignore-registry-errors >/tmp/mmmail-frontend-audit.log 2>&1
 
+echo "[validate-local] frontend-v2 tests"
+env -u http_proxy -u https_proxy -u HTTP_PROXY -u HTTPS_PROXY -u ALL_PROXY -u all_proxy \
+  pnpm --dir frontend-v2 test >/tmp/mmmail-frontend-v2-test.log 2>&1
+
+echo "[validate-local] frontend-v2 typecheck"
+env -u http_proxy -u https_proxy -u HTTP_PROXY -u HTTPS_PROXY -u ALL_PROXY -u all_proxy \
+  pnpm --dir frontend-v2 typecheck >/tmp/mmmail-frontend-v2-typecheck.log 2>&1
+
 echo "[validate-local] required files"
 required=(
   README.md
@@ -112,6 +120,10 @@ required=(
   backend/Dockerfile
   frontend/Dockerfile
   backend/pom.xml
+  frontend-v2/package.json
+  frontend-v2/src/app/router/routes.ts
+  frontend-v2/src/layouts/modules/shell-nav.ts
+  frontend-v2/src/shared/content/route-surfaces.ts
   frontend/pages/inbox.vue
   frontend/pages/labs.vue
   .env.example
