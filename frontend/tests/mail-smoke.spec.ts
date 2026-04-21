@@ -513,38 +513,16 @@ describe('mail smoke', () => {
     expect(mailApiMock.fetchFolder).toHaveBeenCalledWith('sent', 1, 20, '', {})
   })
 
-  it('opens reply and forward from detail and downloads attachments', async () => {
+  it('redirects legacy mail detail routes to the conversation workspace', async () => {
     const { default: MailDetailPage } = await importMailDetailPage()
-    const wrapper = mount(MailDetailPage, {
+    mount(MailDetailPage, {
       global: { stubs: elementStubs }
     })
 
     await flushPromises()
-    expect(mailApiMock.fetchMailDetail).toHaveBeenCalledWith('42')
-    expect(wrapper.text()).toContain('Quarterly update')
-    expect(wrapper.text()).toContain('report.pdf')
-
-    await findButton(wrapper, '[data-testid="mail-reply-button"]').trigger('click')
-    expect(navigateToMock).toHaveBeenLastCalledWith({
-      path: '/compose',
-      query: {
-        to: 'alice@example.com',
-        subject: 'Re: Quarterly update',
-        body: '\n\nOn 2026-03-13 10:20:30 UTC, alice@example.com wrote:\n> Body line'
-      }
-    })
-
-    await findButton(wrapper, '[data-testid="mail-forward-button"]').trigger('click')
-    expect(navigateToMock).toHaveBeenLastCalledWith({
-      path: '/compose',
-      query: {
-        subject: 'Fwd: Quarterly update',
-        body: '\n\n---------- Forwarded message ---------\nFrom: alice@example.com\nDate: 2026-03-13 10:20:30 UTC\nSubject: Quarterly update\n\nBody line'
-      }
-    })
-
-    await findButton(wrapper, '[data-testid="mail-attachment-download-button"]').trigger('click')
-    expect(mailApiMock.downloadMailAttachment).toHaveBeenCalledWith('42', 'att-1')
+    expect(navigateToMock).toHaveBeenCalledWith('/conversations/42')
+    expect(mailApiMock.fetchMailDetail).not.toHaveBeenCalled()
+    expect(mailApiMock.downloadMailAttachment).not.toHaveBeenCalled()
   })
 
   it('restores the same draft and retries failed attachment upload', async () => {

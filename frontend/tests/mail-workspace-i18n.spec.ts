@@ -216,12 +216,12 @@ const stubs = {
   })
 }
 
-async function importMailDetailPage() {
+async function importLegacyMailDetailPage() {
   const module = await import('../pages/mail/[id].vue')
   return module.default
 }
 
-async function importConversationListPage() {
+async function importLegacyConversationsPage() {
   const module = await import('../pages/conversations/index.vue')
   return module.default
 }
@@ -269,9 +269,9 @@ describe('mail workspace i18n', () => {
     conversationApiMock.fetchConversationDetail.mockResolvedValue(conversationDetail)
   })
 
-  it('renders localized mail detail actions', async () => {
-    const MailDetailPage = await importMailDetailPage()
-    const wrapper = mount(MailDetailPage, {
+  it('redirects legacy mail detail routes to conversations', async () => {
+    const MailDetailPage = await importLegacyMailDetailPage()
+    mount(MailDetailPage, {
       global: {
         stubs,
         directives: { loading: {} }
@@ -279,16 +279,13 @@ describe('mail workspace i18n', () => {
     })
 
     await flushPromises()
-    expect(wrapper.text()).toContain('Reply')
-    expect(wrapper.text()).toContain('Forward')
-    expect(wrapper.text()).toContain('Add Contact')
-    expect(wrapper.text()).toContain('Save Labels')
-    expect(wrapper.text()).toContain('Download')
+    expect(navigateToMock).toHaveBeenCalledWith('/conversations/mail-42')
+    expect(mailApiMock.fetchMailDetail).not.toHaveBeenCalled()
   })
 
-  it('renders localized conversation list and detail actions', async () => {
-    const ConversationListPage = await importConversationListPage()
-    const listWrapper = mount(ConversationListPage, {
+  it('redirects legacy conversation list routes to inbox', async () => {
+    const LegacyConversationsPage = await importLegacyConversationsPage()
+    mount(LegacyConversationsPage, {
       global: {
         stubs,
         directives: { loading: {} }
@@ -296,11 +293,11 @@ describe('mail workspace i18n', () => {
     })
 
     await flushPromises()
-    expect(listWrapper.text()).toContain('Conversations')
-    expect(listWrapper.text()).toContain('Search')
-    expect(listWrapper.text()).toContain('Participants')
-    expect(listWrapper.text()).toContain('Open')
+    expect(navigateToMock).toHaveBeenCalledWith('/inbox')
+    expect(conversationApiMock.fetchConversations).not.toHaveBeenCalled()
+  })
 
+  it('renders localized conversation detail actions', async () => {
     routeState.params = { id: 'conv-1' }
     const ConversationDetailPage = await importConversationDetailPage()
     const detailWrapper = mount(ConversationDetailPage, {
