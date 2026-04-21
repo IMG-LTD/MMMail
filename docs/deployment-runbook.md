@@ -99,3 +99,10 @@
 - member 访问 `/docs` 会进入 `product-access-blocked`
 - member 点击 `Setup 2FA` 后进入 recovery 模式的 `/authenticator`
 - member 点击 `New entry` 后自动恢复到 `/docs`
+
+## v2.0.0 release gate
+- merge `release/2.0.0` into `main`
+- run `bash scripts/validate-local.sh`
+- confirm CI is green on `main`
+- create and push annotated tag `v2.0.0`
+- publish GitHub Release from `docs/release/v2.0.0-release-notes.md`

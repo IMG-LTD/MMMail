@@ -28,6 +28,9 @@ jobs:
       - name: Install frontend deps
         run: pnpm --dir frontend install --frozen-lockfile
 
+      - name: Install frontend-v2 deps
+        run: pnpm --dir frontend-v2 install --frozen-lockfile
+
       - name: Frontend i18n gates
         run: pnpm --dir frontend i18n:check
 
@@ -66,8 +69,14 @@ jobs:
       - name: Frontend tests
         run: pnpm --dir frontend test
 
+      - name: Frontend v2 tests
+        run: pnpm --dir frontend-v2 test
+
       - name: Frontend typecheck
         run: pnpm --dir frontend typecheck
+
+      - name: Frontend v2 typecheck
+        run: pnpm --dir frontend-v2 typecheck
 
       - name: Frontend audit (high)
         run: pnpm --dir frontend audit --prod --audit-level=high --ignore-registry-errors
@@ -121,6 +130,9 @@ jobs:
 
       - name: Install frontend deps
         run: pnpm --dir frontend install --frozen-lockfile
+
+      - name: Install frontend-v2 deps
+        run: pnpm --dir frontend-v2 install --frozen-lockfile
 
       - name: Setup Java
         uses: actions/setup-java@v4

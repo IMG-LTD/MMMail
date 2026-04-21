@@ -18,6 +18,56 @@
             <artifactId>mmmail-common</artifactId>
             <version>${project.version}</version>
         </dependency>
+        <dependency>
+            <groupId>com.mmmail</groupId>
+            <artifactId>mmmail-foundation</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>com.mmmail</groupId>
+            <artifactId>mmmail-identity</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>com.mmmail</groupId>
+            <artifactId>mmmail-org-governance</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>com.mmmail</groupId>
+            <artifactId>mmmail-platform</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>com.mmmail</groupId>
+            <artifactId>mmmail-mail</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>com.mmmail</groupId>
+            <artifactId>mmmail-pass</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>com.mmmail</groupId>
+            <artifactId>mmmail-drive</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>com.mmmail</groupId>
+            <artifactId>mmmail-workspace</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>com.mmmail</groupId>
+            <artifactId>mmmail-billing</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>com.mmmail</groupId>
+            <artifactId>mmmail-labs</artifactId>
+            <version>${project.version}</version>
+        </dependency>
 
         <dependency>
             <groupId>org.springframework.boot</groupId>

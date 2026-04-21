@@ -115,65 +115,12 @@ describe('pass smoke', () => {
     expect(windowOpenMock).toHaveBeenCalledWith('https://shared.example.com', '_blank', 'noopener,noreferrer')
   })
 
-  it('loads pass monitor and wires shared-scope exclusion and two-factor actions', async () => {
-    const wrapper = await mountPassMonitorPage()
+  it('redirects legacy pass monitor routes to the current monitor workspace', async () => {
+    await mountPassMonitorPage()
     await flushPromises()
 
-    expect(passApiMock.getPersonalMonitor).toHaveBeenCalledTimes(1)
-
-    wrapper.findComponent({ name: 'PassMonitorHero' }).vm.$emit('update:workspace-mode', 'SHARED')
-    await flushPromises()
-    expect(passApiMock.getSharedMonitor).toHaveBeenCalledWith('org-1')
-
-    const section = wrapper.findComponent({ name: 'PassMonitorSectionPanel' })
-    section.vm.$emit('toggle', {
-      id: 'shared-item-1',
-      orgId: 'org-1',
-      scopeType: 'SHARED',
-      excluded: false,
-      canToggleExclusion: true,
-      canManageTwoFactor: true,
-      inactiveTwoFactor: true,
-      twoFactor: { enabled: false }
-    })
-    section.vm.$emit('manage-two-factor', {
-      id: 'shared-item-1',
-      orgId: 'org-1',
-      scopeType: 'SHARED',
-      title: 'Shared Login',
-      website: 'https://shared.example.com',
-      username: 'shared@example.com',
-      itemType: 'LOGIN',
-      updatedAt: '2026-04-02T10:00:00',
-      excluded: false,
-      canToggleExclusion: true,
-      canManageTwoFactor: true,
-      inactiveTwoFactor: true,
-      twoFactor: { enabled: false }
-    })
-    await flushPromises()
-
-    const dialog = wrapper.findComponent({ name: 'PassMonitorTwoFactorDialog' })
-    dialog.vm.$emit('save', {
-      issuer: 'MMMail',
-      accountName: 'shared@example.com',
-      secretCiphertext: 'ciphertext',
-      algorithm: 'SHA1',
-      digits: 6,
-      periodSeconds: 30
-    })
-    dialog.vm.$emit('generate')
-    await flushPromises()
-
-    expect(passApiMock.excludeSharedMonitorItem).toHaveBeenCalledWith('org-1', 'shared-item-1')
-    expect(passApiMock.upsertSharedItemTwoFactor).toHaveBeenCalledWith('org-1', 'shared-item-1', {
-      issuer: 'MMMail',
-      accountName: 'shared@example.com',
-      secretCiphertext: 'ciphertext',
-      algorithm: 'SHA1',
-      digits: 6,
-      periodSeconds: 30
-    })
-    expect(passApiMock.generateSharedItemTwoFactorCode).toHaveBeenCalledWith('org-1', 'shared-item-1')
+    expect(navigateToMock).toHaveBeenCalledWith('/pass/monitor')
+    expect(passApiMock.getPersonalMonitor).not.toHaveBeenCalled()
+    expect(passApiMock.getSharedMonitor).not.toHaveBeenCalled()
   })
 })

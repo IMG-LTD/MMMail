@@ -1,5 +1,7 @@
 # MMMail Community Edition
 
+> Current release target: `v2.0.0` on the `release/2.0.0` integration branch.
+
 MMMail Community Edition 是一个隐私导向、可自托管、以 Web 为中心的协作套件。
 MMMail Community Edition is a privacy-first, self-host-friendly collaboration suite built around a real web runtime.
 

@@ -16,7 +16,7 @@ public class WebMvcConfig implements WebMvcConfigurer {
     @Override
     public void addInterceptors(InterceptorRegistry registry) {
         registry.addInterceptor(orgProductAccessInterceptor)
-                .addPathPatterns("/api/v1/**")
+                .addPathPatterns("/api/v1/**", "/api/v2/**")
                 .excludePathPatterns(
                         "/api/v1/auth/**",
                         "/api/v1/orgs/**",
@@ -24,6 +24,8 @@ public class WebMvcConfig implements WebMvcConfigurer {
                         "/api/v1/settings/**",
                         "/api/v1/suite/**",
                         "/api/v1/audit/**",
+                        "/api/v2/auth/**",
+                        "/api/v2/public/**",
                         "/actuator/**",
                         "/v3/api-docs/**",
                         "/swagger-ui/**"
