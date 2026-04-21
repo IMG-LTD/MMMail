@@ -13,6 +13,7 @@ mapfile -t TRACKED_FILES < <(
     -not -path './.git/*' \
     -not -path './.codex-tasks/*' \
     -not -path './frontend/node_modules/*' \
+    -not -path './frontend-v2/node_modules/*' \
     -not -path './frontend/.nuxt/*' \
     -not -path './frontend/.output/*' \
     -not -name 'pnpm-lock.yaml' \
