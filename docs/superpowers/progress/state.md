@@ -1,8 +1,8 @@
 # MMMail v2 Orchestration State
 
-- Current Milestone: `M6`
+- Current Milestone: `M7`
 - Current Branch: `slice/m0/orchestration-phase0-freeze` (orchestration freeze worktree)
-- Current Status: `awaiting-m6-signoff`
+- Current Status: `awaiting-m7-signoff`
 - Last Updated By: `main-agent`
 - Release Target: `v2.0.0`
 
@@ -14,14 +14,14 @@
 - M4: `completed`
 - M5: `completed`
 - M6: `completed`
-- M7: `pending`
+- M7: `completed`
 - M8: `pending`
 
 ## Active Child Slice Worktrees
 - none
 
 ## Active Risks
-- none; M6 completion artifacts are complete and M6 is awaiting signoff
+- none; M7 completion artifacts are complete and M7 is awaiting signoff
 
 ## Next Required Check-in
-- Review existing `m6-report.md` and record M6 signoff outcome
+- Review existing `m7-report.md` and record M7 signoff outcome
