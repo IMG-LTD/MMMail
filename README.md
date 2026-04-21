@@ -1,6 +1,6 @@
 # MMMail Community Edition
 
-> Current release target: `v2.0.0` on the `release/2.0.0` integration branch.
+> Current shipped release: `v2.0.0` on `main` (tag `v2.0.0`).
 
 MMMail Community Edition 是一个隐私导向、可自托管、以 Web 为中心的协作套件。
 MMMail Community Edition is a privacy-first, self-host-friendly collaboration suite built around a real web runtime.
@@ -62,7 +62,8 @@ MMMail Community Edition is a privacy-first, self-host-friendly collaboration su
 - Issue / PR templates: `.github/ISSUE_TEMPLATE/`、`.github/pull_request_template.md`
 
 ## 当前版本说明 | Release reference
-- 当前公开基线 | Current public baseline: `v1.6.1`
+- 当前公开基线 | Current public baseline: `v2.0.0` on `main` (tag `v2.0.0`)
+- 当前发布说明 | Current release notes: `docs/release/v2.0.0-release-notes.md`
 - 正式支持边界以 `docs/release/community-v1-support-boundaries.md` 与 `docs/open-source/module-maturity-matrix.md` 为准
 
 ## 许可证 | License

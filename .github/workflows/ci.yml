@@ -2,7 +2,7 @@ name: MMMail CI
 
 on:
   push:
-    branches: ["dev/v*", "main", "release/v*"]
+    branches: ["dev/v*", "main", "release/v*", "release/2.0.0"]
   pull_request:
 
 permissions:
