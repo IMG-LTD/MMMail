@@ -28,6 +28,9 @@ jobs:
       - name: Install frontend deps
         run: pnpm --dir frontend install --frozen-lockfile
 
+      - name: Install frontend-v2 deps
+        run: pnpm --dir frontend-v2 install --frozen-lockfile
+
       - name: Frontend i18n gates
         run: pnpm --dir frontend i18n:check
 
@@ -127,6 +130,9 @@ jobs:
 
       - name: Install frontend deps
         run: pnpm --dir frontend install --frozen-lockfile
+
+      - name: Install frontend-v2 deps
+        run: pnpm --dir frontend-v2 install --frozen-lockfile
 
       - name: Setup Java
         uses: actions/setup-java@v4
