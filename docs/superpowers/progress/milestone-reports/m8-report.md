@@ -1,13 +1,12 @@
 # M8 Report
 
 ## Purpose
-- Support `G-release` signoff for the local-preparable part of `v2.0.0`.
-- Record what is already complete in this worktree and what remains under remote release execution.
-- This report does not claim that any remote merge, tag push, or GitHub Release action has already happened.
+- Record final `G-release` completion evidence for `v2.0.0`.
+- Preserve the strong local-complete evidence from this worktree and replace the remaining pending release actions with completed release facts.
 
-## Local-complete evidence already achieved in this worktree
+## Final released-state evidence
 
-### §6.1 Code and architecture done — local evidence
+### §6.1 Code and architecture done — released evidence
 - `M0` completed the frozen release scaffold and the baseline matrices:
   - `docs/superpowers/progress/domain-boundary-matrix.md`
   - `docs/superpowers/progress/tenant-scope-model.md`
@@ -22,36 +21,48 @@
 - `M5` evidence is archived in `docs/superpowers/progress/milestone-reports/m5-report.md` and confirms workspace aggregation plus Docs / Sheets / collaboration surfaces on shared contracts.
 - `M6` evidence is archived in `docs/superpowers/progress/milestone-reports/m6-report.md` and `docs/superpowers/progress/legacy-exit-report.md`; billing readiness is present and approved legacy exits are frozen.
 - `M7` evidence is archived in `docs/superpowers/progress/milestone-reports/m7-report.md`, `docs/superpowers/progress/labs-decision-log.md`, and `docs/superpowers/progress/release-blocker-checklist.md`; Labs disposition is recorded and the blocker checklist is fully checked.
+- PR #5 merged `release/2.0.0` into `main`, making the frozen v2 release branch the shipped mainline result for `v2.0.0`.
 
-### §6.2 Quality gate done — local evidence
-- Local validations pass in this worktree:
+### §6.2 Quality gate done — released evidence
+- Final release-branch validation passed on `release/2.0.0`: `bash scripts/validate-local.sh` completed with `[validate-local] all checks passed`.
+- The local release validation still includes:
   - `pnpm --dir frontend-v2 test`
   - `pnpm --dir frontend-v2 typecheck`
   - `bash scripts/validate-local.sh`
 - `scripts/validate-local.sh` includes the `frontend-v2` test and typecheck steps.
 - `.github/workflows/ci.yml` includes the `frontend-v2` suite.
-- The M7 release blocker checklist is fully checked and records:
+- Main CI run `24714868040` (`MMMail CI`) executed on `main` for merge commit `9ef87db869490688684c543cccd6bb1750e62685` and completed with `success`: `https://github.com/IMG-LTD/MMMail/actions/runs/24714868040`.
+- The M7 release blocker checklist remains fully checked and records:
   - `frontend-v2` local validation wiring
   - CI validation wiring
   - backend targeted release regressions passing
   - v2 route / share / auth / AI-MCP contract tests passing
   - committed legacy redirect and Labs decision evidence
 
-### §6.3 Rollout and rollback readiness — local evidence
-- The local rollout/rollback evidence set exists for signoff review:
+### §6.3 Rollout and rollback readiness — released evidence
+- The rollout/rollback evidence set remains available in:
   - `docs/superpowers/progress/feature-flag-matrix.md`
   - `docs/superpowers/progress/gateway-compatibility-matrix.md`
   - `docs/superpowers/progress/state.md`
 - Flag ownership and frontend/backend rollout coupling are documented.
 - Gateway compatibility and legacy redirect behavior are documented.
-- This session does not claim a real production canary cutover; only the documented local mechanism/evidence set is prepared.
+- `v2.0.0` is now merged, tagged, and released, while the report still does not claim a real production canary cutover beyond the documented mechanism/evidence set.
 
-### §6.4 Documentation and release artifacts — local evidence
-- `docs/release/v2.0.0-release-notes.md` is prepared for `v2.0.0` and includes landed scope, ops handoff pointers, `2.x Roadmap`, and `Known Limitations`.
-- `docs/superpowers/progress/milestone-reports/m6-report.md` exists and records M6 completion evidence.
-- `docs/superpowers/progress/milestone-reports/m7-report.md` exists and records M7 completion evidence.
-- `docs/superpowers/progress/milestone-reports/m8-report.md` now records the local release-evidence handoff for G-release.
-- Per this task's instruction, `README`, `CHANGELOG`, and deployment runbook files were not modified in this session and are therefore not claimed as newly updated by this report.
+### §6.4 Documentation and release artifacts — released evidence
+- `README.md` was modified in the released merge result for `v2.0.0`.
+- `CHANGELOG.md` was added in the released merge result for `v2.0.0`.
+- `docs/release/v2.0.0-release-notes.md` was added for the release and used to publish the GitHub Release: `https://github.com/IMG-LTD/MMMail/releases/tag/v2.0.0`.
+- `docs/ops/runbook.md`, `docs/ops/install.md`, `docs/ops/upgrade.md`, `docs/ops/backup-restore.md`, and `docs/ops/team-enablement.md` remain the referenced operational handoff set for `v2.0.0`.
+- `docs/superpowers/progress/milestone-reports/m6-report.md`, `docs/superpowers/progress/milestone-reports/m7-report.md`, and this `m8-report.md` record the milestone completion and release closeout evidence set.
+
+### §6.5 Release execution evidence
+- Final release-source validation passed on `release/2.0.0`: `bash scripts/validate-local.sh` completed successfully before release closeout.
+- PR #5 `release: merge v2.0.0 into main` merged from `release/2.0.0` to `main` at `2026-04-21T09:29:31Z`: `https://github.com/IMG-LTD/MMMail/pull/5`.
+- The merge commit for the release is `9ef87db869490688684c543cccd6bb1750e62685`.
+- `origin/main` resolves to `9ef87db869490688684c543cccd6bb1750e62685`, so the merged mainline result matches the release merge commit.
+- The annotated tag `v2.0.0` exists locally and remotely, and the peeled tag target is `9ef87db869490688684c543cccd6bb1750e62685`.
+- GitHub Release `MMMail v2.0.0` was published at `2026-04-21T09:47:11Z`: `https://github.com/IMG-LTD/MMMail/releases/tag/v2.0.0`.
+- Main CI run `24714868040` remained green after the merge/tag/release sequence.
 
 ### §6.6 2.x roadmap / out of scope
 The exact non-`2.0.0` items from the frozen design remain out of scope for this release:
@@ -62,15 +73,6 @@ The exact non-`2.0.0` items from the frozen design remain out of scope for this 
 - Docs/Sheets 实时协作引擎重型升级（backend §11.1 第 4 项）
 - 真实生产环境金丝雀切流（用户确认的 Q4-A 决策）
 
-## pending remote release actions
-The following §6.5 items are required for final release completion but were not executed in this session:
-- Confirm `release/2.0.0` contains all intended PRs, is green in remote CI, and has no unresolved conflicts.
-- Run the final release-branch regression pass on `release/2.0.0` as the release source of truth.
-- Create and complete the one-shot `release/2.0.0 → main` merge PR.
-- Create and push the annotated tag: `git tag -a v2.0.0 -m "MMMail v2.0.0"` and `git push origin v2.0.0`.
-- Publish the GitHub release with the prepared notes: `gh release create v2.0.0 --notes-file docs/release/v2.0.0-release-notes.md`.
-- Verify `main` remains green after the remote merge/tag/release sequence.
-
-## Release handoff note
-- Local release documentation/evidence is prepared for `v2.0.0`.
-- Final G-release completion still depends on explicit user signoff plus the pending remote release actions above.
+## Release conclusion
+- `v2.0.0` is released.
+- M8 closeout is complete; any further work moves to normal post-release follow-up from `main`.
