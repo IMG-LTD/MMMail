@@ -39,6 +39,8 @@ const composeForm = ref({
   subject: '',
   toEmail: ''
 })
+let latestWorkspaceRequest = 0
+let latestRecipientTrustRequest = 0
 
 const localNav = computed<SurfaceOption[]>(() => {
   return [
@@ -179,72 +181,167 @@ function ensureComposeFromEmail() {
   composeForm.value.fromEmail = senderOptions.value[0]?.emailAddress || authStore.user?.email || ''
 }
 
+function isEmailLike(value: string) {
+  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value)
+}
+
 async function loadWorkspace() {
+  const requestId = ++latestWorkspaceRequest
+  const requestToken = authStore.accessToken
+  const requestPath = route.fullPath
+
   syncComposeFromRoute()
 
-  if (!authStore.accessToken) {
+  if (!requestToken) {
+    if (requestId !== latestWorkspaceRequest || requestToken !== authStore.accessToken || requestPath !== route.fullPath) {
+      return
+    }
+
     mailItems.value = []
     activeMail.value = null
     senderOptions.value = []
     recipientTrust.value = null
     loadError.value = ''
+    workspaceLoading.value = false
     return
   }
 
   workspaceLoading.value = true
   loadError.value = ''
 
+  const shouldLoadFolder = !isCompose.value && !isContacts.value
+  let nextDetailId = ''
+
   try {
-    const shouldLoadFolder = !isCompose.value && !isContacts.value
-    const [folderResponse, senderResponse] = await Promise.all([
-      shouldLoadFolder ? listMailFolder(currentFolder.value, authStore.accessToken, folderQuery.value) : Promise.resolve(null),
-      listSenderIdentities(authStore.accessToken)
-    ])
+    if (shouldLoadFolder) {
+      try {
+        const folderResponse = await listMailFolder(currentFolder.value, requestToken, folderQuery.value)
 
-    mailItems.value = folderResponse?.data || []
-    senderOptions.value = senderResponse.data || []
-    ensureComposeFromEmail()
+        if (requestId !== latestWorkspaceRequest || requestToken !== authStore.accessToken || requestPath !== route.fullPath) {
+          return
+        }
 
-    const requestedMailId = resolveRouteString(route.params.id)
-    const fallbackMailId = shouldLoadFolder ? (mailItems.value[0]?.id || '') : ''
-    const detailId = requestedMailId || fallbackMailId
+        mailItems.value = folderResponse.data || []
+      } catch (error) {
+        if (requestId !== latestWorkspaceRequest || requestToken !== authStore.accessToken || requestPath !== route.fullPath) {
+          return
+        }
 
-    if (detailId && shouldLoadFolder) {
-      activeMail.value = (await readMailDetail(detailId, authStore.accessToken)).data
+        loadError.value = error instanceof Error
+          ? error.message
+          : tr(lt('无法加载邮件列表。', '無法載入郵件清單。', 'Unable to load the mail list.'))
+      }
     } else {
       activeMail.value = null
     }
-  } catch (error) {
-    mailItems.value = []
-    activeMail.value = null
-    loadError.value = error instanceof Error
-      ? error.message
-      : tr(lt('无法加载邮件工作区。', '無法載入郵件工作區。', 'Unable to load the mail workspace.'))
+
+    try {
+      const senderResponse = await listSenderIdentities(requestToken)
+
+      if (requestId !== latestWorkspaceRequest || requestToken !== authStore.accessToken || requestPath !== route.fullPath) {
+        return
+      }
+
+      senderOptions.value = senderResponse.data || []
+      ensureComposeFromEmail()
+    } catch {
+      if (requestId !== latestWorkspaceRequest || requestToken !== authStore.accessToken || requestPath !== route.fullPath) {
+        return
+      }
+
+      ensureComposeFromEmail()
+    }
+
+    nextDetailId = shouldLoadFolder
+      ? resolveRouteString(route.params.id) || (mailItems.value[0]?.id || '')
+      : ''
+
+    if (!nextDetailId) {
+      if (requestId !== latestWorkspaceRequest || requestToken !== authStore.accessToken || requestPath !== route.fullPath) {
+        return
+      }
+
+      activeMail.value = null
+      return
+    }
+
+    try {
+      const detailResponse = await readMailDetail(nextDetailId, requestToken)
+
+      if (requestId !== latestWorkspaceRequest || requestToken !== authStore.accessToken || requestPath !== route.fullPath) {
+        return
+      }
+
+      activeMail.value = detailResponse.data
+    } catch (error) {
+      if (requestId !== latestWorkspaceRequest || requestToken !== authStore.accessToken || requestPath !== route.fullPath) {
+        return
+      }
+
+      loadError.value = loadError.value || (error instanceof Error
+        ? error.message
+        : tr(lt('无法加载邮件详情。', '無法載入郵件詳情。', 'Unable to load the mail detail.')))
+    }
   } finally {
-    workspaceLoading.value = false
+    if (requestId === latestWorkspaceRequest && requestToken === authStore.accessToken && requestPath === route.fullPath) {
+      workspaceLoading.value = false
+    }
   }
 }
 
 async function refreshRecipientTrust() {
+  const requestId = ++latestRecipientTrustRequest
+  const requestToken = authStore.accessToken
   const toEmail = composeForm.value.toEmail.trim()
   const fromEmail = composeForm.value.fromEmail.trim()
 
-  if (!authStore.accessToken || !toEmail || !fromEmail) {
-    recipientTrust.value = null
+  if (!requestToken) {
+    if (requestId === latestRecipientTrustRequest && requestToken === authStore.accessToken) {
+      recipientTrust.value = null
+      recipientTrustLoading.value = false
+    }
+    return
+  }
+
+  if (!toEmail || !fromEmail) {
+    if (requestId === latestRecipientTrustRequest && requestToken === authStore.accessToken) {
+      recipientTrust.value = null
+      recipientTrustLoading.value = false
+    }
+    return
+  }
+
+  if (!isEmailLike(toEmail) || !isEmailLike(fromEmail)) {
+    if (requestId === latestRecipientTrustRequest && requestToken === authStore.accessToken) {
+      recipientTrust.value = null
+      recipientTrustLoading.value = false
+    }
     return
   }
 
   recipientTrustLoading.value = true
 
   try {
-    recipientTrust.value = (await readRecipientTrustState(toEmail, fromEmail, authStore.accessToken)).data
+    const response = await readRecipientTrustState(toEmail, fromEmail, requestToken)
+
+    if (requestId !== latestRecipientTrustRequest || requestToken !== authStore.accessToken) {
+      return
+    }
+
+    recipientTrust.value = response.data
   } catch {
+    if (requestId !== latestRecipientTrustRequest || requestToken !== authStore.accessToken) {
+      return
+    }
+
     recipientTrust.value = {
-      status: 'blocked',
-      message: tr(lt('当前无法验证收件人的信任状态。', '目前無法驗證收件者的信任狀態。', 'The recipient trust state is unavailable right now.'))
+      status: 'warning',
+      message: tr(lt('暂时无法读取收件人信任状态。', '暫時無法讀取收件者信任狀態。', 'The recipient trust state is temporarily unavailable.'))
     }
   } finally {
-    recipientTrustLoading.value = false
+    if (requestId === latestRecipientTrustRequest && requestToken === authStore.accessToken) {
+      recipientTrustLoading.value = false
+    }
   }
 }
 

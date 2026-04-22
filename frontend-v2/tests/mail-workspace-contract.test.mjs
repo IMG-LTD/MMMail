@@ -23,5 +23,8 @@ test('mail workspace reads folder, detail, sender, and trust state from APIs', a
   assert.match(view, /listSenderIdentities/)
   assert.match(view, /readRecipientTrustState/)
   assert.match(view, /watch\(\s*\(\) => \[route\.fullPath, authStore\.accessToken\]/)
+  assert.match(view, /latestWorkspaceRequest/)
+  assert.match(view, /latestRecipientTrustRequest/)
+  assert.match(view, /isEmailLike/)
   assert.doesNotMatch(view, /const messages = \[/)
 })
