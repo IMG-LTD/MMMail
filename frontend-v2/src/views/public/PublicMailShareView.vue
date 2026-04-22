@@ -32,6 +32,8 @@ const loadError = ref('')
 const decryptError = ref('')
 const token = computed(() => String(route.params.token || ''))
 
+let latestLoadRequest = 0
+
 const pageTitle = computed(() => {
   if (share.value?.subject) {
     return share.value.subject
@@ -84,6 +86,9 @@ function formatBytes(value: number) {
 }
 
 async function loadShare() {
+  const requestId = ++latestLoadRequest
+  const requestToken = token.value
+
   loading.value = true
   loadError.value = ''
   decryptError.value = ''
@@ -93,20 +98,37 @@ async function loadShare() {
   const capabilityPromise = shareFlow.loadCapabilities()
 
   try {
-    if (!token.value) {
+    if (!requestToken) {
+      if (requestId !== latestLoadRequest || requestToken !== token.value) {
+        return
+      }
+
       loadError.value = tr(lt('缺少共享令牌。', '缺少共享權杖。', 'Missing share token.'))
       return
     }
 
-    share.value = (await readPublicMailShare(token.value)).data
+    const response = await readPublicMailShare(requestToken)
     await capabilityPromise
+
+    if (requestId !== latestLoadRequest || requestToken !== token.value) {
+      return
+    }
+
+    share.value = response.data
   } catch (error) {
     await capabilityPromise
+
+    if (requestId !== latestLoadRequest || requestToken !== token.value) {
+      return
+    }
+
     loadError.value = error instanceof Error && error.message
       ? error.message
       : tr(lt('无法加载共享消息。', '無法載入共享訊息。', 'Unable to load shared message.'))
   } finally {
-    loading.value = false
+    if (requestId === latestLoadRequest && requestToken === token.value) {
+      loading.value = false
+    }
   }
 }
 

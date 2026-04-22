@@ -19,6 +19,8 @@ const loadError = ref('')
 const copyFeedback = ref('')
 const token = computed(() => String(route.params.token || ''))
 
+let latestLoadRequest = 0
+
 function formatDateTime(value: string | null) {
   if (!value) {
     return tr(lt('未设置', '未設定', 'Not set'))
@@ -34,6 +36,9 @@ function formatDateTime(value: string | null) {
 }
 
 async function loadShare() {
+  const requestId = ++latestLoadRequest
+  const requestToken = token.value
+
   loading.value = true
   loadError.value = ''
   copyFeedback.value = ''
@@ -42,20 +47,37 @@ async function loadShare() {
   const capabilityPromise = shareFlow.loadCapabilities()
 
   try {
-    if (!token.value) {
+    if (!requestToken) {
+      if (requestId !== latestLoadRequest || requestToken !== token.value) {
+        return
+      }
+
       loadError.value = tr(lt('缺少共享令牌。', '缺少共享權杖。', 'Missing share token.'))
       return
     }
 
-    share.value = (await readPublicPassShare(token.value)).data
+    const response = await readPublicPassShare(requestToken)
     await capabilityPromise
+
+    if (requestId !== latestLoadRequest || requestToken !== token.value) {
+      return
+    }
+
+    share.value = response.data
   } catch (error) {
     await capabilityPromise
+
+    if (requestId !== latestLoadRequest || requestToken !== token.value) {
+      return
+    }
+
     loadError.value = error instanceof Error && error.message
       ? error.message
       : tr(lt('无法加载共享条目。', '無法載入共享項目。', 'Unable to load the shared item.'))
   } finally {
-    loading.value = false
+    if (requestId === latestLoadRequest && requestToken === token.value) {
+      loading.value = false
+    }
   }
 }
 

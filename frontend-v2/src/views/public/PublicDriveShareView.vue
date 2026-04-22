@@ -34,6 +34,8 @@ const loadError = ref('')
 const downloadError = ref('')
 const token = computed(() => String(route.params.token || ''))
 
+let latestLoadRequest = 0
+
 function formatDateTime(value: string | null) {
   if (!value) {
     return tr(lt('未设置', '未設定', 'Not set'))
@@ -92,6 +94,10 @@ function triggerDownload(blob: Blob, fileName: string) {
 }
 
 async function loadDriveShare() {
+  const requestId = ++latestLoadRequest
+  const requestToken = token.value
+  const requestPassword = shareFlow.password.value
+
   loading.value = true
   loadError.value = ''
   downloadError.value = ''
@@ -101,21 +107,41 @@ async function loadDriveShare() {
   const capabilityPromise = shareFlow.loadCapabilities()
 
   try {
-    if (!token.value) {
+    if (!requestToken) {
+      if (requestId !== latestLoadRequest || requestToken !== token.value) {
+        return
+      }
+
       loadError.value = tr(lt('缺少共享令牌。', '缺少共享權杖。', 'Missing share token.'))
       return
     }
 
-    metadata.value = (await readPublicDriveShareMetadata(token.value)).data
-    items.value = ((await listPublicDriveShareItems(token.value, shareFlow.password.value)).data || []) as DriveShareItem[]
+    const [metadataResponse, itemsResponse] = await Promise.all([
+      readPublicDriveShareMetadata(requestToken),
+      listPublicDriveShareItems(requestToken, requestPassword)
+    ])
     await capabilityPromise
+
+    if (requestId !== latestLoadRequest || requestToken !== token.value) {
+      return
+    }
+
+    metadata.value = metadataResponse.data
+    items.value = (itemsResponse.data || []) as DriveShareItem[]
   } catch (error) {
     await capabilityPromise
+
+    if (requestId !== latestLoadRequest || requestToken !== token.value) {
+      return
+    }
+
     loadError.value = error instanceof Error && error.message
       ? error.message
       : tr(lt('无法加载共享文件。', '無法載入共享檔案。', 'Unable to load shared files.'))
   } finally {
-    loading.value = false
+    if (requestId === latestLoadRequest && requestToken === token.value) {
+      loading.value = false
+    }
   }
 }
 
