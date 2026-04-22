@@ -12,12 +12,15 @@ import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMock
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.MediaType;
+import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
 
 import java.nio.charset.StandardCharsets;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -44,6 +47,7 @@ class MailExternalEncryptedDeliveryIntegrationTest {
     private static final String ENCRYPTED_BODY = "-----BEGIN PGP MESSAGE-----MMMAIL-EXTERNAL-----END PGP MESSAGE-----";
     private static final byte[] ENCRYPTED_ATTACHMENT = "encrypted-attachment-payload".getBytes(StandardCharsets.UTF_8);
     private static final Pattern SECURE_LINK_PATTERN = Pattern.compile("/share/mail/([A-Za-z0-9]+)");
+    private static final DateTimeFormatter EXPIRES_AT_FORMAT = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss");
 
     @Autowired
     private MockMvc mockMvc;
@@ -51,11 +55,15 @@ class MailExternalEncryptedDeliveryIntegrationTest {
     @Autowired
     private ObjectMapper objectMapper;
 
+    @Autowired
+    private JdbcTemplate jdbcTemplate;
+
     @MockBean
     private MailOutboundDeliveryGateway mailOutboundDeliveryGateway;
 
     @BeforeEach
     void setUpGateway() {
+        ensureTokenHashColumn();
         when(mailOutboundDeliveryGateway.isConfigured()).thenReturn(true);
         when(mailOutboundDeliveryGateway.configurationMessage()).thenReturn(null);
         when(mailOutboundDeliveryGateway.send(any())).thenReturn(
@@ -68,11 +76,12 @@ class MailExternalEncryptedDeliveryIntegrationTest {
         String suffix = String.valueOf(System.nanoTime());
         String senderEmail = "mail-external-sender-" + suffix + "@mmmail.local";
         String externalEmail = "external-" + suffix + "@example.net";
+        String expiresAt = futureExpiresAt();
         String senderToken = register(senderEmail, "External Mail Sender");
         disableUndoSend(senderToken);
         saveKeyProfile(senderToken, SENDER_FINGERPRINT);
 
-        mockMvc.perform(sendExternalEncryptedMail(senderToken, senderEmail, externalEmail, suffix, null))
+        mockMvc.perform(sendExternalEncryptedMail(senderToken, senderEmail, externalEmail, suffix, null, expiresAt))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.code").value(0));
 
@@ -98,7 +107,7 @@ class MailExternalEncryptedDeliveryIntegrationTest {
                 .andReturn();
 
         JsonNode secureLink = readJson(secureLinkResult).path("data");
-        assertThat(secureLink.path("expiresAt").asText()).startsWith("2026-04-21T12:00:00");
+        assertThat(secureLink.path("expiresAt").asText()).startsWith(expiresAt);
 
         mockMvc.perform(get("/api/v1/mails/sent")
                         .header("Authorization", "Bearer " + senderToken))
@@ -112,12 +121,13 @@ class MailExternalEncryptedDeliveryIntegrationTest {
         String suffix = String.valueOf(System.nanoTime());
         String senderEmail = "mail-external-internal-sender-" + suffix + "@mmmail.local";
         String receiverEmail = "mail-external-internal-receiver-" + suffix + "@mmmail.local";
+        String expiresAt = futureExpiresAt();
         String senderToken = register(senderEmail, "External Mail Sender");
         register(receiverEmail, "Internal Receiver");
         disableUndoSend(senderToken);
         saveKeyProfile(senderToken, SENDER_FINGERPRINT);
 
-        mockMvc.perform(sendExternalEncryptedMail(senderToken, senderEmail, receiverEmail, suffix, null))
+        mockMvc.perform(sendExternalEncryptedMail(senderToken, senderEmail, receiverEmail, suffix, null, expiresAt))
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.code").value(ErrorCode.INVALID_ARGUMENT.getCode()))
                 .andExpect(jsonPath("$.message").value("Password-protected external Mail E2EE requires SMTP outbound recipients"));
@@ -130,10 +140,11 @@ class MailExternalEncryptedDeliveryIntegrationTest {
         String suffix = String.valueOf(System.nanoTime());
         String senderEmail = "mail-external-draft-sender-" + suffix + "@mmmail.local";
         String externalEmail = "mail-external-draft-" + suffix + "@example.net";
+        String expiresAt = futureExpiresAt();
         String senderToken = register(senderEmail, "External Mail Sender");
         disableUndoSend(senderToken);
         saveKeyProfile(senderToken, SENDER_FINGERPRINT);
-        String draftId = saveExternalDraft(senderToken, senderEmail, externalEmail);
+        String draftId = saveExternalDraft(senderToken, senderEmail, externalEmail, expiresAt);
         String attachmentId = uploadEncryptedAttachment(senderToken, draftId);
 
         mockMvc.perform(get("/api/v1/mails/" + draftId)
@@ -149,7 +160,7 @@ class MailExternalEncryptedDeliveryIntegrationTest {
                 .andExpect(jsonPath("$.data.attachments[0].e2ee.enabled").value(true))
                 .andExpect(jsonPath("$.data.attachments[0].e2ee.algorithm").value("openpgp"));
 
-        mockMvc.perform(sendExternalEncryptedMail(senderToken, senderEmail, externalEmail, suffix, draftId))
+        mockMvc.perform(sendExternalEncryptedMail(senderToken, senderEmail, externalEmail, suffix, draftId, expiresAt))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.code").value(0));
 
@@ -176,7 +187,8 @@ class MailExternalEncryptedDeliveryIntegrationTest {
             String senderEmail,
             String recipientEmail,
             String suffix,
-            String draftId
+            String draftId,
+            String expiresAt
     ) {
         String draftFragment = draftId == null ? "" : """
                           "draftId": %s,
@@ -199,14 +211,14 @@ class MailExternalEncryptedDeliveryIntegrationTest {
                             "externalAccess": {
                               "mode": "PASSWORD_PROTECTED",
                               "passwordHint": "shared out-of-band",
-                              "expiresAt": "2026-04-21T12:00:00"
+                              "expiresAt": "%s"
                             }
                           }
                         }
-                        """.formatted(draftFragment, senderEmail, recipientEmail, suffix, ENCRYPTED_BODY, SENDER_FINGERPRINT));
+                        """.formatted(draftFragment, senderEmail, recipientEmail, suffix, ENCRYPTED_BODY, SENDER_FINGERPRINT, expiresAt));
     }
 
-    private String saveExternalDraft(String token, String senderEmail, String recipientEmail) throws Exception {
+    private String saveExternalDraft(String token, String senderEmail, String recipientEmail, String expiresAt) throws Exception {
         MvcResult result = mockMvc.perform(post("/api/v1/mails/drafts")
                         .header("Authorization", "Bearer " + token)
                         .contentType(MediaType.APPLICATION_JSON)
@@ -222,11 +234,11 @@ class MailExternalEncryptedDeliveryIntegrationTest {
                                     "externalAccess": {
                                       "mode": "PASSWORD_PROTECTED",
                                       "passwordHint": "shared out-of-band",
-                                      "expiresAt": "2026-04-21T12:00:00"
+                                      "expiresAt": "%s"
                                     }
                                   }
                                 }
-                                """.formatted(recipientEmail, senderEmail, ENCRYPTED_BODY, SENDER_FINGERPRINT)))
+                                """.formatted(recipientEmail, senderEmail, ENCRYPTED_BODY, SENDER_FINGERPRINT, expiresAt)))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.code").value(0))
                 .andReturn();
@@ -335,6 +347,14 @@ class MailExternalEncryptedDeliveryIntegrationTest {
             return "null";
         }
         return objectMapper.writeValueAsString(value.asText());
+    }
+
+    private String futureExpiresAt() {
+        return LocalDateTime.now().plusDays(7).withNano(0).format(EXPIRES_AT_FORMAT);
+    }
+
+    private void ensureTokenHashColumn() {
+        jdbcTemplate.execute("ALTER TABLE mail_external_secure_link ADD COLUMN IF NOT EXISTS token_hash VARCHAR(64)");
     }
 
     private JsonNode readJson(MvcResult result) throws Exception {

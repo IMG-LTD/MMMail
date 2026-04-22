@@ -1,19 +1,16 @@
 <script setup lang="ts">
-import { onMounted } from 'vue'
+import { computed, onMounted, ref } from 'vue'
+import { useRoute, useRouter } from 'vue-router'
 import CompactPageHeader from '@/shared/components/CompactPageHeader.vue'
+import { readSystemHealth } from '@/service/api/system-health'
 import { lt, type TextLike, useLocaleText } from '@/locales'
+import { useScopeGuard } from '@/shared/composables/useScopeGuard'
 import { useMcpRegistry } from '@/shared/composables/useMcpRegistry'
-
-const { tr } = useLocaleText()
-const mcpRegistry = useMcpRegistry()
-const registryCapabilities = mcpRegistry.capabilities
-
-onMounted(() => {
-  void mcpRegistry.loadCapabilities()
-})
+import type { SystemHealthOverview } from '@/shared/types/system-health'
+import { useAuthStore } from '@/store/modules/auth'
 
 interface SettingsNavItem {
-  key: string
+  key: SettingsPanelKey
   label: TextLike
 }
 
@@ -24,25 +21,23 @@ interface RegisteredDevice {
   activity: TextLike
 }
 
-const activeNavKey = 'privacy-telemetry'
+type SettingsPanelKey = 'privacy-telemetry' | 'system-health' | 'integrations'
+
+const route = useRoute()
+const router = useRouter()
+const authStore = useAuthStore()
+const { requestHeaders } = useScopeGuard()
+const { tr } = useLocaleText()
+const mcpRegistry = useMcpRegistry()
+const registryCapabilities = mcpRegistry.capabilities
+const systemHealth = ref<SystemHealthOverview | null>(null)
+const systemHealthFailed = ref(false)
+
+const settingsPanelKeys: SettingsPanelKey[] = ['privacy-telemetry', 'system-health', 'integrations']
 const navItems: SettingsNavItem[] = [
-  { key: 'general', label: lt('常规', '一般', 'General') },
-  { key: 'appearance', label: lt('外观', '外觀', 'Appearance') },
-  { key: 'language', label: lt('语言', '語言', 'Language') },
-  { key: 'mail', label: lt('邮件', '郵件', 'Mail') },
-  { key: 'calendar', label: lt('日历', '日曆', 'Calendar') },
-  { key: 'drive', label: lt('云盘', '雲端硬碟', 'Drive') },
-  { key: 'pass', label: lt('密码库', '密碼庫', 'Pass') },
-  { key: 'notifications', label: lt('通知', '通知', 'Notifications') },
   { key: 'privacy-telemetry', label: lt('隐私与遥测', '隱私與遙測', 'Privacy & Telemetry') },
-  { key: 'accessibility', label: lt('无障碍', '無障礙', 'Accessibility') },
-  { key: 'keyboard', label: lt('键盘', '鍵盤', 'Keyboard') },
-  { key: 'labs', label: lt('Labs', 'Labs', 'Labs') },
-  { key: 'developer', label: lt('开发者', '開發者', 'Developer') },
-  { key: 'adoption-readiness', label: lt('采用准备度', '採用準備度', 'Adoption readiness') },
-  { key: 'pwa', label: lt('PWA', 'PWA', 'PWA') },
-  { key: 'mail-e2ee', label: lt('邮件 E2EE', '郵件 E2EE', 'Mail E2EE') },
-  { key: 'about', label: lt('关于', '關於', 'About') }
+  { key: 'system-health', label: lt('系统健康', '系統健康', 'System Health') },
+  { key: 'integrations', label: lt('集成', '整合', 'Integrations') }
 ]
 
 const devices: RegisteredDevice[] = [
@@ -65,6 +60,40 @@ const devices: RegisteredDevice[] = [
     activity: lt('3 天前', '3 天前', '3 days ago')
   }
 ]
+
+function isSettingsPanelKey(value: string): value is SettingsPanelKey {
+  return settingsPanelKeys.includes(value as SettingsPanelKey)
+}
+
+const activePanelKey = computed<SettingsPanelKey>(() => {
+  const panelQuery = Array.isArray(route.query.panel) ? route.query.panel[0] : route.query.panel
+  const requestedPanel = typeof panelQuery === 'string' ? panelQuery : ''
+  return isSettingsPanelKey(requestedPanel) ? requestedPanel : 'privacy-telemetry'
+})
+
+function openPanel(panelKey: SettingsPanelKey) {
+  void router.replace({
+    path: route.path,
+    query: {
+      ...route.query,
+      panel: panelKey
+    }
+  })
+}
+
+onMounted(async () => {
+  if (!authStore.accessToken) {
+    return
+  }
+
+  void mcpRegistry.loadCapabilities().catch(() => {})
+
+  try {
+    systemHealth.value = await readSystemHealth(authStore.accessToken, requestHeaders.value)
+  } catch {
+    systemHealthFailed.value = true
+  }
+})
 </script>
 
 <template>
@@ -81,21 +110,18 @@ const devices: RegisteredDevice[] = [
           v-for="item in navItems"
           :key="item.key"
           type="button"
-          :class="{ 'settings-shell__nav-active': item.key === activeNavKey }"
+          :class="{ 'settings-shell__nav-active': item.key === activePanelKey }"
+          @click="openPanel(item.key)"
         >
           {{ tr(item.label) }}
         </button>
       </aside>
 
       <div class="settings-shell__content">
-        <section class="settings-panel">
+        <section v-if="activePanelKey === 'privacy-telemetry'" class="settings-panel">
           <span class="section-label">{{ tr(lt('隐私与遥测', '隱私與遙測', 'Privacy & Telemetry')) }}</span>
           <strong>{{ tr(lt('隐私与遥测', '隱私與遙測', 'Privacy & Telemetry')) }}</strong>
           <p class="page-subtitle">{{ tr(lt('管理 MMMail 如何收集诊断数据，以在多设备上保护并强化你的隐私。', '管理 MMMail 如何收集診斷資料，以在多裝置上保護並強化你的隱私。', 'Manage how MMMail collects diagnostic data to defend and harden your privacy across devices.')) }}</p>
-
-          <div v-if="registryCapabilities.length" class="settings-capabilities">
-            <span v-for="capability in registryCapabilities" :key="capability" class="metric-chip">{{ capability }}</span>
-          </div>
 
           <div class="settings-choice">
             <div class="settings-choice__item settings-choice__item--active">
@@ -113,7 +139,54 @@ const devices: RegisteredDevice[] = [
           </div>
         </section>
 
-        <section class="settings-panel">
+        <section v-if="activePanelKey === 'system-health'" class="settings-panel settings-panel--grid">
+          <span class="section-label">{{ tr(lt('系统健康', '系統健康', 'System Health')) }}</span>
+          <strong>{{ tr(lt('系统健康', '系統健康', 'System Health')) }}</strong>
+          <p class="page-subtitle">{{ tr(lt('当前工作区的服务状态、请求指标、错误追踪和作业运行概览。', '目前工作區的服務狀態、請求指標、錯誤追蹤與工作執行總覽。', 'A minimal overview of service status, request metrics, error tracking, and job activity for the current workspace.')) }}</p>
+
+          <div v-if="systemHealth" class="settings-health-grid">
+            <article class="settings-choice__item">
+              <span class="section-label">{{ tr(lt('状态', '狀態', 'Status')) }}</span>
+              <strong>{{ systemHealth.status }}</strong>
+              <p>{{ systemHealth.applicationName }} · {{ systemHealth.applicationVersion }}</p>
+            </article>
+            <article class="settings-choice__item">
+              <span class="section-label">{{ tr(lt('请求指标', '請求指標', 'Request Metrics')) }}</span>
+              <strong>{{ systemHealth.metrics.totalRequests }}</strong>
+              <p>{{ tr(lt('失败请求', '失敗請求', 'Failed requests')) }}: {{ systemHealth.metrics.failedRequests }}</p>
+            </article>
+            <article class="settings-choice__item">
+              <span class="section-label">{{ tr(lt('错误追踪', '錯誤追蹤', 'Error Tracking')) }}</span>
+              <strong>{{ systemHealth.errorTracking.totalEvents }}</strong>
+              <p>{{ tr(lt('服务端 / 客户端', '服務端 / 用戶端', 'Server / Client')) }}: {{ systemHealth.errorTracking.serverEvents }} / {{ systemHealth.errorTracking.clientEvents }}</p>
+            </article>
+            <article class="settings-choice__item">
+              <span class="section-label">{{ tr(lt('作业运行', '工作執行', 'Jobs')) }}</span>
+              <strong>{{ systemHealth.jobs.totalRuns }}</strong>
+              <p>{{ tr(lt('活跃 / 失败', '活躍 / 失敗', 'Active / Failed')) }}: {{ systemHealth.jobs.activeRuns }} / {{ systemHealth.jobs.failedRuns }}</p>
+            </article>
+            <article class="settings-choice__item settings-health-grid__wide">
+              <span class="section-label">{{ tr(lt('Prometheus', 'Prometheus', 'Prometheus')) }}</span>
+              <strong>{{ systemHealth.prometheusPath }}</strong>
+            </article>
+          </div>
+
+          <p v-else-if="systemHealthFailed" class="page-subtitle">{{ tr(lt('系统健康暂时不可用。', '系統健康暫時無法使用。', 'System health is temporarily unavailable.')) }}</p>
+          <p v-else class="page-subtitle">{{ tr(lt('登录后即可查看系统健康概览。', '登入後即可查看系統健康總覽。', 'Sign in to view the system health overview.')) }}</p>
+        </section>
+
+        <section v-if="activePanelKey === 'integrations'" class="settings-panel">
+          <span class="section-label">{{ tr(lt('集成', '整合', 'Integrations')) }}</span>
+          <strong>{{ tr(lt('MCP 能力', 'MCP 能力', 'MCP Capabilities')) }}</strong>
+          <p class="page-subtitle">{{ tr(lt('已接入的 MCP 注册能力会在这里集中呈现。', '已接入的 MCP 註冊能力會在這裡集中呈現。', 'Available MCP registry capabilities are collected here.')) }}</p>
+
+          <div v-if="registryCapabilities.length" class="settings-capabilities">
+            <span v-for="capability in registryCapabilities" :key="capability" class="metric-chip">{{ capability }}</span>
+          </div>
+          <p v-else class="page-subtitle">{{ tr(lt('当前没有可展示的集成能力。', '目前沒有可顯示的整合能力。', 'No integration capabilities are currently available.')) }}</p>
+        </section>
+
+        <section v-if="activePanelKey === 'privacy-telemetry'" class="settings-panel">
           <div class="settings-panel__head">
             <span class="section-label">{{ tr(lt('已注册设备', '已註冊裝置', 'Registered Devices')) }}</span>
             <button type="button">{{ tr(lt('全部撤销', '全部撤銷', 'Revoke all')) }}</button>
@@ -132,7 +205,7 @@ const devices: RegisteredDevice[] = [
           </div>
         </section>
 
-        <section class="settings-actions">
+        <section v-if="activePanelKey === 'privacy-telemetry'" class="settings-actions">
           <article class="settings-panel">
             <span class="section-label">{{ tr(lt('导出工作区数据', '匯出工作區資料', 'Export Workspace Data')) }}</span>
             <p class="page-subtitle">{{ tr(lt('以 JSON 格式下载包含 MMMail 设置、遥测日志和偏好历史的账户归档。', '以 JSON 格式下載包含 MMMail 設定、遙測日誌與偏好歷史的帳號封存檔。', 'Download an account archive of your MMMail settings, telemetry logs, and preference history in JSON format.')) }}</p>
@@ -146,7 +219,7 @@ const devices: RegisteredDevice[] = [
           </article>
         </section>
 
-        <div class="settings-save">
+        <div v-if="activePanelKey === 'privacy-telemetry'" class="settings-save">
           <button type="button">{{ tr(lt('保存更改', '儲存變更', 'Save changes')) }}</button>
         </div>
       </div>
@@ -197,6 +270,20 @@ const devices: RegisteredDevice[] = [
   padding: 18px;
   border: 1px solid var(--mm-border);
   border-radius: 12px;
+}
+
+.settings-panel--grid,
+.settings-health-grid {
+  display: grid;
+  gap: 12px;
+}
+
+.settings-health-grid {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.settings-health-grid__wide {
+  grid-column: 1 / -1;
 }
 
 .settings-panel strong {

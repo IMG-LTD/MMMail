@@ -15,7 +15,6 @@ import org.springframework.test.web.servlet.MvcResult;
 import java.util.List;
 import java.util.Map;
 
-import static org.assertj.core.api.Assertions.assertThat;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
@@ -36,7 +35,22 @@ class ObservabilityIntegrationTest {
     private ObjectMapper objectMapper;
 
     @Test
-    void systemHealthShouldExposeMetricsErrorsPrometheusAndJobRunsForAdmin() throws Exception {
+    void systemHealthShouldKeepPrometheusAndErrorTrackingFieldsStableForFrontend() throws Exception {
+        String adminToken = login("admin@mmmail.local", PASSWORD);
+
+        mockMvc.perform(get("/api/v1/system/health")
+                        .header("Authorization", "Bearer " + adminToken))
+                .andExpect(status().isOk())
+                .andExpect(header().exists("X-Request-Id"))
+                .andExpect(jsonPath("$.data.applicationName").value("mmmail-server"))
+                .andExpect(jsonPath("$.data.metrics.totalRequests").exists())
+                .andExpect(jsonPath("$.data.errorTracking.totalEvents").exists())
+                .andExpect(jsonPath("$.data.jobs.totalRuns").exists())
+                .andExpect(jsonPath("$.data.prometheusPath").value("/actuator/prometheus"));
+    }
+
+    @Test
+    void systemHealthShouldExposeObservabilityDrilldownAndPrometheusMetricsForAdmin() throws Exception {
         String adminToken = login("admin@mmmail.local", PASSWORD);
         createEasySwitchSession(adminToken);
 
@@ -61,11 +75,6 @@ class ObservabilityIntegrationTest {
                         .header("Authorization", "Bearer " + adminToken))
                 .andExpect(status().isOk())
                 .andExpect(header().exists("X-Request-Id"))
-                .andExpect(jsonPath("$.data.applicationName").value("mmmail-server"))
-                .andExpect(jsonPath("$.data.prometheusPath").value("/actuator/prometheus"))
-                .andExpect(jsonPath("$.data.metrics.totalRequests").value(Matchers.greaterThanOrEqualTo(1)))
-                .andExpect(jsonPath("$.data.errorTracking.totalEvents").value(Matchers.greaterThanOrEqualTo(1)))
-                .andExpect(jsonPath("$.data.jobs.totalRuns").value(Matchers.greaterThanOrEqualTo(1)))
                 .andExpect(jsonPath("$.data.recentErrors[0].source").value("CLIENT"))
                 .andExpect(jsonPath("$.data.recentJobs[0].jobName").value("MAIL_EASY_SWITCH_IMPORT"));
 

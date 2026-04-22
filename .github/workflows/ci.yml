@@ -72,6 +72,25 @@ jobs:
       - name: Frontend v2 tests
         run: pnpm --dir frontend-v2 test
 
+      - name: Frontend-v2 contract regression
+        run: >
+          pnpm --dir frontend-v2 exec node --test
+          tests/foundation-route-contract.test.mjs
+          tests/redirect-contract.test.mjs
+          tests/auth-scope-contract.test.mjs
+          tests/public-share-contract.test.mjs
+          tests/public-share-runtime-contract.test.mjs
+          tests/public-share-view-contract.test.mjs
+          tests/mail-workspace-contract.test.mjs
+          tests/calendar-workspace-contract.test.mjs
+          tests/drive-workspace-contract.test.mjs
+          tests/pass-workspace-contract.test.mjs
+          tests/docs-sheets-runtime-contract.test.mjs
+          tests/workspace-aggregation-contract.test.mjs
+          tests/settings-panel-contract.test.mjs
+          tests/system-health-contract.test.mjs
+          tests/command-center-query-contract.test.mjs
+
       - name: Frontend typecheck
         run: pnpm --dir frontend typecheck
 
@@ -93,10 +112,10 @@ jobs:
           distribution: temurin
           java-version: 21
 
-      - name: Backend auth/rbac regression
+      - name: Backend auth/rbac and v2 contract regression
         run: >
           mvn -f backend/pom.xml -pl mmmail-server -am
-          -Dtest=AuthFlowIntegrationTest,OrgAuthenticationSecurityIntegrationTest,OrgAdminConsoleIntegrationTest,OrgMemberGovernanceIntegrationTest
+          -Dtest=AuthFlowIntegrationTest,OrgAuthenticationSecurityIntegrationTest,OrgAdminConsoleIntegrationTest,OrgMemberGovernanceIntegrationTest,PlatformCapabilityIntegrationTest,PublicShareCapabilityIntegrationTest,WorkspaceAggregationIntegrationTest,AiMcpCapabilityIntegrationTest,RequestHeaderContractIntegrationTest,ObservabilityIntegrationTest,BillingReadinessIntegrationTest,ContractCatalogRegressionTest,TenantScopeFoundationContractTest,BackendModuleExtractionContractTest,PublicShareTokenHashMigrationIntegrationTest,MailPublicShareTokenHashContractTest,PassPublicShareTokenHashContractTest,DrivePublicShareTokenHashContractTest
           -Dsurefire.failIfNoSpecifiedTests=false test
 
   validate:

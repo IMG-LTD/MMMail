@@ -2,6 +2,7 @@ package com.mmmail.server.service;
 
 import com.mmmail.common.exception.BizException;
 import com.mmmail.common.exception.ErrorCode;
+import com.mmmail.foundation.tenant.TenantScopeHeaders;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
@@ -9,7 +10,7 @@ import org.springframework.util.StringUtils;
 @Service
 public class OrgProductAccessGuardService {
 
-    public static final String ACTIVE_ORG_HEADER = "X-MMMAIL-ORG-ID";
+    public static final String ACTIVE_ORG_HEADER = TenantScopeHeaders.ORG_ID;
 
     private final OrgProductAccessService orgProductAccessService;
     private final OrgPolicyService orgPolicyService;
@@ -39,7 +40,7 @@ public class OrgProductAccessGuardService {
     }
 
     public Long resolveActiveOrgId(HttpServletRequest request) {
-        return parseActiveOrgId(request.getHeader(ACTIVE_ORG_HEADER));
+        return parseActiveOrgId(request.getHeader(TenantScopeHeaders.ORG_ID));
     }
 
     private Long parseActiveOrgId(String rawHeader) {
@@ -49,7 +50,7 @@ public class OrgProductAccessGuardService {
         try {
             return Long.parseLong(rawHeader.trim());
         } catch (NumberFormatException exception) {
-            throw new BizException(ErrorCode.INVALID_ARGUMENT, "X-MMMAIL-ORG-ID must be a numeric organization id");
+            throw new BizException(ErrorCode.INVALID_ARGUMENT, TenantScopeHeaders.ORG_ID + " must be a numeric organization id");
         }
     }
 }

@@ -17,12 +17,14 @@ BACKEND_CALENDAR_GA_TESTS="CalendarSharingAvailabilityIntegrationTest,CalendarRe
 FRONTEND_CALENDAR_GA_TESTS="tests/calendar-availability.spec.ts tests/calendar-workspace.spec.ts tests/calendar-smoke.spec.ts"
 BACKEND_DRIVE_GA_TESTS="DriveReleaseBlockingIntegrationTest,DriveCollaboratorShareIntegrationTest,DriveSharedWithMeIntegrationTest,DriveSecureShareIntegrationTest,DrivePublicFolderShareIntegrationTest"
 FRONTEND_DRIVE_GA_TESTS="tests/drive-smoke.spec.ts tests/drive-batch-share.spec.ts tests/drive-collaborator-sharing.spec.ts"
-BACKEND_OBSERVABILITY_TESTS="ObservabilityIntegrationTest,JobRunMonitorServiceTest,GlobalExceptionHandlerUnitTest"
+BACKEND_OBSERVABILITY_TESTS="JobRunMonitorServiceTest,GlobalExceptionHandlerUnitTest"
 FRONTEND_OBSERVABILITY_TESTS="tests/system-health.spec.ts tests/error-tracking.spec.ts"
 FRONTEND_COMMUNITY_BOUNDARY_TESTS="tests/community-navigation.spec.ts tests/community-boundary.spec.ts"
 FRONTEND_PWA_TESTS="tests/pwa-install.spec.ts tests/pwa-settings-panel.spec.ts"
 BACKEND_SHEETS_TESTS="SheetsWorkbookIntegrationTest,SheetsWorkbookDataManagementIntegrationTest,SheetsSharingVersionIntegrationTest,SheetsWorkbookMultiSheetIntegrationTest"
 FRONTEND_SHEETS_TESTS="tests/sheets-business.spec.ts tests/sheets-sharing-version.spec.ts tests/sheets-refresh-regression.spec.ts tests/sheets-sidebar.spec.ts tests/sheets-workspace-route.spec.ts tests/sheets-workspace.spec.ts tests/sheets-mutation-state.spec.ts tests/sheets-collaboration-state.spec.ts tests/sheets-visible-workbooks-state.spec.ts tests/sheets-panels.smoke.spec.ts tests/sheets-trade-collaboration.smoke.spec.ts tests/sheets-structure.smoke.spec.ts tests/sheets-tools-formula.smoke.spec.ts tests/sheets-grid.smoke.spec.ts tests/sheets-state-boundary.smoke.spec.ts tests/sheets-toolbar-empty.smoke.spec.ts tests/sheets-sharing-boundary.smoke.spec.ts tests/sheets-trade-boundary.smoke.spec.ts tests/sheets-panel-safety.smoke.spec.ts tests/sheets-incoming-boundary.smoke.spec.ts tests/sheets-insight-boundary.smoke.spec.ts"
+FRONTEND_V2_CONTRACT_TESTS="tests/foundation-route-contract.test.mjs tests/redirect-contract.test.mjs tests/auth-scope-contract.test.mjs tests/public-share-contract.test.mjs tests/public-share-runtime-contract.test.mjs tests/public-share-view-contract.test.mjs tests/mail-workspace-contract.test.mjs tests/calendar-workspace-contract.test.mjs tests/drive-workspace-contract.test.mjs tests/pass-workspace-contract.test.mjs tests/docs-sheets-runtime-contract.test.mjs tests/workspace-aggregation-contract.test.mjs tests/settings-panel-contract.test.mjs tests/system-health-contract.test.mjs tests/command-center-query-contract.test.mjs"
+BACKEND_V2_CONTRACT_TESTS="PlatformCapabilityIntegrationTest,PublicShareCapabilityIntegrationTest,WorkspaceAggregationIntegrationTest,AiMcpCapabilityIntegrationTest,RequestHeaderContractIntegrationTest,ObservabilityIntegrationTest,BillingReadinessIntegrationTest,ContractCatalogRegressionTest,TenantScopeFoundationContractTest,BackendModuleExtractionContractTest,PublicShareTokenHashMigrationIntegrationTest,MailPublicShareTokenHashContractTest,PassPublicShareTokenHashContractTest,DrivePublicShareTokenHashContractTest"
 
 echo "[validate-local] frontend tests"
 env -u http_proxy -u https_proxy -u HTTP_PROXY -u HTTPS_PROXY -u ALL_PROXY -u all_proxy \
@@ -86,6 +88,10 @@ env -u http_proxy -u https_proxy -u HTTP_PROXY -u HTTPS_PROXY -u ALL_PROXY -u al
 echo "[validate-local] frontend-v2 tests"
 env -u http_proxy -u https_proxy -u HTTP_PROXY -u HTTPS_PROXY -u ALL_PROXY -u all_proxy \
   pnpm --dir frontend-v2 test >/tmp/mmmail-frontend-v2-test.log 2>&1
+
+echo "[validate-local] frontend-v2 contract regression"
+env -u http_proxy -u https_proxy -u HTTP_PROXY -u HTTPS_PROXY -u ALL_PROXY -u all_proxy \
+  pnpm --dir frontend-v2 exec node --test $FRONTEND_V2_CONTRACT_TESTS >/tmp/mmmail-frontend-v2-contract.log 2>&1
 
 echo "[validate-local] frontend-v2 typecheck"
 env -u http_proxy -u https_proxy -u HTTP_PROXY -u HTTPS_PROXY -u ALL_PROXY -u all_proxy \
@@ -246,6 +252,11 @@ echo "[validate-local] backend auth/rbac regression"
 timeout 60s "$MVN_BIN" -f backend/pom.xml -pl mmmail-server -am \
   -Dtest="$BACKEND_AUTH_RBAC_TESTS" -Dsurefire.failIfNoSpecifiedTests=false test \
   >/tmp/mmmail-backend-auth-rbac.log 2>&1
+
+echo "[validate-local] backend v2 contract regression"
+timeout 60s "$MVN_BIN" -f backend/pom.xml -pl mmmail-server -am \
+  -Dtest="$BACKEND_V2_CONTRACT_TESTS" -Dsurefire.failIfNoSpecifiedTests=false test \
+  >/tmp/mmmail-backend-v2-contract.log 2>&1
 
 echo "[validate-local] backend docs regression"
 timeout 60s "$MVN_BIN" -f backend/pom.xml -pl mmmail-server -am \

@@ -15,6 +15,7 @@ public class DriveShareLink {
     private Long ownerId;
     private Long itemId;
     private String token;
+    private String tokenHash;
     private String permission;
     private LocalDateTime expiresAt;
     private String passwordHash;
@@ -58,6 +59,14 @@ public class DriveShareLink {
 
     public void setToken(String token) {
         this.token = token;
+    }
+
+    public String getTokenHash() {
+        return tokenHash;
+    }
+
+    public void setTokenHash(String tokenHash) {
+        this.tokenHash = tokenHash;
     }
 
     public String getPermission() {

@@ -1,0 +1,5 @@
+version: v2-freeze
+family: billing.readiness
+examples:
+  - billing.readiness.queried
+  - billing.readiness.legacy-exit-confirmed

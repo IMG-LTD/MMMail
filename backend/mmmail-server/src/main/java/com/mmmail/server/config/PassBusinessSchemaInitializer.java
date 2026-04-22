@@ -249,6 +249,9 @@ public class PassBusinessSchemaInitializer implements ApplicationRunner {
 
     private void ensureDriveShareSchema() {
         ensureColumn("drive_share_link", "password_hash", "alter table drive_share_link add column password_hash varchar(255) null");
+        ensureColumn("drive_share_link", "token_hash", "alter table drive_share_link add column token_hash varchar(64) null");
+        ensureIndex("drive_share_link", "uk_drive_share_link_token_hash",
+                "create unique index uk_drive_share_link_token_hash on drive_share_link(token_hash)");
     }
 
     private void ensureVpnSchema() {

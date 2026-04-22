@@ -4,6 +4,7 @@ import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import com.mmmail.common.exception.BizException;
 import com.mmmail.common.exception.ErrorCode;
+import com.mmmail.foundation.security.PublicShareTokenCodec;
 import com.mmmail.server.model.dto.BatchDriveItemsRequest;
 import com.mmmail.server.model.dto.BatchCreateDriveShareRequest;
 import com.mmmail.server.mapper.DriveFileVersionMapper;
@@ -141,6 +142,7 @@ public class DriveService {
     private final DriveReadableShareE2eeService driveReadableShareE2eeService;
     private final PasswordEncoder passwordEncoder;
     private final ObjectProvider<StringRedisTemplate> stringRedisTemplateProvider;
+    private final PublicShareTokenCodec publicShareTokenCodec = new PublicShareTokenCodec();
     private final Map<String, PublicRateCounter> publicRateCounterMap = new ConcurrentHashMap<>();
     @Value("${mmmail.drive.storage-root:${java.io.tmpdir}/mmmail-drive}")
     private String driveStorageRoot;
@@ -341,7 +343,7 @@ public class DriveService {
         auditService.record(
                 userId,
                 "DRIVE_SHARED_WITH_ME_SAVE",
-                "savedShareId=" + savedShare.getId() + ",shareId=" + savedShare.getShareId() + ",token=" + savedShare.getToken(),
+                "savedShareId=" + savedShare.getId() + ",shareId=" + savedShare.getShareId(),
                 ipAddress
         );
         recordPublicAccess(pair, request.token(), PUBLIC_ACTION_SAVE, ACCESS_STATUS_ALLOW, ipAddress, userAgent);
@@ -907,7 +909,9 @@ public class DriveService {
         DriveShareLink shareLink = new DriveShareLink();
         shareLink.setOwnerId(userId);
         shareLink.setItemId(itemId);
-        shareLink.setToken(generateShareToken());
+        String rawToken = generateShareToken();
+        shareLink.setToken(rawToken);
+        shareLink.setTokenHash(publicShareTokenCodec.hash(rawToken));
         shareLink.setPermission(permission);
         shareLink.setExpiresAt(expiresAt);
         shareLink.setPasswordHash(passwordHash);
@@ -960,7 +964,9 @@ public class DriveService {
             DriveShareLink shareLink = new DriveShareLink();
             shareLink.setOwnerId(userId);
             shareLink.setItemId(itemId);
-            shareLink.setToken(generateShareToken());
+            String rawToken = generateShareToken();
+            shareLink.setToken(rawToken);
+            shareLink.setTokenHash(publicShareTokenCodec.hash(rawToken));
             shareLink.setPermission(permission);
             shareLink.setExpiresAt(expiresAt);
             shareLink.setPasswordHash(passwordEncoder.encode(password));
@@ -1167,8 +1173,9 @@ public class DriveService {
             throw new BizException(ErrorCode.INVALID_ARGUMENT, "Share link is unavailable");
         }
 
+        String tokenHash = publicShareTokenCodec.hash(token);
         DriveShareLink share = driveShareLinkMapper.selectOne(new LambdaQueryWrapper<DriveShareLink>()
-                .eq(DriveShareLink::getToken, token));
+                .eq(DriveShareLink::getTokenHash, tokenHash));
         if (share == null) {
             recordPublicAccess(null, token, action, ACCESS_STATUS_DENY_INVALID_TOKEN, ipAddress, userAgent);
             throw new BizException(ErrorCode.INVALID_ARGUMENT, "Share link is unavailable");
@@ -1265,8 +1272,9 @@ public class DriveService {
         if (!StringUtils.hasText(token)) {
             return null;
         }
+        String tokenHash = publicShareTokenCodec.hash(token);
         DriveShareLink share = driveShareLinkMapper.selectOne(new LambdaQueryWrapper<DriveShareLink>()
-                .eq(DriveShareLink::getToken, token));
+                .eq(DriveShareLink::getTokenHash, tokenHash));
         if (share == null) {
             return null;
         }
@@ -1517,7 +1525,7 @@ public class DriveService {
                 log.setItemId(pair.item().getId());
             }
         }
-        log.setTokenHash(sha256((token == null ? "" : token).getBytes()));
+        log.setTokenHash(publicShareTokenCodec.hash(token == null ? "" : token));
         log.setAction(action);
         log.setAccessStatus(accessStatus);
         log.setIpAddress(normalizeNullableText(ipAddress, 64));
@@ -2217,9 +2225,10 @@ public class DriveService {
 
     private String generateShareToken() {
         for (int i = 0; i < 8; i++) {
-            String candidate = UUID.randomUUID().toString().replace("-", "") + Long.toHexString(System.nanoTime());
+            String candidate = publicShareTokenCodec.generateRawToken();
+            String tokenHash = publicShareTokenCodec.hash(candidate);
             long count = safeCount(driveShareLinkMapper.selectCount(new LambdaQueryWrapper<DriveShareLink>()
-                    .eq(DriveShareLink::getToken, candidate)));
+                    .eq(DriveShareLink::getTokenHash, tokenHash)));
             if (count == 0) {
                 return candidate;
             }

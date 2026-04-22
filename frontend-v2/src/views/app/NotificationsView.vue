@@ -1,7 +1,8 @@
 <script setup lang="ts">
-import { onMounted, ref } from 'vue'
+import { ref, watch } from 'vue'
 import CompactPageHeader from '@/shared/components/CompactPageHeader.vue'
 import { lt, useLocaleText } from '@/locales'
+import { useScopeGuard } from '@/shared/composables/useScopeGuard'
 import { httpClient } from '@/service/request/http'
 import type { ApiResponse } from '@/shared/types/api'
 
@@ -10,7 +11,9 @@ interface WorkspaceAggregationSummary {
 }
 
 const { tr } = useLocaleText()
+const { requestHeaders } = useScopeGuard()
 const aggregationSurfaces = ref<string[]>([])
+let aggregationRequestToken = 0
 const notifications = [
   [lt('严重', '嚴重', 'Critical'), lt('云盘共享策略需要复核', '雲端硬碟共享政策需要複核', 'Drive sharing policy needs review'), lt('组织', '組織', 'Organizations'), lt('刚刚', '剛剛', 'Now')],
   [lt('未读', '未讀', 'Unread'), lt('凤凰会议室邀请已接受', '鳳凰會議室邀請已接受', 'Phoenix room invite accepted'), lt('日历', '日曆', 'Calendar'), lt('12 分钟前', '12 分鐘前', '12 min ago')],
@@ -18,19 +21,35 @@ const notifications = [
 ]
 
 async function loadAggregationSurfaces() {
-  const response = await httpClient.get<ApiResponse<WorkspaceAggregationSummary>>('/api/v2/workspace/aggregation')
+  const response = await httpClient.get<ApiResponse<WorkspaceAggregationSummary>>('/api/v2/workspace/aggregation', {
+    scopeHeaders: requestHeaders.value
+  })
   return response.data.surfaces
 }
 
-onMounted(() => {
-  void loadAggregationSurfaces()
-    .then(surfaces => {
-      aggregationSurfaces.value = surfaces
-    })
-    .catch(() => {
-      aggregationSurfaces.value = []
-    })
-})
+watch(
+  requestHeaders,
+  () => {
+    const requestToken = ++aggregationRequestToken
+
+    void loadAggregationSurfaces()
+      .then(surfaces => {
+        if (requestToken !== aggregationRequestToken) {
+          return
+        }
+
+        aggregationSurfaces.value = surfaces
+      })
+      .catch(() => {
+        if (requestToken !== aggregationRequestToken) {
+          return
+        }
+
+        aggregationSurfaces.value = []
+      })
+  },
+  { immediate: true }
+)
 </script>
 
 <template>

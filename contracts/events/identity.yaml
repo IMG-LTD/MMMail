@@ -1,0 +1,6 @@
+version: v2-freeze
+family: identity.session
+examples:
+  - identity.session.issued
+  - identity.session.rotated
+  - identity.session.revoked

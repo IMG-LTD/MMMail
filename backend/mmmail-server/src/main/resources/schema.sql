@@ -797,6 +797,7 @@ create table if not exists drive_share_link (
     owner_id bigint not null,
     item_id bigint not null,
     token varchar(80) not null,
+    token_hash varchar(64) not null,
     permission varchar(16) not null,
     expires_at timestamp,
     password_hash varchar(255),
@@ -811,6 +812,7 @@ create table if not exists drive_share_link (
 );
 
 create unique index uk_drive_share_link_token on drive_share_link(token);
+create unique index uk_drive_share_link_token_hash on drive_share_link(token_hash);
 create index idx_drive_share_link_owner_item on drive_share_link(owner_id, item_id, updated_at);
 
 create table if not exists drive_saved_share (
@@ -1050,6 +1052,7 @@ create table if not exists pass_secure_link (
     item_id bigint not null,
     shared_vault_id bigint not null,
     token varchar(64) not null,
+    token_hash varchar(64) not null,
     max_views int not null default 1,
     current_views int not null default 0,
     expires_at timestamp,
@@ -1061,6 +1064,7 @@ create table if not exists pass_secure_link (
 );
 
 create unique index uk_pass_secure_link_token on pass_secure_link(token);
+create unique index uk_pass_secure_link_token_hash on pass_secure_link(token_hash);
 create index idx_pass_secure_link_item on pass_secure_link(item_id, revoked_at, expires_at);
 
 create table if not exists pass_item_share (

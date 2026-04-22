@@ -3,6 +3,7 @@ package com.mmmail.server.service;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.mmmail.common.exception.BizException;
 import com.mmmail.common.exception.ErrorCode;
+import com.mmmail.foundation.security.PublicShareTokenCodec;
 import com.mmmail.server.mapper.OrgMemberMapper;
 import com.mmmail.server.mapper.OrgPolicyMapper;
 import com.mmmail.server.mapper.OrgWorkspaceMapper;
@@ -41,7 +42,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
-import java.security.SecureRandom;
 import java.time.LocalDateTime;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
@@ -49,7 +49,6 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
-import java.util.UUID;
 import java.util.stream.Collectors;
 
 @Service
@@ -61,8 +60,8 @@ public class PassBusinessService {
     private static final int DEFAULT_SECURE_LINK_EXPIRES_DAYS = 7;
     private static final int MAX_SECURE_LINK_EXPIRES_DAYS = 30;
     private static final int MAX_ACTIVITY_SCAN = 200;
-    private static final SecureRandom RANDOM = new SecureRandom();
 
+    private final PublicShareTokenCodec publicShareTokenCodec = new PublicShareTokenCodec();
     private final OrgWorkspaceMapper orgWorkspaceMapper;
     private final OrgMemberMapper orgMemberMapper;
     private final OrgPolicyMapper orgPolicyMapper;
@@ -580,7 +579,9 @@ public class PassBusinessService {
         link.setOrgId(orgId);
         link.setItemId(itemId);
         link.setSharedVaultId(item.getSharedVaultId());
-        link.setToken(generateUniqueSecureToken());
+        String rawToken = generateUniqueSecureToken();
+        link.setToken(rawToken);
+        link.setTokenHash(publicShareTokenCodec.hash(rawToken));
         link.setMaxViews(request.maxViews() == null ? DEFAULT_SECURE_LINK_VIEWS : request.maxViews());
         link.setCurrentViews(0);
         link.setExpiresAt(expiresAt);
@@ -624,8 +625,9 @@ public class PassBusinessService {
 
     @Transactional
     public PassPublicSecureLinkVo getPublicSecureLink(String token, String ipAddress) {
+        String tokenHash = publicShareTokenCodec.hash(token);
         PassSecureLink link = passSecureLinkMapper.selectOne(new LambdaQueryWrapper<PassSecureLink>()
-                .eq(PassSecureLink::getToken, token));
+                .eq(PassSecureLink::getTokenHash, tokenHash));
         if (link == null) {
             throw new BizException(ErrorCode.INVALID_ARGUMENT, "Pass secure link is not found");
         }
@@ -641,7 +643,7 @@ public class PassBusinessService {
         auditService.record(
                 null,
                 "PASS_SECURE_LINK_VIEW",
-                "orgId=" + link.getOrgId() + ",itemId=" + link.getItemId() + ",linkId=" + link.getId() + ",token=" + token,
+                "orgId=" + link.getOrgId() + ",itemId=" + link.getItemId() + ",linkId=" + link.getId(),
                 ipAddress,
                 link.getOrgId()
         );
@@ -1418,9 +1420,10 @@ public class PassBusinessService {
 
     private String generateUniqueSecureToken() {
         for (int attempt = 0; attempt < 10; attempt++) {
-            String token = UUID.randomUUID().toString().replace("-", "") + Integer.toHexString(RANDOM.nextInt(16));
+            String token = publicShareTokenCodec.generateRawToken();
+            String tokenHash = publicShareTokenCodec.hash(token);
             Long count = passSecureLinkMapper.selectCount(new LambdaQueryWrapper<PassSecureLink>()
-                    .eq(PassSecureLink::getToken, token));
+                    .eq(PassSecureLink::getTokenHash, tokenHash));
             if (count == null || count == 0) {
                 return token;
             }

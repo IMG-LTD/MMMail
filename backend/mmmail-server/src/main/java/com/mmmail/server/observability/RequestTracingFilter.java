@@ -1,6 +1,9 @@
 package com.mmmail.server.observability;
 
 import com.mmmail.common.observability.TraceContext;
+import com.mmmail.foundation.tenant.TenantScopeContext;
+import com.mmmail.foundation.tenant.TenantScopeContextHolder;
+import com.mmmail.foundation.tenant.TenantScopeHeaders;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -42,6 +45,7 @@ public class RequestTracingFilter extends OncePerRequestFilter {
             filterChain.doFilter(request, response);
         } finally {
             logRequest(request, response, startedAt);
+            TenantScopeContextHolder.clear();
             MDC.clear();
         }
     }
@@ -49,13 +53,16 @@ public class RequestTracingFilter extends OncePerRequestFilter {
     private void prepareContext(HttpServletRequest request, HttpServletResponse response, String requestId) {
         MDC.clear();
         MDC.put(TraceContext.REQUEST_ID_MDC, requestId);
-        String orgId = request.getHeader("X-MMMAIL-ORG-ID");
-        if (StringUtils.hasText(orgId)) {
-            MDC.put(TraceContext.ORG_ID_MDC, orgId.trim());
+        String orgId = request.getHeader(TenantScopeHeaders.ORG_ID);
+        String scopeId = request.getHeader(TenantScopeHeaders.SCOPE_ID);
+        String normalizedOrgId = StringUtils.hasText(orgId) ? orgId.trim() : null;
+        String normalizedScopeId = StringUtils.hasText(scopeId) ? scopeId.trim() : null;
+        TenantScopeContextHolder.set(new TenantScopeContext(normalizedOrgId, normalizedScopeId));
+        if (normalizedOrgId != null) {
+            MDC.put(TraceContext.ORG_ID_MDC, normalizedOrgId);
         }
-        String scopeId = request.getHeader("X-MMMAIL-SCOPE-ID");
-        if (StringUtils.hasText(scopeId)) {
-            MDC.put("scopeId", scopeId.trim());
+        if (normalizedScopeId != null) {
+            MDC.put("scopeId", normalizedScopeId);
         }
         request.setAttribute(TraceContext.REQUEST_ID_ATTRIBUTE, requestId);
         response.setHeader(TraceContext.REQUEST_ID_HEADER, requestId);
