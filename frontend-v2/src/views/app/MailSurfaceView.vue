@@ -494,7 +494,7 @@ watch(() => [route.fullPath, authStore.accessToken], () => {
   void loadWorkspace()
 }, { immediate: true })
 
-watch(() => [composeForm.value.toEmail, composeForm.value.fromEmail], () => {
+watch(() => [composeForm.value.toEmail, composeForm.value.fromEmail, authStore.accessToken], () => {
   void refreshRecipientTrust()
 })
 </script>
