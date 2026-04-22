@@ -174,11 +174,26 @@ function syncComposeFromRoute() {
 }
 
 function ensureComposeFromEmail() {
-  if (composeForm.value.fromEmail.trim()) {
+  const currentFromEmail = composeForm.value.fromEmail.trim()
+  const availableFromEmails = senderOptions.value
+    .map(item => item.emailAddress.trim())
+    .filter(Boolean)
+  const fallbackFromEmail = availableFromEmails[0] || authStore.user?.email || ''
+
+  if (!currentFromEmail) {
+    composeForm.value.fromEmail = fallbackFromEmail
     return
   }
 
-  composeForm.value.fromEmail = senderOptions.value[0]?.emailAddress || authStore.user?.email || ''
+  if (availableFromEmails.length && availableFromEmails.includes(currentFromEmail)) {
+    return
+  }
+
+  if (!availableFromEmails.length && currentFromEmail === fallbackFromEmail) {
+    return
+  }
+
+  composeForm.value.fromEmail = fallbackFromEmail
 }
 
 function isEmailLike(value: string) {
@@ -211,6 +226,8 @@ async function loadWorkspace() {
 
   const shouldLoadFolder = !isCompose.value && !isContacts.value
   let nextDetailId = ''
+  let folderItems: MailSummary[] = []
+  let folderLoaded = false
 
   try {
     if (shouldLoadFolder) {
@@ -221,17 +238,24 @@ async function loadWorkspace() {
           return
         }
 
-        mailItems.value = folderResponse.data || []
+        folderItems = folderResponse.data || []
+        folderLoaded = true
+        mailItems.value = folderItems
       } catch (error) {
         if (requestId !== latestWorkspaceRequest || requestToken !== authStore.accessToken || requestPath !== route.fullPath) {
           return
         }
 
+        folderItems = []
+        folderLoaded = false
+        mailItems.value = []
+        activeMail.value = null
         loadError.value = error instanceof Error
           ? error.message
           : tr(lt('无法加载邮件列表。', '無法載入郵件清單。', 'Unable to load the mail list.'))
       }
     } else {
+      mailItems.value = []
       activeMail.value = null
     }
 
@@ -249,11 +273,12 @@ async function loadWorkspace() {
         return
       }
 
+      senderOptions.value = []
       ensureComposeFromEmail()
     }
 
-    nextDetailId = shouldLoadFolder
-      ? resolveRouteString(route.params.id) || (mailItems.value[0]?.id || '')
+    nextDetailId = shouldLoadFolder && folderLoaded
+      ? resolveRouteString(route.params.id) || (folderItems[0]?.id || '')
       : ''
 
     if (!nextDetailId) {
@@ -278,6 +303,7 @@ async function loadWorkspace() {
         return
       }
 
+      activeMail.value = null
       loadError.value = loadError.value || (error instanceof Error
         ? error.message
         : tr(lt('无法加载邮件详情。', '無法載入郵件詳情。', 'Unable to load the mail detail.')))
