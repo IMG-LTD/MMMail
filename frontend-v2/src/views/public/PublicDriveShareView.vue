@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, onMounted, ref } from 'vue'
+import { computed, onMounted, ref, watch } from 'vue'
 import { useRoute } from 'vue-router'
 import { NButton, NInput } from 'naive-ui'
 import { lt, useLocaleText } from '@/locales'
@@ -31,6 +31,7 @@ const items = ref<DriveShareItem[]>([])
 const loading = ref(false)
 const downloadLoadingId = ref('')
 const loadError = ref('')
+const downloadError = ref('')
 const token = computed(() => String(route.params.token || ''))
 
 function formatDateTime(value: string | null) {
@@ -93,6 +94,7 @@ function triggerDownload(blob: Blob, fileName: string) {
 async function loadDriveShare() {
   loading.value = true
   loadError.value = ''
+  downloadError.value = ''
   metadata.value = null
   items.value = []
 
@@ -119,18 +121,27 @@ async function loadDriveShare() {
 
 async function downloadItem(item: DriveShareItem) {
   downloadLoadingId.value = item.id
+  downloadError.value = ''
 
   try {
     const payload = await downloadPublicDriveShareItem(token.value, item.id, shareFlow.password.value)
     const fileName = inferFileName(payload.contentDisposition, item.name || 'download')
     triggerDownload(payload.blob, fileName)
     shareFlow.unlock()
+  } catch (error) {
+    downloadError.value = error instanceof Error && error.message
+      ? error.message
+      : tr(lt('无法下载共享文件。', '無法下載共享檔案。', 'Unable to download the shared file.'))
   } finally {
     downloadLoadingId.value = ''
   }
 }
 
 onMounted(() => {
+  void loadDriveShare()
+})
+
+watch(token, () => {
   void loadDriveShare()
 })
 </script>
@@ -169,6 +180,7 @@ onMounted(() => {
           {{ tr(lt('打开共享文件', '開啟共享檔案', 'Open shared files')) }}
         </n-button>
       </div>
+      <p v-if="downloadError" class="share-drive__error">{{ downloadError }}</p>
     </article>
 
     <article class="surface-card share-drive__items">
@@ -225,6 +237,12 @@ label {
   flex-wrap: wrap;
   gap: 10px;
   margin-top: 20px;
+}
+
+.share-drive__error {
+  margin: 16px 0 0;
+  color: var(--mm-error, #d03050);
+  font-size: 13px;
 }
 
 .share-drive__list {

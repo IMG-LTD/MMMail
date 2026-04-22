@@ -17,14 +17,18 @@ test('public share views read runtime payloads instead of frozen placeholder cop
   assert.match(mail, /readPublicMailShare/)
   assert.match(mail, /decryptMailPublicBody/)
   assert.match(mail, /route\.params\.token/)
+  assert.match(mail, /watch\(token/)
   assert.doesNotMatch(mail, /Project Phoenix: Final Asset Transfer/)
 
   assert.match(drive, /readPublicDriveShareMetadata/)
   assert.match(drive, /listPublicDriveShareItems/)
   assert.match(drive, /downloadPublicDriveShareItem/)
   assert.match(drive, /shareFlow\.password/)
+  assert.match(drive, /watch\(token/)
+  assert.match(drive, /downloadError/)
 
   assert.match(pass, /readPublicPassShare/)
   assert.match(pass, /navigator\.clipboard\.writeText/)
   assert.match(pass, /route\.params\.token/)
+  assert.match(pass, /watch\(token/)
 })

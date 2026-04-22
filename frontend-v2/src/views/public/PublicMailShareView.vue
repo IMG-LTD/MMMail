@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, onMounted, ref } from 'vue'
+import { computed, onMounted, ref, watch } from 'vue'
 import { useRoute } from 'vue-router'
 import { NButton, NInput } from 'naive-ui'
 import { lt, useLocaleText } from '@/locales'
@@ -158,6 +158,10 @@ async function downloadAttachment(attachment: PublicMailShareAttachment) {
 }
 
 onMounted(() => {
+  void loadShare()
+})
+
+watch(token, () => {
   void loadShare()
 })
 </script>
