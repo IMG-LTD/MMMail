@@ -1,16 +1,86 @@
 <script setup lang="ts">
-import { onMounted } from 'vue'
+import { computed, onMounted, ref } from 'vue'
+import { useRoute } from 'vue-router'
 import { NButton, NInput } from 'naive-ui'
 import { lt, useLocaleText } from '@/locales'
 import { usePublicShareFlow } from '@/shared/composables/usePublicShareFlow'
+import { readPublicPassShare, type PublicPassShare } from '@/service/api/public-share'
 
+const route = useRoute()
 const { tr } = useLocaleText()
 const shareFlow = usePublicShareFlow()
+const auditedActions = shareFlow.auditedActions
+const passwordHeader = shareFlow.passwordHeader
 const sharePassword = shareFlow.password
-const shareLoading = shareFlow.loading
+
+const share = ref<PublicPassShare | null>(null)
+const loading = ref(false)
+const loadError = ref('')
+const copyFeedback = ref('')
+const token = computed(() => String(route.params.token || ''))
+
+function formatDateTime(value: string | null) {
+  if (!value) {
+    return tr(lt('未设置', '未設定', 'Not set'))
+  }
+
+  const parsed = new Date(value)
+
+  if (Number.isNaN(parsed.getTime())) {
+    return value
+  }
+
+  return parsed.toLocaleString()
+}
+
+async function loadShare() {
+  loading.value = true
+  loadError.value = ''
+  copyFeedback.value = ''
+  share.value = null
+
+  const capabilityPromise = shareFlow.loadCapabilities()
+
+  try {
+    if (!token.value) {
+      loadError.value = tr(lt('缺少共享令牌。', '缺少共享權杖。', 'Missing share token.'))
+      return
+    }
+
+    share.value = (await readPublicPassShare(token.value)).data
+    await capabilityPromise
+  } catch (error) {
+    await capabilityPromise
+    loadError.value = error instanceof Error && error.message
+      ? error.message
+      : tr(lt('无法加载共享条目。', '無法載入共享項目。', 'Unable to load the shared item.'))
+  } finally {
+    loading.value = false
+  }
+}
+
+function displayValue(value: string | null | undefined) {
+  return value || tr(lt('无', '無', 'None'))
+}
+
+async function copySecret(value: string | null | undefined, label: string) {
+  if (!value) {
+    return
+  }
+
+  try {
+    await navigator.clipboard.writeText(value)
+    copyFeedback.value = `${label} ${tr(lt('已复制', '已複製', 'copied'))}`
+    shareFlow.unlock()
+  } catch (error) {
+    copyFeedback.value = error instanceof Error && error.message
+      ? error.message
+      : tr(lt('复制失败。', '複製失敗。', 'Copy failed.'))
+  }
+}
 
 onMounted(() => {
-  void shareFlow.loadCapabilities()
+  void loadShare()
 })
 </script>
 
@@ -18,10 +88,15 @@ onMounted(() => {
   <section class="public-shell page-shell share-pass">
     <article class="surface-card share-pass__auth">
       <span class="section-label">{{ tr(lt('受保护访问', '受保護存取', 'Protected access')) }}</span>
-      <h1 class="page-title">{{ tr(lt('打开安全链接', '開啟安全連結', 'Open a secure link')) }}</h1>
+      <h1 class="page-title">{{ share?.title || tr(lt('打开安全链接', '開啟安全連結', 'Open a secure link')) }}</h1>
       <p class="page-subtitle">
-        {{ tr(lt('该链接会在密码验证后解锁单个秘密项。下载、复制和再次分享都会按当前策略记录审计轨迹。', '此連結會在密碼驗證後解鎖單一秘密項目。下載、複製與再次分享都會依目前政策留下稽核軌跡。', 'This link unlocks a single secret item after password verification. Download, copy, and resharing attempts are audited under the active policy.')) }}
+        {{ loadError || tr(lt('该链接会按路由令牌加载共享秘密项。', '此連結會依路由權杖載入共享秘密項目。', 'This link loads the shared secret item from the route token.')) }}
       </p>
+
+      <div v-if="passwordHeader || auditedActions.length" class="share-pass__meta">
+        <div v-if="passwordHeader" class="metric-chip">{{ passwordHeader }}</div>
+        <div v-for="action in auditedActions" :key="action" class="metric-chip">{{ action }}</div>
+      </div>
 
       <label>{{ tr(lt('访问密码', '存取密碼', 'Access password')) }}</label>
       <n-input
@@ -31,23 +106,48 @@ onMounted(() => {
       />
 
       <div class="share-pass__actions">
-        <n-button type="primary" :loading="shareLoading" @click="shareFlow.unlock()">{{ tr(lt('解锁条目', '解鎖項目', 'Unlock item')) }}</n-button>
-        <n-button secondary>{{ tr(lt('查看访问策略', '查看存取政策', 'Review access policy')) }}</n-button>
+        <n-button type="primary" :loading="loading" @click="loadShare">
+          {{ tr(lt('刷新条目', '重新整理項目', 'Refresh item')) }}
+        </n-button>
       </div>
+      <p v-if="copyFeedback" class="share-pass__feedback">{{ copyFeedback }}</p>
     </article>
 
     <article class="surface-card share-pass__preview">
       <span class="section-label">{{ tr(lt('链接摘要', '連結摘要', 'Link summary')) }}</span>
-      <h2>{{ tr(lt('共享保险库便签', '共享保險庫便箋', 'Shared Vault Note')) }}</h2>
-      <p class="page-subtitle">
-        {{ tr(lt('36 小时后过期 · 单一收件者 · 解锁前禁止复制', '36 小時後到期 · 單一收件者 · 解鎖前禁止複製', 'Expires in 36 hours · Single recipient · Copy blocked until unlock')) }}
-      </p>
+      <template v-if="share">
+        <h2>{{ share.sharedVaultName }}</h2>
+        <p class="page-subtitle">
+          {{ tr(lt('项目类型', '項目類型', 'Item type')) }}: {{ share.itemType }} ·
+          {{ tr(lt('查看次数', '檢視次數', 'Views')) }}: {{ share.currentViews }}/{{ share.maxViews }} ·
+          {{ tr(lt('到期', '到期', 'Expires')) }}: {{ formatDateTime(share.expiresAt) }}
+        </p>
 
-      <div class="share-pass__meta">
-        <div class="metric-chip">{{ tr(lt('邮箱验证已启用', '信箱驗證已啟用', 'Mailbox verification enabled')) }}</div>
-        <div class="metric-chip">{{ tr(lt('下载后自动吊销', '下載後自動吊銷', 'Auto revoke after download')) }}</div>
-        <div class="metric-chip">{{ tr(lt('审计日志已记录', '稽核日誌已記錄', 'Audit logging enabled')) }}</div>
-      </div>
+        <div class="share-pass__meta">
+          <div class="metric-chip">{{ tr(lt('用户名', '使用者名稱', 'Username')) }}: {{ displayValue(share.username) }}</div>
+          <div class="metric-chip">{{ tr(lt('网站', '網站', 'Website')) }}: {{ displayValue(share.website) }}</div>
+        </div>
+
+        <div class="share-pass__cards">
+          <div class="share-pass__card">
+            <strong>{{ tr(lt('秘密', '秘密', 'Secret')) }}</strong>
+            <code>{{ displayValue(share.secretCiphertext) }}</code>
+            <n-button secondary :disabled="!share.secretCiphertext" @click="copySecret(share.secretCiphertext, tr(lt('秘密', '秘密', 'Secret')))">
+              {{ tr(lt('复制秘密', '複製秘密', 'Copy secret')) }}
+            </n-button>
+          </div>
+          <div class="share-pass__card">
+            <strong>{{ tr(lt('备注', '備註', 'Note')) }}</strong>
+            <p>{{ displayValue(share.note) }}</p>
+            <n-button secondary :disabled="!share.username" @click="copySecret(share.username, tr(lt('用户名', '使用者名稱', 'Username')))">
+              {{ tr(lt('复制用户名', '複製使用者名稱', 'Copy username')) }}
+            </n-button>
+          </div>
+        </div>
+      </template>
+      <p v-else class="page-subtitle">
+        {{ loading ? tr(lt('正在加载共享条目。', '正在載入共享項目。', 'Loading shared item.')) : tr(lt('共享条目不可用。', '共享項目不可用。', 'Shared item unavailable.')) }}
+      </p>
     </article>
   </section>
 </template>
@@ -85,11 +185,37 @@ label {
   margin-top: 18px;
 }
 
+.share-pass__feedback {
+  margin: 16px 0 0;
+  color: var(--mm-text-secondary);
+}
+
 .share-pass__preview h2 {
   margin: 10px 0 12px;
   font-size: 32px;
   letter-spacing: -0.04em;
   color: var(--mm-pass);
+}
+
+.share-pass__cards {
+  display: grid;
+  gap: 14px;
+  margin-top: 20px;
+}
+
+.share-pass__card {
+  display: grid;
+  gap: 10px;
+  padding: 18px;
+  border: 1px solid var(--mm-border);
+  border-radius: 14px;
+  background: var(--mm-card-muted);
+}
+
+.share-pass__card code,
+.share-pass__card p {
+  margin: 0;
+  word-break: break-word;
 }
 
 @media (max-width: 900px) {
