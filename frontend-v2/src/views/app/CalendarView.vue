@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, onMounted, ref } from 'vue'
+import { computed, onMounted, ref, watch } from 'vue'
 import { lt, useLocaleText } from '@/locales'
 import {
   listCalendarAgenda,
@@ -67,6 +67,7 @@ const agendaItems = ref<CalendarAgendaItem[]>([])
 const availability = ref<CalendarAvailability | null>(null)
 const selectedEventId = ref('')
 const hasLoadedCalendar = ref(false)
+let latestCalendarRequest = 0
 
 const viewModes = [
   { key: 'month', label: lt('月', '月', 'Month') },
@@ -76,50 +77,7 @@ const viewModes = [
 ] satisfies Array<{ key: CalendarViewMode; label: ReturnType<typeof lt> }>
 
 const surfaceItems = computed<CalendarSurfaceItem[]>(() => {
-  const items: CalendarSurfaceItem[] = []
-  const seen = new Set<string>()
-
-  calendarEvents.value.forEach((item) => {
-    if (seen.has(item.id)) {
-      return
-    }
-
-    seen.add(item.id)
-    items.push({
-      allDay: item.allDay,
-      attendeeCount: item.attendeeCount,
-      endAt: item.endAt,
-      id: item.id,
-      location: item.location,
-      ownerEmail: item.ownerEmail,
-      shared: item.shared,
-      startAt: item.startAt,
-      title: item.title
-    })
-  })
-
-  agendaItems.value.forEach((item) => {
-    if (seen.has(item.id)) {
-      return
-    }
-
-    seen.add(item.id)
-    items.push({
-      allDay: false,
-      attendeeCount: item.attendeeCount,
-      endAt: item.endAt,
-      id: item.id,
-      location: item.location,
-      ownerEmail: item.ownerEmail,
-      shared: item.shared,
-      startAt: item.startAt,
-      title: item.title
-    })
-  })
-
-  return items.sort((left, right) => {
-    return String(left.startAt).localeCompare(String(right.startAt))
-  })
+  return mergeCalendarSurfaceItems(calendarEvents.value, agendaItems.value)
 })
 
 const scheduleDays = computed<CalendarDayCell[]>(() => {
@@ -354,19 +312,47 @@ const emptyState = computed(() => {
   return tr(lt('当前时间窗口暂无事件。', '目前時間視窗暫無事件。', 'No events in the current time window.'))
 })
 
+const visibleRange = computed(() => {
+  const rangeStart = activeViewMode.value === 'day' ? startOfDay(focusedDay.value) : startOfWeek(focusedDay.value)
+  const rangeEnd = addDays(rangeStart, activeViewMode.value === 'day' ? 1 : 5)
+
+  return {
+    from: formatLocalDateTime(rangeStart),
+    to: formatLocalDateTime(rangeEnd)
+  }
+})
+
 onMounted(() => {
   void copilotPanel.loadCapabilities().catch(() => {})
   void loadCalendar()
 })
 
+watch(() => authStore.accessToken, (token, previousToken) => {
+  if (token === previousToken) {
+    return
+  }
+
+  void loadCalendar()
+})
+
 async function loadCalendar() {
-  if (!authStore.accessToken) {
+  const requestId = ++latestCalendarRequest
+  const requestToken = authStore.accessToken
+  const requestRange = visibleRange.value
+  const requestRangeKey = `${requestRange.from}|${requestRange.to}`
+
+  if (!requestToken) {
+    if (requestId !== latestCalendarRequest || requestToken !== authStore.accessToken || requestRangeKey !== `${visibleRange.value.from}|${visibleRange.value.to}`) {
+      return
+    }
+
     calendarEvents.value = []
     agendaItems.value = []
     availability.value = null
     selectedEventId.value = ''
     loadError.value = ''
     hasLoadedCalendar.value = false
+    calendarLoading.value = false
     return
   }
 
@@ -375,55 +361,72 @@ async function loadCalendar() {
 
   try {
     const [eventsResponse, agendaResponse] = await Promise.all([
-      listCalendarEvents(authStore.accessToken),
-      listCalendarAgenda(authStore.accessToken)
+      listCalendarEvents(requestToken, requestRange.from, requestRange.to),
+      listCalendarAgenda(requestToken)
     ])
 
-    calendarEvents.value = Array.isArray(eventsResponse.data) ? eventsResponse.data : []
-    agendaItems.value = Array.isArray(agendaResponse.data) ? agendaResponse.data : []
-
-    if (!hasLoadedCalendar.value) {
-      const anchorDate = parseDate(calendarEvents.value[0]?.startAt) || parseDate(agendaItems.value[0]?.startAt)
-      if (anchorDate) {
-        focusedDay.value = startOfDay(anchorDate)
-      }
+    if (requestId !== latestCalendarRequest || requestToken !== authStore.accessToken || requestRangeKey !== `${visibleRange.value.from}|${visibleRange.value.to}`) {
+      return
     }
+
+    const nextCalendarEvents = Array.isArray(eventsResponse.data) ? eventsResponse.data : []
+    const nextAgendaItems = Array.isArray(agendaResponse.data) ? agendaResponse.data : []
 
     const attendeeEmails = Array.from(new Set([
       authStore.user?.email || '',
-      ...calendarEvents.value.map(item => item.ownerEmail || ''),
-      ...agendaItems.value.map(item => item.ownerEmail || '')
+      ...nextCalendarEvents.map(item => item.ownerEmail || ''),
+      ...nextAgendaItems.map(item => item.ownerEmail || '')
     ].filter(isEmailLike)))
 
+    let nextAvailability: CalendarAvailability | null = null
+    let nextLoadError = ''
+
     try {
-      availability.value = (await queryCalendarAvailability(authStore.accessToken, {
+      nextAvailability = (await queryCalendarAvailability(requestToken, {
         attendeeEmails,
-        endAt: formatLocalDateTime(addDays(startOfWeek(focusedDay.value), 7)),
-        startAt: formatLocalDateTime(startOfWeek(focusedDay.value))
+        endAt: requestRange.to,
+        startAt: requestRange.from
       })).data
     } catch (error) {
-      availability.value = null
-      loadError.value = resolveErrorMessage(error)
+      nextAvailability = null
+      nextLoadError = resolveErrorMessage(error)
     }
 
-    if (!surfaceItems.value.some(item => item.id === selectedEventId.value)) {
-      selectedEventId.value = surfaceItems.value[0]?.id || ''
+    if (requestId !== latestCalendarRequest || requestToken !== authStore.accessToken || requestRangeKey !== `${visibleRange.value.from}|${visibleRange.value.to}`) {
+      return
+    }
+
+    calendarEvents.value = nextCalendarEvents
+    agendaItems.value = nextAgendaItems
+    availability.value = nextAvailability
+    loadError.value = nextLoadError
+
+    const nextSurfaceItems = mergeCalendarSurfaceItems(nextCalendarEvents, nextAgendaItems)
+    if (!nextSurfaceItems.some(item => item.id === selectedEventId.value)) {
+      selectedEventId.value = nextSurfaceItems[0]?.id || ''
     }
 
     hasLoadedCalendar.value = true
   } catch (error) {
+    if (requestId !== latestCalendarRequest || requestToken !== authStore.accessToken || requestRangeKey !== `${visibleRange.value.from}|${visibleRange.value.to}`) {
+      return
+    }
+
     calendarEvents.value = []
     agendaItems.value = []
     availability.value = null
     selectedEventId.value = ''
     loadError.value = resolveErrorMessage(error)
   } finally {
-    calendarLoading.value = false
+    if (requestId === latestCalendarRequest) {
+      calendarLoading.value = false
+    }
   }
 }
 
 function setViewMode(mode: CalendarViewMode) {
   activeViewMode.value = mode
+  void loadCalendar()
 }
 
 function selectDay(date: Date) {
@@ -438,6 +441,53 @@ function focusTodayAndReload() {
 
 function selectItem(itemId: string) {
   selectedEventId.value = itemId
+}
+
+function mergeCalendarSurfaceItems(events: CalendarEvent[], agenda: CalendarAgendaItem[]) {
+  const items: CalendarSurfaceItem[] = []
+  const seen = new Set<string>()
+
+  events.forEach((item) => {
+    if (seen.has(item.id)) {
+      return
+    }
+
+    seen.add(item.id)
+    items.push({
+      allDay: item.allDay,
+      attendeeCount: item.attendeeCount,
+      endAt: item.endAt,
+      id: item.id,
+      location: item.location,
+      ownerEmail: item.ownerEmail,
+      shared: item.shared,
+      startAt: item.startAt,
+      title: item.title
+    })
+  })
+
+  agenda.forEach((item) => {
+    if (seen.has(item.id)) {
+      return
+    }
+
+    seen.add(item.id)
+    items.push({
+      allDay: false,
+      attendeeCount: item.attendeeCount,
+      endAt: item.endAt,
+      id: item.id,
+      location: item.location,
+      ownerEmail: item.ownerEmail,
+      shared: item.shared,
+      startAt: item.startAt,
+      title: item.title
+    })
+  })
+
+  return items.sort((left, right) => {
+    return String(left.startAt).localeCompare(String(right.startAt))
+  })
 }
 
 function parseDate(value?: string | null) {

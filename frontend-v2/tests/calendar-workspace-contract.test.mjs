@@ -18,5 +18,8 @@ test('calendar workspace reads events and availability from APIs', async () => {
   assert.match(view, /listCalendarEvents/)
   assert.match(view, /listCalendarAgenda/)
   assert.match(view, /queryCalendarAvailability/)
+  assert.match(view, /latestCalendarRequest/)
+  assert.match(view, /watch\(\(\) => authStore\.accessToken/)
+  assert.match(view, /listCalendarEvents\(requestToken, requestRange\.from, requestRange\.to\)/)
   assert.doesNotMatch(view, /const events = \[/)
 })
