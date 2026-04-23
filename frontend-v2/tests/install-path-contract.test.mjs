@@ -70,6 +70,7 @@ test('install scripts expose the same minimal and standard compose modes', async
 
   assert.match(installPs1, /docker compose --env-file \$EnvFile -f docker-compose\.minimal\.yml up -d --build/)
   assert.match(installPs1, /docker compose --env-file \$EnvFile up -d --build/)
+  assert.match(installPs1, /Check-EnvForMode/)
   assert.match(installPs1, /MMMAIL_NACOS_ENABLED=false/)
   assert.match(installPs1, /MMMAIL_NACOS_ENABLED=true/)
 })
