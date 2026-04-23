@@ -1,8 +1,9 @@
 # Security Policy
 
 ## Scope
-- `Community Edition v1.6.1` is the current public baseline.
-- Security fixes that affect authentication, organization isolation, data access, storage, self-hosted deployment, or documented `GA` capabilities are treated as release blockers.
+- `v2.0.3` is the current public baseline.
+- Security fixes that affect authentication, organization isolation, data access, public share access, storage, self-hosted deployment, or documented `GA` capabilities are treated as release blockers.
+- Current support boundaries are documented in `docs/release/v2-support-boundaries.md`.
 
 ## Reporting a Vulnerability
 - Do **not** open a public GitHub issue for a live security vulnerability.
@@ -28,10 +29,7 @@
 - Never commit live secrets, passwords, API keys, JWT secrets, or private infrastructure endpoints into the repository.
 - Keep example files sanitized and use `replace-with-*` placeholders only.
 - Production secrets must come from environment variables, secret managers, or deployment-time injection.
-- Security-sensitive changes must include:
-  - explicit error handling
-  - audit visibility where applicable
-  - updated validation or regression coverage
+- Security-sensitive changes must include updated validation or regression coverage.
 
 ## Security Validation
 - `scripts/security-secret-scan.sh` scans the working tree for secret regressions.

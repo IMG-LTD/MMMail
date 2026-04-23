@@ -11,13 +11,8 @@
 config/*.local
 
 # Frontend
-frontend/node_modules/
-frontend/.nuxt/
-frontend/.nuxt-dev/
-frontend/.nuxt-pass-*
-frontend/.output/
-frontend/.cache/
-frontend/--host/
+frontend-v2/node_modules
+frontend-v2/dist
 
 # Backend
 backend/**/target/

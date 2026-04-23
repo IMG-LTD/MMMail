@@ -79,19 +79,11 @@ services:
   frontend:
     build:
       context: .
-      dockerfile: frontend/Dockerfile
+      dockerfile: frontend-v2/Dockerfile
       args:
-        NUXT_PUBLIC_API_BASE: http://localhost:8080
-        NUXT_PUBLIC_AUTH_CSRF_COOKIE_NAME: ${NUXT_PUBLIC_AUTH_CSRF_COOKIE_NAME}
-        NUXT_PUBLIC_ENABLE_PREVIEW_MODULES: ${NUXT_PUBLIC_ENABLE_PREVIEW_MODULES}
+        VITE_API_BASE_URL: ${VITE_API_BASE_URL}
     container_name: mmmail-frontend
     restart: unless-stopped
-    environment:
-      HOST: 0.0.0.0
-      PORT: 3001
-      NUXT_PUBLIC_API_BASE: http://localhost:8080
-      NUXT_PUBLIC_AUTH_CSRF_COOKIE_NAME: ${NUXT_PUBLIC_AUTH_CSRF_COOKIE_NAME}
-      NUXT_PUBLIC_ENABLE_PREVIEW_MODULES: ${NUXT_PUBLIC_ENABLE_PREVIEW_MODULES}
     depends_on:
       backend:
         condition: service_healthy

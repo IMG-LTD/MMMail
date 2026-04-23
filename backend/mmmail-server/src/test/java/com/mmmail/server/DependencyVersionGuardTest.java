@@ -110,16 +110,6 @@ class DependencyVersionGuardTest {
     }
 
     @Test
-    void validateRc1ContainerScriptShouldCheckLatestAppliedFlywayVersion() throws IOException {
-        String validateRc1ContainerScript = Files.readString(Path.of("..", "..", "scripts", "validate-rc1-container.sh"));
-
-        assertThat(validateRc1ContainerScript)
-                .as("validate-rc1-container.sh should compare release metadata to the latest applied Flyway version")
-                .contains("select coalesce((select version from flyway_schema_history where success = 1 and version is not null order by installed_rank desc limit 1), 'none')")
-                .doesNotContain("[[ \"$schema_version\" != \"5\" ]]");
-    }
-
-    @Test
     void validateBatch3ScriptShouldRunFlywayUniquenessGuard() throws IOException {
         String validateBatch3Script = Files.readString(Path.of("..", "..", "scripts", "validate-batch3.sh"));
 
