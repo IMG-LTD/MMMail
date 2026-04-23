@@ -40,7 +40,7 @@ assignees: ""
 - Logs:
 - Screenshots:
 - `bash scripts/validate-local.sh`:
-- `bash scripts/validate-all.sh`:
+- `bash scripts/validate-security.sh`:
 - GitHub Actions / artifact / workflow link:
 
 ## Environment

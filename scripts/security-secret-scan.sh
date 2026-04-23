@@ -12,10 +12,8 @@ mapfile -t TRACKED_FILES < <(
   find . -type f \
     -not -path './.git/*' \
     -not -path './.codex-tasks/*' \
-    -not -path './frontend/node_modules/*' \
     -not -path './frontend-v2/node_modules/*' \
-    -not -path './frontend/.nuxt/*' \
-    -not -path './frontend/.output/*' \
+    -not -path './frontend-v2/dist/*' \
     -not -name 'pnpm-lock.yaml' \
     -not -name 'package-lock.json' \
     -not -name 'yarn.lock' \

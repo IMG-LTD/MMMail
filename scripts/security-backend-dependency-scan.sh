@@ -10,6 +10,7 @@ MVN_BIN="$(resolve_maven_bin "$ROOT_DIR")"
 REPORT_DIR="${MMMAIL_SECURITY_REPORT_DIR:-$ROOT_DIR/artifacts/security}/dependency-check"
 DATA_DIR="${MMMAIL_DEPENDENCY_CHECK_DATA_DIR:-$ROOT_DIR/.tools/dependency-check-data}"
 FAIL_ON_CVSS="${MMMAIL_DEPENDENCY_SCAN_FAIL_ON_CVSS:-7}"
+TIMEOUT_SECONDS="${MMMAIL_DEPENDENCY_SCAN_TIMEOUT_SECONDS:-900}"
 mkdir -p "$REPORT_DIR" "$DATA_DIR"
 
 if [[ -z "${MMMAIL_NVD_API_KEY:-}" ]]; then
@@ -31,4 +32,4 @@ if [[ -n "${MMMAIL_NVD_API_KEY:-}" ]]; then
   maven_args+=("-DnvdApiKey=${MMMAIL_NVD_API_KEY}")
 fi
 
-timeout 900s "$MVN_BIN" "${maven_args[@]}"
+timeout "${TIMEOUT_SECONDS}s" "$MVN_BIN" "${maven_args[@]}"

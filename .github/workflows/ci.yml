@@ -25,51 +25,10 @@ jobs:
         with:
           version: 9
 
-      - name: Install frontend deps
-        run: pnpm --dir frontend install --frozen-lockfile
-
       - name: Install frontend-v2 deps
         run: pnpm --dir frontend-v2 install --frozen-lockfile
 
-      - name: Frontend i18n gates
-        run: pnpm --dir frontend i18n:check
-
-      - name: Publish frontend i18n summary
-        if: always()
-        run: |
-          node <<'NODE'
-          const fs = require('node:fs')
-          const summaryPath = process.env.GITHUB_STEP_SUMMARY
-          const catalogPath = 'artifacts/i18n-consistency-report.json'
-          const coveragePath = 'artifacts/i18n-page-coverage-report.json'
-          const surfacePath = 'artifacts/i18n-surface-literal-report.json'
-          const lines = ['## Frontend i18n gates']
-          if (!summaryPath) {
-            process.exit(0)
-          }
-          if (!fs.existsSync(catalogPath) || !fs.existsSync(coveragePath) || !fs.existsSync(surfacePath)) {
-            lines.push('- i18n report artifacts unavailable')
-            fs.appendFileSync(summaryPath, `${lines.join('\n')}\n`)
-            process.exit(0)
-          }
-          const catalog = JSON.parse(fs.readFileSync(catalogPath, 'utf8'))
-          const coverage = JSON.parse(fs.readFileSync(coveragePath, 'utf8'))
-          const surface = JSON.parse(fs.readFileSync(surfacePath, 'utf8'))
-          lines.push(`- modules: \`${catalog.totalModules}\``)
-          lines.push(`- locale key gaps: \`${catalog.modulesWithGaps.length}\``)
-          lines.push(`- placeholder mismatches: \`${catalog.modulesWithPlaceholderMismatches.length}\``)
-          lines.push(`- surface literal files: \`${surface.filesWithFindings.length}\``)
-          lines.push(`- surface literal findings: \`${surface.totalFindings}\``)
-          lines.push(`- page coverage: \`${coverage.coveragePercent}%\``)
-          lines.push(`- pages without i18n: \`${coverage.pagesWithoutI18n.length}\``)
-          lines.push(`- pages without static keys: \`${coverage.pagesWithoutStaticKeys.length}\``)
-          fs.appendFileSync(summaryPath, `${lines.join('\n')}\n`)
-          NODE
-
-      - name: Frontend tests
-        run: pnpm --dir frontend test
-
-      - name: Frontend v2 tests
+      - name: Frontend-v2 tests
         run: pnpm --dir frontend-v2 test
 
       - name: Frontend-v2 contract regression
@@ -91,14 +50,11 @@ jobs:
           tests/system-health-contract.test.mjs
           tests/command-center-query-contract.test.mjs
 
-      - name: Frontend typecheck
-        run: pnpm --dir frontend typecheck
-
-      - name: Frontend v2 typecheck
+      - name: Frontend-v2 typecheck
         run: pnpm --dir frontend-v2 typecheck
 
-      - name: Frontend audit (high)
-        run: pnpm --dir frontend audit --prod --audit-level=high --ignore-registry-errors
+      - name: Frontend-v2 audit (high)
+        run: pnpm --dir frontend-v2 audit --prod --audit-level=high --ignore-registry-errors
 
   backend:
     runs-on: ubuntu-latest
@@ -124,6 +80,7 @@ jobs:
     env:
       MMMAIL_VALIDATE_CONTAINER_TESTS: "true"
       MMMAIL_RUN_BACKEND_DEPENDENCY_SCAN: "true"
+      MMMAIL_DEPENDENCY_SCAN_TIMEOUT_SECONDS: "1800"
       MMMAIL_NVD_API_KEY: ${{ secrets.MMMAIL_NVD_API_KEY }}
     steps:
       - name: Checkout
@@ -146,9 +103,6 @@ jobs:
         uses: pnpm/action-setup@v4
         with:
           version: 9
-
-      - name: Install frontend deps
-        run: pnpm --dir frontend install --frozen-lockfile
 
       - name: Install frontend-v2 deps
         run: pnpm --dir frontend-v2 install --frozen-lockfile

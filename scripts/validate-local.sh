@@ -10,80 +10,13 @@ source "$ROOT_DIR/scripts/lib/java-common.sh"
 MVN_BIN="$(resolve_maven_bin "$ROOT_DIR")"
 BACKEND_AUTH_RBAC_TESTS="AuthFlowIntegrationTest,OrgAuthenticationSecurityIntegrationTest,OrgAdminConsoleIntegrationTest,OrgMemberGovernanceIntegrationTest"
 BACKEND_DOCS_TESTS="DocsCollaborationIntegrationTest,DocsSuggestionWorkflowIntegrationTest,DocsOrgAccessIntegrationTest"
-FRONTEND_DOCS_TESTS="tests/docs-smoke.spec.ts tests/docs-panels.smoke.spec.ts tests/docs-comments.smoke.spec.ts tests/docs-presentation.spec.ts tests/docs-transfer.spec.ts tests/docs-draft.spec.ts tests/docs-route.spec.ts tests/docs-leave-guard.spec.ts"
 BACKEND_MAIL_GA_TESTS="MailGaIntegrationTest,MailAttachmentIntegrationTest,MailReleaseBlockingIntegrationTest"
-FRONTEND_MAIL_GA_TESTS="tests/mail-compose.spec.ts tests/mail-attachments.spec.ts tests/mail-smoke.spec.ts"
 BACKEND_CALENDAR_GA_TESTS="CalendarSharingAvailabilityIntegrationTest,CalendarReleaseBlockingIntegrationTest,CalendarIcsImportIntegrationTest"
-FRONTEND_CALENDAR_GA_TESTS="tests/calendar-availability.spec.ts tests/calendar-workspace.spec.ts tests/calendar-smoke.spec.ts"
 BACKEND_DRIVE_GA_TESTS="DriveReleaseBlockingIntegrationTest,DriveCollaboratorShareIntegrationTest,DriveSharedWithMeIntegrationTest,DriveSecureShareIntegrationTest,DrivePublicFolderShareIntegrationTest"
-FRONTEND_DRIVE_GA_TESTS="tests/drive-smoke.spec.ts tests/drive-batch-share.spec.ts tests/drive-collaborator-sharing.spec.ts"
 BACKEND_OBSERVABILITY_TESTS="JobRunMonitorServiceTest,GlobalExceptionHandlerUnitTest"
-FRONTEND_OBSERVABILITY_TESTS="tests/system-health.spec.ts tests/error-tracking.spec.ts"
-FRONTEND_COMMUNITY_BOUNDARY_TESTS="tests/community-navigation.spec.ts tests/community-boundary.spec.ts"
-FRONTEND_PWA_TESTS="tests/pwa-install.spec.ts tests/pwa-settings-panel.spec.ts"
 BACKEND_SHEETS_TESTS="SheetsWorkbookIntegrationTest,SheetsWorkbookDataManagementIntegrationTest,SheetsSharingVersionIntegrationTest,SheetsWorkbookMultiSheetIntegrationTest"
-FRONTEND_SHEETS_TESTS="tests/sheets-business.spec.ts tests/sheets-sharing-version.spec.ts tests/sheets-refresh-regression.spec.ts tests/sheets-sidebar.spec.ts tests/sheets-workspace-route.spec.ts tests/sheets-workspace.spec.ts tests/sheets-mutation-state.spec.ts tests/sheets-collaboration-state.spec.ts tests/sheets-visible-workbooks-state.spec.ts tests/sheets-panels.smoke.spec.ts tests/sheets-trade-collaboration.smoke.spec.ts tests/sheets-structure.smoke.spec.ts tests/sheets-tools-formula.smoke.spec.ts tests/sheets-grid.smoke.spec.ts tests/sheets-state-boundary.smoke.spec.ts tests/sheets-toolbar-empty.smoke.spec.ts tests/sheets-sharing-boundary.smoke.spec.ts tests/sheets-trade-boundary.smoke.spec.ts tests/sheets-panel-safety.smoke.spec.ts tests/sheets-incoming-boundary.smoke.spec.ts tests/sheets-insight-boundary.smoke.spec.ts"
 FRONTEND_V2_CONTRACT_TESTS="tests/foundation-route-contract.test.mjs tests/redirect-contract.test.mjs tests/auth-scope-contract.test.mjs tests/public-share-contract.test.mjs tests/public-share-runtime-contract.test.mjs tests/public-share-view-contract.test.mjs tests/mail-workspace-contract.test.mjs tests/calendar-workspace-contract.test.mjs tests/drive-workspace-contract.test.mjs tests/pass-workspace-contract.test.mjs tests/docs-sheets-runtime-contract.test.mjs tests/workspace-aggregation-contract.test.mjs tests/settings-panel-contract.test.mjs tests/system-health-contract.test.mjs tests/command-center-query-contract.test.mjs"
 BACKEND_V2_CONTRACT_TESTS="PlatformCapabilityIntegrationTest,PublicShareCapabilityIntegrationTest,WorkspaceAggregationIntegrationTest,AiMcpCapabilityIntegrationTest,RequestHeaderContractIntegrationTest,ObservabilityIntegrationTest,BillingReadinessIntegrationTest,ContractCatalogRegressionTest,TenantScopeFoundationContractTest,BackendModuleExtractionContractTest,PublicShareTokenHashMigrationIntegrationTest,MailPublicShareTokenHashContractTest,PassPublicShareTokenHashContractTest,DrivePublicShareTokenHashContractTest"
-
-echo "[validate-local] frontend tests"
-env -u http_proxy -u https_proxy -u HTTP_PROXY -u HTTPS_PROXY -u ALL_PROXY -u all_proxy \
-  pnpm --dir frontend test >/tmp/mmmail-frontend-test.log 2>&1
-
-echo "[validate-local] frontend docs regression"
-env -u http_proxy -u https_proxy -u HTTP_PROXY -u HTTPS_PROXY -u ALL_PROXY -u all_proxy \
-  pnpm --dir frontend exec vitest run $FRONTEND_DOCS_TESTS >/tmp/mmmail-frontend-docs.log 2>&1
-
-echo "[validate-local] frontend mail ga regression"
-env -u http_proxy -u https_proxy -u HTTP_PROXY -u HTTPS_PROXY -u ALL_PROXY -u all_proxy \
-  pnpm --dir frontend exec vitest run $FRONTEND_MAIL_GA_TESTS >/tmp/mmmail-frontend-mail-ga.log 2>&1
-
-echo "[validate-local] frontend calendar ga regression"
-env -u http_proxy -u https_proxy -u HTTP_PROXY -u HTTPS_PROXY -u ALL_PROXY -u all_proxy \
-  pnpm --dir frontend exec vitest run $FRONTEND_CALENDAR_GA_TESTS >/tmp/mmmail-frontend-calendar-ga.log 2>&1
-
-echo "[validate-local] frontend drive ga regression"
-env -u http_proxy -u https_proxy -u HTTP_PROXY -u HTTPS_PROXY -u ALL_PROXY -u all_proxy \
-  pnpm --dir frontend exec vitest run $FRONTEND_DRIVE_GA_TESTS >/tmp/mmmail-frontend-drive-ga.log 2>&1
-
-echo "[validate-local] frontend observability regression"
-env -u http_proxy -u https_proxy -u HTTP_PROXY -u HTTPS_PROXY -u ALL_PROXY -u all_proxy \
-  pnpm --dir frontend exec vitest run $FRONTEND_OBSERVABILITY_TESTS >/tmp/mmmail-frontend-observability.log 2>&1
-
-echo "[validate-local] frontend community boundary regression"
-env -u http_proxy -u https_proxy -u HTTP_PROXY -u HTTPS_PROXY -u ALL_PROXY -u all_proxy \
-  pnpm --dir frontend exec vitest run $FRONTEND_COMMUNITY_BOUNDARY_TESTS >/tmp/mmmail-frontend-community-boundary.log 2>&1
-
-echo "[validate-local] frontend pwa regression"
-env -u http_proxy -u https_proxy -u HTTP_PROXY -u HTTPS_PROXY -u ALL_PROXY -u all_proxy \
-  pnpm --dir frontend exec vitest run $FRONTEND_PWA_TESTS >/tmp/mmmail-frontend-pwa.log 2>&1
-
-echo "[validate-local] frontend sheets regression"
-env -u http_proxy -u https_proxy -u HTTP_PROXY -u HTTPS_PROXY -u ALL_PROXY -u all_proxy \
-  pnpm --dir frontend exec vitest run $FRONTEND_SHEETS_TESTS >/tmp/mmmail-frontend-sheets.log 2>&1
-
-echo "[validate-local] frontend i18n governance"
-env -u http_proxy -u https_proxy -u HTTP_PROXY -u HTTPS_PROXY -u ALL_PROXY -u all_proxy \
-  pnpm --dir frontend i18n:test >/tmp/mmmail-frontend-i18n.log 2>&1
-
-echo "[validate-local] i18n consistency report"
-env -u http_proxy -u https_proxy -u HTTP_PROXY -u HTTPS_PROXY -u ALL_PROXY -u all_proxy \
-  pnpm --dir frontend i18n:catalog >/tmp/mmmail-i18n-report.log 2>&1
-
-echo "[validate-local] i18n page coverage report"
-env -u http_proxy -u https_proxy -u HTTP_PROXY -u HTTPS_PROXY -u ALL_PROXY -u all_proxy \
-  pnpm --dir frontend i18n:coverage >/tmp/mmmail-i18n-coverage.log 2>&1
-
-echo "[validate-local] security gates"
-bash scripts/validate-security.sh >/tmp/mmmail-security.log 2>&1
-
-echo "[validate-local] frontend typecheck"
-env -u http_proxy -u https_proxy -u HTTP_PROXY -u HTTPS_PROXY -u ALL_PROXY -u all_proxy \
-  pnpm --dir frontend typecheck >/tmp/mmmail-frontend-typecheck.log 2>&1
-
-echo "[validate-local] frontend dependency audit (high)"
-env -u http_proxy -u https_proxy -u HTTP_PROXY -u HTTPS_PROXY -u ALL_PROXY -u all_proxy \
-  pnpm --dir frontend audit --prod --audit-level=high --ignore-registry-errors >/tmp/mmmail-frontend-audit.log 2>&1
 
 echo "[validate-local] frontend-v2 tests"
 env -u http_proxy -u https_proxy -u HTTP_PROXY -u HTTPS_PROXY -u ALL_PROXY -u all_proxy \
@@ -96,6 +29,13 @@ env -u http_proxy -u https_proxy -u HTTP_PROXY -u HTTPS_PROXY -u ALL_PROXY -u al
 echo "[validate-local] frontend-v2 typecheck"
 env -u http_proxy -u https_proxy -u HTTP_PROXY -u HTTPS_PROXY -u ALL_PROXY -u all_proxy \
   pnpm --dir frontend-v2 typecheck >/tmp/mmmail-frontend-v2-typecheck.log 2>&1
+
+echo "[validate-local] frontend-v2 dependency audit (high)"
+env -u http_proxy -u https_proxy -u HTTP_PROXY -u HTTPS_PROXY -u ALL_PROXY -u all_proxy \
+  pnpm --dir frontend-v2 audit --prod --audit-level=high --ignore-registry-errors >/tmp/mmmail-frontend-v2-audit.log 2>&1
+
+echo "[validate-local] security gates"
+bash scripts/validate-security.sh >/tmp/mmmail-security.log 2>&1
 
 echo "[validate-local] required files"
 required=(
@@ -113,25 +53,24 @@ required=(
   docs/ops/upgrade.md
   docs/ops/backup-restore.md
   docs/ops/runbook.md
-  docs/release/community-v1-support-boundaries.md
+  docs/release/v2-support-boundaries.md
+  docs/release/v2-feedback-intake.md
+  docs/release/v2.0.3-release-notes.md
   docs/open-source/module-maturity-matrix.md
   docs/open-source/README.en.md
   docs/ops/install.en.md
-  docs/open-source/i18n-governance.md
   docs/architecture/deployment-topology.md
   docs/architecture/database-migration-strategy.md
   docs/security/threat-model.md
   docker-compose.yml
   docker-compose.minimal.yml
   backend/Dockerfile
-  frontend/Dockerfile
   backend/pom.xml
+  frontend-v2/Dockerfile
   frontend-v2/package.json
   frontend-v2/src/app/router/routes.ts
   frontend-v2/src/layouts/modules/shell-nav.ts
   frontend-v2/src/shared/content/route-surfaces.ts
-  frontend/pages/inbox.vue
-  frontend/pages/labs.vue
   .env.example
   config/backend.env.example
   config/backend.test.env.example
@@ -158,7 +97,7 @@ done
 echo "[validate-local] sanitized secrets in config templates"
 placeholder_checks=(
   ".env.example|MMMAIL_NACOS_ENABLED=false"
-  ".env.example|NUXT_PUBLIC_ENABLE_PREVIEW_MODULES=false"
+  ".env.example|VITE_API_BASE_URL=http://localhost:8080"
   ".env.example|MMMAIL_JWT_SECRET=replace-with-32-plus-char-random-secret"
   "config/backend.env.example|MMMAIL_NACOS_ENABLED=true"
   "config/backend.env.example|SPRING_DATASOURCE_PASSWORD=replace-with-db-password"
@@ -184,6 +123,7 @@ done
 
 echo "[validate-local] env templates include required keys"
 required_env_keys=(
+  VITE_API_BASE_URL
   MMMAIL_NACOS_ENABLED
   MMMAIL_JWT_SECRET
   MMMAIL_CORS_ALLOWED_ORIGINS

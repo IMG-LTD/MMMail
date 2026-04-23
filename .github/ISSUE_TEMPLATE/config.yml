@@ -1,14 +1,14 @@
 blank_issues_enabled: false
 contact_links:
   - name: Community support boundaries
-    url: https://github.com/IMG-LTD/MMMail/blob/main/docs/release/community-v1-support-boundaries.md
+    url: https://github.com/IMG-LTD/MMMail/blob/main/docs/release/v2-support-boundaries.md
     about: 查看当前 Community / Hosted 与 GA / Beta / Preview 边界
   - name: Issue routing guide
-    url: https://github.com/IMG-LTD/MMMail/blob/main/docs/release/community-v1-feedback-intake.md
+    url: https://github.com/IMG-LTD/MMMail/blob/main/docs/release/v2-feedback-intake.md
     about: 查看当前公开基线的分流规则、release-blocking 判定与证据要求
-  - name: Release notes (v1.6.1)
-    url: https://github.com/IMG-LTD/MMMail/blob/main/docs/release/community-v1-v1.6.1-release-notes.md
-    about: 查看当前公开基线 v1.6.1 的新增能力、限制与验证口径
+  - name: Release notes (v2.0.3)
+    url: https://github.com/IMG-LTD/MMMail/blob/main/docs/release/v2.0.3-release-notes.md
+    about: 查看当前公开基线 v2.0.3 的新增能力、限制与验证口径
   - name: Module maturity matrix
     url: https://github.com/IMG-LTD/MMMail/blob/main/docs/open-source/module-maturity-matrix.md
     about: 查看各模块当前成熟度、默认导航暴露与支持口径
