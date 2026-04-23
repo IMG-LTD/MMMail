@@ -5,18 +5,25 @@ import { NConfigProvider, NDialogProvider, NMessageProvider, NNotificationProvid
 import { RouterView, useRoute } from 'vue-router'
 import BlankLayout from '@/layouts/blank-layout/BlankLayout.vue'
 import BaseLayout from '@/layouts/base-layout/BaseLayout.vue'
+import WelcomeOnboardingModal from '@/shared/components/WelcomeOnboardingModal.vue'
 import { getNaiveUiDateLocale, getNaiveUiLocale } from '@/locales'
 import { useAppStore } from '@/store/modules/app'
+import { useAuthStore } from '@/store/modules/auth'
+import { useOnboardingStore } from '@/store/modules/onboarding'
 import { useThemeStore } from '@/store/modules/theme'
 import { applyThemeVariables } from '@/theme/tokens'
 
 const route = useRoute()
 const appStore = useAppStore()
+const authStore = useAuthStore()
+const onboardingStore = useOnboardingStore()
 const themeStore = useThemeStore()
 const { locale } = storeToRefs(appStore)
 
+const isBaseLayout = computed(() => route.meta.layout === 'base')
+
 const currentLayout = computed(() => {
-  return route.meta.layout === 'base' ? BaseLayout : BlankLayout
+  return isBaseLayout.value ? BaseLayout : BlankLayout
 })
 
 const currentNaiveTheme = computed(() => {
@@ -35,6 +42,12 @@ watchEffect(() => {
   document.body.classList.toggle('density-comfortable', themeStore.density === 'comfortable')
   document.body.classList.toggle('mmmail-dark', themeStore.isDark)
 })
+
+watchEffect(() => {
+  if (onboardingStore.shouldAutoOpen && authStore.isAuthenticated && isBaseLayout.value) {
+    onboardingStore.openGuide()
+  }
+})
 </script>
 
 <template>
@@ -50,6 +63,7 @@ watchEffect(() => {
           <component :is="currentLayout">
             <router-view />
           </component>
+          <welcome-onboarding-modal />
           <div id="sr-live-polite" class="sr-only" role="status" aria-live="polite" aria-atomic="true" />
           <div id="sr-live-assertive" class="sr-only" role="alert" aria-live="assertive" aria-atomic="true" />
         </n-message-provider>
