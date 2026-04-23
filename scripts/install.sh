@@ -10,6 +10,13 @@ print_usage() {
   printf '%s\n' "Set MMMAIL_ENV_FILE=/path/to/.env to use a custom env file."
 }
 
+validate_argument_count() {
+  if (($# > 1)); then
+    print_usage >&2
+    exit 1
+  fi
+}
+
 validate_requested_mode() {
   case "$REQUESTED_MODE" in
     minimal|standard|'')
@@ -150,14 +157,15 @@ print_success() {
 }
 
 main() {
+  validate_argument_count "$@"
   validate_requested_mode
 
   local mode
   mode="$(select_mode)"
 
+  ensure_env_file
   require_command docker
   docker compose version >/dev/null
-  ensure_env_file
 
   check_env_for_mode "$mode"
   bash "$ROOT_DIR/scripts/validate-runtime-env.sh" "$ENV_FILE"

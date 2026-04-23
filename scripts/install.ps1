@@ -182,9 +182,9 @@ function Run-Compose {
 $requestedMode = Resolve-RequestedMode
 $installMode = Select-InstallMode $requestedMode
 
+Ensure-EnvFile
 Require-Command 'docker'
 docker compose version | Out-Null
-Ensure-EnvFile
 $envMap = Read-EnvMap
 Check-EnvForMode $envMap $installMode
 Run-Compose $installMode
