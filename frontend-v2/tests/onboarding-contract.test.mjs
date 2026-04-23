@@ -65,6 +65,10 @@ test('app shell auto-opens onboarding for authenticated first-login base-layout 
   assert.match(content, /shouldAutoOpen/)
   assert.match(content, /openGuide/)
   assert.match(content, /isAuthenticated|authenticated|accessToken/)
+  assert.match(
+    content,
+    /(?:route\.meta\.layout|layoutName)\s*={2,3}\s*['"`]base['"`]|['"`]base['"`]\s*={2,3}\s*(?:route\.meta\.layout|layoutName)/
+  )
 })
 
 test('settings workspace exposes getting-started panel and reopens onboarding guide', async () => {
