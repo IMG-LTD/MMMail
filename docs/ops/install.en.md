@@ -9,6 +9,7 @@
 - Standard mode may additionally enable `Nacos`, but this is not a promise of a production microservice mesh.
 - Docker installs require `Docker` and `Docker Compose v2`; at least `4 CPU / 8 GB RAM` is recommended.
 - Minimal mode ports: `3001`, `8080`, `3306`, `6379`; standard mode additionally uses `8848`.
+- Docker paths publish MySQL `3306` and Redis `6379` on the host; restrict host access with firewalls or security groups, and put Web/API traffic behind TLS and a reverse proxy before internet exposure.
 - Support boundaries: `../release/v2-support-boundaries.md`; module maturity: `../open-source/module-maturity-matrix.md`.
 
 ## 1. Choose an install path
@@ -49,7 +50,7 @@ Windows PowerShell:
 - Standard mode: `./scripts/install.ps1 standard`
 
 Notes:
-- If no mode is passed, the script tries to ask interactively; non-interactive shells default to minimal mode.
+- If no mode is passed, the Bash script tries to ask interactively and can fall back to minimal mode in non-interactive contexts; the PowerShell script uses `Read-Host` when no mode is passed, so non-interactive PowerShell should pass `minimal` or `standard` explicitly.
 - The default env file is `.env` in the repository root. To use another file, set `MMMAIL_ENV_FILE=/path/to/.env`; PowerShell can also use `-EnvFile path`.
 - The scripts do not create production-grade secrets for you. If `.env` does not exist, they create it from `.env.example` and exit; replace placeholders before running again.
 - Minimal mode requires `MMMAIL_NACOS_ENABLED=false`; standard mode requires `MMMAIL_NACOS_ENABLED=true`.
@@ -112,14 +113,15 @@ Use the bare-metal path when installing without Docker. These are high-level ste
    - Without Nacos, set `MMMAIL_NACOS_ENABLED=false`; with Nacos, prepare Nacos and set `MMMAIL_NACOS_ENABLED=true`, `NACOS_SERVER_ADDR`, `NACOS_USERNAME`, and `NACOS_PASSWORD`.
    - Keep `SPRING_SQL_INIT_MODE=never`; Flyway owns schema migrations.
 3. Start the backend:
+   - `bash scripts/start-backend-local.sh` and Maven commands do not automatically read the repository-root `.env`; export or load it in the current shell first, for example: `set -a; source .env; set +a`.
    - Use the local helper: `bash scripts/start-backend-local.sh`
    - Or run Maven Spring Boot from the `backend` directory: `mvn -pl mmmail-server -am -DskipTests spring-boot:run`
-   - For production-like hosting, manage the Java process with systemd, supervisor, or equivalent platform tooling.
+   - For production-like hosting, manage the Java process with systemd, supervisor, or equivalent platform tooling; systemd services should use `EnvironmentFile=/path/to/.env` or equivalent environment injection.
 4. Build and serve the frontend:
    - `pnpm --dir frontend-v2 install`
-   - `pnpm --dir frontend-v2 build`
+   - `VITE_API_BASE_URL=https://api.example.com pnpm --dir frontend-v2 build`
    - Serve `frontend-v2/dist` through a static file server or reverse proxy.
-   - Ensure `VITE_API_BASE_URL` points to the backend address at build time.
+   - Frontend commands do not automatically read the repository-root `.env`; set build-time `VITE_API_BASE_URL` through the shell environment or `frontend-v2/.env.production`.
 5. Database migrations:
    - Check migration status: `./scripts/db-upgrade.sh .env info`
    - Run upgrades when needed: `./scripts/db-upgrade.sh .env upgrade`
@@ -129,12 +131,13 @@ Local experience is for development, debugging, or quickly trying the frontend. 
 
 Frontend dev server:
 - `pnpm --dir frontend-v2 install`
+- Set `VITE_API_BASE_URL=http://localhost:8080` through the shell environment or `frontend-v2/.env.local`.
 - `pnpm --dir frontend-v2 dev`
 - Default URL: `http://127.0.0.1:5174`
 
 Local backend:
 - Prepare MySQL, Redis, and `.env` first.
-- Confirm `VITE_API_BASE_URL=http://localhost:8080`.
+- `bash scripts/start-backend-local.sh` does not automatically read the repository-root `.env`; export or load variables before starting, for example: `set -a; source .env; set +a`.
 - Start the backend: `bash scripts/start-backend-local.sh`
 - Default backend health URL: `http://127.0.0.1:8080/actuator/health`
 

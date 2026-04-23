@@ -9,6 +9,7 @@
 - 标准模式可额外启用 `Nacos`，但这不代表仓库已经交付真实微服务网格。
 - Docker 安装需要 `Docker` 与 `Docker Compose v2`；建议至少 `4 CPU / 8 GB RAM`。
 - 最小模式端口：`3001`、`8080`、`3306`、`6379`；标准模式额外使用 `8848`。
+- Docker 路径会在宿主机发布 MySQL `3306` 与 Redis `6379`；上线前请用防火墙或安全组限制访问，并在面向互联网暴露前为 Web/API 配置 TLS 与反向代理。
 - 权威范围见 `docs/release/v2-support-boundaries.md` 与 `docs/open-source/module-maturity-matrix.md`。
 
 ## 1. 路径选择
@@ -49,7 +50,7 @@ Windows PowerShell：
 - 标准模式：`./scripts/install.ps1 standard`
 
 说明：
-- 如果未传模式，脚本会尝试交互选择；非交互环境默认使用最小模式。
+- 如果未传模式，Bash 脚本会尝试交互选择，并可在非交互环境回退到最小模式；PowerShell 脚本未传模式时会使用 `Read-Host` 询问，因此非交互 PowerShell 应显式传入 `minimal` 或 `standard`。
 - 默认读取仓库根目录 `.env`；如需自定义路径，可设置 `MMMAIL_ENV_FILE=/path/to/.env`，PowerShell 也可使用 `-EnvFile path`。
 - 脚本不会替你生成生产级密钥；如果 `.env` 不存在，脚本会从 `.env.example` 创建后退出，请先替换占位值再重跑。
 - 最小模式要求 `MMMAIL_NACOS_ENABLED=false`；标准模式要求 `MMMAIL_NACOS_ENABLED=true`。
@@ -112,14 +113,15 @@ Windows PowerShell：
    - 不使用 Nacos 时设置 `MMMAIL_NACOS_ENABLED=false`；需要 Nacos 时准备 Nacos 并设置 `MMMAIL_NACOS_ENABLED=true`、`NACOS_SERVER_ADDR`、`NACOS_USERNAME`、`NACOS_PASSWORD`。
    - 保持 `SPRING_SQL_INIT_MODE=never`，Flyway 负责 schema migration。
 3. 启动后端：
+   - `bash scripts/start-backend-local.sh` 与 Maven 命令不会自动读取仓库根目录 `.env`；运行前先在当前 shell 导出或加载变量，例如：`set -a; source .env; set +a`。
    - 可用本地辅助脚本：`bash scripts/start-backend-local.sh`
    - 或在 `backend` 目录内运行 Maven Spring Boot：`mvn -pl mmmail-server -am -DskipTests spring-boot:run`
-   - 生产守护方式可用 systemd、supervisor 或等价平台能力管理 Java 进程。
+   - 生产守护方式可用 systemd、supervisor 或等价平台能力管理 Java 进程；systemd 服务请配置 `EnvironmentFile=/path/to/.env` 或等价环境注入。
 4. 构建并托管前端：
    - `pnpm --dir frontend-v2 install`
-   - `pnpm --dir frontend-v2 build`
+   - `VITE_API_BASE_URL=https://api.example.com pnpm --dir frontend-v2 build`
    - 将 `frontend-v2/dist` 交给静态文件服务器或反向代理托管。
-   - 确认构建时 `VITE_API_BASE_URL` 指向后端地址。
+   - 前端命令不会自动读取仓库根目录 `.env`；请通过 shell 环境变量，或 `frontend-v2/.env.production` 设置构建时 `VITE_API_BASE_URL`。
 5. 数据迁移：
    - 查看迁移状态：`./scripts/db-upgrade.sh .env info`
    - 需要升级时执行：`./scripts/db-upgrade.sh .env upgrade`
@@ -129,12 +131,13 @@ Windows PowerShell：
 
 前端开发服务器：
 - `pnpm --dir frontend-v2 install`
+- 通过 shell 环境变量或 `frontend-v2/.env.local` 设置 `VITE_API_BASE_URL=http://localhost:8080`。
 - `pnpm --dir frontend-v2 dev`
 - 默认地址：`http://127.0.0.1:5174`
 
 后端本地启动：
 - 先准备 MySQL、Redis 与 `.env`。
-- 确认 `VITE_API_BASE_URL=http://localhost:8080`。
+- `bash scripts/start-backend-local.sh` 不会自动读取仓库根目录 `.env`；启动前先导出或加载变量，例如：`set -a; source .env; set +a`。
 - 启动后端：`bash scripts/start-backend-local.sh`
 - 默认后端健康检查：`http://127.0.0.1:8080/actuator/health`
 
