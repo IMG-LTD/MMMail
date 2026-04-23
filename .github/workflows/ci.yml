@@ -80,6 +80,7 @@ jobs:
     env:
       MMMAIL_VALIDATE_CONTAINER_TESTS: "true"
       MMMAIL_RUN_BACKEND_DEPENDENCY_SCAN: "true"
+      MMMAIL_DEPENDENCY_SCAN_TIMEOUT_SECONDS: "1800"
       MMMAIL_NVD_API_KEY: ${{ secrets.MMMAIL_NVD_API_KEY }}
     steps:
       - name: Checkout
