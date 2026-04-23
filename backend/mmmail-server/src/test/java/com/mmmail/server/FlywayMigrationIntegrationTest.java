@@ -41,22 +41,26 @@ class FlywayMigrationIntegrationTest {
 
     @Test
     void freshInstallShouldApplyBaselineSchemaAndSeedData() throws Exception {
+        int productionMigrationCount = MigrationTestVersions.productionMigrationCount();
+        int latestProductionVersion = MigrationTestVersions.latestProductionVersion();
         Flyway flyway = defaultFlyway();
 
         MigrateResult result = flyway.migrate();
 
-        assertThat(result.migrationsExecuted).isEqualTo(13);
+        assertThat(result.migrationsExecuted).isEqualTo(productionMigrationCount);
         assertThat(queryForLong("select count(*) from user_account")).isEqualTo(2);
         assertThat(queryForLong("select count(*) from user_preference")).isEqualTo(2);
         assertThat(queryForLong("select count(*) from mail_attachment")).isEqualTo(0);
         assertThat(queryForLong("select count(*) from information_schema.columns where table_schema = 'mmmail' and table_name = 'user_preference' and column_name = 'mail_e2ee_recovery_private_key_encrypted'")).isEqualTo(1);
         assertThat(queryForLong("select count(*) from information_schema.columns where table_schema = 'mmmail' and table_name = 'user_preference' and column_name = 'mail_e2ee_recovery_updated_at'")).isEqualTo(1);
-        assertThat(queryForLong("select count(*) from system_release_metadata where schema_version = '13'")).isEqualTo(1);
-        assertThat(queryForLong("select count(*) from flyway_schema_history where version in ('1', '2', '3', '4', '5', '6', '7', '8', '9', '10', '11', '12', '13') and success = 1")).isEqualTo(13);
+        assertThat(queryForLong("select count(*) from system_release_metadata where schema_version = '" + latestProductionVersion + "'")).isEqualTo(1);
+        assertThat(queryForLong("select count(*) from flyway_schema_history where version is not null and success = 1")).isEqualTo(productionMigrationCount);
     }
 
     @Test
     void existingSchemaShouldBaselineCurrentStateAndApplyUpgradeMigration() throws Exception {
+        int latestProductionVersion = MigrationTestVersions.latestProductionVersion();
+        int productionAndTestMigrationCount = MigrationTestVersions.productionAndTestMigrationCount();
         executeLegacyScript("db/baseline/community-v1-schema.sql");
         executeLegacyScript("data.sql");
 
@@ -68,14 +72,14 @@ class FlywayMigrationIntegrationTest {
 
         MigrateResult result = flyway.migrate();
 
-        assertThat(result.migrationsExecuted).isEqualTo(13);
+        assertThat(result.migrationsExecuted).isEqualTo(productionAndTestMigrationCount - 1);
         assertThat(queryForLong("select count(*) from migration_upgrade_probe")).isEqualTo(1);
         assertThat(queryForLong("select count(*) from mail_attachment")).isEqualTo(0);
         assertThat(queryForLong("select count(*) from information_schema.columns where table_schema = 'mmmail' and table_name = 'user_preference' and column_name = 'mail_e2ee_recovery_private_key_encrypted'")).isEqualTo(1);
         assertThat(queryForLong("select count(*) from information_schema.columns where table_schema = 'mmmail' and table_name = 'user_preference' and column_name = 'mail_e2ee_recovery_updated_at'")).isEqualTo(1);
-        assertThat(queryForLong("select count(*) from system_release_metadata where schema_version = '13'")).isEqualTo(1);
+        assertThat(queryForLong("select count(*) from system_release_metadata where schema_version = '" + latestProductionVersion + "'")).isEqualTo(1);
         assertThat(queryForLong("select count(*) from flyway_schema_history where version = '1' and type = 'BASELINE'")).isEqualTo(1);
-        assertThat(queryForLong("select count(*) from flyway_schema_history where version in ('2', '3', '4', '5', '6', '7', '8', '9', '10', '11', '12', '13', '14') and success = 1")).isEqualTo(13);
+        assertThat(queryForLong("select count(*) from flyway_schema_history where version is not null and success = 1")).isEqualTo(productionAndTestMigrationCount);
         assertThat(queryForLong("select count(*) from flyway_schema_history where version = '14' and success = 1")).isEqualTo(1);
     }
 
