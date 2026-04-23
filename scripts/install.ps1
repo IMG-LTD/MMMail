@@ -1,14 +1,53 @@
 param(
-  [ValidateSet('', 'minimal', 'standard')]
+  [Parameter(Position = 0)]
   [string]$Mode = '',
-  [string]$EnvFile = ''
+  [Parameter(Position = 1)]
+  [string]$EnvFile = '',
+  [Alias('h', 'help')]
+  [switch]$ShowHelp = $false,
+  [Parameter(ValueFromRemainingArguments = $true)]
+  [string[]]$RemainingArgs = @()
 )
 
 $ErrorActionPreference = 'Stop'
 $RootDir = Split-Path -Parent (Split-Path -Parent $MyInvocation.MyCommand.Path)
 
 if ([string]::IsNullOrWhiteSpace($EnvFile)) {
+  $EnvFile = $env:MMMAIL_ENV_FILE
+}
+
+if ([string]::IsNullOrWhiteSpace($EnvFile)) {
   $EnvFile = Join-Path $RootDir '.env'
+}
+
+function Write-Usage {
+  Write-Host 'Usage: scripts/install.ps1 [minimal|standard] [-EnvFile path] [-h|--help]'
+  Write-Host 'Set MMMAIL_ENV_FILE=/path/to/.env to use a custom env file.'
+}
+
+function Resolve-RequestedMode {
+  $helpTokens = @('-h', '--help', 'help')
+
+  if ($ShowHelp -or $helpTokens -contains $Mode -or ([string]::IsNullOrWhiteSpace($Mode) -and $RemainingArgs.Count -eq 1 -and $helpTokens -contains $RemainingArgs[0])) {
+    Write-Usage
+    exit 0
+  }
+
+  if ($RemainingArgs.Count -gt 0) {
+    Write-Usage
+    throw "Unexpected arguments: $($RemainingArgs -join ' ')"
+  }
+
+  if ([string]::IsNullOrWhiteSpace($Mode)) {
+    return ''
+  }
+
+  if ($Mode -eq 'minimal' -or $Mode -eq 'standard') {
+    return $Mode
+  }
+
+  Write-Usage
+  throw "Unknown install mode: $Mode"
 }
 
 function Require-Command {
@@ -80,8 +119,10 @@ function Require-EnvEquals {
 }
 
 function Select-InstallMode {
-  if ($Mode -eq 'minimal' -or $Mode -eq 'standard') {
-    return $Mode
+  param([string]$RequestedMode)
+
+  if ($RequestedMode -eq 'minimal' -or $RequestedMode -eq 'standard') {
+    return $RequestedMode
   }
 
   $selected = Read-Host 'Choose install mode [minimal/standard] (minimal)'
@@ -90,6 +131,7 @@ function Select-InstallMode {
   }
 
   if ($selected -ne 'minimal' -and $selected -ne 'standard') {
+    Write-Usage
     throw "Unknown install mode: $selected"
   }
 
@@ -137,10 +179,12 @@ function Run-Compose {
   }
 }
 
+$requestedMode = Resolve-RequestedMode
+$installMode = Select-InstallMode $requestedMode
+
 Require-Command 'docker'
 docker compose version | Out-Null
 Ensure-EnvFile
-$installMode = Select-InstallMode
 $envMap = Read-EnvMap
 Check-EnvForMode $envMap $installMode
 Run-Compose $installMode

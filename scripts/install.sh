@@ -10,6 +10,22 @@ print_usage() {
   printf '%s\n' "Set MMMAIL_ENV_FILE=/path/to/.env to use a custom env file."
 }
 
+validate_requested_mode() {
+  case "$REQUESTED_MODE" in
+    minimal|standard|'')
+      ;;
+    -h|--help)
+      print_usage
+      exit 0
+      ;;
+    *)
+      printf '%s\n' "Unknown install mode: $REQUESTED_MODE" >&2
+      print_usage >&2
+      exit 1
+      ;;
+  esac
+}
+
 has_command() {
   command -v "$1" >/dev/null 2>&1
 }
@@ -68,22 +84,10 @@ ensure_env_file() {
 }
 
 select_mode() {
-  case "$REQUESTED_MODE" in
-    minimal|standard)
-      printf '%s' "$REQUESTED_MODE"
-      return
-      ;;
-    -h|--help)
-      print_usage
-      exit 0
-      ;;
-    '')
-      ;;
-    *)
-      print_usage >&2
-      exit 1
-      ;;
-  esac
+  if [[ "$REQUESTED_MODE" == "minimal" || "$REQUESTED_MODE" == "standard" ]]; then
+    printf '%s' "$REQUESTED_MODE"
+    return
+  fi
 
   if [[ -t 0 ]]; then
     printf '%s' "Choose install mode [minimal/standard] (minimal): " >&2
@@ -146,12 +150,15 @@ print_success() {
 }
 
 main() {
+  validate_requested_mode
+
+  local mode
+  mode="$(select_mode)"
+
   require_command docker
   docker compose version >/dev/null
   ensure_env_file
 
-  local mode
-  mode="$(select_mode)"
   check_env_for_mode "$mode"
   bash "$ROOT_DIR/scripts/validate-runtime-env.sh" "$ENV_FILE"
   run_compose "$mode"
