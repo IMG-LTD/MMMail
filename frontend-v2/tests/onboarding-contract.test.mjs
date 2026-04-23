@@ -18,16 +18,250 @@ async function readContractFile(file, label) {
   }
 }
 
-test('onboarding content exposes four quick-start steps with target paths', async () => {
+const expectedQuickStartTargetPaths = ['/suite', '/inbox', '/calendar', '/drive']
+
+function extractBalancedSource(content, startIndex, openCharacter, closeCharacter) {
+  let depth = 0
+  let quote = null
+  let escaping = false
+
+  for (let index = startIndex; index < content.length; index += 1) {
+    const character = content[index]
+
+    if (quote) {
+      if (escaping) {
+        escaping = false
+        continue
+      }
+
+      if (character === '\\') {
+        escaping = true
+        continue
+      }
+
+      if (character === quote) {
+        quote = null
+      }
+
+      continue
+    }
+
+    if (character === '\'' || character === '"' || character === '`') {
+      quote = character
+      continue
+    }
+
+    if (character === openCharacter) {
+      depth += 1
+      continue
+    }
+
+    if (character === closeCharacter) {
+      depth -= 1
+
+      if (depth === 0) {
+        return content.slice(startIndex, index + 1)
+      }
+    }
+  }
+
+  assert.fail(`Expected balanced ${openCharacter}${closeCharacter} source starting at index ${startIndex}`)
+}
+
+function extractNamedExportedArray(content, exportName) {
+  const declarationPattern = new RegExp(`export\\s+const\\s+${exportName}\\s*(?::[^=]+)?=\\s*\\[`, 'm')
+  const declaration = declarationPattern.exec(content)
+
+  assert.ok(declaration, `Expected onboarding content to export ${exportName}`)
+
+  const arrayStart = declaration.index + declaration[0].lastIndexOf('[')
+  return extractBalancedSource(content, arrayStart, '[', ']')
+}
+
+function countTopLevelObjects(arraySource) {
+  let arrayDepth = 0
+  let objectDepth = 0
+  let quote = null
+  let escaping = false
+  let objectCount = 0
+
+  for (const character of arraySource) {
+    if (quote) {
+      if (escaping) {
+        escaping = false
+        continue
+      }
+
+      if (character === '\\') {
+        escaping = true
+        continue
+      }
+
+      if (character === quote) {
+        quote = null
+      }
+
+      continue
+    }
+
+    if (character === '\'' || character === '"' || character === '`') {
+      quote = character
+      continue
+    }
+
+    if (character === '[') {
+      arrayDepth += 1
+      continue
+    }
+
+    if (character === ']') {
+      arrayDepth -= 1
+      continue
+    }
+
+    if (character === '{') {
+      if (arrayDepth === 1 && objectDepth === 0) {
+        objectCount += 1
+      }
+
+      objectDepth += 1
+      continue
+    }
+
+    if (character === '}') {
+      objectDepth -= 1
+    }
+  }
+
+  return objectCount
+}
+
+function extractTargetPathValues(stepSource) {
+  return Array.from(stepSource.matchAll(/\btargetPath\s*:\s*(["'`])([^"'`]+)\1/g), (match) => match[2])
+}
+
+function findNextNonWhitespaceIndex(content, startIndex) {
+  for (let index = startIndex; index < content.length; index += 1) {
+    if (!/\s/.test(content[index])) {
+      return index
+    }
+  }
+
+  return -1
+}
+
+function extractStatementSource(content, startIndex) {
+  let quote = null
+  let escaping = false
+  let parenDepth = 0
+  let arrayDepth = 0
+  let objectDepth = 0
+
+  for (let index = startIndex; index < content.length; index += 1) {
+    const character = content[index]
+
+    if (quote) {
+      if (escaping) {
+        escaping = false
+        continue
+      }
+
+      if (character === '\\') {
+        escaping = true
+        continue
+      }
+
+      if (character === quote) {
+        quote = null
+      }
+
+      continue
+    }
+
+    if (character === '\'' || character === '"' || character === '`') {
+      quote = character
+      continue
+    }
+
+    if (character === '(') parenDepth += 1
+    if (character === ')') parenDepth -= 1
+    if (character === '[') arrayDepth += 1
+    if (character === ']') arrayDepth -= 1
+    if (character === '{') objectDepth += 1
+    if (character === '}') objectDepth -= 1
+
+    if (parenDepth === 0 && arrayDepth === 0 && objectDepth === 0 && (character === ';' || character === '\n')) {
+      return content.slice(startIndex, index + 1)
+    }
+  }
+
+  return content.slice(startIndex)
+}
+
+function extractIfBlocks(content) {
+  const blocks = []
+  const ifPattern = /\bif\s*\(/g
+  let match
+
+  while ((match = ifPattern.exec(content)) !== null) {
+    const conditionStart = content.indexOf('(', match.index)
+    const conditionSource = extractBalancedSource(content, conditionStart, '(', ')')
+    const bodyStart = findNextNonWhitespaceIndex(content, conditionStart + conditionSource.length)
+
+    if (bodyStart === -1) {
+      continue
+    }
+
+    const bodySource = content[bodyStart] === '{'
+      ? extractBalancedSource(content, bodyStart, '{', '}')
+      : extractStatementSource(content, bodyStart)
+
+    blocks.push(`if ${conditionSource} ${bodySource}`)
+  }
+
+  return blocks
+}
+
+function extractReactiveCallBlocks(content) {
+  const blocks = []
+  const reactiveCallPattern = /\b(?:watchEffect|onMounted|watch)\s*\(/g
+  let match
+
+  while ((match = reactiveCallPattern.exec(content)) !== null) {
+    const callStart = content.indexOf('(', match.index)
+    blocks.push(extractBalancedSource(content, callStart, '(', ')'))
+  }
+
+  return blocks
+}
+
+function hasAutoOpenGateContract(block) {
+  const onboardingStatePattern = /\bshouldAutoOpen\b/
+  const authenticatedStatePattern = /\b(?:isAuthenticated|authenticated|accessToken)\b/i
+  const baseLayoutPattern = /(?:(?:route\.meta\??\.layout|layoutName|currentLayout)(?:\.value)?\s*(?:={2,3}|!==?)\s*['"`]base['"`]|['"`]base['"`]\s*(?:={2,3}|!==?)\s*(?:route\.meta\??\.layout|layoutName|currentLayout)(?:\.value)?|\bisBaseLayout(?:\.value)?\b)/
+  const openGuidePattern = /\bopenGuide\s*\(\s*\)/
+  const gateSignalPattern = /\bif\s*\(|&&|\|\|/
+
+  return onboardingStatePattern.test(block) &&
+    authenticatedStatePattern.test(block) &&
+    baseLayoutPattern.test(block) &&
+    openGuidePattern.test(block) &&
+    gateSignalPattern.test(block)
+}
+
+function hasOnboardingAutoOpenGate(content) {
+  return [...extractIfBlocks(content), ...extractReactiveCallBlocks(content)].some(hasAutoOpenGateContract)
+}
+
+test('onboarding content exposes exactly four quick-start steps with target paths', async () => {
   const content = await readContractFile(files.onboardingSteps, 'onboarding steps')
+  const quickStartStepsSource = extractNamedExportedArray(content, 'onboardingQuickStartSteps')
+  const targetPathValues = extractTargetPathValues(quickStartStepsSource)
 
   assert.match(content, /onboarding/i)
   assert.match(content, /quick start|getting started|快速开始|入门指南|开始使用/i)
-  assert.match(content, /\/suite/)
-  assert.match(content, /\/inbox/)
-  assert.match(content, /\/calendar/)
-  assert.match(content, /\/drive/)
-  assert.match(content, /\[[\s\S]*(\/suite)[\s\S]*(\/inbox)[\s\S]*(\/calendar)[\s\S]*(\/drive)[\s\S]*\]/)
+  assert.equal(countTopLevelObjects(quickStartStepsSource), expectedQuickStartTargetPaths.length)
+  assert.deepEqual(targetPathValues, expectedQuickStartTargetPaths)
 })
 
 test('onboarding store persists local-only state and exposes guide actions', async () => {
@@ -61,13 +295,9 @@ test('app shell auto-opens onboarding for authenticated first-login base-layout 
   assert.match(content, /WelcomeOnboardingModal|welcome-onboarding-modal/)
   assert.match(content, /useAuthStore|authStore/)
   assert.match(content, /useOnboardingStore|onboardingStore/)
-  assert.match(content, /watch\(/)
-  assert.match(content, /shouldAutoOpen/)
-  assert.match(content, /openGuide/)
-  assert.match(content, /isAuthenticated|authenticated|accessToken/)
-  assert.match(
-    content,
-    /(?:route\.meta\.layout|layoutName)\s*={2,3}\s*['"`]base['"`]|['"`]base['"`]\s*={2,3}\s*(?:route\.meta\.layout|layoutName)/
+  assert.ok(
+    hasOnboardingAutoOpenGate(content),
+    'Expected one conditional/reactive block to gate openGuide() on shouldAutoOpen, authenticated state, and base layout'
   )
 })
 
