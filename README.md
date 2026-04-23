@@ -24,34 +24,13 @@ MMMail Community Edition is a privacy-first, self-host-friendly collaboration su
 - 不承诺原生客户端、完整商业计费闭环或所有可见模块同等成熟
 - 不承诺完整零知识邮件 / 云盘架构
 
-## 最小自托管启动 | Minimal self-host quick start
-1. 复制环境模板 | Copy the env template
-   - `cp .env.example .env`
-2. 至少替换这些占位值 | Replace these placeholders at minimum
-   - `MMMAIL_JWT_SECRET`
-   - `SPRING_DATASOURCE_PASSWORD`
-   - `SPRING_REDIS_PASSWORD`
-   - `MYSQL_ROOT_PASSWORD`
-3. 首次采用建议最小模式 | Start with minimal mode first
-   - `MMMAIL_NACOS_ENABLED=false`
-4. 校验环境 | Validate the environment
-   - `./scripts/validate-runtime-env.sh .env`
-5. 启动服务 | Start the stack
-   - `docker compose --env-file .env -f docker-compose.minimal.yml up -d --build`
-6. 验证服务 | Check the stack
-   - Frontend: `http://127.0.0.1:3001`
-   - Backend health: `http://127.0.0.1:8080/actuator/health`
-   - Public boundary page: `http://127.0.0.1:3001/boundary`
+## 自托管 / 快速开始 | Self-host / Quick start
+首次部署请先选择安装路径；完整步骤、前置条件与验证方式见 `docs/ops/install.md`。
 
-## 本地开发用法 | Local development
-- Frontend v2 dev server:
-  - `pnpm --dir frontend-v2 install`
-  - `pnpm --dir frontend-v2 dev`
-  - default URL: `http://127.0.0.1:5174`
-- Default frontend API target:
-  - `VITE_API_BASE_URL=http://localhost:8080`
-- Local validation:
-  - `bash scripts/validate-local.sh`
+- 一键安装：Linux / macOS 使用 `scripts/install.sh minimal|standard`，Windows PowerShell 使用 `scripts/install.ps1 minimal|standard`。
+- Docker 手动安装：复制 `.env.example` 为 `.env`，替换占位值，按最小模式或标准模式运行 Docker Compose。
+- 裸机手动安装：自行准备 MySQL、Redis、Java 后端与前端构建/托管，数据库迁移由 Flyway 管理。
+- 本地体验：用于开发或快速试用前端体验，按 `docs/ops/install.md` 的本地命令启动。
 
 ## 文档导航 | Documentation
 - 安装说明 | Install: `docs/ops/install.md`
