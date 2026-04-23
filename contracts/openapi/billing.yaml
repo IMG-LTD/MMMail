@@ -1,0 +1,11 @@
+openapi: 3.1.0
+info:
+  title: MMMail Billing Readiness Contract
+  version: v2-freeze
+paths:
+  /api/v2/billing/readiness:
+    get:
+      summary: Read frozen billing readiness panels
+      responses:
+        '200':
+          description: ok

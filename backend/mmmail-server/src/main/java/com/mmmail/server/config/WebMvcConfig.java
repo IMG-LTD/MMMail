@@ -26,6 +26,7 @@ public class WebMvcConfig implements WebMvcConfigurer {
                         "/api/v1/audit/**",
                         "/api/v2/auth/**",
                         "/api/v2/public/**",
+                        "/api/v2/public-share/**",
                         "/actuator/**",
                         "/v3/api-docs/**",
                         "/swagger-ui/**"

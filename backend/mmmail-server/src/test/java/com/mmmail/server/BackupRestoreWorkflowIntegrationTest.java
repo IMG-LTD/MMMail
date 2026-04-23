@@ -45,6 +45,7 @@ class BackupRestoreWorkflowIntegrationTest {
 
     @Test
     void backupAndRestoreShouldRecoverDatabaseAndDrivePayload() throws Exception {
+        int latestProductionVersion = MigrationTestVersions.latestProductionVersion();
         MigrationDefaults.apply(Flyway.configure().dataSource(MYSQL.getJdbcUrl(), MYSQL.getUsername(), MYSQL.getPassword())).load().migrate();
 
         try (Connection connection = openConnection(); Statement statement = connection.createStatement()) {
@@ -73,7 +74,7 @@ class BackupRestoreWorkflowIntegrationTest {
         assertThat(queryForLong("select count(*) from user_account where id = 99")).isEqualTo(1);
         assertThat(Files.readString(driveRoot.resolve("note.txt"))).isEqualTo("backup-original");
         assertThat(Files.exists(backupDir.resolve("manifest.txt"))).isTrue();
-        assertThat(Files.readString(backupDir.resolve("manifest.txt"))).contains("schema_version=13");
+        assertThat(Files.readString(backupDir.resolve("manifest.txt"))).contains("schema_version=" + latestProductionVersion);
     }
 
     @Test

@@ -1,0 +1,5 @@
+version: v2-freeze
+family: workspace.aggregation
+examples:
+  - workspace.aggregation.requested
+  - workspace.aggregation.filtered-by-scope

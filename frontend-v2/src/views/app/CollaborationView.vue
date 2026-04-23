@@ -1,7 +1,8 @@
 <script setup lang="ts">
-import { onMounted, ref } from 'vue'
+import { ref, watch } from 'vue'
 import CompactPageHeader from '@/shared/components/CompactPageHeader.vue'
 import { lt, useLocaleText } from '@/locales'
+import { useScopeGuard } from '@/shared/composables/useScopeGuard'
 import { httpClient } from '@/service/request/http'
 import type { ApiResponse } from '@/shared/types/api'
 
@@ -10,7 +11,9 @@ interface WorkspaceAggregationSummary {
 }
 
 const { tr } = useLocaleText()
+const { requestHeaders } = useScopeGuard()
 const aggregationSurfaces = ref<string[]>([])
+let aggregationRequestToken = 0
 const cards = [
   [lt('共享文档', '共享文件', 'Shared Docs'), '14', lt('Beta 写作空间中仍有待响应项。', 'Beta 寫作空間中仍有待回應項目。', 'Pending responses across beta writing spaces')],
   [lt('云盘审阅', '雲端硬碟審閱', 'Drive Reviews'), '8', lt('文件仍在等待协作者批准。', '檔案仍在等待協作者批准。', 'Files waiting for collaborator approval')],
@@ -18,19 +21,35 @@ const cards = [
 ]
 
 async function loadAggregationSurfaces() {
-  const response = await httpClient.get<ApiResponse<WorkspaceAggregationSummary>>('/api/v2/workspace/aggregation')
+  const response = await httpClient.get<ApiResponse<WorkspaceAggregationSummary>>('/api/v2/workspace/aggregation', {
+    scopeHeaders: requestHeaders.value
+  })
   return response.data.surfaces
 }
 
-onMounted(() => {
-  void loadAggregationSurfaces()
-    .then(surfaces => {
-      aggregationSurfaces.value = surfaces
-    })
-    .catch(() => {
-      aggregationSurfaces.value = []
-    })
-})
+watch(
+  requestHeaders,
+  () => {
+    const requestToken = ++aggregationRequestToken
+
+    void loadAggregationSurfaces()
+      .then(surfaces => {
+        if (requestToken !== aggregationRequestToken) {
+          return
+        }
+
+        aggregationSurfaces.value = surfaces
+      })
+      .catch(() => {
+        if (requestToken !== aggregationRequestToken) {
+          return
+        }
+
+        aggregationSurfaces.value = []
+      })
+  },
+  { immediate: true }
+)
 </script>
 
 <template>

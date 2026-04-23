@@ -63,7 +63,8 @@ MMMail Community Edition is a privacy-first, self-host-friendly collaboration su
 
 ## 当前版本说明 | Release reference
 - 当前公开基线 | Current public baseline: `v2.0.0` on `main` (tag `v2.0.0`)
-- 当前发布说明 | Current release notes: `docs/release/v2.0.0-release-notes.md`
+- 当前硬化轨道 | Current hardening track: `docs/release/v2.0.1-release-notes.md`, `docs/release/v2.0.2-release-notes.md`
+- 当前已发布说明 | Current shipped release notes: `docs/release/v2.0.0-release-notes.md`
 - 正式支持边界以 `docs/release/community-v1-support-boundaries.md` 与 `docs/open-source/module-maturity-matrix.md` 为准
 
 ## 许可证 | License

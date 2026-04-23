@@ -1,71 +1,53 @@
 <script setup lang="ts">
-import { computed, onMounted } from 'vue'
+import { computed, onMounted, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import { lt, type TextLike, useLocaleText } from '@/locales'
+import { lt, useLocaleText } from '@/locales'
+import {
+  listMailFolder,
+  listSenderIdentities,
+  readMailDetail,
+  readRecipientTrustState,
+  sendMail,
+  type MailDetail,
+  type MailSenderIdentity,
+  type MailSummary,
+  type RecipientTrustState
+} from '@/service/api/mail'
 import { useCopilotPanel } from '@/shared/composables/useCopilotPanel'
 import { findSurface, mailFolderSurfaces, type SurfaceOption } from '@/shared/content/route-surfaces'
+import { useAuthStore } from '@/store/modules/auth'
 
 const route = useRoute()
 const router = useRouter()
+const authStore = useAuthStore()
 const { tr } = useLocaleText()
 const copilotPanel = useCopilotPanel()
 const copilotOpen = copilotPanel.open
 
-onMounted(() => {
-  void copilotPanel.loadCapabilities()
+const mailItems = ref<MailSummary[]>([])
+const activeMail = ref<MailDetail | null>(null)
+const senderOptions = ref<MailSenderIdentity[]>([])
+const recipientTrust = ref<RecipientTrustState | null>(null)
+const workspaceLoading = ref(false)
+const recipientTrustLoading = ref(false)
+const composeSending = ref(false)
+const loadError = ref('')
+const searchDraft = ref('')
+const composeForm = ref({
+  body: '',
+  fromEmail: '',
+  subject: '',
+  toEmail: ''
 })
-
-const messages = [
-  {
-    id: 'secure-ops',
-    sender: lt('安全运营', '安全營運', 'Secure Operations'),
-    subject: lt('凤凰项目：最终资产交付', '鳳凰專案：最終資產交付', 'Project Phoenix: Final Asset Transfer'),
-    preview: lt('加密载荷已验证。请在最终同步前查看附件。', '加密負載已驗證。請在最終同步前查看附件。', 'Encrypted payload verified. Review attachments before the final sync.'),
-    time: '10:42 AM',
-    badge: lt('已验证', '已驗證', 'Verified')
-  },
-  {
-    id: 'amir-horne',
-    sender: 'Dr. Amir Horne',
-    subject: lt('Q3 审计报告 - 需要处理', 'Q3 稽核報告 - 需要處理', 'Q3 Audit Reports - Action Required'),
-    preview: lt('预发布环境仍有少量差异，需完成签核。', '預發佈環境仍有少量差異，需完成簽核。', 'A few discrepancies remain in staging and require sign-off.'),
-    time: '09:41 AM',
-    badge: lt('未读', '未讀', 'Unread')
-  },
-  {
-    id: 'system-alerts',
-    sender: lt('系统告警', '系統告警', 'System Alerts'),
-    subject: lt('每周安全摘要', '每週安全摘要', 'Weekly Security Digest'),
-    preview: lt('当前工作区未检测到未授权访问尝试。', '目前工作區未偵測到未授權存取嘗試。', 'No unauthorized access attempts detected in the current workspace.'),
-    time: lt('昨天', '昨天', 'Yesterday'),
-    badge: lt('摘要', '摘要', 'Digest')
-  }
-]
-
-interface ContactCard {
-  name: string
-  team: TextLike
-  email: string
-}
-
-const contacts: ContactCard[] = [
-  { name: 'Elena Rostova', team: lt('设计系统', '設計系統', 'Design Systems'), email: 'elena@phoenix-secure.com' },
-  { name: 'Marcus Lin', team: lt('运营', '營運', 'Operations'), email: 'marcus@phoenix-secure.com' },
-  { name: 'Priya Sharma', team: lt('安全', '安全', 'Security'), email: 'priya@phoenix-secure.com' }
-]
-
-const searchResults = [
-  { id: 'mail', group: lt('邮件', '郵件', 'Mail'), title: lt('凤凰项目发布清单', '鳳凰專案發佈清單', 'Phoenix rollout checklist'), note: lt('在主题与附件元数据中找到', '在主旨與附件中繼資料中找到', 'Found in subject and attachment metadata') },
-  { id: 'files', group: lt('文件', '檔案', 'Files'), title: lt('节点拓扑图', '節點拓撲圖', 'Node topology map'), note: lt('与当前会话关联的云盘结果', '與目前會話關聯的雲端硬碟結果', 'Drive result linked from the active thread') },
-  { id: 'people', group: lt('人员', '人員', 'People'), title: 'Amir Horne', note: lt('最近的发件人与审阅人', '最近的寄件者與審閱者', 'Recent sender and reviewer') }
-]
+let latestWorkspaceRequest = 0
+let latestRecipientTrustRequest = 0
 
 const localNav = computed<SurfaceOption[]>(() => {
   return [
-    ...mailFolderSurfaces.slice(0, 4),
-    { key: 'contacts', label: lt('联系人', '聯絡人', 'Contacts'), description: lt('可信发件人与通讯录卡片。', '可信寄件者與通訊錄卡片。', 'Trusted senders and directory cards.') },
-    { key: 'search', label: lt('搜索', '搜尋', 'Search'), description: lt('已保存与高级搜索视图。', '已儲存與進階搜尋檢視。', 'Saved and advanced search views.') },
-    { key: 'compose', label: lt('写邮件', '寫郵件', 'Compose'), description: lt('展开式写信界面。', '展開式寫信介面。', 'Expanded compose surface.') }
+    ...mailFolderSurfaces,
+    { key: 'contacts', label: lt('联系人', '聯絡人', 'Contacts'), description: lt('发件身份与可信通讯地址。', '寄件身分與可信通訊地址。', 'Sender identities and trusted contact addresses.') },
+    { key: 'search', label: lt('搜索', '搜尋', 'Search'), description: lt('按关键字读取已认证邮件结果。', '依關鍵字讀取已驗證郵件結果。', 'Read authenticated mail results by keyword.') },
+    { key: 'compose', label: lt('写邮件', '寫郵件', 'Compose'), description: lt('基于已认证身份与收件人信任状态写信。', '基於已驗證身分與收件者信任狀態寫信。', 'Compose with authenticated identities and recipient trust state.') }
   ]
 })
 
@@ -82,9 +64,362 @@ const isContacts = computed(() => surfaceKey.value === 'contacts')
 const isSearch = computed(() => surfaceKey.value === 'search')
 const isConversation = computed(() => surfaceKey.value === 'conversation')
 const isThreadSurface = computed(() => !isCompose.value && !isContacts.value && !isSearch.value)
+const currentFolder = computed(() => {
+  if (isConversation.value) {
+    return 'inbox'
+  }
 
-function openConversation() {
-  router.push('/conversations/phoenix')
+  if (isSearch.value) {
+    return 'search'
+  }
+
+  return surfaceKey.value
+})
+
+const folderQuery = computed<Record<string, string | number | undefined>>(() => {
+  return {
+    keyword: isSearch.value ? searchDraft.value || undefined : undefined,
+    page: 1,
+    size: 20
+  }
+})
+
+const activeMailParagraphs = computed(() => {
+  return activeMail.value?.body
+    ?.split(/\n+/)
+    .map(item => item.trim())
+    .filter(Boolean) || []
+})
+
+const composeTrustCopy = computed(() => {
+  if (!authStore.accessToken) {
+    return tr(lt('登录后即可校验收件人信任状态。', '登入後即可驗證收件者信任狀態。', 'Sign in to verify recipient trust state.'))
+  }
+
+  if (recipientTrustLoading.value) {
+    return tr(lt('正在检查收件人的加密投递状态。', '正在檢查收件者的加密投遞狀態。', 'Checking the recipient encrypted-delivery status.'))
+  }
+
+  if (recipientTrust.value?.message) {
+    return recipientTrust.value.message
+  }
+
+  return tr(lt('填写发件人与收件人后，系统会读取信任状态。', '填寫寄件人與收件者後，系統會讀取信任狀態。', 'Enter sender and recipient details to load the trust state.'))
+})
+
+const composeTrustClass = computed(() => {
+  return {
+    'mail-compose__trust--blocked': recipientTrust.value?.status === 'blocked',
+    'mail-compose__trust--ready': recipientTrust.value?.status === 'ready',
+    'mail-compose__trust--warning': recipientTrust.value?.status === 'warning'
+  }
+})
+
+const detailTrustCopy = computed(() => {
+  if (!authStore.accessToken) {
+    return tr(lt('登录后即可读取已认证邮件详情。', '登入後即可讀取已驗證郵件詳情。', 'Sign in to read authenticated mail detail.'))
+  }
+
+  if (workspaceLoading.value) {
+    return tr(lt('正在读取已认证邮件数据。', '正在讀取已驗證郵件資料。', 'Loading authenticated mail data.'))
+  }
+
+  if (activeMail.value) {
+    return tr(lt('此消息详情来自已认证运行时数据。', '此訊息詳情來自已驗證執行期資料。', 'This message detail comes from authenticated runtime data.'))
+  }
+
+  return tr(lt('选择一封邮件以查看详情。', '選擇一封郵件以查看詳情。', 'Select a message to view detail.'))
+})
+
+const composeSendDisabled = computed(() => {
+  return !authStore.accessToken || composeSending.value || !composeForm.value.toEmail.trim() || !composeForm.value.subject.trim()
+})
+
+onMounted(() => {
+  void copilotPanel.loadCapabilities().catch(() => {})
+})
+
+function resolveRouteString(value: unknown) {
+  if (Array.isArray(value)) {
+    return resolveRouteString(value[0])
+  }
+
+  return typeof value === 'string' ? value : ''
+}
+
+function syncComposeFromRoute() {
+  const routeTo = resolveRouteString(route.query.to)
+  const routeFrom = resolveRouteString(route.query.from)
+  const routeSubject = resolveRouteString(route.query.subject)
+  const routeBody = resolveRouteString(route.query.body)
+  const routeSearch = resolveRouteString(route.query.q)
+
+  if (routeTo) {
+    composeForm.value.toEmail = routeTo
+  }
+
+  if (routeFrom) {
+    composeForm.value.fromEmail = routeFrom
+  }
+
+  if (routeSubject) {
+    composeForm.value.subject = routeSubject
+  }
+
+  if (routeBody) {
+    composeForm.value.body = routeBody
+  }
+
+  searchDraft.value = routeSearch
+}
+
+function ensureComposeFromEmail() {
+  const currentFromEmail = composeForm.value.fromEmail.trim()
+  const availableFromEmails = senderOptions.value
+    .map(item => item.emailAddress.trim())
+    .filter(Boolean)
+  const fallbackFromEmail = availableFromEmails[0] || authStore.user?.email || ''
+
+  if (!currentFromEmail) {
+    composeForm.value.fromEmail = fallbackFromEmail
+    return
+  }
+
+  if (availableFromEmails.length && availableFromEmails.includes(currentFromEmail)) {
+    return
+  }
+
+  if (!availableFromEmails.length && currentFromEmail === fallbackFromEmail) {
+    return
+  }
+
+  composeForm.value.fromEmail = fallbackFromEmail
+}
+
+function isEmailLike(value: string) {
+  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value)
+}
+
+async function loadWorkspace() {
+  const requestId = ++latestWorkspaceRequest
+  const requestToken = authStore.accessToken
+  const requestPath = route.fullPath
+
+  syncComposeFromRoute()
+
+  if (!requestToken) {
+    if (requestId !== latestWorkspaceRequest || requestToken !== authStore.accessToken || requestPath !== route.fullPath) {
+      return
+    }
+
+    mailItems.value = []
+    activeMail.value = null
+    senderOptions.value = []
+    recipientTrust.value = null
+    loadError.value = ''
+    workspaceLoading.value = false
+    return
+  }
+
+  workspaceLoading.value = true
+  loadError.value = ''
+
+  const shouldLoadFolder = !isCompose.value && !isContacts.value
+  let nextDetailId = ''
+  let folderItems: MailSummary[] = []
+  let folderLoaded = false
+
+  try {
+    if (shouldLoadFolder) {
+      try {
+        const folderResponse = await listMailFolder(currentFolder.value, requestToken, folderQuery.value)
+
+        if (requestId !== latestWorkspaceRequest || requestToken !== authStore.accessToken || requestPath !== route.fullPath) {
+          return
+        }
+
+        folderItems = folderResponse.data || []
+        folderLoaded = true
+        mailItems.value = folderItems
+      } catch (error) {
+        if (requestId !== latestWorkspaceRequest || requestToken !== authStore.accessToken || requestPath !== route.fullPath) {
+          return
+        }
+
+        folderItems = []
+        folderLoaded = false
+        mailItems.value = []
+        activeMail.value = null
+        loadError.value = error instanceof Error
+          ? error.message
+          : tr(lt('无法加载邮件列表。', '無法載入郵件清單。', 'Unable to load the mail list.'))
+      }
+    } else {
+      mailItems.value = []
+      activeMail.value = null
+    }
+
+    try {
+      const senderResponse = await listSenderIdentities(requestToken)
+
+      if (requestId !== latestWorkspaceRequest || requestToken !== authStore.accessToken || requestPath !== route.fullPath) {
+        return
+      }
+
+      senderOptions.value = senderResponse.data || []
+      ensureComposeFromEmail()
+    } catch {
+      if (requestId !== latestWorkspaceRequest || requestToken !== authStore.accessToken || requestPath !== route.fullPath) {
+        return
+      }
+
+      senderOptions.value = []
+      ensureComposeFromEmail()
+    }
+
+    nextDetailId = shouldLoadFolder && folderLoaded
+      ? resolveRouteString(route.params.id) || (folderItems[0]?.id || '')
+      : ''
+
+    if (!nextDetailId) {
+      if (requestId !== latestWorkspaceRequest || requestToken !== authStore.accessToken || requestPath !== route.fullPath) {
+        return
+      }
+
+      activeMail.value = null
+      return
+    }
+
+    try {
+      const detailResponse = await readMailDetail(nextDetailId, requestToken)
+
+      if (requestId !== latestWorkspaceRequest || requestToken !== authStore.accessToken || requestPath !== route.fullPath) {
+        return
+      }
+
+      activeMail.value = detailResponse.data
+    } catch (error) {
+      if (requestId !== latestWorkspaceRequest || requestToken !== authStore.accessToken || requestPath !== route.fullPath) {
+        return
+      }
+
+      activeMail.value = null
+      loadError.value = loadError.value || (error instanceof Error
+        ? error.message
+        : tr(lt('无法加载邮件详情。', '無法載入郵件詳情。', 'Unable to load the mail detail.')))
+    }
+  } finally {
+    if (requestId === latestWorkspaceRequest && requestToken === authStore.accessToken && requestPath === route.fullPath) {
+      workspaceLoading.value = false
+    }
+  }
+}
+
+async function refreshRecipientTrust() {
+  const requestId = ++latestRecipientTrustRequest
+  const requestToken = authStore.accessToken
+  const toEmail = composeForm.value.toEmail.trim()
+  const fromEmail = composeForm.value.fromEmail.trim()
+
+  if (!requestToken) {
+    if (requestId === latestRecipientTrustRequest && requestToken === authStore.accessToken) {
+      recipientTrust.value = null
+      recipientTrustLoading.value = false
+    }
+    return
+  }
+
+  if (!toEmail || !fromEmail) {
+    if (requestId === latestRecipientTrustRequest && requestToken === authStore.accessToken) {
+      recipientTrust.value = null
+      recipientTrustLoading.value = false
+    }
+    return
+  }
+
+  if (!isEmailLike(toEmail) || !isEmailLike(fromEmail)) {
+    if (requestId === latestRecipientTrustRequest && requestToken === authStore.accessToken) {
+      recipientTrust.value = null
+      recipientTrustLoading.value = false
+    }
+    return
+  }
+
+  recipientTrustLoading.value = true
+
+  try {
+    const response = await readRecipientTrustState(toEmail, fromEmail, requestToken)
+
+    if (requestId !== latestRecipientTrustRequest || requestToken !== authStore.accessToken) {
+      return
+    }
+
+    recipientTrust.value = response.data
+  } catch {
+    if (requestId !== latestRecipientTrustRequest || requestToken !== authStore.accessToken) {
+      return
+    }
+
+    recipientTrust.value = {
+      status: 'warning',
+      message: tr(lt('暂时无法读取收件人信任状态。', '暫時無法讀取收件者信任狀態。', 'The recipient trust state is temporarily unavailable.'))
+    }
+  } finally {
+    if (requestId === latestRecipientTrustRequest && requestToken === authStore.accessToken) {
+      recipientTrustLoading.value = false
+    }
+  }
+}
+
+async function submitCompose() {
+  if (composeSendDisabled.value || !authStore.accessToken) {
+    return
+  }
+
+  composeSending.value = true
+  loadError.value = ''
+
+  try {
+    await sendMail({
+      body: composeForm.value.body.trim(),
+      fromEmail: composeForm.value.fromEmail.trim() || undefined,
+      subject: composeForm.value.subject.trim(),
+      toEmail: composeForm.value.toEmail.trim()
+    }, authStore.accessToken)
+
+    composeForm.value = {
+      body: '',
+      fromEmail: composeForm.value.fromEmail,
+      subject: '',
+      toEmail: ''
+    }
+    recipientTrust.value = null
+    await router.push('/sent')
+  } catch (error) {
+    loadError.value = error instanceof Error
+      ? error.message
+      : tr(lt('邮件发送失败。', '郵件傳送失敗。', 'Failed to send the message.'))
+  } finally {
+    composeSending.value = false
+  }
+}
+
+function openConversation(mailId: string) {
+  void router.push(`/conversations/${mailId}`)
+}
+
+function openComposeForIdentity(emailAddress: string) {
+  void router.push({
+    path: '/compose',
+    query: { from: emailAddress }
+  })
+}
+
+function runSearch() {
+  void router.push({
+    path: '/search',
+    query: searchDraft.value.trim() ? { q: searchDraft.value.trim() } : {}
+  })
 }
 
 function openSurface(item: SurfaceOption) {
@@ -94,13 +429,74 @@ function openSurface(item: SurfaceOption) {
     contacts: '/contacts',
     drafts: '/drafts',
     inbox: '/inbox',
-    search: '/search',
+    outbox: '/outbox',
     scheduled: '/scheduled',
+    search: '/search',
+    sent: '/sent',
     snoozed: '/snoozed',
-    starred: '/starred'
+    spam: '/spam',
+    starred: '/starred',
+    trash: '/trash',
+    unread: '/unread'
   }
-  router.push(pathMap[item.key] ?? '/inbox')
+
+  void router.push(pathMap[item.key] ?? '/inbox')
 }
+
+function formatMailTimestamp(value: string) {
+  if (!value) {
+    return tr(lt('未知时间', '未知時間', 'Unknown time'))
+  }
+
+  const parsed = new Date(value)
+
+  if (Number.isNaN(parsed.getTime())) {
+    return value
+  }
+
+  return new Intl.DateTimeFormat(undefined, {
+    day: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit',
+    month: 'short'
+  }).format(parsed)
+}
+
+function formatFileSize(value: number) {
+  if (!value) {
+    return '0 B'
+  }
+
+  if (value >= 1024 * 1024) {
+    return `${(value / (1024 * 1024)).toFixed(1)} MB`
+  }
+
+  if (value >= 1024) {
+    return `${Math.round(value / 1024)} KB`
+  }
+
+  return `${value} B`
+}
+
+function resolveMailSender(mail: MailSummary | MailDetail | null) {
+  if (!mail) {
+    return tr(lt('暂无发件人', '暫無寄件人', 'No sender'))
+  }
+
+  return mail.senderDisplayName || mail.senderEmail || mail.peerEmail || tr(lt('未知发件人', '未知寄件人', 'Unknown sender'))
+}
+
+function resolveIdentityLabel(identity: MailSenderIdentity) {
+  return identity.displayName || identity.emailAddress || tr(lt('发件身份', '寄件身分', 'Sender identity'))
+}
+
+watch(() => [route.fullPath, authStore.accessToken], () => {
+  void loadWorkspace()
+}, { immediate: true })
+
+watch(() => [composeForm.value.toEmail, composeForm.value.fromEmail, authStore.accessToken], () => {
+  void refreshRecipientTrust()
+})
 </script>
 
 <template>
@@ -126,6 +522,11 @@ function openSurface(item: SurfaceOption) {
       </div>
     </header>
 
+    <p v-if="!authStore.accessToken" class="mail-surface__notice page-subtitle">
+      {{ tr(lt('登录后即可读取邮件、身份与收件人信任状态。', '登入後即可讀取郵件、身分與收件者信任狀態。', 'Sign in to load mail, sender identities, and recipient trust state.')) }}
+    </p>
+    <p v-else-if="loadError" class="mail-surface__notice page-subtitle">{{ loadError }}</p>
+
     <div class="mail-surface__local-nav">
       <button
         v-for="item in localNav"
@@ -143,65 +544,94 @@ function openSurface(item: SurfaceOption) {
         <header class="mail-compose__head">
           <div>
             <span class="section-label">{{ tr(lt('写邮件', '寫郵件', 'Compose')) }}</span>
-            <h1>{{ tr(lt('加密投递已就绪', '加密投遞已就緒', 'Encrypted delivery ready')) }}</h1>
+            <h1>{{ tr(lt('使用已认证身份发送邮件', '使用已驗證身分傳送郵件', 'Send mail with authenticated identities')) }}</h1>
           </div>
           <div class="mail-compose__actions">
-            <button type="button">{{ tr(lt('丢弃', '捨棄', 'Discard')) }}</button>
-            <button type="button">{{ tr(lt('定时发送', '排程傳送', 'Schedule')) }}</button>
-            <button class="mail-compose__primary" type="button">{{ tr(lt('发送', '傳送', 'Send')) }}</button>
+            <button
+              type="button"
+              @click="composeForm = { body: '', fromEmail: composeForm.fromEmail, subject: '', toEmail: '' }"
+            >
+              {{ tr(lt('清空', '清空', 'Clear')) }}
+            </button>
+            <button type="button" @click="runSearch">{{ tr(lt('搜索会话', '搜尋會話', 'Search threads')) }}</button>
+            <button class="mail-compose__primary" type="button" :disabled="composeSendDisabled" @click="submitCompose">
+              {{ composeSending ? tr(lt('发送中', '傳送中', 'Sending')) : tr(lt('发送', '傳送', 'Send')) }}
+            </button>
           </div>
         </header>
 
-        <div class="mail-compose__trust">
-          {{ tr(lt('所有收件人都已准备就绪。只有指定收件人可以读取消息内容。', '所有收件者都已準備就緒。只有指定收件者可以讀取訊息內容。', 'All recipients are ready. Only the intended recipient can read the message contents.')) }}
+        <div class="mail-compose__trust" :class="composeTrustClass">
+          {{ composeTrustCopy }}
         </div>
 
         <div class="mail-compose__fields">
           <label>
+            <span class="section-label">{{ tr(lt('发件人', '寄件人', 'From')) }}</span>
+            <select v-model="composeForm.fromEmail">
+              <option v-if="!senderOptions.length" value="">
+                {{ tr(lt('暂无可用发件身份', '暫無可用寄件身分', 'No sender identities available')) }}
+              </option>
+              <option
+                v-for="identity in senderOptions"
+                :key="identity.emailAddress"
+                :value="identity.emailAddress"
+              >
+                {{ resolveIdentityLabel(identity) }} · {{ identity.emailAddress }}
+              </option>
+            </select>
+          </label>
+          <label>
             <span class="section-label">{{ tr(lt('收件人', '收件者', 'To')) }}</span>
-            <div class="mail-compose__chips">
-              <span class="metric-chip">amir@phoenix-secure.com</span>
-              <span class="metric-chip">ops@phoenix-secure.com</span>
-            </div>
+            <input v-model="composeForm.toEmail" type="email" :placeholder="tr(lt('name@example.com', 'name@example.com', 'name@example.com'))">
           </label>
           <label>
             <span class="section-label">{{ tr(lt('主题', '主旨', 'Subject')) }}</span>
-            <input type="text" :value="tr(lt('凤凰上线交接', '鳳凰上線交接', 'Phoenix launch handoff'))" />
+            <input v-model="composeForm.subject" type="text" :placeholder="tr(lt('输入邮件主题', '輸入郵件主旨', 'Enter a subject'))">
           </label>
           <label class="mail-compose__editor">
             <span class="section-label">{{ tr(lt('正文', '訊息', 'Message')) }}</span>
-            <textarea :value="tr(lt('附件中包含最终资产、就绪说明以及切换窗口的恢复方案。', '附件中包含最終資產、就緒說明以及切換視窗的復原方案。', 'Attached are the final assets, readiness notes, and the recovery plan for the switch-over window.'))" />
+            <textarea v-model="composeForm.body" :placeholder="tr(lt('输入消息内容', '輸入訊息內容', 'Write your message'))" />
           </label>
         </div>
       </div>
 
       <aside class="mail-compose__side">
         <article class="surface-card mail-compose__note">
-          <span class="section-label">{{ tr(lt('附件', '附件', 'Attachments')) }}</span>
-          <strong>{{ tr(lt('2 个加密文件', '2 個加密檔案', '2 encrypted files')) }}</strong>
-          <p class="page-subtitle">{{ tr(lt('超过安全限制的文件会自动改走云盘分享链接。', '超過安全限制的檔案會自動改走雲端硬碟分享連結。', 'Files over the secure limit are automatically redirected through Drive share links.')) }}</p>
+          <span class="section-label">{{ tr(lt('发件身份', '寄件身分', 'Sender identities')) }}</span>
+          <strong>{{ senderOptions.length }} {{ tr(lt('个可用身份', '個可用身分', 'available identities')) }}</strong>
+          <p class="page-subtitle">
+            {{ authStore.user?.email || tr(lt('当前未登录', '目前未登入', 'Not signed in')) }}
+          </p>
         </article>
         <article class="surface-card mail-compose__note">
-          <span class="section-label">{{ tr(lt('定时发送', '排程傳送', 'Scheduling')) }}</span>
-          <strong>14:00 CEST</strong>
-          <p class="page-subtitle">{{ tr(lt('考虑时区的排程会让发送队列与收件人工作时间保持一致。', '考量時區的排程會讓傳送佇列與收件者工作時間保持一致。', 'Time-zone aware scheduling keeps the send queue aligned with recipient working hours.')) }}</p>
+          <span class="section-label">{{ tr(lt('信任状态', '信任狀態', 'Trust state')) }}</span>
+          <strong>{{ recipientTrust?.status || tr(lt('待检查', '待檢查', 'Pending')) }}</strong>
+          <p class="page-subtitle">
+            {{ recipientTrust?.routeCount ?? 0 }} {{ tr(lt('条投递路径', '條投遞路徑', 'delivery routes')) }}
+          </p>
         </article>
       </aside>
     </section>
 
     <section v-else-if="isContacts" class="mail-directory">
       <article class="surface-card mail-directory__hero">
-        <span class="section-label">{{ tr(lt('可信联系人', '可信聯絡人', 'Trusted contacts')) }}</span>
-        <strong>{{ tr(lt('内部目录与最近的加密发件人', '內部通訊錄與最近的加密寄件者', 'Internal directory and recent encrypted senders')) }}</strong>
-        <p class="page-subtitle">{{ tr(lt('联系人默认保持人类可读，验证细节则保持一键可达。', '聯絡人預設保持人類可讀，驗證細節則保持一鍵可達。', 'Contacts stay human-readable by default, while verification detail remains one click away.')) }}</p>
+        <span class="section-label">{{ tr(lt('发件身份', '寄件身分', 'Sender identities')) }}</span>
+        <strong>{{ tr(lt('已认证发件人与常用地址', '已驗證寄件人與常用地址', 'Authenticated senders and common addresses')) }}</strong>
+        <p class="page-subtitle">
+          {{ tr(lt('联系人卡片由运行时身份数据生成，而不是冻结示例数据。', '聯絡人卡片由執行期身分資料產生，而不是凍結示例資料。', 'Contact cards are generated from runtime identity data instead of frozen sample data.')) }}
+        </p>
       </article>
       <div class="mail-directory__grid">
-        <article v-for="contact in contacts" :key="contact.email" class="surface-card mail-directory__card">
-          <span class="mail-directory__avatar">{{ contact.name.charAt(0) }}</span>
-          <strong>{{ contact.name }}</strong>
-          <span>{{ tr(contact.team) }}</span>
-          <p>{{ contact.email }}</p>
-          <button type="button">{{ tr(lt('打开会话', '開啟會話', 'Open thread')) }}</button>
+        <article v-for="identity in senderOptions" :key="identity.emailAddress" class="surface-card mail-directory__card">
+          <span class="mail-directory__avatar">{{ resolveIdentityLabel(identity).charAt(0).toUpperCase() }}</span>
+          <strong>{{ resolveIdentityLabel(identity) }}</strong>
+          <span>{{ identity.source || tr(lt('发件身份', '寄件身分', 'Sender identity')) }}</span>
+          <p>{{ identity.emailAddress }}</p>
+          <button type="button" @click="openComposeForIdentity(identity.emailAddress)">{{ tr(lt('使用此身份写信', '使用此身分寫信', 'Compose with this identity')) }}</button>
+        </article>
+        <article v-if="!workspaceLoading && !senderOptions.length" class="surface-card mail-directory__card">
+          <strong>{{ tr(lt('暂无身份数据', '暫無身分資料', 'No identity data')) }}</strong>
+          <p>{{ tr(lt('登录后会显示发件身份。', '登入後會顯示寄件身分。', 'Sender identities appear after sign-in.')) }}</p>
         </article>
       </div>
     </section>
@@ -209,63 +639,81 @@ function openSurface(item: SurfaceOption) {
     <section v-else-if="isSearch" class="mail-search">
       <article class="surface-card mail-search__filters">
         <span class="section-label">{{ tr(lt('高级搜索', '進階搜尋', 'Advanced search')) }}</span>
+        <div class="mail-search__head">
+          <input
+            v-model="searchDraft"
+            class="mail-search__input"
+            type="search"
+            :placeholder="tr(lt('按主题或正文关键字搜索', '依主旨或內文關鍵字搜尋', 'Search by subject or body keyword'))"
+            @keyup.enter="runSearch"
+          >
+          <button type="button" @click="runSearch">{{ tr(lt('搜索', '搜尋', 'Search')) }}</button>
+        </div>
         <div class="mail-search__chips">
-          <span class="metric-chip">from: secure operations</span>
-          <span class="metric-chip">has:attachment</span>
-          <span class="metric-chip">is:encrypted</span>
+          <span v-if="searchDraft" class="metric-chip">keyword: {{ searchDraft }}</span>
+          <span class="metric-chip">{{ mailItems.length }} {{ tr(lt('条结果', '條結果', 'results')) }}</span>
         </div>
       </article>
       <article class="surface-card mail-search__results">
-        <div v-for="result in searchResults" :key="result.id" class="mail-search__row">
-          <span class="section-label">{{ tr(result.group) }}</span>
-          <strong>{{ tr(result.title) }}</strong>
-          <p>{{ tr(result.note) }}</p>
-        </div>
+        <button v-for="result in mailItems" :key="result.id" type="button" class="mail-search__row" @click="openConversation(result.id)">
+          <span class="section-label">{{ formatMailTimestamp(result.sentAt) }}</span>
+          <strong>{{ result.subject || tr(lt('无主题', '無主旨', 'No subject')) }}</strong>
+          <p>{{ result.preview || resolveMailSender(result) }}</p>
+        </button>
+        <p v-if="workspaceLoading" class="page-subtitle">{{ tr(lt('正在搜索邮件。', '正在搜尋郵件。', 'Searching mail.')) }}</p>
+        <p v-else-if="!mailItems.length" class="page-subtitle">{{ tr(lt('没有找到匹配邮件。', '沒有找到符合的郵件。', 'No matching mail found.')) }}</p>
       </article>
     </section>
 
     <section v-else class="mail-workspace">
       <article v-if="!isConversation" class="mail-workspace__list">
         <button
-          v-for="message in messages"
+          v-for="message in mailItems"
           :key="message.id"
           class="mail-workspace__row"
           type="button"
-          @click="openConversation"
+          @click="openConversation(message.id)"
         >
           <div>
             <div class="mail-workspace__row-head">
-              <strong>{{ tr(message.sender) }}</strong>
-              <span>{{ tr(message.time) }}</span>
+              <strong>{{ resolveMailSender(message) }}</strong>
+              <span>{{ formatMailTimestamp(message.sentAt) }}</span>
             </div>
-            <p>{{ tr(message.subject) }}</p>
-            <small>{{ tr(message.preview) }}</small>
+            <p>{{ message.subject || tr(lt('无主题', '無主旨', 'No subject')) }}</p>
+            <small>{{ message.preview || tr(lt('暂无预览内容', '暫無預覽內容', 'No preview available')) }}</small>
           </div>
-          <span class="mail-workspace__badge">{{ tr(message.badge) }}</span>
+          <span class="mail-workspace__badge">
+            {{ message.unread ? tr(lt('未读', '未讀', 'Unread')) : tr(lt('已读', '已讀', 'Read')) }}
+          </span>
         </button>
+        <div v-if="workspaceLoading" class="mail-workspace__empty">{{ tr(lt('正在加载邮件列表。', '正在載入郵件清單。', 'Loading mail list.')) }}</div>
+        <div v-else-if="!mailItems.length" class="mail-workspace__empty">{{ tr(lt('当前文件夹没有邮件。', '目前資料夾沒有郵件。', 'This folder is empty.')) }}</div>
       </article>
 
       <article class="mail-workspace__detail surface-card">
         <div class="mail-workspace__detail-head">
           <div>
             <span class="section-label">{{ isConversation ? tr(lt('会话', '會話', 'Conversation')) : tr(surface.label) }}</span>
-            <h1>{{ tr(lt('凤凰项目：最终资产交付', '鳳凰專案：最終資產交付', 'Project Phoenix: Final Asset Transfer')) }}</h1>
+            <h1>{{ activeMail?.subject || tr(lt('选择一封邮件', '選擇一封郵件', 'Select a message')) }}</h1>
           </div>
           <button v-if="isConversation" type="button" @click="router.push('/inbox')">{{ tr(lt('返回收件箱', '返回收件匣', 'Back to inbox')) }}</button>
         </div>
-        <div class="mail-workspace__trust">{{ tr(lt('只有你和收件人可以读取此消息。', '只有你和收件者可以讀取此訊息。', 'Only you and the recipient can read this message.')) }}</div>
-        <div class="mail-workspace__body">
-          <p>{{ tr(lt('团队，所有节点上的加密载荷都已验证完成。请在最终同步前查看附件。', '團隊，所有節點上的加密負載都已驗證完成。請在最終同步前查看附件。', 'Team, the encrypted payload has been verified across all nodes. Review the attachments before final sync.')) }}</p>
-          <p>{{ tr(lt('旧密钥将在切换窗口关闭后按计划退役。', '舊金鑰將在切換視窗關閉後按計畫退役。', 'Legacy keys are scheduled for retirement after the switch-over window closes.')) }}</p>
+        <div class="mail-workspace__trust">{{ detailTrustCopy }}</div>
+        <div v-if="activeMail" class="mail-workspace__meta">
+          <span class="section-label">{{ tr(lt('发件人', '寄件人', 'Sender')) }}</span>
+          <strong>{{ resolveMailSender(activeMail) }}</strong>
+          <span>{{ formatMailTimestamp(activeMail.sentAt) }}</span>
         </div>
-        <div class="mail-workspace__attachments">
-          <article class="mail-workspace__attachment">
-            <strong>Phoenix_Schematics_v4.pdf</strong>
-            <span>2.4 MB</span>
-          </article>
-          <article class="mail-workspace__attachment">
-            <strong>Node_Topology_Map.png</strong>
-            <span>1.1 MB</span>
+        <div v-if="workspaceLoading" class="mail-workspace__empty">{{ tr(lt('正在加载邮件详情。', '正在載入郵件詳情。', 'Loading mail detail.')) }}</div>
+        <div v-else-if="activeMail" class="mail-workspace__body">
+          <p v-for="(paragraph, index) in activeMailParagraphs" :key="`${activeMail.id}-${index}`">{{ paragraph }}</p>
+          <p v-if="!activeMailParagraphs.length">{{ tr(lt('此邮件没有正文内容。', '此郵件沒有正文內容。', 'This message has no body content.')) }}</p>
+        </div>
+        <div v-else class="mail-workspace__empty">{{ tr(lt('请选择列表中的邮件查看详情。', '請選擇清單中的郵件查看詳情。', 'Choose a message from the list to inspect its detail.')) }}</div>
+        <div v-if="activeMail?.attachments.length" class="mail-workspace__attachments">
+          <article v-for="attachment in activeMail.attachments" :key="attachment.id" class="mail-workspace__attachment">
+            <strong>{{ attachment.fileName }}</strong>
+            <span>{{ formatFileSize(attachment.fileSize) }}</span>
           </article>
         </div>
       </article>
@@ -305,6 +753,11 @@ function openSurface(item: SurfaceOption) {
 .mail-surface__toolbar-left span {
   color: var(--mm-text-secondary);
   font-size: 12px;
+}
+
+.mail-surface__notice {
+  margin: 0;
+  padding: 12px 16px 0;
 }
 
 .mail-surface__toolbar-right button,
@@ -389,6 +842,10 @@ function openSurface(item: SurfaceOption) {
   color: #fff;
 }
 
+.mail-compose__primary:disabled {
+  opacity: 0.6;
+}
+
 .mail-compose__trust,
 .mail-workspace__trust {
   display: inline-flex;
@@ -401,6 +858,24 @@ function openSurface(item: SurfaceOption) {
   background: rgba(19, 138, 107, 0.08);
   color: var(--mm-security);
   font-size: 12px;
+}
+
+.mail-compose__trust--ready {
+  border-color: rgba(19, 138, 107, 0.2);
+  background: rgba(19, 138, 107, 0.08);
+  color: var(--mm-security);
+}
+
+.mail-compose__trust--warning {
+  border-color: rgba(208, 145, 31, 0.25);
+  background: rgba(208, 145, 31, 0.1);
+  color: #8b5e00;
+}
+
+.mail-compose__trust--blocked {
+  border-color: rgba(196, 59, 59, 0.25);
+  background: rgba(196, 59, 59, 0.1);
+  color: #a12626;
 }
 
 .mail-compose__fields {
@@ -416,7 +891,9 @@ function openSurface(item: SurfaceOption) {
 }
 
 .mail-compose__fields input,
-.mail-compose__editor textarea {
+.mail-compose__fields select,
+.mail-compose__editor textarea,
+.mail-search__input {
   width: 100%;
   padding: 14px;
   border: 1px solid var(--mm-border);
@@ -488,6 +965,19 @@ function openSurface(item: SurfaceOption) {
   padding: 16px;
 }
 
+.mail-search__head {
+  display: flex;
+  gap: 12px;
+  margin-top: 12px;
+}
+
+.mail-search__head button {
+  min-width: 96px;
+  border: 1px solid var(--mm-border);
+  border-radius: 14px;
+  background: var(--mm-card);
+}
+
 .mail-search__chips {
   display: flex;
   flex-wrap: wrap;
@@ -498,7 +988,9 @@ function openSurface(item: SurfaceOption) {
 .mail-search__row {
   display: grid;
   gap: 8px;
+  width: 100%;
   padding: 16px;
+  text-align: left;
 }
 
 .mail-search__row p {
@@ -541,7 +1033,8 @@ function openSurface(item: SurfaceOption) {
 
 .mail-workspace__row small,
 .mail-workspace__badge,
-.mail-workspace__attachment span {
+.mail-workspace__attachment span,
+.mail-workspace__meta span {
   color: var(--mm-text-secondary);
   font-size: 12px;
 }
@@ -549,6 +1042,12 @@ function openSurface(item: SurfaceOption) {
 .mail-workspace__detail {
   margin: 16px;
   padding: 20px;
+}
+
+.mail-workspace__meta {
+  display: grid;
+  gap: 6px;
+  margin-top: 18px;
 }
 
 .mail-workspace__body {
@@ -574,6 +1073,12 @@ function openSurface(item: SurfaceOption) {
   background: var(--mm-card-muted);
 }
 
+.mail-workspace__empty {
+  padding: 18px 16px;
+  color: var(--mm-text-secondary);
+  font-size: 13px;
+}
+
 @media (max-width: 1100px) {
   .mail-compose,
   .mail-workspace,
@@ -597,9 +1102,11 @@ function openSurface(item: SurfaceOption) {
     flex-direction: column;
   }
 
-  .mail-surface__toolbar-right {
+  .mail-surface__toolbar-right,
+  .mail-search__head {
     width: 100%;
     justify-content: flex-start;
+    flex-wrap: wrap;
   }
 
   .mail-surface--thread .mail-workspace {

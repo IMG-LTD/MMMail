@@ -3,6 +3,7 @@ package com.mmmail.server.service;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.mmmail.common.exception.BizException;
 import com.mmmail.common.exception.ErrorCode;
+import com.mmmail.foundation.security.PublicShareTokenCodec;
 import com.mmmail.server.mapper.MailExternalSecureLinkMapper;
 import com.mmmail.server.mapper.MailMessageMapper;
 import com.mmmail.server.model.dto.MailExternalAccessRequest;
@@ -13,11 +14,9 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
-import java.security.SecureRandom;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.Locale;
-import java.util.UUID;
 
 @Service
 public class MailExternalSecureLinkService {
@@ -26,9 +25,9 @@ public class MailExternalSecureLinkService {
 
     private static final int DEFAULT_EXPIRE_DAYS = 7;
     private static final int MAX_EXPIRE_DAYS = 30;
-    private static final SecureRandom RANDOM = new SecureRandom();
     private static final DateTimeFormatter NOTIFICATION_TIME_FORMAT = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
 
+    private final PublicShareTokenCodec publicShareTokenCodec = new PublicShareTokenCodec();
     private final MailExternalSecureLinkMapper mailExternalSecureLinkMapper;
     private final MailMessageMapper mailMessageMapper;
     private final MailAttachmentService mailAttachmentService;
@@ -70,6 +69,7 @@ public class MailExternalSecureLinkService {
         MailExternalSecureLink existing = findByMailId(mail.getId());
         if (existing != null) {
             existing.setRecipientEmail(requireRecipientEmail(recipientEmail));
+            existing.setTokenHash(publicShareTokenCodec.hash(existing.getToken()));
             existing.setPublicUrl(buildPublicUrl(publicBaseUrl, existing.getToken()));
             existing.setPasswordHint(normalizePasswordHint(accessRequest.passwordHint()));
             existing.setExpiresAt(expiresAt);
@@ -82,7 +82,9 @@ public class MailExternalSecureLinkService {
         link.setMailId(mail.getId());
         link.setOwnerId(ownerId);
         link.setRecipientEmail(requireRecipientEmail(recipientEmail));
-        link.setToken(generateUniqueToken());
+        String rawToken = publicShareTokenCodec.generateRawToken();
+        link.setToken(rawToken);
+        link.setTokenHash(publicShareTokenCodec.hash(rawToken));
         link.setPublicUrl(buildPublicUrl(publicBaseUrl, link.getToken()));
         link.setPasswordHint(normalizePasswordHint(accessRequest.passwordHint()));
         link.setExpiresAt(expiresAt);
@@ -115,7 +117,7 @@ public class MailExternalSecureLinkService {
         auditService.record(
                 null,
                 "MAIL_SECURE_LINK_VIEW",
-                "mailId=" + link.getMailId() + ",recipient=" + link.getRecipientEmail() + ",token=" + link.getToken(),
+                "mailId=" + link.getMailId() + ",recipient=" + link.getRecipientEmail(),
                 ipAddress
         );
         return new MailPublicSecureLinkVo(
@@ -145,7 +147,7 @@ public class MailExternalSecureLinkService {
         auditService.record(
                 null,
                 "MAIL_SECURE_LINK_ATTACHMENT_DOWNLOAD",
-                "mailId=" + mail.getId() + ",attachment=" + attachmentId + ",token=" + link.getToken(),
+                "mailId=" + mail.getId() + ",attachment=" + attachmentId,
                 ipAddress
         );
         return download;
@@ -185,8 +187,9 @@ public class MailExternalSecureLinkService {
     }
 
     private MailExternalSecureLink requireActiveLink(String token) {
+        String tokenHash = publicShareTokenCodec.hash(requireToken(token));
         MailExternalSecureLink link = mailExternalSecureLinkMapper.selectOne(new LambdaQueryWrapper<MailExternalSecureLink>()
-                .eq(MailExternalSecureLink::getToken, requireToken(token))
+                .eq(MailExternalSecureLink::getTokenHash, tokenHash)
                 .last("limit 1"));
         if (link == null) {
             throw new BizException(ErrorCode.INVALID_ARGUMENT, "Mail secure link is not found");
@@ -230,19 +233,6 @@ public class MailExternalSecureLinkService {
         String baseUrl = requireText(publicBaseUrl, "Public base URL is required for secure mail delivery");
         String normalizedBaseUrl = baseUrl.endsWith("/") ? baseUrl.substring(0, baseUrl.length() - 1) : baseUrl;
         return normalizedBaseUrl + "/share/mail/" + token;
-    }
-
-    private String generateUniqueToken() {
-        for (int attempt = 0; attempt < 10; attempt++) {
-            String token = UUID.randomUUID().toString().replace("-", "")
-                    + Integer.toHexString(RANDOM.nextInt(16)).toUpperCase(Locale.ROOT);
-            Long count = mailExternalSecureLinkMapper.selectCount(new LambdaQueryWrapper<MailExternalSecureLink>()
-                    .eq(MailExternalSecureLink::getToken, token));
-            if (count == null || count == 0) {
-                return token;
-            }
-        }
-        throw new BizException(ErrorCode.INTERNAL_ERROR, "Failed to generate secure mail token");
     }
 
     private String requireToken(String token) {

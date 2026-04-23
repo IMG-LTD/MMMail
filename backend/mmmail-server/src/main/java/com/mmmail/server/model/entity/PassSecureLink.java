@@ -16,6 +16,7 @@ public class PassSecureLink {
     private Long itemId;
     private Long sharedVaultId;
     private String token;
+    private String tokenHash;
     private Integer maxViews;
     private Integer currentViews;
     private LocalDateTime expiresAt;
@@ -64,6 +65,14 @@ public class PassSecureLink {
 
     public void setToken(String token) {
         this.token = token;
+    }
+
+    public String getTokenHash() {
+        return tokenHash;
+    }
+
+    public void setTokenHash(String tokenHash) {
+        this.tokenHash = tokenHash;
     }
 
     public Integer getMaxViews() {

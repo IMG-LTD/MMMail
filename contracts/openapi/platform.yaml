@@ -1,0 +1,11 @@
+openapi: 3.1.0
+info:
+  title: MMMail Platform Contract
+  version: v2-freeze
+paths:
+  /api/v2/platform/capabilities:
+    get:
+      summary: Read platform capability enums and scope header contract
+      responses:
+        '200':
+          description: ok

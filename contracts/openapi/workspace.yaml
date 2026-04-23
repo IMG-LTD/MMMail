@@ -1,0 +1,11 @@
+openapi: 3.1.0
+info:
+  title: MMMail Workspace Aggregation Contract
+  version: v2-freeze
+paths:
+  /api/v2/workspace/aggregation:
+    get:
+      summary: Read workspace aggregation summary
+      responses:
+        '200':
+          description: ok

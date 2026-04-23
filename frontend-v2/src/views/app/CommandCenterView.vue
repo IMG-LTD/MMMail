@@ -4,9 +4,7 @@ import { lt, useLocaleText } from '@/locales'
 import { useAutomationRunbook } from '@/shared/composables/useAutomationRunbook'
 
 const { tr } = useLocaleText()
-const automationRunbook = useAutomationRunbook()
-const currentView = automationRunbook.currentView
-const setView = automationRunbook.setView
+const { currentView, setView } = useAutomationRunbook()
 
 const routes = [lt('收件箱', '收件匣', 'Inbox'), lt('日历', '日曆', 'Calendar'), lt('云盘', '雲端硬碟', 'Drive'), lt('密码监控', '密碼監控', 'Pass Monitor')]
 const history = [lt('组织访问矩阵', '組織存取矩陣', 'org access matrix'), lt('恢复包', '復原包', 'recovery kit'), lt('季度审计', '季度稽核', 'quarterly audit')]

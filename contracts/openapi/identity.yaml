@@ -1,0 +1,17 @@
+openapi: 3.1.0
+info:
+  title: MMMail Identity Contract
+  version: v2-freeze
+paths:
+  /api/v1/auth/login:
+    post:
+      summary: Login and issue access plus refresh session
+      responses:
+        '200':
+          description: ok
+  /api/v1/auth/refresh:
+    post:
+      summary: Rotate refresh token and issue a new access token
+      responses:
+        '200':
+          description: ok

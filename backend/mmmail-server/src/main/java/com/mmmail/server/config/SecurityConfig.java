@@ -3,6 +3,7 @@ package com.mmmail.server.config;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.mmmail.common.exception.ErrorCode;
 import com.mmmail.common.model.Result;
+import com.mmmail.foundation.tenant.TenantScopeHeaders;
 import com.mmmail.server.observability.RequestTracingFilter;
 import com.mmmail.server.security.JwtAuthFilter;
 import jakarta.servlet.FilterChain;
@@ -96,6 +97,7 @@ public class SecurityConfig {
                                 "/api/v1/public/drive/**",
                                 "/api/v1/public/meet/**",
                                 "/api/v1/public/pass/**",
+                                "/api/v2/public-share/**",
                                 "/v3/api-docs/**",
                                 "/swagger-ui/**",
                                 "/swagger-ui.html",
@@ -147,8 +149,8 @@ public class SecurityConfig {
                 "Content-Type",
                 "X-Requested-With",
                 "X-MMMAIL-CSRF",
-                "X-MMMAIL-ORG-ID",
-                "X-MMMAIL-SCOPE-ID",
+                TenantScopeHeaders.ORG_ID,
+                TenantScopeHeaders.SCOPE_ID,
                 "X-Drive-Share-Password",
                 "Accept",
                 "Origin",
@@ -192,7 +194,15 @@ public class SecurityConfig {
         String normalized = Arrays.stream(allowHeaders.split(","))
                 .map(String::trim)
                 .filter(header -> !header.isEmpty())
-                .map(header -> header.equalsIgnoreCase("x-mmmail-scope-id") ? "X-MMMAIL-SCOPE-ID" : header)
+                .map(header -> {
+                    if (header.equalsIgnoreCase(TenantScopeHeaders.ORG_ID)) {
+                        return TenantScopeHeaders.ORG_ID;
+                    }
+                    if (header.equalsIgnoreCase(TenantScopeHeaders.SCOPE_ID)) {
+                        return TenantScopeHeaders.SCOPE_ID;
+                    }
+                    return header;
+                })
                 .collect(Collectors.joining(", "));
         response.setHeader(HttpHeaders.ACCESS_CONTROL_ALLOW_HEADERS, normalized);
     }

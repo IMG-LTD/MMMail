@@ -16,6 +16,7 @@ public class MailExternalSecureLink {
     private Long ownerId;
     private String recipientEmail;
     private String token;
+    private String tokenHash;
     private String publicUrl;
     private String passwordHint;
     private LocalDateTime expiresAt;
@@ -64,6 +65,14 @@ public class MailExternalSecureLink {
 
     public void setToken(String token) {
         this.token = token;
+    }
+
+    public String getTokenHash() {
+        return tokenHash;
+    }
+
+    public void setTokenHash(String tokenHash) {
+        this.tokenHash = tokenHash;
     }
 
     public String getPublicUrl() {

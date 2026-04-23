@@ -1,0 +1,6 @@
+version: v2-freeze
+family: pass.secure-link
+examples:
+  - pass.secure-link.created
+  - pass.secure-link.viewed
+  - pass.secure-link.revoked

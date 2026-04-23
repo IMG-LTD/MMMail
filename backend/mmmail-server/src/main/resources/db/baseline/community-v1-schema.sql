@@ -974,6 +974,7 @@ create table if not exists pass_secure_link (
     item_id bigint not null,
     shared_vault_id bigint not null,
     token varchar(64) not null,
+    token_hash varchar(64) not null,
     max_views int not null default 1,
     current_views int not null default 0,
     expires_at timestamp,
@@ -985,6 +986,7 @@ create table if not exists pass_secure_link (
 );
 
 create unique index uk_pass_secure_link_token on pass_secure_link(token);
+create unique index uk_pass_secure_link_token_hash on pass_secure_link(token_hash);
 create index idx_pass_secure_link_item on pass_secure_link(item_id, revoked_at, expires_at);
 
 create table if not exists pass_item_share (

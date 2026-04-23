@@ -1,0 +1,17 @@
+openapi: 3.1.0
+info:
+  title: MMMail Mail Public Share Contract
+  version: v2-freeze
+paths:
+  /api/v1/public/mail/secure-links/{token}:
+    parameters:
+      - name: token
+        in: path
+        required: true
+        schema:
+          type: string
+    get:
+      summary: Read a public encrypted mail share
+      responses:
+        '200':
+          description: ok

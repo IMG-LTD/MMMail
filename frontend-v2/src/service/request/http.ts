@@ -61,12 +61,42 @@ async function request<T>(path: string, options: RequestOptions = {}) {
   return parseResponse<T>(response)
 }
 
+async function requestBlob<T extends boolean = false>(path: string, options: Omit<RequestOptions, 'body'> = {}) {
+  const headers = new Headers(options.headers)
+
+  if (options.token) {
+    headers.set('Authorization', `Bearer ${options.token}`)
+  }
+
+  Object.entries(options.scopeHeaders || {}).forEach(([key, value]) => {
+    headers.set(key, value)
+  })
+
+  const response = await fetch(createRequestUrl(path, options.query), {
+    headers,
+    method: options.method || 'GET'
+  })
+
+  if (!response.ok) {
+    throw new Error(`HTTP ${response.status} ${response.statusText}`)
+  }
+
+  return {
+    blob: await response.blob(),
+    contentDisposition: response.headers.get('Content-Disposition') || '',
+    contentType: response.headers.get('Content-Type') || ''
+  }
+}
+
 export const httpClient = {
   delete<T>(path: string, options?: Omit<RequestOptions, 'method'>) {
     return request<T>(path, { ...options, method: 'DELETE' })
   },
   get<T>(path: string, options?: Omit<RequestOptions, 'body' | 'method'>) {
     return request<T>(path, { ...options, method: 'GET' })
+  },
+  getBlob<T extends boolean = false>(path: string, options?: Omit<RequestOptions, 'body' | 'method'>) {
+    return requestBlob<T>(path, { ...options, method: 'GET' })
   },
   post<T>(path: string, options?: Omit<RequestOptions, 'method'>) {
     return request<T>(path, { ...options, method: 'POST' })

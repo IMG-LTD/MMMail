@@ -1,0 +1,6 @@
+version: v2-freeze
+family: mail.secure-link
+examples:
+  - mail.secure-link.created
+  - mail.secure-link.viewed
+  - mail.secure-link.attachment-downloaded

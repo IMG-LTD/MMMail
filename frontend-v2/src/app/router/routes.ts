@@ -132,12 +132,8 @@ const mailRoutes: RouteRecordRaw[] = [
   }
 ]
 
-// `/folders/:folderId` and `/folders/:id` resolve to the same Vue Router pattern,
-// so the frozen compatibility mapping is documented inline instead of registered as a dead redirect.
-// {
-//   path: '/folders/:folderId',
-//   redirect: to => `/folders/${String(to.params.folderId || '')}`
-// }
+// Folder detail compatibility is tracked in sameShapeCompatibilityRoutes because
+// legacy and canonical URLs share the same Vue Router path shape.
 
 const workspaceRoutes: RouteRecordRaw[] = [
   {
@@ -346,7 +342,7 @@ const researchRoutes: RouteRecordRaw[] = [
   }
 ]
 
-// path: '/pass-monitor' compatibility is generated from redirectRegistry.
+// Redirect compatibility routes are generated from redirectRegistry.
 const redirectRoutes: RouteRecordRaw[] = redirectRegistry.map(rule => ({
   path: rule.from,
   redirect: rule.to

@@ -1,0 +1,6 @@
+version: v2-freeze
+family: platform.outbox
+examples:
+  - platform.outbox.published
+  - platform.outbox.failed
+  - platform.outbox.dead-lettered

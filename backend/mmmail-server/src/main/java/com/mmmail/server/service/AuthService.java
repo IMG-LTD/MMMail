@@ -4,6 +4,7 @@ import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import com.mmmail.common.exception.BizException;
 import com.mmmail.common.exception.ErrorCode;
+import com.mmmail.identity.session.RefreshTokenHasher;
 import com.mmmail.server.mapper.UserAccountMapper;
 import com.mmmail.server.mapper.UserSessionMapper;
 import com.mmmail.server.model.dto.LoginRequest;
@@ -22,11 +23,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
-import java.nio.charset.StandardCharsets;
-import java.security.MessageDigest;
-import java.security.NoSuchAlgorithmException;
 import java.time.LocalDateTime;
-import java.util.HexFormat;
 import java.util.List;
 import java.util.UUID;
 
@@ -40,6 +37,7 @@ public class AuthService {
     private final AuditService auditService;
     private final UserPreferenceService userPreferenceService;
     private final SecurityRateLimitService securityRateLimitService;
+    private final RefreshTokenHasher refreshTokenHasher;
     private final long refreshExpireHours;
 
     public AuthService(
@@ -50,6 +48,7 @@ public class AuthService {
             AuditService auditService,
             UserPreferenceService userPreferenceService,
             SecurityRateLimitService securityRateLimitService,
+            RefreshTokenHasher refreshTokenHasher,
             @Value("${mmmail.refresh-token-expire-hours:168}") long refreshExpireHours
     ) {
         this.userAccountMapper = userAccountMapper;
@@ -59,6 +58,7 @@ public class AuthService {
         this.auditService = auditService;
         this.userPreferenceService = userPreferenceService;
         this.securityRateLimitService = securityRateLimitService;
+        this.refreshTokenHasher = refreshTokenHasher;
         this.refreshExpireHours = refreshExpireHours;
     }
 
@@ -193,7 +193,7 @@ public class AuthService {
     }
 
     private UserSession findActiveSession(String refreshToken) {
-        String tokenHash = hashToken(refreshToken);
+        String tokenHash = refreshTokenHasher.hash(refreshToken);
         UserSession session = userSessionMapper.selectOne(new LambdaQueryWrapper<UserSession>()
                 .eq(UserSession::getRefreshTokenHash, tokenHash)
                 .eq(UserSession::getRevoked, 0));
@@ -229,7 +229,7 @@ public class AuthService {
         LocalDateTime now = LocalDateTime.now();
         UserSession session = new UserSession();
         session.setOwnerId(userId);
-        session.setRefreshTokenHash(hashToken(token));
+        session.setRefreshTokenHash(refreshTokenHasher.hash(token));
         session.setExpiresAt(now.plusHours(refreshExpireHours));
         session.setRevoked(0);
         session.setCreatedAt(now);
@@ -259,16 +259,6 @@ public class AuthService {
                         .set(UserSession::getRevoked, 1)
                         .set(UserSession::getUpdatedAt, LocalDateTime.now())
         );
-    }
-
-    private String hashToken(String token) {
-        try {
-            MessageDigest digest = MessageDigest.getInstance("SHA-256");
-            byte[] hash = digest.digest(token.getBytes(StandardCharsets.UTF_8));
-            return HexFormat.of().formatHex(hash);
-        } catch (NoSuchAlgorithmException ex) {
-            throw new IllegalStateException("SHA-256 is not available", ex);
-        }
     }
 
     private String normalizeEmail(String email) {

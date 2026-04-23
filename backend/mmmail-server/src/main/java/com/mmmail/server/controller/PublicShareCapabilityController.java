@@ -16,7 +16,9 @@ public class PublicShareCapabilityController {
         return Result.success(Map.of(
                 "states", new String[]{"token-valid", "password-required", "unlocked", "expired", "revoked", "locked", "download-blocked"},
                 "auditedActions", new String[]{"preview", "download", "copy", "reshare"},
-                "passwordHeader", "X-Drive-Share-Password"
+                "passwordHeader", "X-Drive-Share-Password",
+                "supportsAudit", true,
+                "supportsPasswordUnlock", true
         ));
     }
 }

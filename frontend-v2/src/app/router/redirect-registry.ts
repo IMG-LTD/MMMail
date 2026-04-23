@@ -9,3 +9,12 @@ export const redirectRegistry: RedirectRule[] = [
   { from: '/labels', to: '/inbox' },
   { from: '/settings/system-health', to: '/settings?panel=system-health' }
 ]
+
+export interface SameShapeCompatibilityRule {
+  legacy: string
+  canonical: string
+}
+
+export const sameShapeCompatibilityRoutes: SameShapeCompatibilityRule[] = [
+  { legacy: '/folders/:folderId', canonical: '/folders/:id' }
+]
