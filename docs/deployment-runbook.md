@@ -1,14 +1,15 @@
 # MMMail v2.0.3 Deployment Runbook
 
 **版本**: `v2.0.3`
-**日期**: `2026-04-23`
+**日期**: `2026-04-24`
 **状态**: `released candidate`
 
 ## 1. 目的
 - 记录 `main` 切到 v2-only 之后的部署基线。
 - 统一 `frontend-v2`、Compose、自托管门禁与发布文档口径。
-- 更完整的安装、升级、备份恢复、运维排障请参考：
-  - `docs/ops/install.md`
+- First-time install source of truth: `docs/ops/install.md`。
+- 首次安装路径选择（一键安装、Docker 手动安装、裸机手动安装、本地体验 / 开发）以 `docs/ops/install.md` 为准；本 Runbook 从操作者已经选定安装路径之后开始，聚焦部署执行、验证、升级、备份、恢复与事故处理步骤。
+- 更完整的升级、备份恢复、运行态排障请参考：
   - `docs/ops/upgrade.md`
   - `docs/ops/backup-restore.md`
   - `docs/ops/runbook.md`
@@ -20,11 +21,12 @@
 - archive 分支 `archive/v2-only-pre-cleanup-20260423` 仅用于保留清理前仓库状态，不参与当前发布门禁
 
 ## 3. 部署前检查
-1. 校验运行时环境
+1. 确认已经按 `docs/ops/install.md` 选定安装路径并准备 `.env`
+2. 校验运行时环境
    - `./scripts/validate-runtime-env.sh .env`
-2. 执行本地门禁
+3. 执行本地门禁
    - `bash scripts/validate-local.sh`
-3. 如需数据库变更前保护，先执行备份
+4. 如需数据库变更前保护，先执行备份
    - `./scripts/db-backup.sh .env`
 
 ## 4. 部署执行
@@ -60,5 +62,6 @@
 
 ## 7. 发布工件对齐
 - Release notes source of truth: `docs/release/v2.0.3-release-notes.md`
+- First-time install source of truth: `docs/ops/install.md`
 - Support boundaries: `docs/release/v2-support-boundaries.md`
 - Module maturity: `docs/open-source/module-maturity-matrix.md`

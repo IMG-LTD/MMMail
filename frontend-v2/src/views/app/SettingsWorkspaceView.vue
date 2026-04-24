@@ -8,6 +8,7 @@ import { useScopeGuard } from '@/shared/composables/useScopeGuard'
 import { useMcpRegistry } from '@/shared/composables/useMcpRegistry'
 import type { SystemHealthOverview } from '@/shared/types/system-health'
 import { useAuthStore } from '@/store/modules/auth'
+import { useOnboardingStore } from '@/store/modules/onboarding'
 
 interface SettingsNavItem {
   key: SettingsPanelKey
@@ -21,11 +22,12 @@ interface RegisteredDevice {
   activity: TextLike
 }
 
-type SettingsPanelKey = 'privacy-telemetry' | 'system-health' | 'integrations'
+type SettingsPanelKey = 'getting-started' | 'privacy-telemetry' | 'system-health' | 'integrations'
 
 const route = useRoute()
 const router = useRouter()
 const authStore = useAuthStore()
+const onboardingStore = useOnboardingStore()
 const { requestHeaders } = useScopeGuard()
 const { tr } = useLocaleText()
 const mcpRegistry = useMcpRegistry()
@@ -33,8 +35,9 @@ const registryCapabilities = mcpRegistry.capabilities
 const systemHealth = ref<SystemHealthOverview | null>(null)
 const systemHealthFailed = ref(false)
 
-const settingsPanelKeys: SettingsPanelKey[] = ['privacy-telemetry', 'system-health', 'integrations']
+const settingsPanelKeys: SettingsPanelKey[] = ['getting-started', 'privacy-telemetry', 'system-health', 'integrations']
 const navItems: SettingsNavItem[] = [
+  { key: 'getting-started', label: lt('新手引导', '新手引導', 'Getting Started') },
   { key: 'privacy-telemetry', label: lt('隐私与遥测', '隱私與遙測', 'Privacy & Telemetry') },
   { key: 'system-health', label: lt('系统健康', '系統健康', 'System Health') },
   { key: 'integrations', label: lt('集成', '整合', 'Integrations') }
@@ -118,6 +121,20 @@ onMounted(async () => {
       </aside>
 
       <div class="settings-shell__content">
+        <section v-if="activePanelKey === 'getting-started'" class="settings-panel">
+          <span class="section-label">{{ tr(lt('新手引导', '新手引導', 'Getting Started')) }}</span>
+          <strong>{{ tr(lt('重新打开新手引导', '重新開啟新手引導', 'Reopen the onboarding guide')) }}</strong>
+          <p class="page-subtitle">{{ tr(lt('随时回到快速开始流程，复习套件、收件箱、日历和云盘的核心入口。', '隨時回到快速開始流程，複習套件、收件匣、日曆和雲端硬碟的核心入口。', 'Return to the quick-start flow anytime to review the suite, inbox, calendar, and drive essentials.')) }}</p>
+
+          <div class="settings-choice">
+            <div class="settings-choice__item settings-choice__item--active">
+              <strong>{{ tr(lt('入门指南', '入門指南', 'Getting Started')) }}</strong>
+              <p>{{ tr(lt('打开欢迎引导，继续浏览 MMMail 的关键工作区。', '開啟歡迎引導，繼續瀏覽 MMMail 的關鍵工作區。', 'Open the welcome guide and continue browsing the key MMMail workspaces.')) }}</p>
+              <button type="button" @click="onboardingStore.openGuide()">{{ tr(lt('打开引导', '開啟引導', 'Open guide')) }}</button>
+            </div>
+          </div>
+        </section>
+
         <section v-if="activePanelKey === 'privacy-telemetry'" class="settings-panel">
           <span class="section-label">{{ tr(lt('隐私与遥测', '隱私與遙測', 'Privacy & Telemetry')) }}</span>
           <strong>{{ tr(lt('隐私与遥测', '隱私與遙測', 'Privacy & Telemetry')) }}</strong>
