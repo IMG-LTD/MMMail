@@ -1,5 +1,10 @@
 # Changelog
 
+## v2.0.4
+- Added Bash and PowerShell one-click installers for minimal and standard Docker Compose deployment paths.
+- Restructured first-time install documentation around one-click, Docker manual, bare-metal manual, and local development paths.
+- Added browser-local first-login onboarding with four quick-start steps and a Settings reopen entry.
+
 ## v2.0.3
 - Preserved the mixed legacy repository state on `archive/v2-only-pre-cleanup-20260423` before simplifying `main`.
 - Replaced the last `frontend/` runtime, compose, CI, and validation entrypoints with `frontend-v2`.
