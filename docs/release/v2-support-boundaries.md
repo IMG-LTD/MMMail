@@ -68,4 +68,4 @@
 - `docs/open-source/module-maturity-matrix.md`
 - `docs/ops/install.md`
 - `docs/ops/runbook.md`
-- `docs/release/v2.0.3-release-notes.md`
+- `docs/release/v2.0.4-release-notes.md`

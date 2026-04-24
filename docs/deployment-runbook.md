@@ -1,6 +1,6 @@
-# MMMail v2.0.3 Deployment Runbook
+# MMMail v2.0.4 Deployment Runbook
 
-**版本**: `v2.0.3`
+**版本**: `v2.0.4`
 **日期**: `2026-04-24`
 **状态**: `released candidate`
 
@@ -15,7 +15,7 @@
   - `docs/ops/runbook.md`
 
 ## 2. 适用部署基线
-- 当前 shipped baseline：`main` / `v2.0.3`
+- 当前 shipped baseline：`main` / `v2.0.4`
 - 当前默认自托管运行模型：`frontend-v2 Web + 单个 Spring Boot 后端进程 + MySQL / Redis`
 - 标准模式可额外启用 `Nacos`
 - archive 分支 `archive/v2-only-pre-cleanup-20260423` 仅用于保留清理前仓库状态，不参与当前发布门禁
@@ -61,7 +61,7 @@
 - 需要恢复时，按 `docs/ops/backup-restore.md` 执行恢复或回滚
 
 ## 7. 发布工件对齐
-- Release notes source of truth: `docs/release/v2.0.3-release-notes.md`
+- Release notes source of truth: `docs/release/v2.0.4-release-notes.md`
 - First-time install source of truth: `docs/ops/install.md`
 - Support boundaries: `docs/release/v2-support-boundaries.md`
 - Module maturity: `docs/open-source/module-maturity-matrix.md`

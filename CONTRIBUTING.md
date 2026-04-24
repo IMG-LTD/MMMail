@@ -1,7 +1,7 @@
 # Contributing to MMMail
 
 ## Scope
-- 当前公开协作基线以 `v2.0.3` 为准，权威范围见 `README.md`、`docs/release/v2-support-boundaries.md` 与 `docs/open-source/module-maturity-matrix.md`。
+- 当前公开协作基线以 `v2.0.4` 为准，权威范围见 `README.md`、`docs/release/v2-support-boundaries.md` 与 `docs/open-source/module-maturity-matrix.md`。
 - `GA` 模块的回归、文档与运维能力属于 release-blocking 范围；`Beta / Preview` 改动不得破坏 `GA` 门禁，也不得夸大未交付能力。
 - 当前主线优先级仍是 `Mail → Calendar → Drive → Pass` 协作闭环与自托管可采用性。
 

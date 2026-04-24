@@ -1,6 +1,6 @@
-# MMMail v2.0.3 Threat Model
+# MMMail v2.0.4 Threat Model
 
-**版本**: `v2.0.3`
+**版本**: `v2.0.4`
 **日期**: `2026-04-23`
 
 ## 保护资产

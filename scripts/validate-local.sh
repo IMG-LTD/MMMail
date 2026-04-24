@@ -55,7 +55,7 @@ required=(
   docs/ops/runbook.md
   docs/release/v2-support-boundaries.md
   docs/release/v2-feedback-intake.md
-  docs/release/v2.0.3-release-notes.md
+  docs/release/v2.0.4-release-notes.md
   docs/open-source/module-maturity-matrix.md
   docs/open-source/README.en.md
   docs/ops/install.en.md

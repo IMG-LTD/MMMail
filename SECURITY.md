@@ -1,7 +1,7 @@
 # Security Policy
 
 ## Scope
-- `v2.0.3` is the current public baseline.
+- `v2.0.4` is the current public baseline.
 - Security fixes that affect authentication, organization isolation, data access, public share access, storage, self-hosted deployment, or documented `GA` capabilities are treated as release blockers.
 - Current support boundaries are documented in `docs/release/v2-support-boundaries.md`.
 

@@ -4,7 +4,7 @@
 **日期**: `2026-04-23`
 
 ## 当前反馈基线
-- 默认公开基线：`main` / `v2.0.3`
+- 默认公开基线：`main` / `v2.0.4`
 - 支持边界：`docs/release/v2-support-boundaries.md`
 - 模块成熟度：`docs/open-source/module-maturity-matrix.md`
 

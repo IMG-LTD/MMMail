@@ -1,10 +1,10 @@
-# MMMail v2.0.3 Deployment Topology
+# MMMail v2.0.4 Deployment Topology
 
-**版本**: `v2.0.3`
+**版本**: `v2.0.4`
 **日期**: `2026-04-23`
 
 ## 目标
-- 提供两个可复现的单机 `Docker Compose` 拓扑，覆盖当前 `v2.0.3` 公开主路径。
+- 提供两个可复现的单机 `Docker Compose` 拓扑，覆盖当前 `v2.0.4` 公开主路径。
 - `docker-compose.yml` 表示标准模式；`docker-compose.minimal.yml` 表示更轻量的最小自托管模式。
 - 交付对象是本地试用、自托管验证和后续运维脚本化，不追求生产级高可用。
 

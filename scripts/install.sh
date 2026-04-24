@@ -44,11 +44,24 @@ require_command() {
   fi
 }
 
+resolve_env_file_path() {
+  case "$ENV_FILE" in
+    /*)
+      ;;
+    *)
+      ENV_FILE="$(pwd -P)/$ENV_FILE"
+      ;;
+  esac
+}
+
 read_env_value() {
   local key="$1"
   local line
+  local value
   line="$(grep -E "^${key}=" "$ENV_FILE" | tail -n 1 || true)"
-  printf '%s' "${line#*=}"
+  value="${line#*=}"
+  value="${value%$'\r'}"
+  printf '%s' "$value"
 }
 
 require_env_value() {
@@ -67,14 +80,15 @@ require_env_value() {
   fi
 }
 
-require_env_equals() {
+require_env_boolean_equals() {
   local key="$1"
   local expected="$2"
   local value
   value="$(read_env_value "$key")"
+  value="$(printf '%s' "$value" | tr '[:upper:]' '[:lower:]')"
 
   if [[ "$value" != "$expected" ]]; then
-    printf '%s\n' "$key must be $expected for this install mode" >&2
+    printf '%s\n' "$key must be $expected for this install mode (current: ${value:-missing})" >&2
     exit 1
   fi
 }
@@ -118,17 +132,19 @@ select_mode() {
 check_env_for_mode() {
   local mode="$1"
 
+  require_env_value MMMAIL_AUTH_CSRF_COOKIE_NAME
   require_env_value MMMAIL_JWT_SECRET
+  require_env_value SPRING_DATASOURCE_USERNAME
   require_env_value SPRING_DATASOURCE_PASSWORD
   require_env_value SPRING_REDIS_PASSWORD
   require_env_value MYSQL_ROOT_PASSWORD
 
   if [[ "$mode" == "minimal" ]]; then
     # Requires MMMAIL_NACOS_ENABLED=false
-    require_env_equals MMMAIL_NACOS_ENABLED false
+    require_env_boolean_equals MMMAIL_NACOS_ENABLED false
   else
     # Requires MMMAIL_NACOS_ENABLED=true
-    require_env_equals MMMAIL_NACOS_ENABLED true
+    require_env_boolean_equals MMMAIL_NACOS_ENABLED true
     require_env_value NACOS_USERNAME
     require_env_value NACOS_PASSWORD
   fi
@@ -153,12 +169,14 @@ print_success() {
   printf '%s\n' "Frontend: http://127.0.0.1:3001"
   printf '%s\n' "Backend health: http://127.0.0.1:8080/actuator/health"
   printf '%s\n' "Boundary page: http://127.0.0.1:3001/boundary"
-  printf '%s\n' "Migration status: ./scripts/db-upgrade.sh .env info"
+  printf '%s\n' "Env file: $ENV_FILE"
+  printf '%s\n' "Migration status: ./scripts/db-upgrade.sh $ENV_FILE info"
 }
 
 main() {
   validate_argument_count "$@"
   validate_requested_mode
+  resolve_env_file_path
 
   local mode
   mode="$(select_mode)"

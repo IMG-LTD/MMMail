@@ -16,5 +16,5 @@ MMMail Community Edition is a privacy-first, self-host-friendly collaboration ba
 ## Start here
 - Install quickstart: `../ops/install.en.md`
 - Support boundaries: `../release/v2-support-boundaries.md`
-- Release notes: `../release/v2.0.3-release-notes.md`
+- Release notes: `../release/v2.0.4-release-notes.md`
 - Module maturity: `module-maturity-matrix.md`

@@ -50,6 +50,22 @@ function Resolve-RequestedMode {
   throw "Unknown install mode: $Mode"
 }
 
+function Resolve-EnvFilePath {
+  if ([System.IO.Path]::IsPathRooted($EnvFile)) {
+    return $EnvFile
+  }
+
+  return [System.IO.Path]::GetFullPath((Join-Path (Get-Location) $EnvFile))
+}
+
+function Test-InputRedirected {
+  try {
+    return [Console]::IsInputRedirected
+  } catch {
+    return $false
+  }
+}
+
 function Require-Command {
   param([string]$Name)
 
@@ -84,7 +100,7 @@ function Read-EnvMap {
     }
 
     $key = $line.Substring(0, $separator)
-    $value = $line.Substring($separator + 1)
+    $value = $line.Substring($separator + 1).TrimEnd("`r")
     $map[$key] = $value
   }
 
@@ -106,15 +122,20 @@ function Require-EnvValue {
   }
 }
 
-function Require-EnvEquals {
+function Require-EnvBooleanEquals {
   param(
     [hashtable]$EnvMap,
     [string]$Key,
     [string]$Expected
   )
 
-  if (-not $EnvMap.ContainsKey($Key) -or $EnvMap[$Key] -ne $Expected) {
-    throw "$Key must be $Expected for this install mode"
+  if (-not $EnvMap.ContainsKey($Key)) {
+    throw "$Key must be $Expected for this install mode (current: missing)"
+  }
+
+  $value = $EnvMap[$Key].ToLowerInvariant()
+  if ($value -ne $Expected) {
+    throw "$Key must be $Expected for this install mode (current: $value)"
   }
 }
 
@@ -125,9 +146,13 @@ function Select-InstallMode {
     return $RequestedMode
   }
 
-  $selected = Read-Host 'Choose install mode [minimal/standard] (minimal)'
-  if ([string]::IsNullOrWhiteSpace($selected)) {
+  if (Test-InputRedirected) {
     $selected = 'minimal'
+  } else {
+    $selected = Read-Host 'Choose install mode [minimal/standard] (minimal)'
+    if ([string]::IsNullOrWhiteSpace($selected)) {
+      $selected = 'minimal'
+    }
   }
 
   if ($selected -ne 'minimal' -and $selected -ne 'standard') {
@@ -144,7 +169,9 @@ function Check-EnvForMode {
     [string]$InstallMode
   )
 
+  Require-EnvValue $EnvMap 'MMMAIL_AUTH_CSRF_COOKIE_NAME'
   Require-EnvValue $EnvMap 'MMMAIL_JWT_SECRET'
+  Require-EnvValue $EnvMap 'SPRING_DATASOURCE_USERNAME'
   Require-EnvValue $EnvMap 'SPRING_DATASOURCE_PASSWORD'
   Require-EnvValue $EnvMap 'SPRING_REDIS_PASSWORD'
   Require-EnvValue $EnvMap 'MYSQL_ROOT_PASSWORD'
@@ -155,10 +182,10 @@ function Check-EnvForMode {
 
   if ($InstallMode -eq 'minimal') {
     # Requires MMMAIL_NACOS_ENABLED=false
-    Require-EnvEquals $EnvMap 'MMMAIL_NACOS_ENABLED' 'false'
+    Require-EnvBooleanEquals $EnvMap 'MMMAIL_NACOS_ENABLED' 'false'
   } else {
     # Requires MMMAIL_NACOS_ENABLED=true
-    Require-EnvEquals $EnvMap 'MMMAIL_NACOS_ENABLED' 'true'
+    Require-EnvBooleanEquals $EnvMap 'MMMAIL_NACOS_ENABLED' 'true'
     Require-EnvValue $EnvMap 'NACOS_USERNAME'
     Require-EnvValue $EnvMap 'NACOS_PASSWORD'
   }
@@ -180,6 +207,7 @@ function Run-Compose {
 }
 
 $requestedMode = Resolve-RequestedMode
+$EnvFile = Resolve-EnvFilePath
 $installMode = Select-InstallMode $requestedMode
 
 Ensure-EnvFile
@@ -194,4 +222,5 @@ Write-Host "MMMail $installMode mode is starting."
 Write-Host "Frontend: http://127.0.0.1:3001"
 Write-Host "Backend health: http://127.0.0.1:8080/actuator/health"
 Write-Host "Boundary page: http://127.0.0.1:3001/boundary"
-Write-Host "Migration status: ./scripts/db-upgrade.sh .env info"
+Write-Host "Env file: $EnvFile"
+Write-Host "Migration status: bash scripts/db-upgrade.sh $EnvFile info"

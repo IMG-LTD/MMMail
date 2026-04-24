@@ -1,10 +1,10 @@
 # MMMail v2 Mainline 首次安装指南
 
-**版本**: `v2.0.3`
+**版本**: `v2.0.4`
 **日期**: `2026-04-24`
 
 ## 当前边界与前置条件
-- 当前公开基线为 `main` / `v2.0.3`，仓库主线只保留 v2 代码与运行路径。
+- 当前公开基线为 `main` / `v2.0.4`，仓库主线只保留 v2 代码与运行路径。
 - 当前默认自托管运行模型为 `frontend-v2 Web + 单个 Spring Boot 后端进程 + MySQL / Redis`。
 - 标准模式可额外启用 `Nacos`，但这不代表仓库已经交付真实微服务网格。
 - Docker 安装需要 `Docker` 与 `Docker Compose v2`；建议至少 `4 CPU / 8 GB RAM`。
@@ -50,7 +50,7 @@ Windows PowerShell：
 - 标准模式：`./scripts/install.ps1 standard`
 
 说明：
-- 如果未传模式，Bash 脚本会尝试交互选择，并可在非交互环境回退到最小模式；PowerShell 脚本未传模式时会使用 `Read-Host` 询问，因此非交互 PowerShell 应显式传入 `minimal` 或 `standard`。
+- 如果未传模式，Bash 与 PowerShell 脚本都会优先尝试交互选择；在非交互环境中会回退到最小模式。自动化部署建议仍显式传入 `minimal` 或 `standard`。
 - 默认读取仓库根目录 `.env`；如需自定义路径，可设置 `MMMAIL_ENV_FILE=/path/to/.env`，PowerShell 也可使用 `-EnvFile path`。
 - 脚本不会替你生成生产级密钥；如果 `.env` 不存在，脚本会从 `.env.example` 创建后退出，请先替换占位值再重跑。
 - 最小模式要求 `MMMAIL_NACOS_ENABLED=false`；标准模式要求 `MMMAIL_NACOS_ENABLED=true`。

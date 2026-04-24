@@ -1,10 +1,10 @@
 # MMMail v2 Mainline First-time Install Guide
 
-**Version**: `v2.0.3`
+**Version**: `v2.0.4`
 **Date**: `2026-04-24`
 
 ## Current boundaries and prerequisites
-- Public baseline: `main` / `v2.0.3`; the repository mainline contains v2-only code and runtime paths.
+- Public baseline: `main` / `v2.0.4`; the repository mainline contains v2-only code and runtime paths.
 - Default self-hosted runtime: `frontend-v2 Web + single Spring Boot backend + MySQL / Redis`.
 - Standard mode may additionally enable `Nacos`, but this is not a promise of a production microservice mesh.
 - Docker installs require `Docker` and `Docker Compose v2`; at least `4 CPU / 8 GB RAM` is recommended.
@@ -50,7 +50,7 @@ Windows PowerShell:
 - Standard mode: `./scripts/install.ps1 standard`
 
 Notes:
-- If no mode is passed, the Bash script tries to ask interactively and can fall back to minimal mode in non-interactive contexts; the PowerShell script uses `Read-Host` when no mode is passed, so non-interactive PowerShell should pass `minimal` or `standard` explicitly.
+- If no mode is passed, the Bash and PowerShell scripts try to ask interactively first and fall back to minimal mode in non-interactive contexts. Automation should still pass `minimal` or `standard` explicitly.
 - The default env file is `.env` in the repository root. To use another file, set `MMMAIL_ENV_FILE=/path/to/.env`; PowerShell can also use `-EnvFile path`.
 - The scripts do not create production-grade secrets for you. If `.env` does not exist, they create it from `.env.example` and exit; replace placeholders before running again.
 - Minimal mode requires `MMMAIL_NACOS_ENABLED=false`; standard mode requires `MMMAIL_NACOS_ENABLED=true`.
