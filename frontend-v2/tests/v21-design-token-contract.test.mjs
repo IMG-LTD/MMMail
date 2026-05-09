@@ -9,56 +9,61 @@ const files = {
   globalCss: new URL('../src/styles/global.css', import.meta.url)
 }
 
-const requiredCssVars = [
-  '--mm-app-bg',
-  '--mm-surface',
-  '--mm-surface-soft',
-  '--mm-surface-muted',
-  '--mm-overlay',
-  '--mm-border',
-  '--mm-border-strong',
-  '--mm-focus-ring',
-  '--mm-text-primary',
-  '--mm-text-secondary',
-  '--mm-text-muted',
-  '--mm-text-disabled',
-  '--mm-text-inverse',
-  '--mm-brand-primary',
-  '--mm-brand-primary-hover',
-  '--mm-brand-soft',
-  '--mm-brand-border',
-  '--mm-brand-contrast',
-  '--mm-success',
-  '--mm-info',
-  '--mm-warning',
-  '--mm-danger',
-  '--mm-premium',
-  '--mm-hosted',
-  '--mm-preview',
-  '--mm-product-mail',
-  '--mm-product-calendar',
-  '--mm-product-drive',
-  '--mm-product-docs',
-  '--mm-product-sheets',
-  '--mm-product-pass',
-  '--mm-product-collaboration',
-  '--mm-product-command',
-  '--mm-product-notifications',
-  '--mm-product-admin',
-  '--mm-product-settings',
-  '--mm-product-labs',
-  '--mm-radius-xs',
-  '--mm-radius-sm',
-  '--mm-radius-md',
-  '--mm-radius-lg',
-  '--mm-radius-xl',
-  '--mm-shadow-sm',
-  '--mm-shadow-md',
-  '--mm-shadow-lg',
-  '--mm-duration-fast',
-  '--mm-duration-base',
-  '--mm-duration-slow'
-]
+const requiredSemanticVars = {
+  '--mm-app-bg': 'appBg',
+  '--mm-surface': 'surface',
+  '--mm-surface-soft': 'surfaceSoft',
+  '--mm-surface-muted': 'surfaceMuted',
+  '--mm-overlay': 'overlay',
+  '--mm-border': 'border',
+  '--mm-border-strong': 'borderStrong',
+  '--mm-focus-ring': 'focusRing',
+  '--mm-text-primary': 'textPrimary',
+  '--mm-text-secondary': 'textSecondary',
+  '--mm-text-muted': 'textMuted',
+  '--mm-text-disabled': 'textDisabled',
+  '--mm-text-inverse': 'textInverse',
+  '--mm-brand-primary': 'brandPrimary',
+  '--mm-brand-primary-hover': 'brandPrimaryHover',
+  '--mm-brand-soft': 'brandSoft',
+  '--mm-brand-border': 'brandBorder',
+  '--mm-brand-contrast': 'brandContrast',
+  '--mm-success': 'success',
+  '--mm-info': 'info',
+  '--mm-warning': 'warning',
+  '--mm-danger': 'danger',
+  '--mm-premium': 'premium',
+  '--mm-hosted': 'hosted',
+  '--mm-preview': 'preview',
+  '--mm-product-mail': 'productMail',
+  '--mm-product-calendar': 'productCalendar',
+  '--mm-product-drive': 'productDrive',
+  '--mm-product-docs': 'productDocs',
+  '--mm-product-sheets': 'productSheets',
+  '--mm-product-pass': 'productPass',
+  '--mm-product-collaboration': 'productCollaboration',
+  '--mm-product-command': 'productCommand',
+  '--mm-product-notifications': 'productNotifications',
+  '--mm-product-admin': 'productAdmin',
+  '--mm-product-settings': 'productSettings',
+  '--mm-product-labs': 'productLabs',
+  '--mm-radius-xs': 'radiusXs',
+  '--mm-radius-sm': 'radiusSm',
+  '--mm-radius-md': 'radiusMd',
+  '--mm-radius-lg': 'radiusLg',
+  '--mm-radius-xl': 'radiusXl',
+  '--mm-shadow-sm': 'shadowSm',
+  '--mm-shadow-md': 'shadowMd',
+  '--mm-shadow-lg': 'shadowLg',
+  '--mm-duration-fast': 'durationFast',
+  '--mm-duration-base': 'durationBase',
+  '--mm-duration-slow': 'durationSlow',
+  '--mm-density-factor': 'densityFactor'
+}
+
+function escapeRegExp(value) {
+  return value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+}
 
 test('v2.1 semantic tokens are declared and exported', async () => {
   const [designTokens, naiveTheme, themeTokens, globalCss] = await Promise.all(
@@ -72,8 +77,13 @@ test('v2.1 semantic tokens are declared and exported', async () => {
   assert.match(themeTokens, /buildMmDesignTokens/)
   assert.match(themeTokens, /buildNaiveThemeOverrides/)
 
-  for (const variable of requiredCssVars) {
-    assert.match(globalCss, new RegExp(variable.replaceAll('-', '\\-')))
-    assert.match(designTokens, new RegExp(variable.replace('--mm-', '').replaceAll('-', '[A-Z][a-z]+|[a-z]+')))
+  for (const [variable, property] of Object.entries(requiredSemanticVars)) {
+    assert.match(globalCss, new RegExp(escapeRegExp(variable)))
+    assert.match(designTokens, new RegExp(`\\b${property}: string`))
+    assert.match(designTokens, new RegExp(`'${escapeRegExp(variable)}': tokens\\.${property}`))
   }
+
+  assert.match(naiveTheme, /const isCompact = Number\(tokens\.densityFactor\) < 1/)
+  assert.match(naiveTheme, /heightLarge: isCompact \? '38px' : '42px'/)
+  assert.match(naiveTheme, /heightMedium: isCompact \? '32px' : '36px'/)
 })

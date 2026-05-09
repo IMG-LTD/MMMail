@@ -2,6 +2,8 @@ import type { GlobalThemeOverrides } from 'naive-ui'
 import type { MmDesignTokens } from './tokens'
 
 export function buildNaiveThemeOverrides(tokens: MmDesignTokens): GlobalThemeOverrides {
+  const isCompact = Number(tokens.densityFactor) < 1
+
   return {
     common: {
       bodyColor: tokens.appBg,
@@ -28,8 +30,8 @@ export function buildNaiveThemeOverrides(tokens: MmDesignTokens): GlobalThemeOve
       borderRadiusLarge: tokens.radiusMd,
       borderRadiusMedium: tokens.radiusSm,
       borderRadiusSmall: tokens.radiusXs,
-      heightLarge: '42px',
-      heightMedium: '36px'
+      heightLarge: isCompact ? '38px' : '42px',
+      heightMedium: isCompact ? '32px' : '36px'
     },
     Card: {
       borderRadius: tokens.radiusLg,
