@@ -1,0 +1,185 @@
+export type V21RouteAuth = 'public' | 'required'
+export type V21RouteEntitlement = 'community' | 'premium'
+export type V21RouteHosted = 'none' | 'optional' | 'required'
+export type V21RouteLayout = 'base' | 'blank'
+export type V21RouteMaturity = 'ga' | 'beta' | 'preview'
+export type V21RoutePermission = 'none' | 'user' | 'admin' | 'owner'
+
+export type V21RouteProductArea =
+  | 'admin'
+  | 'auth'
+  | 'calendar'
+  | 'collaboration'
+  | 'command-center'
+  | 'docs'
+  | 'drive'
+  | 'labs'
+  | 'mail'
+  | 'notifications'
+  | 'pass'
+  | 'public'
+  | 'settings'
+  | 'share'
+  | 'sheets'
+  | 'system'
+  | 'workspace'
+
+export interface V21RouteMeta {
+  auth: V21RouteAuth
+  entitlement: V21RouteEntitlement
+  hosted: V21RouteHosted
+  layout: V21RouteLayout
+  maturity: V21RouteMaturity
+  path: string
+  permission: V21RoutePermission
+  productArea: V21RouteProductArea
+  replacementFor: readonly string[]
+}
+
+type RouteMetaOverrides = Partial<V21RouteMeta> & Record<string, unknown>
+
+export const V21_ROUTE_META = [
+  { path: '/', productArea: 'public', layout: 'blank', maturity: 'ga', auth: 'public', permission: 'none', entitlement: 'community', hosted: 'none', replacementFor: ['/suite'] },
+  { path: '/login', productArea: 'auth', layout: 'blank', maturity: 'ga', auth: 'public', permission: 'none', entitlement: 'community', hosted: 'none', replacementFor: [] },
+  { path: '/register', productArea: 'auth', layout: 'blank', maturity: 'ga', auth: 'public', permission: 'none', entitlement: 'community', hosted: 'none', replacementFor: [] },
+  { path: '/boundary', productArea: 'public', layout: 'blank', maturity: 'ga', auth: 'public', permission: 'none', entitlement: 'community', hosted: 'none', replacementFor: [] },
+  { path: '/product-access-blocked', productArea: 'system', layout: 'blank', maturity: 'ga', auth: 'public', permission: 'none', entitlement: 'community', hosted: 'none', replacementFor: [] },
+  { path: '/share/mail/:token', productArea: 'share', layout: 'blank', maturity: 'ga', auth: 'public', permission: 'none', entitlement: 'community', hosted: 'none', replacementFor: [] },
+  { path: '/share/drive/:token', productArea: 'share', layout: 'blank', maturity: 'ga', auth: 'public', permission: 'none', entitlement: 'community', hosted: 'none', replacementFor: ['/public/drive/shares/:token'] },
+  { path: '/public/drive/shares/:token', productArea: 'share', layout: 'blank', maturity: 'ga', auth: 'public', permission: 'none', entitlement: 'community', hosted: 'none', replacementFor: [] },
+  { path: '/share/pass/:token', productArea: 'share', layout: 'blank', maturity: 'ga', auth: 'public', permission: 'none', entitlement: 'community', hosted: 'none', replacementFor: [] },
+  { path: '/onboarding/:storyKey', productArea: 'public', layout: 'blank', maturity: 'beta', auth: 'public', permission: 'none', entitlement: 'community', hosted: 'none', replacementFor: [] },
+  { path: '/failure-modes', productArea: 'system', layout: 'blank', maturity: 'beta', auth: 'public', permission: 'none', entitlement: 'community', hosted: 'none', replacementFor: [] },
+  { path: '/failure-modes/:storyKey', productArea: 'system', layout: 'blank', maturity: 'beta', auth: 'public', permission: 'none', entitlement: 'community', hosted: 'none', replacementFor: [] },
+  { path: '/404', productArea: 'system', layout: 'blank', maturity: 'ga', auth: 'public', permission: 'none', entitlement: 'community', hosted: 'none', replacementFor: [] },
+  { path: '/500', productArea: 'system', layout: 'blank', maturity: 'ga', auth: 'public', permission: 'none', entitlement: 'community', hosted: 'none', replacementFor: [] },
+  { path: '/offline', productArea: 'system', layout: 'blank', maturity: 'ga', auth: 'public', permission: 'none', entitlement: 'community', hosted: 'none', replacementFor: [] },
+  { path: '/maintenance', productArea: 'system', layout: 'blank', maturity: 'ga', auth: 'public', permission: 'none', entitlement: 'community', hosted: 'none', replacementFor: [] },
+  { path: '/workspace', productArea: 'workspace', layout: 'base', maturity: 'ga', auth: 'required', permission: 'user', entitlement: 'community', hosted: 'none', replacementFor: ['/suite'] },
+  { path: '/workspace/today', productArea: 'workspace', layout: 'base', maturity: 'beta', auth: 'required', permission: 'user', entitlement: 'community', hosted: 'none', replacementFor: [] },
+  { path: '/workspace/activity', productArea: 'workspace', layout: 'base', maturity: 'beta', auth: 'required', permission: 'user', entitlement: 'community', hosted: 'none', replacementFor: [] },
+  { path: '/workspace/tasks', productArea: 'workspace', layout: 'base', maturity: 'beta', auth: 'required', permission: 'user', entitlement: 'community', hosted: 'none', replacementFor: [] },
+  { path: '/mail', productArea: 'mail', layout: 'base', maturity: 'ga', auth: 'required', permission: 'user', entitlement: 'community', hosted: 'none', replacementFor: ['/inbox'] },
+  { path: '/mail/inbox', productArea: 'mail', layout: 'base', maturity: 'ga', auth: 'required', permission: 'user', entitlement: 'community', hosted: 'none', replacementFor: ['/inbox'] },
+  { path: '/mail/starred', productArea: 'mail', layout: 'base', maturity: 'ga', auth: 'required', permission: 'user', entitlement: 'community', hosted: 'none', replacementFor: ['/starred'] },
+  { path: '/mail/snoozed', productArea: 'mail', layout: 'base', maturity: 'ga', auth: 'required', permission: 'user', entitlement: 'community', hosted: 'none', replacementFor: ['/snoozed'] },
+  { path: '/mail/drafts', productArea: 'mail', layout: 'base', maturity: 'ga', auth: 'required', permission: 'user', entitlement: 'community', hosted: 'none', replacementFor: ['/drafts'] },
+  { path: '/mail/scheduled', productArea: 'mail', layout: 'base', maturity: 'ga', auth: 'required', permission: 'user', entitlement: 'community', hosted: 'none', replacementFor: ['/scheduled'] },
+  { path: '/mail/outbox', productArea: 'mail', layout: 'base', maturity: 'ga', auth: 'required', permission: 'user', entitlement: 'community', hosted: 'none', replacementFor: ['/outbox'] },
+  { path: '/mail/sent', productArea: 'mail', layout: 'base', maturity: 'ga', auth: 'required', permission: 'user', entitlement: 'community', hosted: 'none', replacementFor: ['/sent'] },
+  { path: '/mail/archive', productArea: 'mail', layout: 'base', maturity: 'ga', auth: 'required', permission: 'user', entitlement: 'community', hosted: 'none', replacementFor: ['/archive'] },
+  { path: '/mail/spam', productArea: 'mail', layout: 'base', maturity: 'ga', auth: 'required', permission: 'user', entitlement: 'community', hosted: 'none', replacementFor: ['/spam'] },
+  { path: '/mail/trash', productArea: 'mail', layout: 'base', maturity: 'ga', auth: 'required', permission: 'user', entitlement: 'community', hosted: 'none', replacementFor: ['/trash'] },
+  { path: '/mail/unread', productArea: 'mail', layout: 'base', maturity: 'ga', auth: 'required', permission: 'user', entitlement: 'community', hosted: 'none', replacementFor: ['/unread'] },
+  { path: '/mail/contacts', productArea: 'mail', layout: 'base', maturity: 'ga', auth: 'required', permission: 'user', entitlement: 'community', hosted: 'none', replacementFor: ['/contacts'] },
+  { path: '/mail/search', productArea: 'mail', layout: 'base', maturity: 'ga', auth: 'required', permission: 'user', entitlement: 'community', hosted: 'none', replacementFor: ['/search'] },
+  { path: '/mail/folders/:folderId', productArea: 'mail', layout: 'base', maturity: 'ga', auth: 'required', permission: 'user', entitlement: 'community', hosted: 'none', replacementFor: ['/folders/:id'] },
+  { path: '/mail/labels/:labelId', productArea: 'mail', layout: 'base', maturity: 'ga', auth: 'required', permission: 'user', entitlement: 'community', hosted: 'none', replacementFor: ['/labels/:id'] },
+  { path: '/mail/conversations/:threadId', productArea: 'mail', layout: 'base', maturity: 'ga', auth: 'required', permission: 'user', entitlement: 'community', hosted: 'none', replacementFor: ['/conversations/:id'] },
+  { path: '/mail/settings', productArea: 'mail', layout: 'base', maturity: 'beta', auth: 'required', permission: 'user', entitlement: 'community', hosted: 'none', replacementFor: [] },
+  { path: '/mail/compose', productArea: 'mail', layout: 'base', maturity: 'ga', auth: 'required', permission: 'user', entitlement: 'community', hosted: 'none', replacementFor: ['/compose'] },
+  { path: '/calendar', productArea: 'calendar', layout: 'base', maturity: 'ga', auth: 'required', permission: 'user', entitlement: 'community', hosted: 'none', replacementFor: [] },
+  { path: '/calendar/day', productArea: 'calendar', layout: 'base', maturity: 'beta', auth: 'required', permission: 'user', entitlement: 'community', hosted: 'none', replacementFor: [] },
+  { path: '/calendar/week', productArea: 'calendar', layout: 'base', maturity: 'beta', auth: 'required', permission: 'user', entitlement: 'community', hosted: 'none', replacementFor: [] },
+  { path: '/calendar/month', productArea: 'calendar', layout: 'base', maturity: 'beta', auth: 'required', permission: 'user', entitlement: 'community', hosted: 'none', replacementFor: [] },
+  { path: '/calendar/rooms', productArea: 'calendar', layout: 'base', maturity: 'preview', auth: 'required', permission: 'user', entitlement: 'premium', hosted: 'none', replacementFor: [] },
+  { path: '/calendar/seats', productArea: 'calendar', layout: 'base', maturity: 'preview', auth: 'required', permission: 'user', entitlement: 'premium', hosted: 'none', replacementFor: [] },
+  { path: '/calendar/resources', productArea: 'calendar', layout: 'base', maturity: 'preview', auth: 'required', permission: 'user', entitlement: 'premium', hosted: 'none', replacementFor: [] },
+  { path: '/calendar/settings', productArea: 'calendar', layout: 'base', maturity: 'beta', auth: 'required', permission: 'user', entitlement: 'community', hosted: 'none', replacementFor: [] },
+  { path: '/drive', productArea: 'drive', layout: 'base', maturity: 'ga', auth: 'required', permission: 'user', entitlement: 'community', hosted: 'none', replacementFor: [] },
+  { path: '/drive/recent', productArea: 'drive', layout: 'base', maturity: 'ga', auth: 'required', permission: 'user', entitlement: 'community', hosted: 'none', replacementFor: [] },
+  { path: '/drive/shared', productArea: 'drive', layout: 'base', maturity: 'ga', auth: 'required', permission: 'user', entitlement: 'community', hosted: 'none', replacementFor: [] },
+  { path: '/drive/starred', productArea: 'drive', layout: 'base', maturity: 'ga', auth: 'required', permission: 'user', entitlement: 'community', hosted: 'none', replacementFor: [] },
+  { path: '/drive/trash', productArea: 'drive', layout: 'base', maturity: 'ga', auth: 'required', permission: 'user', entitlement: 'community', hosted: 'none', replacementFor: [] },
+  { path: '/drive/folders/:folderId', productArea: 'drive', layout: 'base', maturity: 'beta', auth: 'required', permission: 'user', entitlement: 'community', hosted: 'none', replacementFor: [] },
+  { path: '/drive/files/:fileId', productArea: 'drive', layout: 'base', maturity: 'beta', auth: 'required', permission: 'user', entitlement: 'community', hosted: 'none', replacementFor: [] },
+  { path: '/drive/uploads', productArea: 'drive', layout: 'base', maturity: 'beta', auth: 'required', permission: 'user', entitlement: 'community', hosted: 'none', replacementFor: [] },
+  { path: '/drive/storage', productArea: 'drive', layout: 'base', maturity: 'beta', auth: 'required', permission: 'user', entitlement: 'premium', hosted: 'optional', replacementFor: [] },
+  { path: '/drive/admin', productArea: 'drive', layout: 'base', maturity: 'preview', auth: 'required', permission: 'admin', entitlement: 'premium', hosted: 'optional', replacementFor: [] },
+  { path: '/docs', productArea: 'docs', layout: 'base', maturity: 'ga', auth: 'required', permission: 'user', entitlement: 'community', hosted: 'none', replacementFor: [] },
+  { path: '/docs/templates', productArea: 'docs', layout: 'base', maturity: 'beta', auth: 'required', permission: 'user', entitlement: 'community', hosted: 'none', replacementFor: [] },
+  { path: '/docs/:documentId', productArea: 'docs', layout: 'base', maturity: 'ga', auth: 'required', permission: 'user', entitlement: 'community', hosted: 'none', replacementFor: ['/docs/:id'] },
+  { path: '/docs/:documentId/versions', productArea: 'docs', layout: 'base', maturity: 'preview', auth: 'required', permission: 'user', entitlement: 'premium', hosted: 'none', replacementFor: [] },
+  { path: '/docs/:documentId/share', productArea: 'docs', layout: 'base', maturity: 'beta', auth: 'required', permission: 'user', entitlement: 'community', hosted: 'none', replacementFor: [] },
+  { path: '/sheets', productArea: 'sheets', layout: 'base', maturity: 'ga', auth: 'required', permission: 'user', entitlement: 'community', hosted: 'none', replacementFor: [] },
+  { path: '/sheets/import', productArea: 'sheets', layout: 'base', maturity: 'beta', auth: 'required', permission: 'user', entitlement: 'community', hosted: 'none', replacementFor: [] },
+  { path: '/sheets/:sheetId', productArea: 'sheets', layout: 'base', maturity: 'ga', auth: 'required', permission: 'user', entitlement: 'community', hosted: 'none', replacementFor: ['/sheets/:id'] },
+  { path: '/sheets/:sheetId/data-cleaning', productArea: 'sheets', layout: 'base', maturity: 'preview', auth: 'required', permission: 'user', entitlement: 'premium', hosted: 'none', replacementFor: [] },
+  { path: '/sheets/:sheetId/insights', productArea: 'sheets', layout: 'base', maturity: 'preview', auth: 'required', permission: 'user', entitlement: 'premium', hosted: 'none', replacementFor: [] },
+  { path: '/labs', productArea: 'labs', layout: 'base', maturity: 'preview', auth: 'required', permission: 'user', entitlement: 'premium', hosted: 'optional', replacementFor: [] },
+  { path: '/labs/:moduleKey', productArea: 'labs', layout: 'base', maturity: 'preview', auth: 'required', permission: 'user', entitlement: 'premium', hosted: 'optional', replacementFor: [] },
+  { path: '/labs/:moduleKey/settings', productArea: 'labs', layout: 'base', maturity: 'preview', auth: 'required', permission: 'admin', entitlement: 'premium', hosted: 'optional', replacementFor: [] },
+  { path: '/pass', productArea: 'pass', layout: 'base', maturity: 'ga', auth: 'required', permission: 'user', entitlement: 'community', hosted: 'none', replacementFor: [] },
+  { path: '/pass/vault', productArea: 'pass', layout: 'base', maturity: 'ga', auth: 'required', permission: 'user', entitlement: 'community', hosted: 'none', replacementFor: [] },
+  { path: '/pass/vaults/:vaultId', productArea: 'pass', layout: 'base', maturity: 'beta', auth: 'required', permission: 'user', entitlement: 'community', hosted: 'none', replacementFor: [] },
+  { path: '/pass/items/:itemId', productArea: 'pass', layout: 'base', maturity: 'beta', auth: 'required', permission: 'user', entitlement: 'community', hosted: 'none', replacementFor: [] },
+  { path: '/pass/shared', productArea: 'pass', layout: 'base', maturity: 'preview', auth: 'required', permission: 'user', entitlement: 'premium', hosted: 'none', replacementFor: ['/pass/shared-library'] },
+  { path: '/pass/secure-links', productArea: 'pass', layout: 'base', maturity: 'preview', auth: 'required', permission: 'user', entitlement: 'premium', hosted: 'none', replacementFor: [] },
+  { path: '/pass/aliases', productArea: 'pass', layout: 'base', maturity: 'preview', auth: 'required', permission: 'user', entitlement: 'premium', hosted: 'none', replacementFor: ['/pass/alias-center'] },
+  { path: '/pass/mailbox', productArea: 'pass', layout: 'base', maturity: 'preview', auth: 'required', permission: 'user', entitlement: 'premium', hosted: 'none', replacementFor: [] },
+  { path: '/pass/policies', productArea: 'pass', layout: 'base', maturity: 'preview', auth: 'required', permission: 'admin', entitlement: 'premium', hosted: 'none', replacementFor: ['/pass/business-policy'] },
+  { path: '/pass/import', productArea: 'pass', layout: 'base', maturity: 'beta', auth: 'required', permission: 'user', entitlement: 'community', hosted: 'none', replacementFor: [] },
+  { path: '/pass/monitor', productArea: 'pass', layout: 'base', maturity: 'preview', auth: 'required', permission: 'user', entitlement: 'premium', hosted: 'none', replacementFor: [] },
+  { path: '/collaboration', productArea: 'collaboration', layout: 'base', maturity: 'beta', auth: 'required', permission: 'user', entitlement: 'community', hosted: 'none', replacementFor: [] },
+  { path: '/collaboration/projects', productArea: 'collaboration', layout: 'base', maturity: 'beta', auth: 'required', permission: 'user', entitlement: 'community', hosted: 'none', replacementFor: [] },
+  { path: '/collaboration/projects/:projectId', productArea: 'collaboration', layout: 'base', maturity: 'beta', auth: 'required', permission: 'user', entitlement: 'community', hosted: 'none', replacementFor: [] },
+  { path: '/collaboration/tasks', productArea: 'collaboration', layout: 'base', maturity: 'beta', auth: 'required', permission: 'user', entitlement: 'community', hosted: 'none', replacementFor: [] },
+  { path: '/collaboration/tasks/:taskId', productArea: 'collaboration', layout: 'base', maturity: 'beta', auth: 'required', permission: 'user', entitlement: 'community', hosted: 'none', replacementFor: [] },
+  { path: '/collaboration/knowledge', productArea: 'collaboration', layout: 'base', maturity: 'preview', auth: 'required', permission: 'user', entitlement: 'premium', hosted: 'none', replacementFor: [] },
+  { path: '/collaboration/activity', productArea: 'collaboration', layout: 'base', maturity: 'beta', auth: 'required', permission: 'user', entitlement: 'community', hosted: 'none', replacementFor: [] },
+  { path: '/command-center', productArea: 'command-center', layout: 'base', maturity: 'preview', auth: 'required', permission: 'user', entitlement: 'premium', hosted: 'optional', replacementFor: [] },
+  { path: '/command-center/commands', productArea: 'command-center', layout: 'base', maturity: 'preview', auth: 'required', permission: 'user', entitlement: 'premium', hosted: 'optional', replacementFor: [] },
+  { path: '/command-center/commands/:commandId', productArea: 'command-center', layout: 'base', maturity: 'preview', auth: 'required', permission: 'user', entitlement: 'premium', hosted: 'optional', replacementFor: [] },
+  { path: '/command-center/runs', productArea: 'command-center', layout: 'base', maturity: 'preview', auth: 'required', permission: 'user', entitlement: 'premium', hosted: 'optional', replacementFor: [] },
+  { path: '/command-center/runs/:runId', productArea: 'command-center', layout: 'base', maturity: 'preview', auth: 'required', permission: 'user', entitlement: 'premium', hosted: 'optional', replacementFor: [] },
+  { path: '/command-center/workflows', productArea: 'command-center', layout: 'base', maturity: 'preview', auth: 'required', permission: 'admin', entitlement: 'premium', hosted: 'optional', replacementFor: [] },
+  { path: '/command-center/workflows/:workflowId', productArea: 'command-center', layout: 'base', maturity: 'preview', auth: 'required', permission: 'admin', entitlement: 'premium', hosted: 'optional', replacementFor: [] },
+  { path: '/command-center/audit', productArea: 'command-center', layout: 'base', maturity: 'preview', auth: 'required', permission: 'admin', entitlement: 'premium', hosted: 'optional', replacementFor: [] },
+  { path: '/notifications', productArea: 'notifications', layout: 'base', maturity: 'beta', auth: 'required', permission: 'user', entitlement: 'community', hosted: 'none', replacementFor: [] },
+  { path: '/notifications/inbox', productArea: 'notifications', layout: 'base', maturity: 'beta', auth: 'required', permission: 'user', entitlement: 'community', hosted: 'none', replacementFor: [] },
+  { path: '/notifications/rules', productArea: 'notifications', layout: 'base', maturity: 'preview', auth: 'required', permission: 'user', entitlement: 'premium', hosted: 'none', replacementFor: [] },
+  { path: '/notifications/subscriptions', productArea: 'notifications', layout: 'base', maturity: 'beta', auth: 'required', permission: 'user', entitlement: 'community', hosted: 'none', replacementFor: [] },
+  { path: '/notifications/templates', productArea: 'notifications', layout: 'base', maturity: 'preview', auth: 'required', permission: 'admin', entitlement: 'premium', hosted: 'none', replacementFor: [] },
+  { path: '/notifications/compose', productArea: 'notifications', layout: 'base', maturity: 'preview', auth: 'required', permission: 'admin', entitlement: 'premium', hosted: 'none', replacementFor: [] },
+  { path: '/notifications/analytics', productArea: 'notifications', layout: 'base', maturity: 'preview', auth: 'required', permission: 'admin', entitlement: 'premium', hosted: 'optional', replacementFor: [] },
+  { path: '/admin', productArea: 'admin', layout: 'base', maturity: 'beta', auth: 'required', permission: 'admin', entitlement: 'community', hosted: 'none', replacementFor: ['/organizations'] },
+  { path: '/admin/users', productArea: 'admin', layout: 'base', maturity: 'beta', auth: 'required', permission: 'admin', entitlement: 'community', hosted: 'none', replacementFor: ['/organizations/members'] },
+  { path: '/admin/roles', productArea: 'admin', layout: 'base', maturity: 'preview', auth: 'required', permission: 'admin', entitlement: 'premium', hosted: 'none', replacementFor: [] },
+  { path: '/admin/organizations', productArea: 'admin', layout: 'base', maturity: 'beta', auth: 'required', permission: 'admin', entitlement: 'community', hosted: 'none', replacementFor: ['/organizations'] },
+  { path: '/admin/domains', productArea: 'admin', layout: 'base', maturity: 'beta', auth: 'required', permission: 'admin', entitlement: 'community', hosted: 'none', replacementFor: ['/organizations/domains'] },
+  { path: '/admin/policies', productArea: 'admin', layout: 'base', maturity: 'beta', auth: 'required', permission: 'admin', entitlement: 'community', hosted: 'none', replacementFor: ['/organizations/policy'] },
+  { path: '/admin/audit', productArea: 'admin', layout: 'base', maturity: 'beta', auth: 'required', permission: 'admin', entitlement: 'community', hosted: 'none', replacementFor: ['/organizations/audit'] },
+  { path: '/admin/alerts', productArea: 'admin', layout: 'base', maturity: 'preview', auth: 'required', permission: 'admin', entitlement: 'premium', hosted: 'optional', replacementFor: ['/organizations/monitor'] },
+  { path: '/admin/integrations', productArea: 'admin', layout: 'base', maturity: 'preview', auth: 'required', permission: 'admin', entitlement: 'premium', hosted: 'optional', replacementFor: [] },
+  { path: '/admin/billing', productArea: 'admin', layout: 'base', maturity: 'preview', auth: 'required', permission: 'admin', entitlement: 'premium', hosted: 'required', replacementFor: ['/business', '/suite/billing'] },
+  { path: '/admin/system', productArea: 'admin', layout: 'base', maturity: 'beta', auth: 'required', permission: 'admin', entitlement: 'community', hosted: 'optional', replacementFor: [] },
+  { path: '/admin/risk', productArea: 'admin', layout: 'base', maturity: 'preview', auth: 'required', permission: 'admin', entitlement: 'premium', hosted: 'optional', replacementFor: ['/security'] },
+  { path: '/settings', productArea: 'settings', layout: 'base', maturity: 'ga', auth: 'required', permission: 'user', entitlement: 'community', hosted: 'none', replacementFor: [] },
+  { path: '/settings/profile', productArea: 'settings', layout: 'base', maturity: 'ga', auth: 'required', permission: 'user', entitlement: 'community', hosted: 'none', replacementFor: [] },
+  { path: '/settings/security', productArea: 'settings', layout: 'base', maturity: 'ga', auth: 'required', permission: 'user', entitlement: 'community', hosted: 'none', replacementFor: ['/security'] },
+  { path: '/settings/devices', productArea: 'settings', layout: 'base', maturity: 'ga', auth: 'required', permission: 'user', entitlement: 'community', hosted: 'none', replacementFor: [] },
+  { path: '/settings/notifications', productArea: 'settings', layout: 'base', maturity: 'beta', auth: 'required', permission: 'user', entitlement: 'community', hosted: 'none', replacementFor: [] },
+  { path: '/settings/privacy', productArea: 'settings', layout: 'base', maturity: 'beta', auth: 'required', permission: 'user', entitlement: 'community', hosted: 'none', replacementFor: [] },
+  { path: '/settings/integrations', productArea: 'settings', layout: 'base', maturity: 'preview', auth: 'required', permission: 'user', entitlement: 'premium', hosted: 'optional', replacementFor: [] },
+  { path: '/settings/storage', productArea: 'settings', layout: 'base', maturity: 'beta', auth: 'required', permission: 'user', entitlement: 'community', hosted: 'optional', replacementFor: [] },
+  { path: '/settings/billing', productArea: 'settings', layout: 'base', maturity: 'preview', auth: 'required', permission: 'user', entitlement: 'premium', hosted: 'required', replacementFor: ['/business', '/suite/billing'] },
+  { path: '/settings/audit', productArea: 'settings', layout: 'base', maturity: 'preview', auth: 'required', permission: 'admin', entitlement: 'premium', hosted: 'optional', replacementFor: ['/organizations/audit'] },
+  { path: '/settings/help', productArea: 'settings', layout: 'base', maturity: 'ga', auth: 'required', permission: 'user', entitlement: 'community', hosted: 'none', replacementFor: [] }
+] as const satisfies readonly V21RouteMeta[]
+
+export function findV21RouteMeta(path: string): V21RouteMeta {
+  const route = V21_ROUTE_META.find(item => item.path === path)
+
+  if (!route) {
+    throw new Error(`Missing v2.1 route metadata for ${path}`)
+  }
+
+  return route
+}
+
+export function buildRouteMeta(path: string, overrides: RouteMetaOverrides = {}) {
+  return {
+    ...findV21RouteMeta(path),
+    ...overrides
+  }
+}

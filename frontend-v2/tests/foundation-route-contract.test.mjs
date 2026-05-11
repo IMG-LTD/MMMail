@@ -14,7 +14,7 @@ test('foundation route contract freezes canonical and same-shape compatibility e
   assert.match(routesContent, /path: '\/mail\/:id'/)
   assert.match(routesContent, /path: '\/public\/drive\/shares\/:token'/)
   assert.match(routesContent, /path: '\/folders\/:id'/)
-  assert.doesNotMatch(routesContent, /\/folders\/:folderId/)
+  assert.doesNotMatch(routesContent, /path: '\/folders\/:folderId'/)
   assert.match(registryContent, /legacy: '\/folders\/:folderId', canonical: '\/folders\/:id'/)
   assert.match(routesContent, /const redirectRoutes: RouteRecordRaw\[] = redirectRegistry\.map/)
 })

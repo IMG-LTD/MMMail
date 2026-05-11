@@ -20,13 +20,14 @@ defineProps<{
   flex-direction: column;
   gap: 12px;
   padding: 18px;
+  background: var(--mm-surface);
 }
 
 strong {
   font-size: 28px;
   line-height: 1;
   letter-spacing: -0.04em;
-  color: var(--mm-ink);
+  color: var(--mm-text-primary);
 }
 
 span:last-child {

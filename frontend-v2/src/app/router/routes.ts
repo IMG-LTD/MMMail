@@ -1,5 +1,6 @@
 import type { RouteRecordRaw } from 'vue-router'
 import { redirectRegistry } from './redirect-registry'
+import { buildRouteMeta } from './v21-route-meta'
 
 const BaseLayoutMeta = { layout: 'base' as const }
 const BlankLayoutMeta = { layout: 'blank' as const }
@@ -20,7 +21,8 @@ const StorySurfaceView = () => import('@/views/public/StorySurfaceView.vue')
 const publicRoutes: RouteRecordRaw[] = [
   {
     path: '/',
-    redirect: '/suite'
+    redirect: '/workspace',
+    meta: buildRouteMeta('/', BlankLayoutMeta)
   },
   {
     path: '/login',
@@ -99,6 +101,47 @@ const publicRoutes: RouteRecordRaw[] = [
 ]
 
 const mailRoutes: RouteRecordRaw[] = [
+  {
+    path: '/mail',
+    redirect: '/mail/inbox',
+    meta: buildRouteMeta('/mail', FlushWorkspaceMeta)
+  },
+  {
+    path: '/mail/inbox',
+    component: MailSurfaceView,
+    meta: buildRouteMeta('/mail/inbox', {
+      ...FlushWorkspaceMeta,
+      label: 'Mail',
+      surfaceKey: 'inbox'
+    })
+  },
+  ...[
+    { path: '/mail/starred', surfaceKey: 'starred', label: 'Mail' },
+    { path: '/mail/snoozed', surfaceKey: 'snoozed', label: 'Mail' },
+    { path: '/mail/drafts', surfaceKey: 'drafts', label: 'Mail' },
+    { path: '/mail/scheduled', surfaceKey: 'scheduled', label: 'Mail' },
+    { path: '/mail/outbox', surfaceKey: 'outbox', label: 'Mail' },
+    { path: '/mail/sent', surfaceKey: 'sent', label: 'Mail' },
+    { path: '/mail/archive', surfaceKey: 'archive', label: 'Mail' },
+    { path: '/mail/spam', surfaceKey: 'spam', label: 'Mail' },
+    { path: '/mail/trash', surfaceKey: 'trash', label: 'Mail' },
+    { path: '/mail/unread', surfaceKey: 'unread', label: 'Mail' },
+    { path: '/mail/contacts', surfaceKey: 'contacts', label: 'Mail' },
+    { path: '/mail/search', surfaceKey: 'search', label: 'Mail' },
+    { path: '/mail/compose', surfaceKey: 'compose', label: 'Mail' },
+    { path: '/mail/settings', surfaceKey: 'settings', label: 'Mail' },
+    { path: '/mail/conversations/:threadId', surfaceKey: 'conversation', label: 'Mail' },
+    { path: '/mail/folders/:folderId', surfaceKey: 'archive', label: 'Mail' },
+    { path: '/mail/labels/:labelId', surfaceKey: 'starred', label: 'Mail' }
+  ].map(item => ({
+    path: item.path,
+    component: MailSurfaceView,
+    meta: buildRouteMeta(item.path, {
+      ...FlushWorkspaceMeta,
+      label: item.label,
+      surfaceKey: item.surfaceKey
+    })
+  })),
   ...[
     { path: '/inbox', surfaceKey: 'inbox', label: 'Mail' },
     { path: '/starred', surfaceKey: 'starred', label: 'Mail' },
@@ -137,6 +180,26 @@ const mailRoutes: RouteRecordRaw[] = [
 
 const workspaceRoutes: RouteRecordRaw[] = [
   {
+    path: '/workspace',
+    component: SuiteSectionView,
+    meta: buildRouteMeta('/workspace', { ...FlushWorkspaceMeta, label: 'Workspace', surfaceKey: 'overview' })
+  },
+  {
+    path: '/workspace/today',
+    component: SuiteSectionView,
+    meta: buildRouteMeta('/workspace/today', { ...FlushWorkspaceMeta, label: 'Workspace', surfaceKey: 'overview' })
+  },
+  {
+    path: '/workspace/activity',
+    component: SuiteSectionView,
+    meta: buildRouteMeta('/workspace/activity', { ...FlushWorkspaceMeta, label: 'Workspace', surfaceKey: 'operations' })
+  },
+  {
+    path: '/workspace/tasks',
+    component: SuiteSectionView,
+    meta: buildRouteMeta('/workspace/tasks', { ...FlushWorkspaceMeta, label: 'Workspace', surfaceKey: 'operations' })
+  },
+  {
     path: '/calendar',
     component: () => import('@/views/app/CalendarView.vue'),
     meta: { ...FlushWorkspaceMeta, label: 'Calendar' }
@@ -144,7 +207,7 @@ const workspaceRoutes: RouteRecordRaw[] = [
   {
     path: '/drive',
     component: DriveSectionView,
-    meta: { ...FlushWorkspaceMeta, label: 'Drive', surfaceKey: 'drive' }
+    meta: buildRouteMeta('/drive', { ...FlushWorkspaceMeta, label: 'Drive', surfaceKey: 'drive' })
   },
   {
     path: '/drive/shared',

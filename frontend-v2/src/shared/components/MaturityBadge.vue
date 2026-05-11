@@ -54,20 +54,20 @@ const label = computed(() => props.text ?? defaultLabels[props.level])
 }
 
 .maturity-badge--ga {
-  border-color: color-mix(in srgb, var(--mm-primary) 20%, white);
-  background: color-mix(in srgb, var(--mm-primary) 10%, white);
-  color: var(--mm-primary);
+  border-color: color-mix(in srgb, var(--mm-brand-primary) 20%, white);
+  background: color-mix(in srgb, var(--mm-brand-primary) 10%, white);
+  color: var(--mm-brand-primary);
 }
 
 .maturity-badge--beta {
-  border-color: color-mix(in srgb, var(--mm-docs) 22%, white);
-  background: color-mix(in srgb, var(--mm-docs) 12%, white);
-  color: var(--mm-docs);
+  border-color: color-mix(in srgb, var(--mm-product-docs) 22%, white);
+  background: color-mix(in srgb, var(--mm-product-docs) 12%, white);
+  color: var(--mm-product-docs);
 }
 
 .maturity-badge--preview {
-  border-color: color-mix(in srgb, var(--mm-labs) 28%, white);
-  background: color-mix(in srgb, var(--mm-labs) 16%, white);
-  color: var(--mm-labs);
+  border-color: color-mix(in srgb, var(--mm-preview) 28%, white);
+  background: color-mix(in srgb, var(--mm-preview) 16%, white);
+  color: var(--mm-preview);
 }
 </style>
