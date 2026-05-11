@@ -32,17 +32,56 @@ export interface DocsNoteDetail {
   syncVersion: string
 }
 
+export interface DocsComment {
+  id: string
+  body: string
+  authorEmail: string
+  createdAt: string
+}
+
+export interface DocsVersion {
+  id: string
+  version: number
+  createdAt: string
+  authorEmail: string
+}
+
+export interface DocsSharePayload {
+  email: string
+  permission: DocsPermission
+}
+
 export function listDocsNotes(token: string, keyword = '') {
-  return httpClient.get<ApiResponse<DocsNoteSummary[]>>('/api/v1/docs/notes', {
+  return httpClient.get<ApiResponse<DocsNoteSummary[]>>('/api/v2/docs', {
     token,
     query: { keyword, limit: 100 }
   })
 }
 
 export function readDocsNote(noteId: string, token: string) {
-  return httpClient.get<ApiResponse<DocsNoteDetail>>(`/api/v1/docs/notes/${noteId}`, { token })
+  return httpClient.get<ApiResponse<DocsNoteDetail>>(`/api/v2/docs/${noteId}`, { token })
 }
 
 export function updateDocsNote(noteId: string, body: Record<string, unknown>, token: string) {
-  return httpClient.put<ApiResponse<DocsNoteDetail>>(`/api/v1/docs/notes/${noteId}`, { body, token })
+  return httpClient.patch<ApiResponse<DocsNoteDetail>>(`/api/v2/docs/${noteId}`, { body, token })
+}
+
+export function createDocsNote(body: Record<string, unknown>, token: string) {
+  return httpClient.post<ApiResponse<DocsNoteDetail>>('/api/v2/docs', { body, token })
+}
+
+export function listDocsComments(noteId: string, token: string) {
+  return httpClient.get<ApiResponse<DocsComment[]>>(`/api/v2/docs/${noteId}/comments`, { token })
+}
+
+export function createDocsComment(noteId: string, body: Record<string, unknown>, token: string) {
+  return httpClient.post<ApiResponse<DocsComment>>(`/api/v2/docs/${noteId}/comments`, { body, token })
+}
+
+export function listDocsVersions(noteId: string, token: string) {
+  return httpClient.get<ApiResponse<DocsVersion[]>>(`/api/v2/docs/${noteId}/versions`, { token })
+}
+
+export function shareDocsNote(noteId: string, body: DocsSharePayload, token: string) {
+  return httpClient.post<ApiResponse<DocsNoteDetail>>(`/api/v2/docs/${noteId}/share`, { body, token })
 }

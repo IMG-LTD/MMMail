@@ -1,52 +1,104 @@
 <script setup lang="ts">
-import { ref, watch } from 'vue'
+import { computed, ref, watch } from 'vue'
 import CompactPageHeader from '@/shared/components/CompactPageHeader.vue'
 import { lt, useLocaleText } from '@/locales'
 import { useScopeGuard } from '@/shared/composables/useScopeGuard'
-import { httpClient } from '@/service/request/http'
-import type { ApiResponse } from '@/shared/types/api'
-
-interface WorkspaceAggregationSummary {
-  surfaces: string[]
-}
+import {
+  listCollaborationActivity,
+  listCollaborationProjects,
+  listCollaborationTasks,
+  type CollaborationActivity,
+  type CollaborationProject,
+  type CollaborationTask
+} from '@/service/api/collaboration'
+import { useAuthStore } from '@/store/modules/auth'
 
 const { tr } = useLocaleText()
+const authStore = useAuthStore()
 const { requestHeaders } = useScopeGuard()
-const aggregationSurfaces = ref<string[]>([])
-let aggregationRequestToken = 0
-const cards = [
-  [lt('共享文档', '共享文件', 'Shared Docs'), '14', lt('Beta 写作空间中仍有待响应项。', 'Beta 寫作空間中仍有待回應項目。', 'Pending responses across beta writing spaces')],
-  [lt('云盘审阅', '雲端硬碟審閱', 'Drive Reviews'), '8', lt('文件仍在等待协作者批准。', '檔案仍在等待協作者批准。', 'Files waiting for collaborator approval')],
-  [lt('日历占位', '日曆保留', 'Calendar Holds'), '3', lt('时间提议仍需要回复。', '時間提議仍需要回覆。', 'Time proposals requiring a reply')]
-]
+const projects = ref<CollaborationProject[]>([])
+const tasks = ref<CollaborationTask[]>([])
+const activity = ref<CollaborationActivity[]>([])
+const collaborationLoading = ref(false)
+const loadError = ref('')
+let latestCollaborationRequest = 0
 
-async function loadAggregationSurfaces() {
-  const response = await httpClient.get<ApiResponse<WorkspaceAggregationSummary>>('/api/v2/workspace/aggregation', {
-    scopeHeaders: requestHeaders.value
-  })
-  return response.data.surfaces
+const statusCopy = computed(() => {
+  if (!authStore.accessToken) {
+    return tr(lt('登录后即可读取协作项目。', '登入後即可讀取協作專案。', 'Sign in to load collaboration projects.'))
+  }
+
+  if (loadError.value) {
+    return loadError.value
+  }
+
+  return collaborationLoading.value
+    ? tr(lt('正在读取协作运行时。', '正在讀取協作執行期。', 'Loading collaboration runtime.'))
+    : `${projects.value.length} ${tr(lt('个项目', '個專案', 'projects'))} · ${tasks.value.length} ${tr(lt('个任务', '個任務', 'tasks'))}`
+})
+
+const summaryCards = computed(() => [
+  [lt('项目', '專案', 'Projects'), `${projects.value.length}`, statusCopy.value],
+  [lt('任务', '任務', 'Tasks'), `${tasks.value.length}`, tr(lt('来自当前组织范围。', '來自目前組織範圍。', 'Loaded from the current organization scope.'))],
+  [lt('活动', '活動', 'Activity'), `${activity.value.length}`, tr(lt('最近协作事件。', '最近協作事件。', 'Recent collaboration events.'))]
+])
+
+function clearCollaborationState() {
+  projects.value = []
+  tasks.value = []
+  activity.value = []
+  loadError.value = ''
+  collaborationLoading.value = false
+}
+
+function resolveErrorMessage(error: unknown) {
+  return error instanceof Error
+    ? error.message
+    : tr(lt('读取协作数据失败。', '讀取協作資料失敗。', 'Failed to load collaboration data.'))
+}
+
+async function loadCollaboration() {
+  const requestId = ++latestCollaborationRequest
+  const requestToken = authStore.accessToken
+  const scopeHeaders = requestHeaders.value
+  if (!requestToken) {
+    clearCollaborationState()
+    return
+  }
+
+  collaborationLoading.value = true
+  loadError.value = ''
+
+  try {
+    const options = { scopeHeaders, token: requestToken }
+    const [nextProjects, nextTasks, nextActivity] = await Promise.all([
+      listCollaborationProjects(options),
+      listCollaborationTasks(options),
+      listCollaborationActivity(options)
+    ])
+    if (requestId !== latestCollaborationRequest || requestToken !== authStore.accessToken) {
+      return
+    }
+    projects.value = Array.isArray(nextProjects) ? nextProjects : []
+    tasks.value = Array.isArray(nextTasks) ? nextTasks : []
+    activity.value = Array.isArray(nextActivity) ? nextActivity : []
+  } catch (error) {
+    if (requestId !== latestCollaborationRequest || requestToken !== authStore.accessToken) {
+      return
+    }
+    clearCollaborationState()
+    loadError.value = resolveErrorMessage(error)
+  } finally {
+    if (requestId === latestCollaborationRequest && requestToken === authStore.accessToken) {
+      collaborationLoading.value = false
+    }
+  }
 }
 
 watch(
-  requestHeaders,
+  () => [authStore.accessToken, JSON.stringify(requestHeaders.value)],
   () => {
-    const requestToken = ++aggregationRequestToken
-
-    void loadAggregationSurfaces()
-      .then(surfaces => {
-        if (requestToken !== aggregationRequestToken) {
-          return
-        }
-
-        aggregationSurfaces.value = surfaces
-      })
-      .catch(() => {
-        if (requestToken !== aggregationRequestToken) {
-          return
-        }
-
-        aggregationSurfaces.value = []
-      })
+    void loadCollaboration()
   },
   { immediate: true }
 )
@@ -66,16 +118,27 @@ watch(
       <span class="metric-chip">{{ tr(lt('当前筛选：共享工作', '目前篩選：共享工作', 'Current filter: Shared work')) }}</span>
       <span class="metric-chip">{{ tr(lt('感知组织访问范围', '感知組織存取範圍', 'Org access aware')) }}</span>
       <span class="metric-chip">{{ tr(lt('不含邮件的摘要', '不含郵件的摘要', 'Mail-free summaries')) }}</span>
-      <span v-for="surface in aggregationSurfaces" :key="surface" class="metric-chip">{{ surface }}</span>
+      <span v-for="project in projects" :key="project.id" class="metric-chip">{{ project.name }}</span>
     </div>
 
     <div class="collaboration-grid">
-      <article v-for="([title, value, copy], index) in cards" :key="index" class="surface-card collaboration-card">
+      <article v-for="([title, value, copy], index) in summaryCards" :key="index" class="surface-card collaboration-card">
         <span class="section-label">{{ tr(title) }}</span>
         <strong>{{ value }}</strong>
-        <p class="page-subtitle">{{ tr(copy) }}</p>
+        <p class="page-subtitle">{{ copy }}</p>
       </article>
     </div>
+
+    <article class="surface-card collaboration-activity">
+      <span class="section-label">{{ tr(lt('最近活动', '最近活動', 'Recent activity')) }}</span>
+      <p v-if="!activity.length" class="page-subtitle">{{ statusCopy }}</p>
+      <ul v-else>
+        <li v-for="item in activity" :key="item.id">
+          <strong>{{ item.title }}</strong>
+          <span>{{ item.product }} · {{ item.occurredAt }}</span>
+        </li>
+      </ul>
+    </article>
   </section>
 </template>
 
@@ -94,6 +157,25 @@ watch(
 
 .collaboration-card {
   padding: 20px;
+}
+
+.collaboration-activity {
+  display: grid;
+  gap: 12px;
+  padding: 20px;
+}
+
+.collaboration-activity ul {
+  display: grid;
+  gap: 10px;
+  padding: 0;
+  margin: 0;
+  list-style: none;
+}
+
+.collaboration-activity li {
+  display: grid;
+  gap: 4px;
 }
 
 .collaboration-card strong {

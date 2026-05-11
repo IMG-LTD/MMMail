@@ -53,17 +53,50 @@ export interface SheetsWorkbookDetail extends SheetsWorkbookSummary {
   canRestoreVersions: boolean
 }
 
+export interface SheetsImportPayload {
+  format: SheetsImportFormat
+  content: string
+}
+
+export interface SheetsCleaningRulePayload {
+  column: string
+  operation: string
+}
+
+export interface SheetsInsight {
+  id: string
+  title: string
+  summary: string
+  severity: 'info' | 'warning' | 'critical'
+}
+
 export function listSheetsWorkbooks(token: string) {
-  return httpClient.get<ApiResponse<SheetsWorkbookSummary[]>>('/api/v1/sheets/workbooks', {
+  return httpClient.get<ApiResponse<SheetsWorkbookSummary[]>>('/api/v2/sheets', {
     token,
     query: { limit: 100 }
   })
 }
 
 export function readSheetsWorkbook(workbookId: string, token: string) {
-  return httpClient.get<ApiResponse<SheetsWorkbookDetail>>(`/api/v1/sheets/workbooks/${workbookId}`, { token })
+  return httpClient.get<ApiResponse<SheetsWorkbookDetail>>(`/api/v2/sheets/${workbookId}`, { token })
 }
 
 export function updateSheetsWorkbookCells(workbookId: string, body: Record<string, unknown>, token: string) {
-  return httpClient.put<ApiResponse<SheetsWorkbookDetail>>(`/api/v1/sheets/workbooks/${workbookId}/cells`, { body, token })
+  return httpClient.patch<ApiResponse<SheetsWorkbookDetail>>(`/api/v2/sheets/${workbookId}`, { body, token })
+}
+
+export function createSheetsWorkbook(body: Record<string, unknown>, token: string) {
+  return httpClient.post<ApiResponse<SheetsWorkbookDetail>>('/api/v2/sheets', { body, token })
+}
+
+export function importSheetsWorkbook(workbookId: string, body: SheetsImportPayload, token: string) {
+  return httpClient.post<ApiResponse<SheetsWorkbookDetail>>(`/api/v2/sheets/${workbookId}/imports`, { body, token })
+}
+
+export function createSheetsCleaningRule(workbookId: string, body: SheetsCleaningRulePayload, token: string) {
+  return httpClient.post<ApiResponse<SheetsWorkbookDetail>>(`/api/v2/sheets/${workbookId}/cleaning-rules`, { body, token })
+}
+
+export function listSheetsInsights(workbookId: string, token: string) {
+  return httpClient.get<ApiResponse<SheetsInsight[]>>(`/api/v2/sheets/${workbookId}/insights`, { token })
 }
