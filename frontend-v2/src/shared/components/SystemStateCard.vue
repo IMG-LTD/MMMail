@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { RouterLink } from 'vue-router'
 import { useLocaleText, type TextLike } from '@/locales'
 
 const { tr } = useLocaleText()
@@ -21,8 +22,8 @@ defineProps<{
       <h1>{{ tr(title) }}</h1>
       <p>{{ tr(description) }}</p>
       <div class="system-state__actions">
-        <a class="system-state__primary" href="/suite">{{ tr(primaryLabel) }}</a>
-        <a class="system-state__secondary" href="/boundary">{{ tr(secondaryLabel) }}</a>
+        <RouterLink class="system-state__primary" to="/workspace">{{ tr(primaryLabel) }}</RouterLink>
+        <RouterLink class="system-state__secondary" to="/boundary">{{ tr(secondaryLabel) }}</RouterLink>
       </div>
     </article>
   </section>

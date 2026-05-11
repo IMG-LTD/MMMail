@@ -49,33 +49,33 @@ export interface PublicPassShare {
 }
 
 export function readPublicShareCapabilities() {
-  return httpClient.get<ApiResponse<PublicShareCapabilities>>('/api/v2/public-share/capabilities')
+  return httpClient.get<ApiResponse<PublicShareCapabilities>>('/api/v2/share/capabilities')
 }
 
 export function readPublicMailShare(token: string) {
-  return httpClient.get<ApiResponse<PublicMailShare>>(`/api/v1/public/mail/secure-links/${token}`)
+  return httpClient.get<ApiResponse<PublicMailShare>>(`/api/v2/share/mail/${token}`)
 }
 
 export function downloadPublicMailAttachment(token: string, attachmentId: string) {
-  return httpClient.getBlob(`/api/v1/public/mail/secure-links/${token}/attachments/${attachmentId}/download`)
+  return httpClient.getBlob(`/api/v2/share/mail/${token}/attachments/${attachmentId}/download`)
 }
 
 export function readPublicDriveShareMetadata(token: string) {
-  return httpClient.get<ApiResponse<PublicDriveShareMetadata>>(`/api/v1/public/drive/shares/${token}/metadata`)
+  return httpClient.get<ApiResponse<PublicDriveShareMetadata>>(`/api/v2/share/drive/${token}`)
 }
 
 export function listPublicDriveShareItems(token: string, password?: string) {
-  return httpClient.get<ApiResponse<unknown[]>>(`/api/v1/public/drive/shares/${token}/items`, {
+  return httpClient.get<ApiResponse<unknown[]>>(`/api/v2/share/drive/${token}/items`, {
     headers: password ? { 'X-Drive-Share-Password': password } : undefined
   })
 }
 
 export function downloadPublicDriveShareItem(token: string, itemId: string, password?: string) {
-  return httpClient.getBlob(`/api/v1/public/drive/shares/${token}/items/${itemId}/download`, {
+  return httpClient.getBlob(`/api/v2/share/drive/${token}/items/${itemId}/download`, {
     headers: password ? { 'X-Drive-Share-Password': password } : undefined
   })
 }
 
 export function readPublicPassShare(token: string) {
-  return httpClient.get<ApiResponse<PublicPassShare>>(`/api/v1/public/pass/secure-links/${token}`)
+  return httpClient.get<ApiResponse<PublicPassShare>>(`/api/v2/share/pass/${token}`)
 }

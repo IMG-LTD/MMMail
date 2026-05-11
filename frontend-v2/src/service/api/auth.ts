@@ -15,31 +15,31 @@ function unwrapResponse<T>(response: ApiResponse<T>) {
 }
 
 export async function login(payload: LoginRequest) {
-  const response = await httpClient.post<ApiResponse<AuthPayload>>('/api/v1/auth/login', { body: payload })
+  const response = await httpClient.post<ApiResponse<AuthPayload>>('/api/v2/auth/login', { body: payload })
   return unwrapResponse(response)
 }
 
 export async function register(payload: RegisterRequest) {
-  const response = await httpClient.post<ApiResponse<AuthPayload>>('/api/v1/auth/register', { body: payload })
+  const response = await httpClient.post<ApiResponse<AuthPayload>>('/api/v2/auth/register', { body: payload })
   return unwrapResponse(response)
 }
 
 export async function refreshSession(refreshToken?: string) {
-  const response = await httpClient.post<ApiResponse<AuthPayload>>('/api/v1/auth/refresh', {
+  const response = await httpClient.post<ApiResponse<AuthPayload>>('/api/v2/auth/refresh', {
     body: refreshToken ? { refreshToken } : {}
   })
   return unwrapResponse(response)
 }
 
 export async function logoutAll(token?: string) {
-  await httpClient.post<void>('/api/v1/auth/logout-all', { token })
+  await httpClient.post<void>('/api/v2/auth/logout-all', { token })
 }
 
 export async function listSessions(token?: string) {
-  const response = await httpClient.get<ApiResponse<UserSession[]>>('/api/v1/auth/sessions', { token })
+  const response = await httpClient.get<ApiResponse<UserSession[]>>('/api/v2/auth/sessions', { token })
   return unwrapResponse(response)
 }
 
 export async function revokeSession(sessionId: string, token?: string) {
-  await httpClient.post<void>(`/api/v1/auth/sessions/${sessionId}/revoke`, { token })
+  await httpClient.post<void>(`/api/v2/auth/sessions/${sessionId}/revoke`, { token })
 }
