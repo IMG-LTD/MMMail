@@ -10,6 +10,7 @@ import { getNaiveUiDateLocale, getNaiveUiLocale } from '@/locales'
 import { useAppStore } from '@/store/modules/app'
 import { useAuthStore } from '@/store/modules/auth'
 import { useOnboardingStore } from '@/store/modules/onboarding'
+import { useShellStore } from '@/store/modules/shell'
 import { useThemeStore } from '@/store/modules/theme'
 import { applyThemeVariables } from '@/theme/tokens'
 
@@ -17,6 +18,7 @@ const route = useRoute()
 const appStore = useAppStore()
 const authStore = useAuthStore()
 const onboardingStore = useOnboardingStore()
+const shellStore = useShellStore()
 const themeStore = useThemeStore()
 const { locale } = storeToRefs(appStore)
 
@@ -41,6 +43,9 @@ watchEffect(() => {
   document.body.classList.toggle('density-compact', themeStore.density === 'compact')
   document.body.classList.toggle('density-comfortable', themeStore.density === 'comfortable')
   document.body.classList.toggle('mmmail-dark', themeStore.isDark)
+  Object.entries(shellStore.shellStateClasses).forEach(([className, enabled]) => {
+    document.body.classList.toggle(className, enabled)
+  })
 })
 
 watchEffect(() => {

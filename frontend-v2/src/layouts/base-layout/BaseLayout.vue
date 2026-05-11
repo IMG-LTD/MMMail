@@ -1,11 +1,18 @@
 <template>
-  <div class="base-layout">
+  <div
+    class="base-layout"
+    :class="{
+      'base-layout--context-open': shellStore.contextPanelOpen,
+      'base-layout--nav-collapsed': shellStore.sideNavCollapsed
+    }"
+  >
     <shell-top-bar />
     <div class="base-layout__body">
       <shell-side-nav />
       <main class="base-layout__content" :class="{ 'base-layout__content--flush': route.meta.contentMode === 'flush' }">
         <slot />
       </main>
+      <context-panel />
     </div>
     <mobile-tab-bar />
     <theme-drawer />
@@ -14,23 +21,47 @@
 
 <script setup lang="ts">
 import { useRoute } from 'vue-router'
+import ContextPanel from '@/layouts/modules/ContextPanel.vue'
 import ShellSideNav from '@/layouts/modules/ShellSideNav.vue'
 import ShellTopBar from '@/layouts/modules/ShellTopBar.vue'
 import MobileTabBar from '@/layouts/modules/MobileTabBar.vue'
 import ThemeDrawer from '@/layouts/modules/ThemeDrawer.vue'
+import { useShellStore } from '@/store/modules/shell'
 
 const route = useRoute()
+const shellStore = useShellStore()
 </script>
 
 <style scoped>
 .base-layout {
+  --base-layout-side-nav-width: 240px;
+  --base-layout-context-panel-width: 320px;
+
   min-height: 100vh;
   background: var(--mm-bg);
+}
+
+.base-layout--nav-collapsed {
+  --base-layout-side-nav-width: 76px;
 }
 
 .base-layout__body {
   display: flex;
   min-height: calc(100vh - 56px);
+}
+
+.base-layout :deep(.side-nav) {
+  width: var(--base-layout-side-nav-width);
+}
+
+.base-layout--nav-collapsed :deep(.side-nav) {
+  width: 76px;
+}
+
+@media (min-width: 821px) {
+  .base-layout--context-open .base-layout__content {
+    max-width: calc(100vw - var(--base-layout-side-nav-width) - var(--base-layout-context-panel-width));
+  }
 }
 
 .base-layout__content {
