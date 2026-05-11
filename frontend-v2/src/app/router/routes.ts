@@ -11,6 +11,7 @@ const DriveSectionView = () => import('@/views/app/DriveSectionView.vue')
 const PassSectionView = () => import('@/views/app/PassSectionView.vue')
 const SuiteSectionView = () => import('@/views/app/SuiteSectionView.vue')
 const OrganizationsSectionView = () => import('@/views/app/OrganizationsSectionView.vue')
+const AdminSectionView = () => import('@/views/app/AdminSectionView.vue')
 const DocsEditorView = () => import('@/views/app/DocsEditorView.vue')
 const SheetsEditorView = () => import('@/views/app/SheetsEditorView.vue')
 const LabsModuleView = () => import('@/views/app/LabsModuleView.vue')
@@ -305,6 +306,66 @@ const aggregationRoutes: RouteRecordRaw[] = [
 ]
 
 const governanceRoutes: RouteRecordRaw[] = [
+  {
+    path: '/admin',
+    component: AdminSectionView,
+    meta: buildRouteMeta('/admin', { ...BaseLayoutMeta, section: 'governance', label: 'Admin', surfaceKey: 'overview' })
+  },
+  {
+    path: '/admin/users',
+    component: AdminSectionView,
+    meta: buildRouteMeta('/admin/users', { ...BaseLayoutMeta, section: 'governance', label: 'Admin', surfaceKey: 'users' })
+  },
+  {
+    path: '/admin/roles',
+    component: AdminSectionView,
+    meta: buildRouteMeta('/admin/roles', { ...BaseLayoutMeta, section: 'governance', label: 'Admin', surfaceKey: 'roles' })
+  },
+  {
+    path: '/admin/organizations',
+    component: AdminSectionView,
+    meta: buildRouteMeta('/admin/organizations', { ...BaseLayoutMeta, section: 'governance', label: 'Admin', surfaceKey: 'organizations' })
+  },
+  {
+    path: '/admin/domains',
+    component: AdminSectionView,
+    meta: buildRouteMeta('/admin/domains', { ...BaseLayoutMeta, section: 'governance', label: 'Admin', surfaceKey: 'domains' })
+  },
+  {
+    path: '/admin/policies',
+    component: AdminSectionView,
+    meta: buildRouteMeta('/admin/policies', { ...BaseLayoutMeta, section: 'governance', label: 'Admin', surfaceKey: 'policies' })
+  },
+  {
+    path: '/admin/audit',
+    component: AdminSectionView,
+    meta: buildRouteMeta('/admin/audit', { ...BaseLayoutMeta, section: 'governance', label: 'Admin', surfaceKey: 'audit' })
+  },
+  {
+    path: '/admin/alerts',
+    component: AdminSectionView,
+    meta: buildRouteMeta('/admin/alerts', { ...BaseLayoutMeta, section: 'governance', label: 'Admin', surfaceKey: 'alerts' })
+  },
+  {
+    path: '/admin/integrations',
+    component: AdminSectionView,
+    meta: buildRouteMeta('/admin/integrations', { ...BaseLayoutMeta, section: 'governance', label: 'Admin', surfaceKey: 'integrations' })
+  },
+  {
+    path: '/admin/billing',
+    component: AdminSectionView,
+    meta: buildRouteMeta('/admin/billing', { ...BaseLayoutMeta, section: 'governance', label: 'Admin', surfaceKey: 'billing' })
+  },
+  {
+    path: '/admin/system',
+    component: AdminSectionView,
+    meta: buildRouteMeta('/admin/system', { ...BaseLayoutMeta, section: 'governance', label: 'Admin', surfaceKey: 'system' })
+  },
+  {
+    path: '/admin/risk',
+    component: AdminSectionView,
+    meta: buildRouteMeta('/admin/risk', { ...BaseLayoutMeta, section: 'governance', label: 'Admin', surfaceKey: 'risk' })
+  },
   {
     path: '/suite',
     component: SuiteSectionView,
