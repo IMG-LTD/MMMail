@@ -2,12 +2,14 @@
 import { computed } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { lt, useLocaleText } from '@/locales'
+import { useShellStore } from '@/store/modules/shell'
 import MaturityBadge from '@/shared/components/MaturityBadge.vue'
 import { getToneColorVar, isMailRoute, isRouteMatch, mailNavSections, shellNavGroups, type NavItem } from './shell-nav'
 
 const route = useRoute()
 const router = useRouter()
 const { tr } = useLocaleText()
+const shellStore = useShellStore()
 
 const activePath = computed(() => route.path)
 const isInboxNav = computed(() => isMailRoute(route.path))
@@ -25,10 +27,16 @@ function openPath(path: string) {
     router.push(path)
   }
 }
+
+function getCollapseLabel() {
+  return shellStore.sideNavCollapsed
+    ? tr(lt('展开导航', '展開導覽', 'Expand navigation'))
+    : tr(lt('收起导航', '收合導覽', 'Collapse navigation'))
+}
 </script>
 
 <template>
-  <aside class="side-nav" :class="{ 'side-nav--mail': isInboxNav }">
+  <aside class="side-nav" :class="{ 'side-nav--mail': isInboxNav, 'side-nav--collapsed': !isInboxNav && shellStore.sideNavCollapsed }">
     <template v-if="isInboxNav">
       <button class="compose-button" type="button" @click="openPath('/compose')">
         {{ tr(lt('写邮件', '寫郵件', 'Compose')) }}
@@ -65,6 +73,15 @@ function openPath(path: string) {
     </template>
 
     <template v-else>
+      <button
+        class="side-nav__collapse"
+        type="button"
+        :aria-expanded="!shellStore.sideNavCollapsed"
+        :aria-label="getCollapseLabel()"
+        @click="shellStore.toggleSideNav()"
+      >
+        {{ shellStore.sideNavCollapsed ? '›' : '‹' }}
+      </button>
       <div class="side-nav__identity">
         <span class="side-nav__title">{{ tr(lt('工作区', '工作區', 'Workspace')) }}</span>
         <strong>{{ tr(lt('已认证', '已驗證', 'Authenticated')) }}</strong>
@@ -83,6 +100,8 @@ function openPath(path: string) {
           type="button"
           class="side-nav__item"
           :class="{ 'side-nav__item--active': isShellItemActive(item) }"
+          :aria-label="tr(item.label)"
+          :title="tr(item.label)"
           @click="openPath(item.path)"
         >
           <span class="side-nav__dot" :style="{ background: getToneColorVar(item.tone) }" />
@@ -115,6 +134,36 @@ function openPath(path: string) {
 .side-nav--mail {
   gap: 14px;
   padding-top: 14px;
+}
+
+.side-nav__collapse {
+  align-self: flex-end;
+  display: inline-grid;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  border: 1px solid var(--mm-border);
+  border-radius: var(--mm-radius-sm);
+  background: var(--mm-surface);
+  color: var(--mm-text-secondary);
+}
+
+.side-nav--collapsed {
+  width: 76px;
+}
+
+.side-nav--collapsed .side-nav__identity,
+.side-nav--collapsed .side-nav__title,
+.side-nav--collapsed .side-nav__caption,
+.side-nav--collapsed .side-nav__item-copy,
+.side-nav--collapsed .side-nav__badge,
+.side-nav--collapsed .side-nav__footer {
+  display: none;
+}
+
+.side-nav--collapsed .side-nav__item {
+  justify-content: center;
+  padding: 0;
 }
 
 .side-nav__group {

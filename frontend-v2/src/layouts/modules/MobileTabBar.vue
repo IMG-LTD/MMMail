@@ -1,11 +1,22 @@
 <script setup lang="ts">
 import { useRoute, useRouter } from 'vue-router'
 import { lt, useLocaleText } from '@/locales'
+import { useShellStore } from '@/store/modules/shell'
 import { isRouteMatch, mobilePrimaryTabs } from './shell-nav'
 
 const route = useRoute()
 const router = useRouter()
+const shellStore = useShellStore()
 const { tr } = useLocaleText()
+
+function openTab(path: string, key: string) {
+  if (key === 'more') {
+    shellStore.openMobileMorePanel()
+    return
+  }
+
+  router.push(path)
+}
 </script>
 
 <template>
@@ -16,7 +27,7 @@ const { tr } = useLocaleText()
       class="mobile-tab-bar__item"
       :class="{ 'mobile-tab-bar__item--active': isRouteMatch(route.path, tab) }"
       type="button"
-      @click="router.push(tab.path)"
+      @click="openTab(tab.path, tab.key)"
     >
       <span class="mobile-tab-bar__label">{{ tr(tab.label) }}</span>
       <span class="mobile-tab-bar__hint">{{ tr(tab.hint) }}</span>
