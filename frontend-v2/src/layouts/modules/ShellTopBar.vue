@@ -1,12 +1,13 @@
 <script setup lang="ts">
 import { computed } from 'vue'
-import { useRoute, useRouter } from 'vue-router'
+import { useRoute } from 'vue-router'
 import { storeToRefs } from 'pinia'
 import AppLogo from '@/shared/components/AppLogo.vue'
 import { lt, useLocaleText } from '@/locales'
 import MaturityBadge from '@/shared/components/MaturityBadge.vue'
 import LocaleSwitcher from '@/shared/components/LocaleSwitcher.vue'
 import { useAppStore } from '@/store/modules/app'
+import { useShellStore } from '@/store/modules/shell'
 import { useThemeStore } from '@/store/modules/theme'
 import { findShellSurface, getToneColorVar } from './shell-nav'
 
@@ -15,12 +16,11 @@ interface UtilityAction {
   icon: string
   key: 'command' | 'notifications' | 'theme'
   label: ReturnType<typeof lt>
-  path?: string
 }
 
 const route = useRoute()
-const router = useRouter()
 const appStore = useAppStore()
+const shellStore = useShellStore()
 const themeStore = useThemeStore()
 const { activeScope } = storeToRefs(appStore)
 const { drawerOpen } = storeToRefs(themeStore)
@@ -37,32 +37,45 @@ const activeScopeLabel = computed(() => {
 })
 
 const utilityActions: UtilityAction[] = [
-  { key: 'command', icon: '⌘', label: lt('指挥中心', '指揮中心', 'Command Center'), path: '/command-center' },
-  { key: 'notifications', icon: '◉', label: lt('通知', '通知', 'Notifications'), path: '/notifications', badge: '2' },
+  { key: 'command', icon: '⌘', label: lt('命令面板', '命令面板', 'Command palette') },
+  { key: 'notifications', icon: '◉', label: lt('通知', '通知', 'Notifications'), badge: '2' },
   { key: 'theme', icon: '⚙', label: lt('主题设置', '主題設定', 'Theme settings') }
 ]
 
 function handleUtilityAction(key: string) {
-  if (key === 'theme') {
-    themeStore.openDrawer()
+  if (key === 'command') {
+    shellStore.openCommandPalette()
     return
   }
 
-  const action = utilityActions.find(item => item.key === key)
+  if (key === 'notifications') {
+    shellStore.toggleNotificationDrawer()
+    return
+  }
 
-  if (action?.path && route.path !== action.path) {
-    router.push(action.path)
+  if (key === 'theme') {
+    themeStore.openDrawer()
   }
 }
 
 function isUtilityActionActive(key: string) {
+  if (key === 'command') {
+    return shellStore.commandPaletteOpen
+  }
+
+  if (key === 'notifications') {
+    return shellStore.notificationDrawerOpen
+  }
+
   if (key === 'theme') {
     return drawerOpen.value
   }
 
-  const action = utilityActions.find(item => item.key === key)
+  return false
+}
 
-  return !!action?.path && route.path.startsWith(action.path)
+function openQuickCreate() {
+  shellStore.openQuickCreate()
 }
 </script>
 
@@ -84,6 +97,9 @@ function isUtilityActionActive(key: string) {
       </label>
     </div>
     <div class="top-bar__right">
+      <button class="quick-create-button" type="button" @click="openQuickCreate">
+        {{ tr(lt('新建', '新增', 'Create')) }}
+      </button>
       <button class="scope-pill" type="button">{{ activeScopeLabel }} ▾</button>
       <locale-switcher class="top-bar__locale" compact />
       <button
@@ -155,6 +171,19 @@ function isUtilityActionActive(key: string) {
   font-size: 12px;
   font-weight: 600;
   color: var(--mm-ink);
+}
+
+.quick-create-button {
+  display: inline-flex;
+  align-items: center;
+  min-height: 30px;
+  padding: 0 12px;
+  border: 0;
+  border-radius: 999px;
+  background: var(--mm-brand-primary);
+  color: var(--mm-brand-contrast);
+  font-size: 12px;
+  font-weight: 700;
 }
 
 .scope-pill {
@@ -302,6 +331,7 @@ function isUtilityActionActive(key: string) {
     display: none;
   }
 
+  .quick-create-button,
   .scope-pill {
     display: none;
   }

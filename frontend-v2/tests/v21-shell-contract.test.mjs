@@ -12,8 +12,11 @@ const files = {
   baseLayout: new URL('../src/layouts/base-layout/BaseLayout.vue', import.meta.url),
   contextPanel: new URL('../src/layouts/modules/ContextPanel.vue', import.meta.url),
   globalCss: new URL('../src/styles/global.css', import.meta.url),
+  mobileTabBar: new URL('../src/layouts/modules/MobileTabBar.vue', import.meta.url),
+  shellSideNav: new URL('../src/layouts/modules/ShellSideNav.vue', import.meta.url),
   shellStore: new URL('../src/store/modules/shell.ts', import.meta.url),
-  shellNav: new URL('../src/layouts/modules/shell-nav.ts', import.meta.url)
+  shellNav: new URL('../src/layouts/modules/shell-nav.ts', import.meta.url),
+  shellTopBar: new URL('../src/layouts/modules/ShellTopBar.vue', import.meta.url)
 }
 
 const requiredProducts = [
@@ -190,6 +193,9 @@ test('v2.1 app shell renders context panel and exposes shell state classes', asy
   assert.match(baseLayout, /<context-panel/)
   assert.match(baseLayout, /base-layout--context-open/)
   assert.match(baseLayout, /base-layout--nav-collapsed/)
+  assert.match(baseLayout, /isShellSideNavCollapsed/)
+  assert.match(baseLayout, /!isMailRoute\(route\.path\) && shellStore\.sideNavCollapsed/)
+  assert.match(baseLayout, /'base-layout--nav-collapsed': isShellSideNavCollapsed/)
   assert.match(baseLayout, /ContextPanel from '@\/layouts\/modules\/ContextPanel.vue'/)
 
   assert.match(app, /useShellStore/)
@@ -202,7 +208,44 @@ test('v2.1 app shell renders context panel and exposes shell state classes', asy
   assert.match(contextPanel, /context-panel--mobile/)
   assert.match(contextPanel, /MMMail v2\.1/)
   assert.match(contextPanel, /closeContextPanel\(\)/)
+  assert.match(contextPanel, /closeMobileMorePanel\(\)/)
 
   assert.match(globalCss, /\.shell-overlay-backdrop/)
   assert.match(globalCss, /\.shell-panel-surface/)
+})
+
+test('v2.1 shell controls are wired to centralized shell state', async () => {
+  const [shellTopBar, shellSideNav, mobileTabBar] = await Promise.all([
+    readFile(files.shellTopBar, 'utf8'),
+    readFile(files.shellSideNav, 'utf8'),
+    readFile(files.mobileTabBar, 'utf8')
+  ])
+
+  assert.match(shellTopBar, /useShellStore/)
+  assert.match(shellTopBar, /const shellStore = useShellStore\(\)/)
+  assert.match(shellTopBar, /shellStore\.openCommandPalette\(\)/)
+  assert.match(shellTopBar, /shellStore\.openQuickCreate\(\)/)
+  assert.match(shellTopBar, /shellStore\.toggleNotificationDrawer\(\)/)
+  assert.match(shellTopBar, /shellStore\.commandPaletteOpen/)
+  assert.match(shellTopBar, /shellStore\.notificationDrawerOpen/)
+  assert.match(shellTopBar, /themeStore\.openDrawer\(\)/)
+  assert.match(shellTopBar, /drawerOpen/)
+  assert.match(shellTopBar, /quick-create-button/)
+
+  assert.match(shellSideNav, /useShellStore/)
+  assert.match(shellSideNav, /const shellStore = useShellStore\(\)/)
+  assert.match(shellSideNav, /side-nav--collapsed/)
+  assert.match(shellSideNav, /shellStore\.toggleSideNav\(\)/)
+  assert.match(shellSideNav, /shellStore\.sideNavCollapsed/)
+  assert.match(shellSideNav, /:aria-label="getCollapseLabel\(\)"/)
+  assert.match(shellSideNav, /:aria-expanded="!shellStore\.sideNavCollapsed"/)
+  assert.match(shellSideNav, /:aria-label="tr\(item\.label\)"/)
+  assert.match(shellSideNav, /:title="tr\(item\.label\)"/)
+
+  assert.match(mobileTabBar, /useShellStore/)
+  assert.match(mobileTabBar, /const shellStore = useShellStore\(\)/)
+  assert.match(mobileTabBar, /function openTab\(path: string, key: string\)/)
+  assert.match(mobileTabBar, /key === 'more'/)
+  assert.match(mobileTabBar, /shellStore\.openMobileMorePanel\(\)/)
+  assert.match(mobileTabBar, /router\.push\(path\)/)
 })

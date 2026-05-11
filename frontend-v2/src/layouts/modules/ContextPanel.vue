@@ -48,6 +48,7 @@ const panelVisible = computed(() => contextPanelOpen.value || mobileMorePanelOpe
 
 function closeContextPanel() {
   shellStore.closeContextPanel()
+  shellStore.closeMobileMorePanel()
 }
 </script>
 

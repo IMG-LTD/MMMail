@@ -3,7 +3,7 @@
     class="base-layout"
     :class="{
       'base-layout--context-open': shellStore.contextPanelOpen,
-      'base-layout--nav-collapsed': shellStore.sideNavCollapsed
+      'base-layout--nav-collapsed': isShellSideNavCollapsed
     }"
   >
     <shell-top-bar />
@@ -20,16 +20,19 @@
 </template>
 
 <script setup lang="ts">
+import { computed } from 'vue'
 import { useRoute } from 'vue-router'
 import ContextPanel from '@/layouts/modules/ContextPanel.vue'
 import ShellSideNav from '@/layouts/modules/ShellSideNav.vue'
 import ShellTopBar from '@/layouts/modules/ShellTopBar.vue'
 import MobileTabBar from '@/layouts/modules/MobileTabBar.vue'
 import ThemeDrawer from '@/layouts/modules/ThemeDrawer.vue'
+import { isMailRoute } from '@/layouts/modules/shell-nav'
 import { useShellStore } from '@/store/modules/shell'
 
 const route = useRoute()
 const shellStore = useShellStore()
+const isShellSideNavCollapsed = computed(() => !isMailRoute(route.path) && shellStore.sideNavCollapsed)
 </script>
 
 <style scoped>
