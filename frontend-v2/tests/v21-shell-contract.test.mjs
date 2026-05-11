@@ -8,6 +8,10 @@ const require = createRequire(import.meta.url)
 const ts = require('typescript')
 
 const files = {
+  app: new URL('../src/app/App.vue', import.meta.url),
+  baseLayout: new URL('../src/layouts/base-layout/BaseLayout.vue', import.meta.url),
+  contextPanel: new URL('../src/layouts/modules/ContextPanel.vue', import.meta.url),
+  globalCss: new URL('../src/styles/global.css', import.meta.url),
   shellStore: new URL('../src/store/modules/shell.ts', import.meta.url),
   shellNav: new URL('../src/layouts/modules/shell-nav.ts', import.meta.url)
 }
@@ -172,4 +176,33 @@ test('v2.1 navigation model includes structured canonical and fallback product e
   assert.ok(mobilePrimaryTabs[4].matchPrefixes.includes('/pass'))
   assert.ok(mobilePrimaryTabs[4].matchPrefixes.includes('/admin'))
   assert.equal(mobilePrimaryTabs[4].matchPrefixes.includes('/suite'), false)
+})
+
+test('v2.1 app shell renders context panel and exposes shell state classes', async () => {
+  const [app, baseLayout, contextPanel, globalCss] = await Promise.all([
+    readFile(files.app, 'utf8'),
+    readFile(files.baseLayout, 'utf8'),
+    readFile(files.contextPanel, 'utf8'),
+    readFile(files.globalCss, 'utf8')
+  ])
+
+  assert.match(baseLayout, /useShellStore/)
+  assert.match(baseLayout, /<context-panel/)
+  assert.match(baseLayout, /base-layout--context-open/)
+  assert.match(baseLayout, /base-layout--nav-collapsed/)
+  assert.match(baseLayout, /ContextPanel from '@\/layouts\/modules\/ContextPanel.vue'/)
+
+  assert.match(app, /useShellStore/)
+  assert.match(app, /const shellStore = useShellStore\(\)/)
+  assert.match(app, /Object\.entries\(shellStore\.shellStateClasses\)/)
+  assert.match(app, /document\.body\.classList\.toggle\(className, enabled\)/)
+
+  assert.match(contextPanel, /activeContextPanel/)
+  assert.match(contextPanel, /contextPanelOpen/)
+  assert.match(contextPanel, /context-panel--mobile/)
+  assert.match(contextPanel, /MMMail v2\.1/)
+  assert.match(contextPanel, /closeContextPanel\(\)/)
+
+  assert.match(globalCss, /\.shell-overlay-backdrop/)
+  assert.match(globalCss, /\.shell-panel-surface/)
 })

@@ -163,6 +163,21 @@ button {
   gap: 16px;
 }
 
+.shell-overlay-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 30;
+  background: var(--mm-overlay);
+  backdrop-filter: blur(8px);
+}
+
+.shell-panel-surface {
+  border: 1px solid var(--mm-border);
+  border-radius: var(--mm-radius-lg);
+  background: color-mix(in srgb, var(--mm-surface) 96%, transparent);
+  box-shadow: var(--mm-shadow-md);
+}
+
 .section-label {
   color: color-mix(in srgb, var(--mm-text-secondary) 74%, white);
   font-size: 11px;
