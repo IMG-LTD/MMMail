@@ -10,3 +10,4 @@
 | workspace | `contracts/openapi/workspace.yaml` | `mmmail-workspace` | M5 |
 | billing | `contracts/openapi/billing.yaml` | `mmmail-billing` | M6 |
 | labs | `contracts/openapi/labs.yaml` | `mmmail-labs` | M7 |
+| v2.1 API catalog | `contracts/openapi/v21-api-catalog.yaml` | `mmmail-platform` | v2.1 |

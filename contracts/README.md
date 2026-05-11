@@ -12,3 +12,7 @@ This directory is the frozen contract boundary for backend v2 and frontend v2.
 3. Shared error codes live only in `contracts/errors/error-codes.yaml`.
 4. Backend implementation, frontend SDK generation, and frontend consumption may only begin after the relevant contract file is merged to `release/2.0.0`.
 5. Breaking contract edits require a G-slice escalation.
+
+## v2.1 Catalog
+
+`contracts/openapi/v21-api-catalog.yaml` freezes the MMMail v2.1 API Contract Catalog used by backend contract tests. It records route identity, permission metadata, entitlement metadata, and design-source mapping for the frontend v2.1 module plan.
