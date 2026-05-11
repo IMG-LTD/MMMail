@@ -11,11 +11,11 @@ test('mail workspace reads folder, detail, sender, and trust state from APIs', a
     readFile(viewFile, 'utf8')
   ])
 
-  assert.match(api, /\/api\/v1\/mails\/inbox/)
-  assert.match(api, /\/api\/v1\/mails\/search/)
-  assert.match(api, /\/api\/v1\/mails\/identities/)
-  assert.match(api, /\/api\/v1\/mails\/e2ee-recipient-status/)
-  assert.match(api, /\/api\/v1\/mails\/send/)
+  assert.match(api, /\/api\/v2\/mail\/messages/)
+  assert.match(api, /\/api\/v2\/mail\/threads\/\$\{threadId\}/)
+  assert.match(api, /\/api\/v2\/mail\/contacts/)
+  assert.match(api, /\/api\/v2\/mail\/send/)
+  assert.doesNotMatch(api, /\/api\/v1\/mails/)
 
   assert.match(view, /useAuthStore/)
   assert.match(view, /listMailFolder/)

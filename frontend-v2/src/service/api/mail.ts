@@ -69,19 +69,28 @@ export interface SendMailPayload {
   e2ee?: Record<string, unknown>
 }
 
-const MAIL_FOLDER_PATHS: Record<string, string> = {
-  archive: '/api/v1/mails/archive',
-  drafts: '/api/v1/mails/drafts',
-  inbox: '/api/v1/mails/inbox',
-  outbox: '/api/v1/mails/outbox',
-  scheduled: '/api/v1/mails/scheduled',
-  search: '/api/v1/mails/search',
-  sent: '/api/v1/mails/sent',
-  snoozed: '/api/v1/mails/snoozed',
-  spam: '/api/v1/mails/spam',
-  starred: '/api/v1/mails/starred',
-  trash: '/api/v1/mails/trash',
-  unread: '/api/v1/mails/unread'
+export interface MailFolder {
+  key: string
+  label: string
+  unreadCount: number
+}
+
+export interface MailDraftPayload {
+  body?: string
+  fromEmail?: string
+  subject?: string
+  toEmail?: string
+}
+
+export interface MailBulkActionPayload {
+  action: string
+  messageIds: string[]
+}
+
+export interface MailRule {
+  id: string
+  name: string
+  enabled: boolean
 }
 
 function normalizeMailSummary(payload: Partial<MailSummary> & Record<string, unknown>): MailSummary {
@@ -137,8 +146,10 @@ function createIdempotencyKey() {
 }
 
 export async function listMailFolder(folder: string, token: string, query: Record<string, QueryValue> = {}) {
-  const path = MAIL_FOLDER_PATHS[folder] || `/api/v1/mails/${folder}`
-  const response = await httpClient.get<ApiResponse<MailFolderPagePayload | MailSummary[]>>(path, { token, query })
+  const response = await httpClient.get<ApiResponse<MailFolderPagePayload | MailSummary[]>>('/api/v2/mail/messages', {
+    token,
+    query: { ...query, folder }
+  })
   return {
     ...response,
     data: normalizeFolderItems(response.data)
@@ -146,7 +157,8 @@ export async function listMailFolder(folder: string, token: string, query: Recor
 }
 
 export async function readMailDetail(mailId: string, token: string) {
-  const response = await httpClient.get<ApiResponse<MailDetail>>(`/api/v1/mails/${mailId}`, { token })
+  const threadId = mailId
+  const response = await httpClient.get<ApiResponse<MailDetail>>(`/api/v2/mail/threads/${threadId}`, { token })
   return {
     ...response,
     data: normalizeMailDetail(response.data as Partial<MailDetail> & Record<string, unknown>)
@@ -154,13 +166,13 @@ export async function readMailDetail(mailId: string, token: string) {
 }
 
 export function listSenderIdentities(token: string) {
-  return httpClient.get<ApiResponse<MailSenderIdentity[]>>('/api/v1/mails/identities', { token })
+  return httpClient.get<ApiResponse<MailSenderIdentity[]>>('/api/v2/mail/contacts', { token })
 }
 
 export async function readRecipientTrustState(toEmail: string, fromEmail: string, token: string) {
-  const response = await httpClient.get<ApiResponse<MailRecipientTrustApiPayload>>('/api/v1/mails/e2ee-recipient-status', {
+  const response = await httpClient.get<ApiResponse<MailRecipientTrustApiPayload>>('/api/v2/mail/contacts', {
     token,
-    query: { fromEmail, toEmail }
+    query: { capability: 'recipient-trust', fromEmail, toEmail }
   })
 
   const payload = response.data || {}
@@ -192,7 +204,7 @@ export async function readRecipientTrustState(toEmail: string, fromEmail: string
 }
 
 export function sendMail(payload: SendMailPayload, token: string) {
-  return httpClient.post<void>('/api/v1/mails/send', {
+  return httpClient.post<void>('/api/v2/mail/send', {
     body: {
       ...payload,
       idempotencyKey: payload.idempotencyKey || createIdempotencyKey(),
@@ -200,4 +212,20 @@ export function sendMail(payload: SendMailPayload, token: string) {
     },
     token
   })
+}
+
+export function listMailFolders(token: string) {
+  return httpClient.get<ApiResponse<MailFolder[]>>('/api/v2/mail/folders', { token })
+}
+
+export function saveMailDraft(payload: MailDraftPayload, token: string) {
+  return httpClient.post<ApiResponse<MailDetail>>('/api/v2/mail/drafts', { body: payload, token })
+}
+
+export function bulkActionMailMessages(payload: MailBulkActionPayload, token: string) {
+  return httpClient.post<ApiResponse<MailSummary[]>>('/api/v2/mail/messages/bulk-action', { body: payload, token })
+}
+
+export function listMailRules(token: string) {
+  return httpClient.get<ApiResponse<MailRule[]>>('/api/v2/mail/rules', { token })
 }

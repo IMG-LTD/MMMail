@@ -68,23 +68,59 @@ export interface QueryCalendarAvailabilityBody {
   excludeEventId?: string | number | null
 }
 
+export interface CalendarResource {
+  id: string
+  name: string
+  capacity: number
+  location: string | null
+}
+
+export interface CalendarBookingPayload {
+  eventId: string
+  resourceId: string
+  startAt: string
+  endAt: string
+}
+
+export interface CalendarSettings {
+  defaultTimezone: string
+  weekStartsOn: string
+  workingHours: string[]
+}
+
 export function listCalendarEvents(token: string, from?: string, to?: string) {
-  return httpClient.get<ApiResponse<CalendarEvent[]>>('/api/v1/calendar/events', {
+  return httpClient.get<ApiResponse<CalendarEvent[]>>('/api/v2/calendar/events', {
     token,
     query: { from, to }
   })
 }
 
 export function listCalendarAgenda(token: string, days = 7) {
-  return httpClient.get<ApiResponse<CalendarAgendaItem[]>>('/api/v1/calendar/agenda', {
+  return httpClient.get<ApiResponse<CalendarAgendaItem[]>>('/api/v2/calendar/events', {
     token,
-    query: { days }
+    query: { days, view: 'agenda' }
   })
 }
 
 export function queryCalendarAvailability(token: string, body: QueryCalendarAvailabilityBody) {
-  return httpClient.post<ApiResponse<CalendarAvailability>>('/api/v1/calendar/availability/query', {
+  return httpClient.post<ApiResponse<CalendarAvailability>>('/api/v2/calendar/availability', {
     token,
     body
   })
+}
+
+export function listCalendarResources(token: string) {
+  return httpClient.get<ApiResponse<CalendarResource[]>>('/api/v2/calendar/resources', { token })
+}
+
+export function createCalendarBooking(token: string, body: CalendarBookingPayload) {
+  return httpClient.post<ApiResponse<CalendarEvent>>('/api/v2/calendar/bookings', { body, token })
+}
+
+export function readCalendarSettings(token: string) {
+  return httpClient.get<ApiResponse<CalendarSettings>>('/api/v2/calendar/settings', { token })
+}
+
+export function updateCalendarSettings(token: string, body: CalendarSettings) {
+  return httpClient.put<ApiResponse<CalendarSettings>>('/api/v2/calendar/settings', { body, token })
 }

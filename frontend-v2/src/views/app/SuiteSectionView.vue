@@ -1,14 +1,55 @@
 <script setup lang="ts">
-import { computed } from 'vue'
+import { computed, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
+import HostedBadge from '@/design-system/components/HostedBadge.vue'
+import PremiumBadge from '@/design-system/components/PremiumBadge.vue'
 import { lt, useLocaleText } from '@/locales'
+import {
+  listWorkspaceActivity,
+  listWorkspaceTasks,
+  patchWorkspaceTask,
+  readWorkspaceSummary,
+  type WorkspaceActivityItem,
+  type WorkspaceSummary,
+  type WorkspaceSummaryProduct,
+  type WorkspaceTask
+} from '@/service/api/workspace'
 import { findSurface, suiteSections } from '@/shared/content/route-surfaces'
+import { useAuthStore } from '@/store/modules/auth'
 
 const route = useRoute()
 const router = useRouter()
+const authStore = useAuthStore()
 const { tr } = useLocaleText()
 
 const current = computed(() => findSurface(suiteSections, String(route.meta.surfaceKey ?? 'overview'), 'overview'))
+const workspaceSummary = ref<WorkspaceSummary | null>(null)
+const workspaceActivity = ref<WorkspaceActivityItem[]>([])
+const workspaceTasks = ref<WorkspaceTask[]>([])
+const workspaceLoading = ref(false)
+const taskUpdatingId = ref('')
+const loadError = ref('')
+let latestWorkspaceRequest = 0
+
+const productCards = computed<WorkspaceSummaryProduct[]>(() => {
+  return workspaceSummary.value?.productCards ?? []
+})
+
+const workspaceStateCopy = computed(() => {
+  if (!authStore.accessToken) {
+    return tr(lt('登录后读取 Workspace 汇总。', '登入後讀取 Workspace 摘要。', 'Sign in to load the Workspace summary.'))
+  }
+
+  if (workspaceLoading.value) {
+    return tr(lt('正在读取 Workspace 实时摘要。', '正在讀取 Workspace 即時摘要。', 'Loading the live Workspace summary.'))
+  }
+
+  if (loadError.value) {
+    return loadError.value
+  }
+
+  return workspaceSummary.value?.systemStatus || tr(lt('Workspace 已连接 v2.1 运行时。', 'Workspace 已連接 v2.1 執行期。', 'Workspace is connected to the v2.1 runtime.'))
+})
 
 function openSection(key: string) {
   const pathMap: Record<string, string> = {
@@ -21,12 +62,87 @@ function openSection(key: string) {
   router.push(pathMap[key] ?? '/suite')
 }
 
-const cards = [
-  [lt('邮件', '郵件', 'Mail'), '8 GB / 10 GB'],
-  [lt('日历', '日曆', 'Calendar'), lt('4 场会议', '4 場會議', '4 meetings')],
-  [lt('云盘', '雲端硬碟', 'Drive'), lt('62% 配额', '62% 配額', '62% quota')],
-  [lt('密码库', '密碼庫', 'Pass'), lt('3 条告警', '3 則告警', '3 alerts')]
-]
+function clearWorkspaceState() {
+  workspaceSummary.value = null
+  workspaceActivity.value = []
+  workspaceTasks.value = []
+  loadError.value = ''
+  workspaceLoading.value = false
+}
+
+function resolveErrorMessage(error: unknown) {
+  return error instanceof Error
+    ? error.message
+    : tr(lt('读取 Workspace 数据失败。', '讀取 Workspace 資料失敗。', 'Failed to load Workspace data.'))
+}
+
+async function loadWorkspace() {
+  const requestId = ++latestWorkspaceRequest
+  const requestToken = authStore.accessToken
+  const requestPath = route.fullPath
+
+  if (!requestToken) {
+    if (requestId === latestWorkspaceRequest) {
+      clearWorkspaceState()
+    }
+    return
+  }
+
+  workspaceLoading.value = true
+  loadError.value = ''
+
+  try {
+    const [summary, activity, tasks] = await Promise.all([
+      readWorkspaceSummary(requestToken),
+      listWorkspaceActivity(requestToken),
+      listWorkspaceTasks(requestToken)
+    ])
+
+    if (requestId !== latestWorkspaceRequest || requestToken !== authStore.accessToken || requestPath !== route.fullPath) {
+      return
+    }
+
+    workspaceSummary.value = summary
+    workspaceActivity.value = activity
+    workspaceTasks.value = tasks
+  } catch (error) {
+    if (requestId !== latestWorkspaceRequest || requestToken !== authStore.accessToken || requestPath !== route.fullPath) {
+      return
+    }
+
+    workspaceSummary.value = null
+    workspaceActivity.value = []
+    workspaceTasks.value = []
+    loadError.value = resolveErrorMessage(error)
+  } finally {
+    if (requestId === latestWorkspaceRequest && requestToken === authStore.accessToken && requestPath === route.fullPath) {
+      workspaceLoading.value = false
+    }
+  }
+}
+
+async function toggleTask(task: WorkspaceTask) {
+  const requestToken = authStore.accessToken
+  if (!requestToken || taskUpdatingId.value) {
+    return
+  }
+
+  taskUpdatingId.value = task.id
+  try {
+    const updatedTask = await patchWorkspaceTask(task.id, { completed: !task.completed }, requestToken)
+    workspaceTasks.value = workspaceTasks.value.map(item => item.id === updatedTask.id ? updatedTask : item)
+  } finally {
+    taskUpdatingId.value = ''
+  }
+}
+
+watch(
+  () => [route.fullPath, authStore.accessToken],
+  () => {
+    void loadWorkspace()
+  },
+  { immediate: true }
+)
 </script>
 
 <template>
@@ -53,13 +169,54 @@ const cards = [
     <article class="surface-card suite-section__main">
       <span class="section-label">{{ tr(lt('当前焦点', '目前焦點', 'Current focus')) }}</span>
       <strong>{{ `${tr(current.label)} ${tr(lt('界面', '介面', 'surface'))}` }}</strong>
-      <p class="page-subtitle">{{ tr(lt('Suite 壳层会为当前焦点保留专属 Hero、产品卡片和分区面板。', 'Suite 殼層會為目前焦點保留專屬 Hero、產品卡片與分區面板。', 'The suite shell keeps a dedicated hero, product cards, and a section-specific panel for the active focus area.')) }}</p>
+      <p class="page-subtitle">{{ workspaceStateCopy }}</p>
+      <div class="suite-section__meta">
+        <span>Community</span>
+        <PremiumBadge compact />
+        <HostedBadge compact />
+      </div>
     </article>
 
     <div class="suite-section__cards">
-      <article v-for="([label, value], index) in cards" :key="index" class="surface-card suite-section__card">
-        <span class="section-label">{{ tr(label) }}</span>
-        <strong>{{ tr(value) }}</strong>
+      <article v-for="card in productCards" :key="card.key" class="surface-card suite-section__card">
+        <span class="section-label">{{ card.label }}</span>
+        <strong>{{ card.value }}</strong>
+        <div class="suite-section__meta">
+          <span v-if="card.state === 'community'" class="suite-section__community">Community</span>
+          <PremiumBadge v-else-if="card.state === 'premium'" compact />
+          <HostedBadge v-else-if="card.state === 'hosted'" compact />
+          <small v-if="card.updatedAt">{{ card.updatedAt }}</small>
+        </div>
+      </article>
+      <article v-if="!productCards.length" class="surface-card suite-section__card suite-section__empty">
+        <span class="section-label">{{ tr(lt('Workspace', 'Workspace', 'Workspace')) }}</span>
+        <strong>{{ workspaceStateCopy }}</strong>
+      </article>
+    </div>
+
+    <div class="suite-section__panels">
+      <article class="surface-card suite-section__panel">
+        <span class="section-label">{{ tr(lt('最近活动', '最近活動', 'Recent activity')) }}</span>
+        <ul>
+          <li v-for="item in workspaceActivity" :key="item.id">
+            <strong>{{ item.title }}</strong>
+            <span>{{ item.product }} · {{ item.occurredAt }}</span>
+          </li>
+        </ul>
+        <p v-if="!workspaceActivity.length" class="page-subtitle">{{ workspaceStateCopy }}</p>
+      </article>
+
+      <article class="surface-card suite-section__panel">
+        <span class="section-label">{{ tr(lt('待办', '待辦', 'Tasks')) }}</span>
+        <ul>
+          <li v-for="task in workspaceTasks" :key="task.id">
+            <button type="button" :disabled="Boolean(taskUpdatingId)" @click="toggleTask(task)">
+              {{ task.completed ? tr(lt('已完成', '已完成', 'Done')) : tr(lt('完成', '完成', 'Complete')) }}
+            </button>
+            <span>{{ task.title }}</span>
+          </li>
+        </ul>
+        <p v-if="!workspaceTasks.length" class="page-subtitle">{{ workspaceStateCopy }}</p>
       </article>
     </div>
   </section>
@@ -103,8 +260,28 @@ const cards = [
   color: var(--mm-primary);
 }
 
+.suite-section__meta {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.suite-section__community {
+  display: inline-flex;
+  align-items: center;
+  min-height: 22px;
+  padding: 0 8px;
+  border: 1px solid var(--mm-border);
+  border-radius: 6px;
+  background: var(--mm-surface-muted);
+  font-size: 12px;
+  font-weight: 700;
+}
+
 .suite-section__main,
-.suite-section__card {
+.suite-section__card,
+.suite-section__panel {
   display: grid;
   gap: 10px;
   padding: 18px;
@@ -114,9 +291,38 @@ const cards = [
   grid-template-columns: repeat(4, minmax(0, 1fr));
 }
 
+.suite-section__panels {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
+}
+
+.suite-section__panel ul {
+  display: grid;
+  gap: 10px;
+  padding: 0;
+  margin: 0;
+  list-style: none;
+}
+
+.suite-section__panel li {
+  display: grid;
+  gap: 4px;
+}
+
+.suite-section__panel button {
+  justify-self: start;
+  min-height: 30px;
+  padding: 0 10px;
+  border: 1px solid var(--mm-border);
+  border-radius: 6px;
+  background: var(--mm-card);
+}
+
 @media (max-width: 980px) {
   .suite-section__hero,
-  .suite-section__cards {
+  .suite-section__cards,
+  .suite-section__panels {
     grid-template-columns: 1fr;
   }
 }

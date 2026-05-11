@@ -3,7 +3,7 @@ type QueryValue = string | number | boolean | undefined
 interface RequestOptions {
   body?: unknown
   headers?: HeadersInit
-  method?: 'DELETE' | 'GET' | 'POST' | 'PUT'
+  method?: 'DELETE' | 'GET' | 'PATCH' | 'POST' | 'PUT'
   query?: Record<string, QueryValue>
   scopeHeaders?: Record<string, string>
   token?: string
@@ -100,6 +100,9 @@ export const httpClient = {
   },
   post<T>(path: string, options?: Omit<RequestOptions, 'method'>) {
     return request<T>(path, { ...options, method: 'POST' })
+  },
+  patch<T>(path: string, options?: Omit<RequestOptions, 'method'>) {
+    return request<T>(path, { ...options, method: 'PATCH' })
   },
   put<T>(path: string, options?: Omit<RequestOptions, 'method'>) {
     return request<T>(path, { ...options, method: 'PUT' })

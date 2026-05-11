@@ -11,9 +11,10 @@ test('drive workspace reads items, shares, and usage from APIs', async () => {
     readFile(viewFile, 'utf8')
   ])
 
-  assert.match(api, /\/api\/v1\/drive\/items/)
-  assert.match(api, /\/api\/v1\/drive\/usage/)
-  assert.match(api, /\/api\/v1\/drive\/items\/\$\{itemId\}\/shares/)
+  assert.match(api, /\/api\/v2\/drive\/files/)
+  assert.match(api, /\/api\/v2\/drive\/storage\/summary/)
+  assert.match(api, /\/api\/v2\/drive\/files\/\$\{fileId\}\/share/)
+  assert.doesNotMatch(api, /\/api\/v1\/drive/)
   assert.match(view, /useAuthStore/)
   assert.match(view, /listDriveItems/)
   assert.match(view, /readDriveUsage/)
