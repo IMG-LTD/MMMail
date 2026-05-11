@@ -15,7 +15,7 @@ const aggregationFiles = [
 
 const collaborationFile = new URL('../src/views/app/CollaborationView.vue', import.meta.url)
 
-test('workspace aggregation and collaboration surfaces consume shared contracts', async () => {
+test('workspace notifications and collaboration surfaces consume shared v2 clients', async () => {
   const docsAndSheetsContents = await Promise.all(docsAndSheetsFiles.map(file => readFile(file, 'utf8')))
   const aggregationContents = await Promise.all(aggregationFiles.map(file => readFile(file, 'utf8')))
   const collaborationContent = await readFile(collaborationFile, 'utf8')
@@ -25,7 +25,9 @@ test('workspace aggregation and collaboration surfaces consume shared contracts'
   }
 
   for (const content of aggregationContents) {
-    assert.match(content, /\/api\/v2\/workspace\/aggregation/)
+    assert.match(content, /listNotifications/)
+    assert.match(content, /readNotificationAnalytics/)
+    assert.doesNotMatch(content, /\/api\/v2\/workspace\/aggregation/)
   }
 
   assert.match(collaborationContent, /listCollaborationProjects/)
@@ -34,14 +36,14 @@ test('workspace aggregation and collaboration surfaces consume shared contracts'
   assert.doesNotMatch(collaborationContent, /\/api\/v2\/workspace\/aggregation/)
 })
 
-test('aggregation and collaboration surfaces stay scope-aware', async () => {
+test('notifications and collaboration surfaces stay scope-aware', async () => {
   const contents = await Promise.all(aggregationFiles.map(file => readFile(file, 'utf8')))
   const collaborationContent = await readFile(collaborationFile, 'utf8')
 
   for (const content of contents) {
     assert.match(content, /useScopeGuard/)
-    assert.match(content, /scopeHeaders:\s*requestHeaders\.value/)
-    assert.match(content, /watch\(\s*requestHeaders/)
+    assert.match(content, /scopeHeaders = requestHeaders\.value/)
+    assert.match(content, /JSON\.stringify\(requestHeaders\.value\)/)
   }
 
   assert.match(collaborationContent, /useScopeGuard/)

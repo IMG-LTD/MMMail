@@ -149,7 +149,7 @@ test('command center view consumes the query-backed automation runbook state', a
   assert.match(view, /currentView === 'runs'/)
 })
 
-test('notifications aggregation stays scope-aware and refreshes when headers change', async () => {
+test('notifications runtime client stays scope-aware and ignores stale responses', async () => {
   const vue = createVueRuntime()
   const requestHeaders = {
     value: {
@@ -157,8 +157,17 @@ test('notifications aggregation stays scope-aware and refreshes when headers cha
       'X-MMMAIL-SCOPE-ID': 'scope-a'
     }
   }
-  const httpCalls = []
+  const apiCalls = []
   const pendingResponses = []
+  const authStore = {
+    accessToken: 'token-a'
+  }
+  const createDeferredCall = name => options => {
+    apiCalls.push({ name, options })
+    return new Promise(resolve => {
+      pendingResponses.push({ name, resolve })
+    })
+  }
 
   await loadVueScriptModule(notificationsViewFile, {
     mocks: {
@@ -175,15 +184,16 @@ test('notifications aggregation stays scope-aware and refreshes when headers cha
       '@/shared/composables/useScopeGuard': {
         useScopeGuard: () => ({ requestHeaders })
       },
-      '@/service/request/http': {
-        httpClient: {
-          get(url, options) {
-            httpCalls.push({ options, url })
-            return new Promise(resolve => {
-              pendingResponses.push({ resolve, url })
-            })
-          }
-        }
+      '@/service/api/notifications': {
+        listNotifications: createDeferredCall('notifications'),
+        listNotificationRules: createDeferredCall('rules'),
+        listNotificationSubscriptions: createDeferredCall('subscriptions'),
+        listNotificationTemplates: createDeferredCall('templates'),
+        patchNotification: () => Promise.resolve({}),
+        readNotificationAnalytics: createDeferredCall('analytics')
+      },
+      '@/store/modules/auth': {
+        useAuthStore: () => authStore
       }
     }
   })
@@ -192,29 +202,40 @@ test('notifications aggregation stays scope-aware and refreshes when headers cha
 
   assert.equal(vue.watchers.length, 1)
   assert.equal(vue.watchers[0].options.immediate, true)
-  assert.equal(httpCalls[0].url, '/api/v2/workspace/aggregation')
-  assert.equal(httpCalls[0].options.scopeHeaders['X-MMMAIL-ORG-ID'], 'org-a')
-  assert.equal(httpCalls[0].options.scopeHeaders['X-MMMAIL-SCOPE-ID'], 'scope-a')
+  assert.equal(apiCalls.length, 5)
+  assert.equal(apiCalls[0].name, 'notifications')
+  assert.equal(apiCalls[0].options.scopeHeaders['X-MMMAIL-ORG-ID'], 'org-a')
+  assert.equal(apiCalls[0].options.scopeHeaders['X-MMMAIL-SCOPE-ID'], 'scope-a')
+  assert.equal(apiCalls[0].options.token, 'token-a')
 
   requestHeaders.value = {
     'X-MMMAIL-ORG-ID': 'org-b',
     'X-MMMAIL-SCOPE-ID': 'scope-b'
   }
 
-  vue.watchers[0].callback(requestHeaders.value)
+  vue.watchers[0].callback()
   await flushAsyncWork()
 
-  assert.equal(httpCalls[1].url, '/api/v2/workspace/aggregation')
-  assert.equal(httpCalls[1].options.scopeHeaders['X-MMMAIL-ORG-ID'], 'org-b')
-  assert.equal(httpCalls[1].options.scopeHeaders['X-MMMAIL-SCOPE-ID'], 'scope-b')
+  assert.equal(apiCalls.length, 10)
+  assert.equal(apiCalls[5].name, 'notifications')
+  assert.equal(apiCalls[5].options.scopeHeaders['X-MMMAIL-ORG-ID'], 'org-b')
+  assert.equal(apiCalls[5].options.scopeHeaders['X-MMMAIL-SCOPE-ID'], 'scope-b')
 
-  const aggregationSurfaces = vue.refs[0]
+  const runtimeNotifications = vue.refs[0]
 
-  pendingResponses[1].resolve({ data: { surfaces: ['org-b-surface'] } })
+  pendingResponses[5].resolve([{ id: 'org-b-notification', status: 'UNREAD' }])
+  pendingResponses[6].resolve([])
+  pendingResponses[7].resolve([])
+  pendingResponses[8].resolve([])
+  pendingResponses[9].resolve({ criticalCount: 0, deliveryRate: 100, totalCount: 1, unreadCount: 1 })
   await flushAsyncWork()
-  assert.equal(aggregationSurfaces.value[0], 'org-b-surface')
+  assert.equal(runtimeNotifications.value[0].id, 'org-b-notification')
 
-  pendingResponses[0].resolve({ data: { surfaces: ['org-a-stale-surface'] } })
+  pendingResponses[0].resolve([{ id: 'org-a-stale-notification', status: 'UNREAD' }])
+  pendingResponses[1].resolve([])
+  pendingResponses[2].resolve([])
+  pendingResponses[3].resolve([])
+  pendingResponses[4].resolve({ criticalCount: 0, deliveryRate: 100, totalCount: 1, unreadCount: 1 })
   await flushAsyncWork()
-  assert.equal(aggregationSurfaces.value[0], 'org-b-surface')
+  assert.equal(runtimeNotifications.value[0].id, 'org-b-notification')
 })
