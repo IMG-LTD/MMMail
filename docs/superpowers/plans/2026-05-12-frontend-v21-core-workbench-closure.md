@@ -86,12 +86,9 @@ test('core workbench closure splits large views and exposes stable selectors', a
 
 预期：FAIL，报错包含 `ENOENT` 或缺少 `MailComposePanel`、`CalendarEventDrawer`、`PassShareSettingsModal`。
 
-- [ ] **步骤 3：Commit 失败测试**
+- [ ] **步骤 3：保留红灯测试，暂不提交**
 
-```bash
-git add frontend-v2/tests/v21-core-workbench-closure-contract.test.mjs
-git commit -m "test(frontend-v2): cover v2.1 core workbench closure"
-```
+失败测试留在工作树中驱动任务 2-4。提交必须等相关实现完成且验证命令退出码为 0 后执行。
 
 ---
 
@@ -164,7 +161,7 @@ const discardConfirmationOpen = ref(false)
 - [ ] **步骤 5：Commit Mail 切片**
 
 ```bash
-git add frontend-v2/src/views/app/MailSurfaceView.vue frontend-v2/src/views/app/mail frontend-v2/src/views/app/mail-surface-view.css
+git add frontend-v2/tests/v21-core-workbench-closure-contract.test.mjs frontend-v2/src/views/app/MailSurfaceView.vue frontend-v2/src/views/app/mail frontend-v2/src/views/app/mail-surface-view.css
 git commit -m "feat(frontend-v2): close v2.1 mail workbench interactions"
 ```
 
