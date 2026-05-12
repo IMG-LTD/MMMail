@@ -5,8 +5,8 @@ Last updated: 2026-05-12
 ## Current Repository State
 
 - Branch: `main`
-- Latest local commit: `25cdda5a feat(frontend-v2): close v2.1 core workbench interactions`
-- Local branch status at progress capture: `main...origin/main [ahead 35]`
+- Latest frontend implementation commit: `0ba10014 feat(frontend-v2): close v2.1 public auth visual parity`
+- Local branch status at progress capture: `main...origin/main [ahead 39]`
 - Untracked paths intentionally not included in v2.1 commits: `.superpowers/`, `.tmp/`, `docs/MMMail.zip`, `docs/MMMail/`, `frontend/`
 
 ## Completed v2.1 Slices
@@ -23,39 +23,30 @@ Last updated: 2026-05-12
 | Pass, Notifications, and Command Center runtime boundaries | `v21-pass-notifications-command-center-contract.test.mjs` |
 | Share overlays and high-risk confirmations | `v21-browser-visual-qa-contract.test.mjs`, `v21-high-risk-confirmation-contract.test.mjs` |
 | Mail, Calendar, and Pass core workbench closure | `v21-core-workbench-closure-contract.test.mjs`, latest visual QA report |
+| Final public auth visual parity closure | `v21-final-visual-parity-public-auth-closure-contract.test.mjs`, `docs/superpowers/progress/v21-visual-parity-risk-register.md` |
 
 ## Latest Visual QA Baseline
 
 - Report: `docs/superpowers/progress/v21-browser-visual-qa-report.md`
-- Generated at: `2026-05-12T10:11:45.538Z`
+- Generated at: `2026-05-12T10:52:52.623Z`
 - Screenshot count: `69`
 - Covered UI groups: Workspace, Mail, Calendar, Drive, Docs, Sheets/Labs, Pass, Collaboration, Command Center, Notifications, Admin, Settings, Public/Auth/Share/System.
 - Covered interaction evidence includes command palette, quick create, theme drawer, Mail compose security, Calendar event drawer, Drive share, Docs share, Sheets protected range, Pass secret actions, Pass secure-link settings, Pass risk detail, and Settings delete confirmation.
 
+## Latest Completed Slice
+
+- Slice: `frontend-v21-final-visual-parity-public-auth-closure`
+- Commit: `0ba10014 feat(frontend-v2): close v2.1 public auth visual parity`
+- Files changed: split `LoginView.vue` into focused public auth child components, added the visual parity risk register, refreshed browser visual QA evidence, and extended the QA report generator.
+- Verification:
+  - `timeout 60s pnpm --dir frontend-v2 test`: PASS (`80/80`)
+  - `timeout 60s pnpm --dir frontend-v2 typecheck`: PASS
+  - `pnpm --dir frontend-v2 build`: PASS
+  - `pnpm --dir frontend-v2 visual:qa`: PASS (`69 screenshots`)
+- File-size status: all touched frontend implementation files are below the 500-line limit; the largest is `frontend-v2/src/views/public/auth/login-view.css` at `420` lines.
+
 ## Remaining v2.1 Risks
 
-1. `LoginView.vue` is still above the 500-line file limit at 532 lines and should be split before more auth UI work.
-2. Browser QA proves selector visibility and screenshot generation, but does not yet record manual visual parity findings against every `docs/MMMail/UI` design image.
-3. The generated report records screenshot evidence but has no structured risk table for design-image parity deltas.
-4. Several public/auth/share and system routes have route evidence but limited interaction evidence compared with product workbenches.
-5. Some legacy or superseded views remain in the tree after route consolidation, such as older Pass monitor surfaces, and should be reviewed before final v2.1 closure.
-
-## Recommended Next Slice
-
-Proceed with a focused `frontend-v21-final-visual-parity-and-public-auth-closure` slice:
-
-- Compare current browser QA screenshots with the relevant UI design images.
-- Split and polish public auth/system surfaces, starting with `LoginView.vue`.
-- Add a visual parity risk register to the QA report or a sibling progress document.
-- Extend browser QA only with real selectors and real interactions that already exist or are implemented in this slice.
-- Keep all touched files below 500 lines and preserve explicit failure states.
-
-## Update Rule
-
-After the next development slice is completed, update this file with:
-
-- New commit hash.
-- Files changed.
-- Verification commands and outcomes.
-- Updated visual QA screenshot count.
-- Remaining v2.1 risks or a statement that no known v2.1 frontend closure risks remain.
+1. Design-image parity findings are now tracked in `docs/superpowers/progress/v21-visual-parity-risk-register.md`.
+2. No known Public/Auth file-size violation remains after splitting `LoginView.vue`.
+3. Several public/auth/share and system routes remain lower-interaction than product workbenches by design; their current rendered evidence is captured in the latest browser visual QA report.
