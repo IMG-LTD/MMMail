@@ -153,7 +153,7 @@ import java.util.Set;
 运行红灯验证：
 
 ```bash
-timeout 60s mvn -pl mmmail-server -am -f backend/pom.xml test -Dtest=BackendV21ApiContractCatalogTest
+timeout 60s mvn -pl mmmail-server -am -f backend/pom.xml test -Dtest=BackendV21ApiContractCatalogTest -Dsurefire.failIfNoSpecifiedTests=false
 ```
 
 预期：命令退出非 0，失败原因指向缺少 billing、entitlements owner 或 endpoint 数量仍为 116。
@@ -221,7 +221,7 @@ timeout 60s mvn -pl mmmail-server -am -f backend/pom.xml test -Dtest=BackendV21A
 运行：
 
 ```bash
-timeout 60s mvn -pl mmmail-server -am -f backend/pom.xml test -Dtest=BackendV21ApiContractCatalogTest
+timeout 60s mvn -pl mmmail-server -am -f backend/pom.xml test -Dtest=BackendV21ApiContractCatalogTest -Dsurefire.failIfNoSpecifiedTests=false
 ```
 
 预期：退出码 0，Surefire 输出包含 `Failures: 0` 与 `Errors: 0`。
@@ -273,7 +273,7 @@ git commit -m "test(backend-v21): close API contract runtime coverage"
 - Completed: `2026-05-12`
 - Commit: `实际实现提交 hash test(backend-v21): close API contract runtime coverage`
 - Verification:
-  - `timeout 60s mvn -pl mmmail-server -am -f backend/pom.xml test -Dtest=BackendV21ApiContractCatalogTest`
+  - `timeout 60s mvn -pl mmmail-server -am -f backend/pom.xml test -Dtest=BackendV21ApiContractCatalogTest -Dsurefire.failIfNoSpecifiedTests=false`
   - `timeout 60s mvn -pl mmmail-server -am -f backend/pom.xml compile`
   - `timeout 60s pnpm --dir frontend-v2 test`
 ```
