@@ -8,7 +8,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
 @Configuration
-@MapperScan({"com.mmmail.server.mapper", "com.mmmail.server.outbox"})
+@MapperScan({"com.mmmail.server.mapper", "com.mmmail.server.outbox", "com.mmmail.server.jobs"})
 public class MybatisPlusConfig {
 
     @Bean
