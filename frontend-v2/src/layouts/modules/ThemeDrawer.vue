@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { storeToRefs } from 'pinia'
-import { NDrawer, NDrawerContent } from 'naive-ui'
+import Drawer from '@/design-system/components/Drawer.vue'
 import { lt, useLocaleText } from '@/locales'
 import { densityModes, radiusOptions, themePresets, themeSchemes } from '@/theme/settings'
 import { useThemeStore } from '@/store/modules/theme'
@@ -21,103 +21,106 @@ function handleDrawerVisibility(value: boolean) {
 </script>
 
 <template>
-  <n-drawer :show="drawerOpen" :width="384" placement="right" @update:show="handleDrawerVisibility">
-    <n-drawer-content :title="tr(lt('主题设置', '主題設定', 'Theme settings'))" closable>
-      <div class="theme-drawer">
-        <section class="theme-drawer__section">
-          <span class="section-label">{{ tr(lt('模式', '模式', 'Mode')) }}</span>
-          <div class="theme-drawer__option-grid">
-            <button
-              v-for="option in themeSchemes"
-              :key="option.value"
-              type="button"
-              class="theme-drawer__option"
-              :class="{ 'theme-drawer__option--active': themeScheme === option.value }"
-              @click="themeStore.setThemeScheme(option.value)"
-            >
-              {{ tr(option.label) }}
-            </button>
-          </div>
-        </section>
+  <Drawer
+    :show="drawerOpen"
+    :size="384"
+    :title="tr(lt('主题设置', '主題設定', 'Theme settings'))"
+    @update:show="handleDrawerVisibility"
+  >
+    <div class="theme-drawer">
+      <section class="theme-drawer__section">
+        <span class="section-label">{{ tr(lt('模式', '模式', 'Mode')) }}</span>
+        <div class="theme-drawer__option-grid">
+          <button
+            v-for="option in themeSchemes"
+            :key="option.value"
+            type="button"
+            class="theme-drawer__option"
+            :class="{ 'theme-drawer__option--active': themeScheme === option.value }"
+            @click="themeStore.setThemeScheme(option.value)"
+          >
+            {{ tr(option.label) }}
+          </button>
+        </div>
+      </section>
 
-        <section class="theme-drawer__section">
-          <span class="section-label">{{ tr(lt('预设', '預設', 'Preset')) }}</span>
-          <div class="theme-drawer__preset-grid">
-            <button
-              v-for="preset in themePresets"
-              :key="preset.id"
-              type="button"
-              class="theme-drawer__preset"
-              :class="{ 'theme-drawer__preset--active': themePreset === preset.id }"
-              @click="themeStore.setThemePreset(preset.id)"
-            >
-              <span class="theme-drawer__swatch" :style="{ background: preset.accent }" />
-              <strong>{{ tr(preset.label) }}</strong>
-              <span>{{ tr(preset.description) }}</span>
-            </button>
-          </div>
-        </section>
+      <section class="theme-drawer__section">
+        <span class="section-label">{{ tr(lt('预设', '預設', 'Preset')) }}</span>
+        <div class="theme-drawer__preset-grid">
+          <button
+            v-for="preset in themePresets"
+            :key="preset.id"
+            type="button"
+            class="theme-drawer__preset"
+            :class="{ 'theme-drawer__preset--active': themePreset === preset.id }"
+            @click="themeStore.setThemePreset(preset.id)"
+          >
+            <span class="theme-drawer__swatch" :style="{ background: preset.accent }" />
+            <strong>{{ tr(preset.label) }}</strong>
+            <span>{{ tr(preset.description) }}</span>
+          </button>
+        </div>
+      </section>
 
-        <section class="theme-drawer__section">
-          <span class="section-label">{{ tr(lt('密度', '密度', 'Density')) }}</span>
-          <div class="theme-drawer__option-grid">
-            <button
-              v-for="option in densityModes"
-              :key="option.value"
-              type="button"
-              class="theme-drawer__option"
-              :class="{ 'theme-drawer__option--active': density === option.value }"
-              @click="themeStore.setDensity(option.value)"
-            >
-              {{ tr(option.label) }}
-            </button>
-          </div>
-        </section>
+      <section class="theme-drawer__section">
+        <span class="section-label">{{ tr(lt('密度', '密度', 'Density')) }}</span>
+        <div class="theme-drawer__option-grid">
+          <button
+            v-for="option in densityModes"
+            :key="option.value"
+            type="button"
+            class="theme-drawer__option"
+            :class="{ 'theme-drawer__option--active': density === option.value }"
+            @click="themeStore.setDensity(option.value)"
+          >
+            {{ tr(option.label) }}
+          </button>
+        </div>
+      </section>
 
-        <section class="theme-drawer__section">
-          <span class="section-label">{{ tr(lt('圆角', '圓角', 'Corner radius')) }}</span>
-          <div class="theme-drawer__option-grid">
-            <button
-              v-for="value in radiusOptions"
-              :key="value"
-              type="button"
-              class="theme-drawer__option"
-              :class="{ 'theme-drawer__option--active': radius === value }"
-              @click="themeStore.setRadius(value)"
-            >
-              {{ value }} px
-            </button>
-          </div>
-        </section>
+      <section class="theme-drawer__section">
+        <span class="section-label">{{ tr(lt('圆角', '圓角', 'Corner radius')) }}</span>
+        <div class="theme-drawer__option-grid">
+          <button
+            v-for="value in radiusOptions"
+            :key="value"
+            type="button"
+            class="theme-drawer__option"
+            :class="{ 'theme-drawer__option--active': radius === value }"
+            @click="themeStore.setRadius(value)"
+          >
+            {{ value }} px
+          </button>
+        </div>
+      </section>
 
-        <article class="theme-drawer__preview surface-card">
-          <div class="theme-drawer__preview-head">
-            <div>
-              <span class="section-label">{{ tr(lt('预览', '預覽', 'Preview')) }}</span>
-              <strong>{{ resolvedScheme === 'dark' ? tr(lt('深色壳层', '深色殼層', 'Dark shell')) : tr(lt('浅色壳层', '淺色殼層', 'Light shell')) }}</strong>
-            </div>
-            <span class="theme-drawer__preview-badge">{{ tr(densityModes.find(option => option.value === density)?.label ?? density) }}</span>
+      <article class="theme-drawer__preview surface-card">
+        <div class="theme-drawer__preview-head">
+          <div>
+            <span class="section-label">{{ tr(lt('预览', '預覽', 'Preview')) }}</span>
+            <strong>{{ resolvedScheme === 'dark' ? tr(lt('深色壳层', '深色殼層', 'Dark shell')) : tr(lt('浅色壳层', '淺色殼層', 'Light shell')) }}</strong>
           </div>
+          <span class="theme-drawer__preview-badge">{{ tr(densityModes.find(option => option.value === density)?.label ?? density) }}</span>
+        </div>
 
-          <div class="theme-drawer__preview-strip">
-            <span class="theme-drawer__preview-rail" />
-            <div class="theme-drawer__preview-card">
-              <span class="theme-drawer__preview-pill">{{ tr(lt('已加密', '已加密', 'Encrypted')) }}</span>
-              <span class="theme-drawer__preview-line" />
-              <span class="theme-drawer__preview-line theme-drawer__preview-line--short" />
-            </div>
+        <div class="theme-drawer__preview-strip">
+          <span class="theme-drawer__preview-rail" />
+          <div class="theme-drawer__preview-card">
+            <span class="theme-drawer__preview-pill">{{ tr(lt('已加密', '已加密', 'Encrypted')) }}</span>
+            <span class="theme-drawer__preview-line" />
+            <span class="theme-drawer__preview-line theme-drawer__preview-line--short" />
           </div>
+        </div>
 
-          <div class="theme-drawer__preview-metrics">
-            <div v-for="([label, meta], index) in previewMetrics" :key="index">
-              <strong>{{ tr(label) }}</strong>
-              <span>{{ tr(meta) }}</span>
-            </div>
+        <div class="theme-drawer__preview-metrics">
+          <div v-for="([label, meta], index) in previewMetrics" :key="index">
+            <strong>{{ tr(label) }}</strong>
+            <span>{{ tr(meta) }}</span>
           </div>
-        </article>
-      </div>
-    </n-drawer-content>
-  </n-drawer>
+        </div>
+      </article>
+    </div>
+  </Drawer>
 </template>
 
 <style scoped>

@@ -1,6 +1,9 @@
 <script setup lang="ts">
 import { computed, onMounted, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
+import DataGrid, { type DataGridCell, type DataGridColumn } from '@/design-system/components/DataGrid.vue'
+import DataTable, { type DataTableColumn } from '@/design-system/components/DataTable.vue'
+import ErrorState from '@/design-system/components/ErrorState.vue'
 import CompactPageHeader from '@/shared/components/CompactPageHeader.vue'
 import { lt, useLocaleText } from '@/locales'
 import { listSheetsWorkbooks, type SheetsWorkbookSummary } from '@/service/api/sheets'
@@ -19,11 +22,45 @@ const workspaceLoading = ref(false)
 const loadError = ref('')
 
 let latestSheetsWorkspaceRequest = 0
+const WORKBOOK_PREVIEW_LIMIT = 6
 
 const visibleWorkbooks = computed(() => {
   return workbooks.value
     .slice()
     .sort((left, right) => compareDateDesc(left.updatedAt, right.updatedAt) || left.title.localeCompare(right.title))
+})
+const workbookColumns = computed<DataTableColumn[]>(() => [
+  { key: 'title', label: tr(lt('名称', '名稱', 'Name')), sortable: true },
+  { key: 'meta', label: tr(lt('规模', '規模', 'Size')) },
+  { key: 'collaborators', label: tr(lt('协作者', '協作者', 'Collaborators')), width: '140px' },
+  { key: 'visibility', label: tr(lt('可见性', '可見性', 'Visibility')), width: '150px' }
+])
+const workbookRows = computed(() => {
+  return visibleWorkbooks.value.map(workbook => ({
+    id: workbook.id,
+    collaborators: resolveCollaboratorCopy(workbook),
+    meta: resolveWorkbookMeta(workbook),
+    title: workbook.title || tr(lt('未命名工作簿', '未命名活頁簿', 'Untitled workbook')),
+    visibility: resolveVisibilityCopy(workbook)
+  }))
+})
+const previewWorkbooks = computed(() => visibleWorkbooks.value.slice(0, WORKBOOK_PREVIEW_LIMIT))
+const previewColumns = computed<DataGridColumn[]>(() => [
+  { key: 'title', label: tr(lt('工作簿', '活頁簿', 'Workbook')), width: '180px' },
+  { key: 'size', label: tr(lt('行列', '行列', 'Rows/cols')), width: '120px' },
+  { key: 'formulas', label: tr(lt('公式', '公式', 'Formulas')), width: '100px' },
+  { key: 'errors', label: tr(lt('错误', '錯誤', 'Errors')), width: '100px' }
+])
+const previewRows = computed(() => {
+  return previewWorkbooks.value.map((workbook, index) => ({ key: workbook.id, label: `${index + 1}` }))
+})
+const previewCells = computed<DataGridCell[]>(() => {
+  return previewWorkbooks.value.flatMap(workbook => [
+    { columnKey: 'title', rowKey: workbook.id, value: workbook.title || tr(lt('未命名工作簿', '未命名活頁簿', 'Untitled workbook')) },
+    { columnKey: 'size', rowKey: workbook.id, value: `${workbook.rowCount} × ${workbook.colCount}` },
+    { columnKey: 'formulas', rowKey: workbook.id, value: `${workbook.formulaCellCount}` },
+    { columnKey: 'errors', rowKey: workbook.id, value: `${workbook.computedErrorCount}` }
+  ])
 })
 
 const statusCopy = computed(() => {
@@ -64,6 +101,13 @@ function toggleCopilotPanel() {
 
 function openWorkbook(workbookId: string) {
   void router.push(`/sheets/${workbookId}`)
+}
+
+function openWorkbookRow(row: Record<string, unknown>) {
+  const workbookId = typeof row.id === 'string' ? row.id : ''
+  if (workbookId) {
+    openWorkbook(workbookId)
+  }
 }
 
 async function loadSheetsWorkspace() {
@@ -186,28 +230,40 @@ watch(() => [route.fullPath, authStore.accessToken], () => {
 
     <p class="page-subtitle sheets-status">{{ statusCopy }}</p>
 
-    <article class="surface-card sheets-table">
-      <header class="sheets-table__head">
-        <span>{{ tr(lt('名称', '名稱', 'Name')) }}</span>
-        <span>{{ tr(lt('协作者', '協作者', 'Collaborators')) }}</span>
-        <span>{{ tr(lt('可见性', '可見性', 'Visibility')) }}</span>
-      </header>
-      <button
-        v-for="sheet in visibleWorkbooks"
-        :key="sheet.id"
-        class="sheets-table__row"
-        type="button"
-        @click="openWorkbook(sheet.id)"
-      >
-        <div>
-          <strong>{{ sheet.title || tr(lt('未命名工作簿', '未命名活頁簿', 'Untitled workbook')) }}</strong>
-          <p>{{ resolveWorkbookMeta(sheet) }}</p>
-        </div>
-        <span>{{ resolveCollaboratorCopy(sheet) }}</span>
-        <span>{{ resolveVisibilityCopy(sheet) }}</span>
-      </button>
-      <p v-if="!visibleWorkbooks.length" class="sheets-table__empty">{{ emptyCopy }}</p>
-    </article>
+    <ErrorState
+      v-if="loadError"
+      :description="loadError"
+      :title="tr(lt('工作簿读取失败', '活頁簿讀取失敗', 'Workbooks failed to load'))"
+      retry-label="Retry"
+      variant="inline"
+      @retry="loadSheetsWorkspace"
+    />
+
+    <div class="sheets-workspace">
+      <DataTable
+        :columns="workbookColumns"
+        :empty="!workbookRows.length"
+        :loading="workspaceLoading"
+        row-key="id"
+        :rows="workbookRows"
+        stacked
+        @row-action="openWorkbookRow"
+      />
+
+      <section class="sheets-preview" aria-labelledby="sheets-preview-title">
+        <h2 id="sheets-preview-title">{{ tr(lt('网格预览', '網格預覽', 'Grid preview')) }}</h2>
+        <DataGrid
+          v-if="previewRows.length"
+          :cells="previewCells"
+          :columns="previewColumns"
+          readonly
+          :rows="previewRows"
+          sticky-first-column
+          sticky-header
+        />
+        <p v-else class="sheets-preview__empty">{{ emptyCopy }}</p>
+      </section>
+    </div>
   </section>
 </template>
 
@@ -237,62 +293,31 @@ watch(() => [route.fullPath, authStore.accessToken], () => {
   margin: 0;
 }
 
-.sheets-table {
-  overflow: hidden;
-}
-
-.sheets-table__head,
-.sheets-table__row {
+.sheets-workspace {
   display: grid;
-  grid-template-columns: 1.4fr 0.9fr 0.7fr;
-  gap: 16px;
-  width: 100%;
-  padding: 16px 18px;
+  gap: 18px;
 }
 
-.sheets-table__head {
-  border-bottom: 1px solid var(--mm-border);
-  color: var(--mm-text-secondary);
-  font-size: 12px;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
+.sheets-preview {
+  display: grid;
+  gap: 10px;
 }
 
-.sheets-table__row {
-  border: 0;
-  border-bottom: 1px solid var(--mm-border);
-  background: transparent;
-  font: inherit;
-  font-size: 13px;
-  text-align: left;
+.sheets-preview h2 {
+  margin: 0;
+  color: var(--mm-text);
+  font-size: 14px;
+  letter-spacing: 0;
 }
 
-.sheets-table__row strong {
-  display: block;
-}
-
-.sheets-table__row p,
-.sheets-table__row span,
-.sheets-table__empty {
-  color: var(--mm-text-secondary);
-}
-
-.sheets-table__row p {
-  margin: 4px 0 0;
-  font-size: 12px;
-}
-
-.sheets-table__empty {
+.sheets-preview__empty {
   margin: 0;
   padding: 18px;
+  border: 1px solid var(--mm-border);
+  border-radius: var(--mm-radius-md);
+  background: var(--mm-surface);
+  color: var(--mm-text-secondary);
   font-size: 13px;
   line-height: 1.6;
-}
-
-@media (max-width: 720px) {
-  .sheets-table__head,
-  .sheets-table__row {
-    grid-template-columns: 1fr;
-  }
 }
 </style>

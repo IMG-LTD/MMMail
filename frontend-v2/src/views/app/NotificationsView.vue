@@ -1,5 +1,8 @@
 <script setup lang="ts">
 import { computed, ref, watch } from 'vue'
+import ChartCard from '@/design-system/components/ChartCard.vue'
+import DataTable, { type DataTableColumn } from '@/design-system/components/DataTable.vue'
+import ErrorState from '@/design-system/components/ErrorState.vue'
 import CompactPageHeader from '@/shared/components/CompactPageHeader.vue'
 import { lt, useLocaleText } from '@/locales'
 import { useScopeGuard } from '@/shared/composables/useScopeGuard'
@@ -34,6 +37,23 @@ const unreadCount = computed(() => notifications.value.filter(item => item.statu
 const criticalCount = computed(() => notifications.value.filter(item => item.severity === 'CRITICAL').length)
 const enabledRules = computed(() => rules.value.filter(rule => rule.enabled).length)
 const enabledSubscriptions = computed(() => subscriptions.value.filter(item => item.enabled).length)
+const notificationColumns = computed<DataTableColumn[]>(() => [
+  { key: 'severity', label: tr(lt('严重程度', '嚴重程度', 'Severity')), sortable: true, width: '120px' },
+  { key: 'title', label: tr(lt('标题', '標題', 'Title')) },
+  { key: 'product', label: tr(lt('来源', '來源', 'Source')), width: '120px' },
+  { key: 'status', label: tr(lt('状态', '狀態', 'Status')), width: '110px' },
+  { key: 'createdAt', label: tr(lt('时间', '時間', 'Time')), width: '180px' }
+])
+const notificationRows = computed(() => {
+  return notifications.value.map(item => ({
+    id: item.id,
+    createdAt: item.createdAt,
+    product: item.product,
+    severity: item.severity,
+    status: item.status,
+    title: item.title
+  }))
+})
 const statusCopy = computed(() => {
   if (!authStore.accessToken) {
     return tr(lt('登录后即可读取通知。', '登入後即可讀取通知。', 'Sign in to load notifications.'))
@@ -53,6 +73,9 @@ const analyticsCards = computed(() => [
   [lt('严重', '嚴重', 'Critical'), `${analytics.value?.criticalCount ?? criticalCount.value}`],
   [lt('送达率', '送達率', 'Delivery'), `${analytics.value?.deliveryRate ?? 0}%`]
 ])
+const rulesSummary = computed(() => {
+  return `${rules.value.length} ${tr(lt('条规则', '條規則', 'rules'))} · ${templates.value.length} ${tr(lt('个模板', '個範本', 'templates'))}`
+})
 
 function clearNotificationsState() {
   notifications.value = []
@@ -124,6 +147,18 @@ async function markAllRead() {
   await loadNotifications()
 }
 
+async function markNotificationRowRead(row: Record<string, unknown>) {
+  const requestToken = authStore.accessToken
+  const notificationId = typeof row.id === 'string' ? row.id : ''
+  if (!requestToken || !notificationId) {
+    return
+  }
+
+  const options = { scopeHeaders: requestHeaders.value, token: requestToken }
+  await patchNotification(notificationId, { status: 'READ' }, options)
+  await loadNotifications()
+}
+
 watch(
   () => [authStore.accessToken, JSON.stringify(requestHeaders.value)],
   () => {
@@ -152,33 +187,54 @@ watch(
     </div>
 
     <div class="notifications-layout">
-      <article class="surface-card notifications-list">
-        <p v-if="!notifications.length" class="page-subtitle">{{ statusCopy }}</p>
-        <div v-for="item in notifications" :key="item.id" class="notifications-row">
-          <div class="notifications-row__dot" :class="{ 'notifications-row__dot--read': item.status === 'READ' }" />
-          <div>
-            <span class="section-label">{{ item.severity }}</span>
-            <strong>{{ item.title }}</strong>
-            <p>{{ item.product }} · {{ item.createdAt }}</p>
-          </div>
-          <span>{{ item.status }}</span>
-        </div>
-      </article>
+      <div class="notifications-main">
+        <ErrorState
+          v-if="loadError"
+          :description="loadError"
+          :title="tr(lt('通知读取失败', '通知讀取失敗', 'Notifications failed to load'))"
+          retry-label="Retry"
+          variant="inline"
+          @retry="loadNotifications"
+        />
+        <DataTable
+          :columns="notificationColumns"
+          density="compact"
+          :empty="!notificationRows.length"
+          :loading="notificationsLoading"
+          row-key="id"
+          :rows="notificationRows"
+          stacked
+          @row-action="markNotificationRowRead"
+        />
+        <p v-if="!notificationRows.length" class="page-subtitle">{{ statusCopy }}</p>
+      </div>
 
       <aside class="notifications-side">
-        <article class="surface-card notifications-panel">
-          <span class="section-label">{{ tr(lt('分析', '分析', 'Analytics')) }}</span>
+        <ChartCard
+          :description="tr(lt('聚合未读、严重告警和送达表现。', '聚合未讀、嚴重告警和送達表現。', 'Unread, critical alert, and delivery indicators.'))"
+          :loading="notificationsLoading"
+          status="info"
+          :summary="statusCopy"
+          :title="tr(lt('分析', '分析', 'Analytics'))"
+          :value="`${analytics?.totalCount ?? notifications.length}`"
+        >
           <div v-for="([label, value], index) in analyticsCards" :key="index" class="notifications-stat">
             <span>{{ tr(label) }}</span>
             <strong>{{ value }}</strong>
           </div>
-        </article>
+        </ChartCard>
 
-        <article class="surface-card notifications-panel">
-          <span class="section-label">{{ tr(lt('规则与模板', '規則與範本', 'Rules and templates')) }}</span>
-          <p class="page-subtitle">{{ rules.length }} {{ tr(lt('条规则', '條規則', 'rules')) }} · {{ templates.length }} {{ tr(lt('个模板', '個範本', 'templates')) }}</p>
+        <ChartCard
+          :description="tr(lt('集中查看当前启用规则、订阅和模板。', '集中查看目前啟用規則、訂閱和範本。', 'Active rules, subscriptions, and templates in one place.'))"
+          :loading="notificationsLoading"
+          status="success"
+          :summary="rulesSummary"
+          :title="tr(lt('规则与模板', '規則與範本', 'Rules and templates'))"
+          :value="`${enabledRules}`"
+        >
+          <p class="page-subtitle">{{ rulesSummary }}</p>
           <span v-for="item in templates" :key="item.id" class="metric-chip">{{ item.name }}</span>
-        </article>
+        </ChartCard>
       </aside>
     </div>
   </section>
@@ -207,52 +263,14 @@ watch(
   gap: 16px;
 }
 
-.notifications-list {
-  padding: 0 18px;
-}
-
-.notifications-row {
+.notifications-main {
   display: grid;
-  grid-template-columns: 10px minmax(0, 1fr) auto;
-  align-items: start;
-  gap: 14px;
-  padding: 18px 0;
-  border-bottom: 1px solid var(--mm-border);
-}
-
-.notifications-row__dot {
-  width: 8px;
-  height: 8px;
-  margin-top: 5px;
-  border-radius: 999px;
-  background: var(--mm-primary);
-}
-
-.notifications-row__dot--read {
-  background: var(--mm-border);
-}
-
-.notifications-row strong {
-  display: block;
-  margin-top: 8px;
-}
-
-.notifications-row p,
-.notifications-row span:last-child {
-  margin: 6px 0 0;
-  color: var(--mm-text-secondary);
-  font-size: 12px;
+  gap: 12px;
 }
 
 .notifications-side {
   display: grid;
   gap: 16px;
-}
-
-.notifications-panel {
-  display: grid;
-  gap: 12px;
-  padding: 18px;
 }
 
 .notifications-stat {
@@ -276,14 +294,6 @@ watch(
 @media (max-width: 720px) {
   .notifications-mark-all {
     margin-left: 0;
-  }
-
-  .notifications-row {
-    grid-template-columns: 10px minmax(0, 1fr);
-  }
-
-  .notifications-row span:last-child {
-    grid-column: 2;
   }
 }
 </style>

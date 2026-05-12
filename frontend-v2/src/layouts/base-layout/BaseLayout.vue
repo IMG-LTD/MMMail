@@ -15,6 +15,8 @@
       <context-panel />
     </div>
     <mobile-tab-bar />
+    <shell-command-palette />
+    <shell-quick-create-modal />
     <theme-drawer />
   </div>
 </template>
@@ -25,6 +27,8 @@ import { useRoute } from 'vue-router'
 import ContextPanel from '@/layouts/modules/ContextPanel.vue'
 import ShellSideNav from '@/layouts/modules/ShellSideNav.vue'
 import ShellTopBar from '@/layouts/modules/ShellTopBar.vue'
+import ShellCommandPalette from '@/layouts/modules/ShellCommandPalette.vue'
+import ShellQuickCreateModal from '@/layouts/modules/ShellQuickCreateModal.vue'
 import MobileTabBar from '@/layouts/modules/MobileTabBar.vue'
 import ThemeDrawer from '@/layouts/modules/ThemeDrawer.vue'
 import { isMailRoute } from '@/layouts/modules/shell-nav'

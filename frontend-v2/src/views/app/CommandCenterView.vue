@@ -1,5 +1,9 @@
 <script setup lang="ts">
 import { computed, ref, watch } from 'vue'
+import ChartCard from '@/design-system/components/ChartCard.vue'
+import DataTable, { type DataTableColumn } from '@/design-system/components/DataTable.vue'
+import ErrorState from '@/design-system/components/ErrorState.vue'
+import TerminalLog, { type TerminalLogLine } from '@/design-system/components/TerminalLog.vue'
 import CompactPageHeader from '@/shared/components/CompactPageHeader.vue'
 import { lt, useLocaleText } from '@/locales'
 import {
@@ -30,7 +34,22 @@ const loadError = ref('')
 let latestCommandCenterRequest = 0
 
 const enabledCommands = computed(() => commands.value.filter(command => command.enabled))
-const latestAudit = computed(() => auditEntries.value.slice(0, 4))
+const latestAudit = computed(() => auditEntries.value.slice(0, 6))
+const auditColumns = computed<DataTableColumn[]>(() => [
+  { key: 'action', label: tr(lt('操作', '操作', 'Action')), sortable: true },
+  { key: 'actor', label: tr(lt('执行人', '執行人', 'Actor')) },
+  { key: 'status', label: tr(lt('状态', '狀態', 'Status')) },
+  { key: 'createdAt', label: tr(lt('时间', '時間', 'Time')) }
+])
+const auditRows = computed(() => {
+  return latestAudit.value.map(item => ({
+    id: item.id,
+    action: item.action,
+    actor: item.actorEmail,
+    createdAt: item.createdAt,
+    status: item.status
+  }))
+})
 const statusCopy = computed(() => {
   if (!authStore.accessToken) {
     return tr(lt('登录后即可读取指挥中心。', '登入後即可讀取指揮中心。', 'Sign in to load Command Center.'))
@@ -44,7 +63,31 @@ const statusCopy = computed(() => {
     ? tr(lt('正在读取命令运行时。', '正在讀取命令執行期。', 'Loading command runtime.'))
     : `${commands.value.length} ${tr(lt('个命令模板已载入', '個命令範本已載入', 'command templates loaded'))}`
 })
-const logLines = computed(() => activeRun.value?.logTail || [statusCopy.value])
+const terminalLogLevel = computed<TerminalLogLine['level']>(() => {
+  if (runError.value || loadError.value) {
+    return 'error'
+  }
+
+  return activeRun.value?.status === 'SUCCEEDED' ? 'success' : 'info'
+})
+const terminalLogLines = computed<TerminalLogLine[]>(() => {
+  const activeLogLines = activeRun.value?.logTail || []
+  const lines = activeLogLines.length ? activeLogLines : [statusCopy.value]
+
+  return lines.map<TerminalLogLine>((text, index) => ({
+    id: `${activeRun.value?.id || 'command-center'}-${index}`,
+    level: terminalLogLevel.value,
+    stream: activeRun.value ? 'stdout' : 'system',
+    text,
+    timestamp: activeRun.value?.startedAt || '-'
+  }))
+})
+const commandSummary = computed(() => {
+  return `${enabledCommands.value.length}/${commands.value.length} ${tr(lt('可用命令', '可用命令', 'enabled commands'))}`
+})
+const workflowSummary = computed(() => {
+  return `${workflows.value.length} ${tr(lt('条工作流', '條工作流', 'workflows'))}`
+})
 
 function clearCommandCenterState() {
   commands.value = []
@@ -137,8 +180,24 @@ watch(
       badge-tone="preview"
     />
 
+    <ErrorState
+      v-if="loadError"
+      :description="loadError"
+      :title="tr(lt('指挥中心读取失败', '指揮中心讀取失敗', 'Command Center failed to load'))"
+      retry-label="Retry"
+      variant="inline"
+      @retry="loadCommandCenter"
+    />
+
     <div class="command-grid">
-      <article class="surface-card command-card" :class="{ 'command-card--active': currentView === 'overview' }">
+      <ChartCard
+        :description="tr(lt('常用跨模块指令与自动化入口集中呈现。', '常用跨模組指令與自動化入口集中呈現。', 'Frequently used cross-module commands and automation entries.'))"
+        :loading="commandCenterLoading"
+        :status="currentView === 'overview' ? 'info' : 'neutral'"
+        :summary="commandSummary"
+        :title="tr(lt('命令模板', '命令範本', 'Command templates'))"
+        :value="`${enabledCommands.length}`"
+      >
         <button
           type="button"
           class="section-label command-card__label"
@@ -154,9 +213,16 @@ watch(
             {{ command.name }}
           </button>
         </div>
-      </article>
+      </ChartCard>
 
-      <article class="surface-card command-card" :class="{ 'command-card--active': currentView === 'automation' }">
+      <ChartCard
+        :description="tr(lt('跟踪跨产品自动化链路的最新状态。', '追蹤跨產品自動化鏈路的最新狀態。', 'Latest status across product automation workflows.'))"
+        :loading="commandCenterLoading"
+        :status="currentView === 'automation' ? 'success' : 'neutral'"
+        :summary="workflowSummary"
+        :title="tr(lt('工作流', '工作流', 'Workflows'))"
+        :value="`${workflows.length}`"
+      >
         <button
           type="button"
           class="section-label command-card__label"
@@ -170,9 +236,16 @@ watch(
           <strong v-for="workflow in workflows" :key="workflow.id">{{ workflow.name }} · {{ workflow.status }}</strong>
           <p v-if="!workflows.length" class="page-subtitle">{{ statusCopy }}</p>
         </div>
-      </article>
+      </ChartCard>
 
-      <article class="surface-card command-card command-card--feed" :class="{ 'command-card--active': currentView === 'runs' }">
+      <ChartCard
+        :description="tr(lt('审计最近的命令执行、执行人和状态。', '稽核最近的命令執行、執行人和狀態。', 'Recent command runs, actors, and outcomes.'))"
+        :loading="commandCenterLoading"
+        :status="currentView === 'runs' ? 'warning' : 'neutral'"
+        :summary="`${auditRows.length} ${tr(lt('条审计记录', '條稽核記錄', 'audit records'))}`"
+        :title="tr(lt('运行与审计', '執行與稽核', 'Runs and audit'))"
+        :value="`${auditRows.length}`"
+      >
         <button
           type="button"
           class="section-label command-card__label"
@@ -182,21 +255,26 @@ watch(
         >
           {{ tr(lt('运行与审计', '執行與稽核', 'Runs and audit')) }}
         </button>
-        <p v-if="runError" class="page-subtitle">{{ runError }}</p>
-        <div v-for="item in latestAudit" :key="item.id" class="command-feed__row">
-          <div>
-            <strong>{{ item.action }}</strong>
-            <p>{{ item.actorEmail }} · {{ item.status }}</p>
-          </div>
-          <span>{{ item.createdAt }}</span>
-        </div>
-      </article>
+        <ErrorState
+          v-if="runError"
+          :description="runError"
+          :title="tr(lt('命令运行失败', '命令執行失敗', 'Command run failed'))"
+          variant="inline"
+        />
+        <DataTable
+          v-else
+          :columns="auditColumns"
+          density="compact"
+          :empty="!auditRows.length"
+          row-key="id"
+          :rows="auditRows"
+          stacked
+          @row-action="setView('runs')"
+        />
+      </ChartCard>
     </div>
 
-    <article class="surface-card command-log">
-      <span class="section-label">{{ tr(lt('运行日志', '執行日誌', 'Run log')) }}</span>
-      <code v-for="(line, index) in logLines" :key="index">{{ line }}</code>
-    </article>
+    <TerminalLog :lines="terminalLogLines" :running="Boolean(activeRun && !activeRun.finishedAt)" />
   </section>
 </template>
 
@@ -205,15 +283,6 @@ watch(
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 16px;
-}
-
-.command-card {
-  padding: 20px;
-}
-
-.command-card--active {
-  border-color: var(--mm-accent-border);
-  box-shadow: 0 0 0 1px var(--mm-accent-border), var(--mm-shadow);
 }
 
 .command-card__label {
@@ -248,39 +317,6 @@ watch(
   border: 1px solid var(--mm-border);
   border-radius: 8px;
   align-items: center;
-}
-
-.command-card--feed {
-  grid-column: span 1;
-}
-
-.command-feed__row {
-  display: flex;
-  align-items: start;
-  justify-content: space-between;
-  gap: 12px;
-  padding: 14px 0;
-  border-bottom: 1px solid var(--mm-border);
-}
-
-.command-feed__row p,
-.command-feed__row span {
-  margin: 4px 0 0;
-  color: var(--mm-text-secondary);
-  font-size: 12px;
-}
-
-.command-log {
-  display: grid;
-  gap: 8px;
-  padding: 18px;
-  background: #111827;
-  color: #f8fafc;
-}
-
-.command-log code {
-  color: inherit;
-  white-space: pre-wrap;
 }
 
 @media (max-width: 920px) {
