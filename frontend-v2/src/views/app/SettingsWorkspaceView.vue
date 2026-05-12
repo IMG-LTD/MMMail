@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { computed, onMounted, ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
+import Modal from '@/design-system/components/Modal.vue'
 import CompactPageHeader from '@/shared/components/CompactPageHeader.vue'
 import { readSystemHealth } from '@/service/api/system-health'
 import { lt, type TextLike, useLocaleText } from '@/locales'
@@ -34,6 +35,7 @@ const mcpRegistry = useMcpRegistry()
 const registryCapabilities = mcpRegistry.capabilities
 const systemHealth = ref<SystemHealthOverview | null>(null)
 const systemHealthFailed = ref(false)
+const deleteAccountConfirmationOpen = ref(false)
 
 const settingsPanelKeys: SettingsPanelKey[] = ['getting-started', 'privacy-telemetry', 'system-health', 'integrations']
 const navItems: SettingsNavItem[] = [
@@ -82,6 +84,14 @@ function openPanel(panelKey: SettingsPanelKey) {
       panel: panelKey
     }
   })
+}
+
+function openDeleteAccountConfirmation() {
+  deleteAccountConfirmationOpen.value = true
+}
+
+function closeDeleteAccountConfirmation() {
+  deleteAccountConfirmationOpen.value = false
 }
 
 onMounted(async () => {
@@ -232,7 +242,7 @@ onMounted(async () => {
           <article class="settings-panel settings-panel--danger">
             <span class="section-label">{{ tr(lt('删除账户', '刪除帳戶', 'Delete Account')) }}</span>
             <p class="page-subtitle">{{ tr(lt('永久删除你的 MMMail 账户，并清除所有相关遥测数据。', '永久刪除你的 MMMail 帳戶，並清除所有相關遙測資料。', 'Permanently delete your MMMail account and wipe all associated telemetry data.')) }}</p>
-            <button type="button">{{ tr(lt('删除账户', '刪除帳戶', 'Delete account')) }}</button>
+            <button type="button" @click="openDeleteAccountConfirmation()">{{ tr(lt('删除账户', '刪除帳戶', 'Delete account')) }}</button>
           </article>
         </section>
 
@@ -241,6 +251,27 @@ onMounted(async () => {
         </div>
       </div>
     </article>
+
+    <Modal
+      :show="deleteAccountConfirmationOpen"
+      :title="tr(lt('确认删除账户', '確認刪除帳戶', 'Confirm account deletion'))"
+      :description="tr(lt('删除账户是高风险操作，需要明确确认。', '刪除帳戶是高風險操作，需要明確確認。', 'Account deletion is a high-risk action and requires explicit confirmation.'))"
+      close-label="Close delete account confirmation"
+      size="sm"
+      tone="danger"
+      @close="closeDeleteAccountConfirmation"
+      @update:show="deleteAccountConfirmationOpen = $event"
+    >
+      <div class="settings-delete-confirmation">
+        <p>{{ tr(lt('此操作会永久移除账户资料、设置和相关遥测记录。当前界面不会直接执行删除；请在完成导出和审计确认后，通过受控管理流程继续。', '此操作會永久移除帳戶資料、設定和相關遙測記錄。目前介面不會直接執行刪除；請在完成匯出和稽核確認後，透過受控管理流程繼續。', 'This action permanently removes account data, settings, and related telemetry. This interface does not execute deletion directly; continue through the controlled administration process after export and audit confirmation.')) }}</p>
+      </div>
+      <template #actions>
+        <button type="button" @click="closeDeleteAccountConfirmation()">{{ tr(lt('取消', '取消', 'Cancel')) }}</button>
+        <button class="settings-delete-confirmation__danger" type="button" @click="closeDeleteAccountConfirmation()">
+          {{ tr(lt('我已了解风险', '我已了解風險', 'I understand the risk')) }}
+        </button>
+      </template>
+    </Modal>
   </section>
 </template>
 
@@ -387,6 +418,19 @@ onMounted(async () => {
 
 .settings-panel--danger button {
   color: #b43d3d;
+}
+
+.settings-delete-confirmation p {
+  margin: 0;
+  color: var(--mm-text-secondary);
+  font-size: 13px;
+  line-height: 1.6;
+}
+
+.settings-delete-confirmation__danger {
+  border-color: color-mix(in srgb, var(--mm-danger) 32%, var(--mm-border));
+  background: color-mix(in srgb, var(--mm-danger) 12%, var(--mm-surface));
+  color: var(--mm-danger);
 }
 
 .settings-save {
