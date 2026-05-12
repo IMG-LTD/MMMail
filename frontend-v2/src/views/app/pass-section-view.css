@@ -1,0 +1,219 @@
+.pass-surface {
+  display: grid;
+  grid-template-columns: 220px 340px minmax(0, 1fr) 300px;
+  min-height: calc(100vh - 56px);
+  background: var(--mm-card);
+}
+
+.pass-vault-rail,
+.pass-item-list,
+.pass-item-detail,
+.pass-risk-monitor-panel {
+  display: grid;
+  align-content: start;
+  gap: 12px;
+  padding: 16px;
+  min-width: 0;
+}
+
+.pass-vault-rail,
+.pass-item-list,
+.pass-item-detail {
+  border-right: 1px solid var(--mm-border);
+}
+
+.pass-vault-rail {
+  background: var(--mm-side-surface);
+}
+
+.pass-vault-rail button,
+.pass-item-list__row,
+.pass-item-detail button,
+.pass-risk-monitor-panel button,
+.pass-share-settings-modal button,
+.pass-confirm-dialog button {
+  min-height: 34px;
+  padding: 0 12px;
+  border: 1px solid var(--mm-border);
+  border-radius: 10px;
+  background: var(--mm-card);
+}
+
+.pass-vault-rail button {
+  text-align: left;
+}
+
+.pass-vault-rail__item--active {
+  border-color: rgba(228, 123, 57, 0.24) !important;
+  background: rgba(228, 123, 57, 0.1) !important;
+  color: var(--mm-pass);
+}
+
+.pass-vault-rail__status,
+.pass-item-list__empty,
+.pass-item-detail__card,
+.pass-risk-detail,
+.pass-share-settings-modal,
+.pass-confirm-dialog {
+  display: grid;
+  gap: 10px;
+  padding: 14px;
+  border: 1px solid var(--mm-border);
+  border-radius: var(--mm-radius);
+  background: var(--mm-card);
+}
+
+.pass-item-list header p,
+.pass-vault-rail__status p,
+.pass-item-detail__card p,
+.pass-risk-monitor-panel span,
+.pass-risk-detail p,
+.pass-action-error {
+  color: var(--mm-text-secondary);
+  font-size: 13px;
+}
+
+.pass-item-list h1 {
+  margin: 6px 0 0;
+  font-size: 22px;
+}
+
+.pass-item-list__row {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  gap: 12px;
+  align-items: center;
+  text-align: left;
+}
+
+.pass-item-list__row--active {
+  border-color: rgba(228, 123, 57, 0.28);
+  background: rgba(228, 123, 57, 0.08);
+}
+
+.pass-item-list__avatar {
+  display: inline-grid;
+  place-items: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 14px;
+  background: rgba(228, 123, 57, 0.12);
+  color: var(--mm-pass);
+  font-weight: 700;
+}
+
+.pass-item-list__row span:not(.pass-item-list__avatar),
+.pass-item-list__row small {
+  display: grid;
+  gap: 4px;
+}
+
+.pass-item-list__row em {
+  color: var(--mm-text-secondary);
+  font-size: 12px;
+  font-style: normal;
+}
+
+.pass-item-detail__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.pass-secret-reveal,
+.pass-share-settings-modal__save,
+.pass-action-retry {
+  border: 0 !important;
+  background: var(--mm-primary) !important;
+  color: #fff;
+}
+
+.pass-item-detail__secret {
+  padding: 12px;
+  border: 1px solid var(--mm-border);
+  border-radius: 10px;
+  background: var(--mm-card-muted);
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+}
+
+.pass-risk-monitor-panel {
+  background: var(--mm-card);
+}
+
+.pass-risk-trigger {
+  display: grid;
+  gap: 4px;
+  height: auto;
+  padding: 12px !important;
+  text-align: left;
+}
+
+.pass-share-settings-modal,
+.pass-confirm-dialog {
+  position: fixed;
+  z-index: 30;
+  right: 24px;
+  bottom: 24px;
+  width: min(360px, calc(100vw - 48px));
+  box-shadow: var(--mm-shadow);
+}
+
+.pass-share-settings-modal__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.pass-share-settings-modal label {
+  display: grid;
+  gap: 6px;
+}
+
+.pass-share-settings-modal input,
+.pass-share-settings-modal select {
+  width: 100%;
+  padding: 12px;
+  border: 1px solid var(--mm-border);
+  border-radius: 10px;
+  background: var(--mm-card-muted);
+}
+
+.pass-action-error {
+  margin: 0;
+  padding: 10px 12px;
+  border: 1px solid rgba(196, 59, 59, 0.25);
+  border-radius: 10px;
+  background: rgba(196, 59, 59, 0.1);
+  color: #a12626;
+}
+
+@media (max-width: 1180px) {
+  .pass-surface {
+    grid-template-columns: 220px minmax(0, 1fr) 300px;
+  }
+
+  .pass-risk-monitor-panel {
+    display: none;
+  }
+}
+
+@media (max-width: 820px) {
+  .pass-surface {
+    grid-template-columns: 1fr;
+    padding-bottom: 88px;
+  }
+
+  .pass-vault-rail {
+    display: flex;
+    overflow-x: auto;
+    border-right: 0;
+    border-bottom: 1px solid var(--mm-border);
+    white-space: nowrap;
+  }
+
+  .pass-item-list,
+  .pass-item-detail {
+    border-right: 0;
+    border-bottom: 1px solid var(--mm-border);
+  }
+}

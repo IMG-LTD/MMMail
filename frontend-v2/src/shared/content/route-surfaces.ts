@@ -52,6 +52,7 @@ export const passSections: SurfaceOption[] = [
   { key: 'pass-secure-links', label: lt('安全链接', '安全連結', 'Secure Links'), description: lt('受保护链接、二维码导出与访问历史。', '受保護連結、QR 匯出與存取歷史。', 'Protected links, QR exports, and access history.') },
   { key: 'pass-alias-center', label: lt('别名中心', '別名中心', 'Alias Center'), description: lt('邮箱别名、收件路由与发件控制。', '電子郵件別名、收件路由與寄件控制。', 'Email aliases, inbox routing, and sender controls.') },
   { key: 'pass-mailbox', label: lt('收件地址', '收件地址', 'Mailbox'), description: lt('接收地址与默认别名行为。', '接收地址與預設別名行為。', 'Receiving addresses and default alias behavior.') },
+  { key: 'pass-monitor', label: lt('安全监控', '安全監控', 'Security Monitor'), description: lt('弱密码、重复使用与二次验证风险。', '弱密碼、重複使用與第二因素風險。', 'Weak, reused, and missing-factor risk signals.') },
   { key: 'pass-business-policy', label: lt('企业策略', '企業策略', 'Business Policy'), description: lt('保险库范围、导出控制与生命周期策略。', '保險庫範圍、匯出控制與生命週期策略。', 'Vault scope, export controls, and lifecycle policy.') }
 ]
 

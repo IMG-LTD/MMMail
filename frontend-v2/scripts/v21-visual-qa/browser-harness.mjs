@@ -19,6 +19,8 @@ const TEXT_SAMPLE_LIMIT = 160
 const MIN_PAGE_TEXT_LENGTH = 1
 
 const ACTION_EXPRESSIONS = {
+  activateMailComposeSecurity: clickSequenceExpression(['.mail-send-trigger', '.mail-discard-trigger']),
+  activatePassSecretActions: clickSequenceExpression(['.pass-secret-reveal', '.pass-rotate-trigger', '.pass-confirm-dialog button']),
   clickCommandPalette: clickByLabelExpression('Command palette|命令面板'),
   clickDeleteAccount: clickByLabelExpression('Delete account|删除账户|刪除帳戶'),
   clickDocsSharePanel: clickAndSubmitExpression('.docs-share-trigger', '.docs-share-panel__send'),
@@ -26,6 +28,9 @@ const ACTION_EXPRESSIONS = {
   clickQuickCreate: clickSelectorExpression('.quick-create-button'),
   clickSheetsProtectedRange: clickAndSubmitExpression('.sheets-protected-range-trigger', '.sheets-protected-range-modal__save'),
   clickThemeDrawer: clickByLabelExpression('Theme settings|主题设置|主題設定'),
+  openCalendarEventDrawer: clickAndSubmitExpression('.calendar-event-trigger', '.calendar-event-drawer__save'),
+  openPassRiskDetail: clickSelectorExpression('.pass-risk-trigger'),
+  openPassShareSettings: clickAndSubmitExpression('.pass-secure-link-trigger', '.pass-share-settings-modal__save'),
   none: '(() => true)()'
 }
 
@@ -289,6 +294,28 @@ function clickAndSubmitExpression(triggerSelector, submitSelector) {
       submit.click();
       resolve(true);
     }, ${SELECTOR_RETRY_DELAY_MS});
+  })`
+}
+
+function clickSequenceExpression(selectors) {
+  return `new Promise(resolve => {
+    const selectors = ${JSON.stringify(selectors)};
+    let index = 0;
+    function next() {
+      const target = document.querySelector(selectors[index]);
+      if (!target) {
+        resolve(false);
+        return;
+      }
+      target.click();
+      index += 1;
+      if (index >= selectors.length) {
+        resolve(true);
+        return;
+      }
+      setTimeout(next, ${SELECTOR_RETRY_DELAY_MS});
+    }
+    next();
   })`
 }
 

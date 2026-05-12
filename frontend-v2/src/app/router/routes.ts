@@ -15,7 +15,6 @@ const AdminSectionView = () => import('@/views/app/AdminSectionView.vue')
 const DocsEditorView = () => import('@/views/app/DocsEditorView.vue')
 const SheetsEditorView = () => import('@/views/app/SheetsEditorView.vue')
 const LabsModuleView = () => import('@/views/app/LabsModuleView.vue')
-const PassMonitorView = () => import('@/views/app/PassMonitorView.vue')
 const PublicPassShareView = () => import('@/views/public/PublicPassShareView.vue')
 const StorySurfaceView = () => import('@/views/public/StorySurfaceView.vue')
 
@@ -262,7 +261,7 @@ const workspaceRoutes: RouteRecordRaw[] = [
   },
   {
     path: '/pass/monitor',
-    component: PassMonitorView,
+    component: PassSectionView,
     meta: { ...FlushWorkspaceMeta, label: 'Pass', surfaceKey: 'pass-monitor' }
   },
   {

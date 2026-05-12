@@ -63,16 +63,27 @@ const requiredEvidenceIds = [
   'quick-create',
   'theme-drawer',
   'mail-compose',
+  'mail-compose-security',
+  'mail-thread-workbench',
+  'calendar-event-drawer',
   'drive-share-panel',
   'docs-share-panel',
   'sheets-protected-range',
+  'pass-secret-actions',
+  'pass-secure-link-settings',
+  'pass-risk-detail',
   'settings-delete-confirmation'
 ]
 
 const requiredOverlayContracts = [
+  { action: 'activateMailComposeSecurity', id: 'mail-compose-security', selector: '.mail-trust-panel' },
+  { action: 'openCalendarEventDrawer', id: 'calendar-event-drawer', selector: '.calendar-event-drawer' },
   { action: 'clickDriveSharePanel', id: 'drive-share-panel', selector: '.drive-share-panel' },
   { action: 'clickDocsSharePanel', id: 'docs-share-panel', selector: '.docs-share-panel' },
-  { action: 'clickSheetsProtectedRange', id: 'sheets-protected-range', selector: '.sheets-protected-range-modal' }
+  { action: 'clickSheetsProtectedRange', id: 'sheets-protected-range', selector: '.sheets-protected-range-modal' },
+  { action: 'activatePassSecretActions', id: 'pass-secret-actions', selector: '.pass-rotate-confirmation' },
+  { action: 'openPassShareSettings', id: 'pass-secure-link-settings', selector: '.pass-share-settings-modal' },
+  { action: 'openPassRiskDetail', id: 'pass-risk-detail', selector: '.pass-risk-detail' }
 ]
 
 test('v2.1 browser visual QA runner exposes expanded coverage registry', async () => {

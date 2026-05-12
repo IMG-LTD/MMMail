@@ -9,8 +9,10 @@ const files = {
   shellNav: new URL('../src/layouts/modules/ShellSideNav.vue', import.meta.url),
   shellModel: new URL('../src/layouts/modules/shell-nav.ts', import.meta.url),
   mailSurface: new URL('../src/views/app/MailSurfaceView.vue', import.meta.url),
+  mailSurfaceCss: new URL('../src/views/app/mail-surface-view.css', import.meta.url),
   driveSurface: new URL('../src/views/app/DriveSectionView.vue', import.meta.url),
   passSurface: new URL('../src/views/app/PassSectionView.vue', import.meta.url),
+  passSurfaceCss: new URL('../src/views/app/pass-section-view.css', import.meta.url),
   organizationsSurface: new URL('../src/views/app/OrganizationsSectionView.vue', import.meta.url)
 }
 
@@ -22,8 +24,10 @@ test('responsive shell safeguards stay in place for mobile degradation', async (
     shellNav,
     shellModel,
     mailSurface,
+    mailSurfaceCss,
     driveSurface,
     passSurface,
+    passSurfaceCss,
     organizationsSurface
   ] = await Promise.all(Object.values(files).map(file => readFile(file, 'utf8')))
 
@@ -37,8 +41,9 @@ test('responsive shell safeguards stay in place for mobile degradation', async (
   assert.match(shellModel, /key: 'more'[\s\S]*'\/docs', '\/sheets', '\/pass'/)
   assert.match(mailSurface, /mail-surface--conversation/)
   assert.match(mailSurface, /mail-surface--thread/)
-  assert.match(mailSurface, /mail-workspace__detail\s*\{\s*\n\s*display:\s*none;/)
+  assert.match(mailSurfaceCss, /mail-thread-reader\s*\{\s*\n\s*display:\s*none;/)
   assert.match(driveSurface, /overflow-x:\s*auto;/)
-  assert.match(passSurface, /white-space:\s*nowrap;/)
+  assert.match(passSurface, /pass-section-view\.css/)
+  assert.match(passSurfaceCss, /white-space:\s*nowrap;/)
   assert.match(organizationsSurface, /flex-wrap:\s*nowrap;/)
 })

@@ -24,7 +24,7 @@ export const ROUTE_SCENARIOS = [
     }
   },
   appRoute('mail-inbox', '邮件', '/mail/inbox', ['.mail-surface', '.mail-workspace'], ALL_VIEWPORTS),
-  appRoute('calendar-board', '日历', '/calendar', ['.calendar-page', '.calendar-sidebar', '.calendar-board'], ALL_VIEWPORTS),
+  appRoute('calendar-board', '日历', '/calendar', ['.calendar-page', '.calendar-filter-sidebar', '.calendar-board'], ALL_VIEWPORTS),
   {
     checks: [...APP_SHELL_CHECKS, '.drive-surface', '.drive-surface__content'],
     id: 'drive-files',
@@ -42,9 +42,9 @@ export const ROUTE_SCENARIOS = [
   appRoute('sheets-workspace', 'Sheets和labs', '/sheets', ['.sheets-workspace', '.data-table', '.sheets-preview'], ALL_VIEWPORTS),
   appRoute('sheets-editor', 'Sheets和labs', '/sheets/demo-sheet', ['.sheets-editor', '.sheets-editor__grid'], DESKTOP_ONLY),
   appRoute('labs-overview', 'Sheets和labs', '/labs', ['.labs-grid'], DESKTOP_ONLY),
-  appRoute('pass-vault', 'Pass', '/pass', ['.pass-surface', '.pass-surface__list'], ALL_VIEWPORTS),
-  appRoute('pass-secure-links', 'Pass', '/pass/secure-links', ['.pass-surface__detail'], DESKTOP_ONLY),
-  appRoute('pass-monitor', 'Pass', '/pass/monitor', ['.pass-monitor__hero', '.pass-monitor__grid'], DESKTOP_ONLY),
+  appRoute('pass-vault', 'Pass', '/pass', ['.pass-surface', '.pass-item-list'], ALL_VIEWPORTS),
+  appRoute('pass-secure-links', 'Pass', '/pass/secure-links', ['.pass-item-detail'], DESKTOP_ONLY),
+  appRoute('pass-monitor', 'Pass', '/pass/monitor', ['.pass-risk-monitor-panel', '.pass-risk-detail'], DESKTOP_ONLY),
   appRoute('collaboration-overview', 'Collaboration', '/collaboration', ['.collaboration-grid'], ALL_VIEWPORTS),
   appRoute('command-center', 'CommandCenter', '/command-center', ['.command-grid', '.terminal-log'], ALL_VIEWPORTS),
   appRoute('notifications', 'Notifications', '/notifications', ['.notifications-layout', '.data-table'], ALL_VIEWPORTS),
@@ -73,10 +73,16 @@ export const OVERLAY_SCENARIOS = [
   overlay('command-palette', '首页', '/workspace', 'clickCommandPalette', ['.command-palette[role="dialog"]']),
   overlay('quick-create', '首页', '/workspace', 'clickQuickCreate', ['.mm-modal[role="dialog"][aria-modal="true"]', '.quick-create-modal']),
   overlay('theme-drawer', '首页', '/workspace', 'clickThemeDrawer', ['.mm-drawer[role="dialog"][aria-modal="true"]', '.theme-drawer']),
-  overlay('mail-compose', '邮件', '/mail/compose', 'none', ['.mail-compose', '.mail-compose__panel', '.mail-compose__side']),
+  overlay('mail-compose', '邮件', '/mail/compose', 'none', ['.mail-compose', '.mail-compose-panel', '.mail-trust-panel']),
+  overlay('mail-compose-security', '邮件', '/mail/compose', 'activateMailComposeSecurity', ['.mail-compose-panel', '.mail-trust-panel', '.mail-attachment-strip', '.mail-send-error', '.mail-send-retry', '.mail-discard-confirmation']),
+  overlay('mail-thread-workbench', '邮件', '/mail/inbox', 'none', ['.mail-folder-rail', '.mail-message-list', '.mail-thread-reader', '.mail-attachment-strip']),
+  overlay('calendar-event-drawer', '日历', '/calendar', 'openCalendarEventDrawer', ['.calendar-event-drawer', '.calendar-conflict-panel', '.calendar-resource-state', '.calendar-save-error', '.calendar-save-retry']),
   overlay('drive-share-panel', '云盘', '/drive', 'clickDriveSharePanel', ['.drive-share-panel', '.drive-share-panel__title', '.drive-share-panel__members', '.drive-share-panel__public-link', '.drive-share-panel__revoke', '.drive-share-panel__retry']),
   overlay('docs-share-panel', '文档', '/docs/demo-document', 'clickDocsSharePanel', ['.docs-share-panel', '.docs-share-panel__invite-input', '.docs-share-panel__role-select', '.docs-share-panel__link-access', '.docs-share-panel__collaborators', '.docs-share-panel__error', '.docs-share-panel__retry']),
   overlay('sheets-protected-range', 'Sheets和labs', '/sheets/demo-sheet', 'clickSheetsProtectedRange', ['.sheets-protected-range-modal', '.sheets-protected-range-modal__range-input', '.sheets-protected-range-modal__editors', '.sheets-protected-range-modal__conflict', '.sheets-protected-range-modal__error', '.sheets-protected-range-modal__retry']),
+  overlay('pass-secret-actions', 'Pass', '/pass', 'activatePassSecretActions', ['.pass-item-detail', '.pass-secret-reveal', '.pass-rotate-confirmation', '.pass-action-error', '.pass-action-retry']),
+  overlay('pass-secure-link-settings', 'Pass', '/pass/secure-links', 'openPassShareSettings', ['.pass-share-settings-modal', '.pass-action-error', '.pass-action-retry']),
+  overlay('pass-risk-detail', 'Pass', '/pass/monitor', 'openPassRiskDetail', ['.pass-risk-monitor-panel', '.pass-risk-detail', '.pass-action-retry']),
   overlay('settings-delete-confirmation', 'Setting', '/settings', 'clickDeleteAccount', ['.mm-modal[role="dialog"][aria-modal="true"]', '.settings-delete-confirmation'])
 ]
 
