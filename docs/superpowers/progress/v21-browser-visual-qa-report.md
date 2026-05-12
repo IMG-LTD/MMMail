@@ -1,6 +1,6 @@
 # v2.1 Browser Visual QA Report
 
-Generated at: 2026-05-12T06:08:21.539Z
+Generated at: 2026-05-12T08:10:27.215Z
 
 Total screenshots: 63
 
@@ -85,9 +85,9 @@ Total screenshots: 63
 | 首页 | quick-create | desktop 1440x900 | `/workspace` | `.mm-modal[role="dialog"][aria-modal="true"]`, `.quick-create-modal` | `.tmp/v21-browser-visual-qa/quick-create-desktop.png` |
 | 首页 | theme-drawer | desktop 1440x900 | `/workspace` | `.mm-drawer[role="dialog"][aria-modal="true"]`, `.theme-drawer` | `.tmp/v21-browser-visual-qa/theme-drawer-desktop.png` |
 | 邮件 | mail-compose | desktop 1440x900 | `/mail/compose` | `.mail-compose`, `.mail-compose__panel`, `.mail-compose__side` | `.tmp/v21-browser-visual-qa/mail-compose-desktop.png` |
-| 云盘 | drive-share-panel | desktop 1440x900 | `/drive` | `.drive-surface`, `.drive-surface__table` | `.tmp/v21-browser-visual-qa/drive-share-panel-desktop.png` |
-| 文档 | docs-share-panel | desktop 1440x900 | `/docs/demo-document` | `.docs-editor__actions`, `.docs-editor__panel` | `.tmp/v21-browser-visual-qa/docs-share-panel-desktop.png` |
-| Sheets和labs | sheets-protected-range | desktop 1440x900 | `/sheets/demo-sheet` | `.sheets-editor__formula`, `.sheets-editor__side` | `.tmp/v21-browser-visual-qa/sheets-protected-range-desktop.png` |
+| 云盘 | drive-share-panel | desktop 1440x900 | `/drive` | `.drive-share-panel`, `.drive-share-panel__title`, `.drive-share-panel__members`, `.drive-share-panel__public-link`, `.drive-share-panel__revoke`, `.drive-share-panel__retry` | `.tmp/v21-browser-visual-qa/drive-share-panel-desktop.png` |
+| 文档 | docs-share-panel | desktop 1440x900 | `/docs/demo-document` | `.docs-share-panel`, `.docs-share-panel__invite-input`, `.docs-share-panel__role-select`, `.docs-share-panel__link-access`, `.docs-share-panel__collaborators`, `.docs-share-panel__error`, `.docs-share-panel__retry` | `.tmp/v21-browser-visual-qa/docs-share-panel-desktop.png` |
+| Sheets和labs | sheets-protected-range | desktop 1440x900 | `/sheets/demo-sheet` | `.sheets-protected-range-modal`, `.sheets-protected-range-modal__range-input`, `.sheets-protected-range-modal__editors`, `.sheets-protected-range-modal__conflict`, `.sheets-protected-range-modal__error`, `.sheets-protected-range-modal__retry` | `.tmp/v21-browser-visual-qa/sheets-protected-range-desktop.png` |
 | Setting | settings-delete-confirmation | desktop 1440x900 | `/settings` | `.mm-modal[role="dialog"][aria-modal="true"]`, `.settings-delete-confirmation` | `.tmp/v21-browser-visual-qa/settings-delete-confirmation-desktop.png` |
 
 ## Covered overlay and panel evidence

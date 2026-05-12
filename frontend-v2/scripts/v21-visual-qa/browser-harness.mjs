@@ -21,7 +21,10 @@ const MIN_PAGE_TEXT_LENGTH = 1
 const ACTION_EXPRESSIONS = {
   clickCommandPalette: clickByLabelExpression('Command palette|命令面板'),
   clickDeleteAccount: clickByLabelExpression('Delete account|删除账户|刪除帳戶'),
+  clickDocsSharePanel: clickAndSubmitExpression('.docs-share-trigger', '.docs-share-panel__send'),
+  clickDriveSharePanel: clickSelectorExpression('.drive-share-trigger'),
   clickQuickCreate: clickSelectorExpression('.quick-create-button'),
+  clickSheetsProtectedRange: clickAndSubmitExpression('.sheets-protected-range-trigger', '.sheets-protected-range-modal__save'),
   clickThemeDrawer: clickByLabelExpression('Theme settings|主题设置|主題設定'),
   none: '(() => true)()'
 }
@@ -267,6 +270,26 @@ function clickSelectorExpression(selector) {
     target.click();
     return true;
   })()`
+}
+
+function clickAndSubmitExpression(triggerSelector, submitSelector) {
+  return `new Promise(resolve => {
+    const trigger = document.querySelector(${JSON.stringify(triggerSelector)});
+    if (!trigger) {
+      resolve(false);
+      return;
+    }
+    trigger.click();
+    setTimeout(() => {
+      const submit = document.querySelector(${JSON.stringify(submitSelector)});
+      if (!submit) {
+        resolve(false);
+        return;
+      }
+      submit.click();
+      resolve(true);
+    }, ${SELECTOR_RETRY_DELAY_MS});
+  })`
 }
 
 function clickByLabelExpression(pattern) {

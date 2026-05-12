@@ -74,9 +74,9 @@ export const OVERLAY_SCENARIOS = [
   overlay('quick-create', '首页', '/workspace', 'clickQuickCreate', ['.mm-modal[role="dialog"][aria-modal="true"]', '.quick-create-modal']),
   overlay('theme-drawer', '首页', '/workspace', 'clickThemeDrawer', ['.mm-drawer[role="dialog"][aria-modal="true"]', '.theme-drawer']),
   overlay('mail-compose', '邮件', '/mail/compose', 'none', ['.mail-compose', '.mail-compose__panel', '.mail-compose__side']),
-  overlay('drive-share-panel', '云盘', '/drive', 'none', ['.drive-surface', '.drive-surface__table']),
-  overlay('docs-share-panel', '文档', '/docs/demo-document', 'none', ['.docs-editor__actions', '.docs-editor__panel']),
-  overlay('sheets-protected-range', 'Sheets和labs', '/sheets/demo-sheet', 'none', ['.sheets-editor__formula', '.sheets-editor__side']),
+  overlay('drive-share-panel', '云盘', '/drive', 'clickDriveSharePanel', ['.drive-share-panel', '.drive-share-panel__title', '.drive-share-panel__members', '.drive-share-panel__public-link', '.drive-share-panel__revoke', '.drive-share-panel__retry']),
+  overlay('docs-share-panel', '文档', '/docs/demo-document', 'clickDocsSharePanel', ['.docs-share-panel', '.docs-share-panel__invite-input', '.docs-share-panel__role-select', '.docs-share-panel__link-access', '.docs-share-panel__collaborators', '.docs-share-panel__error', '.docs-share-panel__retry']),
+  overlay('sheets-protected-range', 'Sheets和labs', '/sheets/demo-sheet', 'clickSheetsProtectedRange', ['.sheets-protected-range-modal', '.sheets-protected-range-modal__range-input', '.sheets-protected-range-modal__editors', '.sheets-protected-range-modal__conflict', '.sheets-protected-range-modal__error', '.sheets-protected-range-modal__retry']),
   overlay('settings-delete-confirmation', 'Setting', '/settings', 'clickDeleteAccount', ['.mm-modal[role="dialog"][aria-modal="true"]', '.settings-delete-confirmation'])
 ]
 

@@ -12,6 +12,7 @@ import {
   isCurrentRouteEntity,
   isRouteEntityEditingLocked
 } from './route-bound-editor-state'
+import DocsSharePanel from './docs/DocsSharePanel.vue'
 
 interface OutlineItem {
   key: string
@@ -36,6 +37,7 @@ const noteLoading = ref(false)
 const saveLoading = ref(false)
 const loadError = ref('')
 const saveError = ref('')
+const docsSharePanelOpen = ref(false)
 
 let latestDocsNoteRequest = 0
 let latestDocsSaveRequest = 0
@@ -349,7 +351,9 @@ watch(() => [noteId.value, route.fullPath, authStore.accessToken], (nextValue, p
         <p class="page-subtitle docs-editor__status">{{ editorStatus }}</p>
       </div>
       <div class="docs-editor__actions">
-        <button type="button">{{ shareLabel }}</button>
+        <button class="docs-share-trigger" type="button" @click="docsSharePanelOpen = true">
+          {{ shareLabel }}
+        </button>
         <button type="button">{{ note ? `v${note.currentVersion}` : 'v0' }}</button>
         <button type="button" :disabled="saveDisabled" @click="saveNote()">
           {{ saveLoading ? tr(lt('保存中', '儲存中', 'Saving')) : tr(lt('保存', '儲存', 'Save')) }}
@@ -399,117 +403,8 @@ watch(() => [noteId.value, route.fullPath, authStore.accessToken], (nextValue, p
         </div>
       </aside>
     </section>
+    <DocsSharePanel v-model:show="docsSharePanelOpen" :note="note" />
   </section>
 </template>
 
-<style scoped>
-.docs-editor__top,
-.docs-editor__layout {
-  display: grid;
-  gap: 16px;
-}
-
-.docs-editor__top {
-  grid-template-columns: minmax(0, 1fr) auto;
-  padding: 18px;
-}
-
-.docs-editor__top h1 {
-  margin: 8px 0 0;
-  font-size: 24px;
-  letter-spacing: -0.04em;
-  text-transform: capitalize;
-}
-
-.docs-editor__status {
-  margin-top: 10px;
-}
-
-.docs-editor__actions {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 10px;
-}
-
-.docs-editor__actions button,
-.docs-editor__panel button {
-  min-height: 34px;
-  padding: 0 12px;
-  border: 1px solid var(--mm-border);
-  border-radius: 10px;
-  background: var(--mm-card);
-}
-
-.docs-editor__actions button:disabled {
-  opacity: 0.6;
-}
-
-.docs-editor__layout {
-  grid-template-columns: 220px minmax(0, 1fr) 280px;
-}
-
-.docs-editor__panel,
-.docs-editor__canvas {
-  display: grid;
-  align-content: start;
-  gap: 12px;
-  padding: 18px;
-}
-
-.docs-editor__empty {
-  margin: 0;
-  line-height: 1.6;
-}
-
-.docs-editor__field {
-  display: grid;
-  gap: 10px;
-}
-
-.docs-editor__field--content {
-  min-height: 0;
-}
-
-.docs-editor__title-input,
-.docs-editor__textarea {
-  width: 100%;
-  border: 1px solid var(--mm-border);
-  border-radius: 14px;
-  background: var(--mm-card-muted);
-  color: var(--mm-text);
-}
-
-.docs-editor__title-input {
-  min-height: 48px;
-  padding: 0 14px;
-  font-size: 16px;
-  font-weight: 600;
-}
-
-.docs-editor__textarea {
-  min-height: 460px;
-  padding: 14px;
-  resize: vertical;
-  line-height: 1.7;
-}
-
-.docs-editor__facts {
-  display: grid;
-  gap: 12px;
-  margin-top: 8px;
-}
-
-.docs-editor__fact {
-  display: grid;
-  gap: 6px;
-  padding-top: 12px;
-  border-top: 1px solid var(--mm-border);
-}
-
-@media (max-width: 980px) {
-  .docs-editor__layout,
-  .docs-editor__top {
-    grid-template-columns: 1fr;
-  }
-}
-</style>
+<style scoped src="./docs-editor-view.css"></style>

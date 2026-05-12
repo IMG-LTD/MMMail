@@ -12,6 +12,15 @@ import {
 } from '@/service/api/drive'
 import { driveSections, findSurface } from '@/shared/content/route-surfaces'
 import { useAuthStore } from '@/store/modules/auth'
+import DriveSharePanel from './drive/DriveSharePanel.vue'
+import {
+  filterDriveItems,
+  formatDateLabel,
+  formatDateTime,
+  formatFileSize,
+  isFolderItem,
+  resolveRuntimeError
+} from './drive-section-helpers'
 
 const route = useRoute()
 const router = useRouter()
@@ -28,6 +37,7 @@ const driveLoading = ref(false)
 const shareLoading = ref(false)
 const loadError = ref('')
 const selectedItemId = ref('')
+const sharePanelOpen = ref(false)
 
 let latestDriveRequest = 0
 let latestShareRequest = 0
@@ -106,7 +116,7 @@ const detailCopy = computed(() => {
     return tr(lt('当前视图没有可检查的文件。', '目前檢視沒有可檢查的檔案。', 'There is no file to inspect in this view.'))
   }
 
-  return `${resolveItemType(selectedItem.value)} · ${formatFileSize(selectedItem.value.sizeBytes)} · ${formatDateTime(selectedItem.value.updatedAt)}`
+  return `${resolveItemType(selectedItem.value)} · ${formatFileSize(selectedItem.value.sizeBytes)} · ${formatDateTime(selectedItem.value.updatedAt, tr(lt('未设置', '未設定', 'Not set')))}`
 })
 
 const detailFacts = computed(() => {
@@ -129,7 +139,7 @@ const detailFacts = computed(() => {
     },
     {
       label: tr(lt('更新于', '更新於', 'Updated')),
-      value: formatDateTime(selectedItem.value.updatedAt)
+      value: formatDateTime(selectedItem.value.updatedAt, tr(lt('未设置', '未設定', 'Not set')))
     }
   ]
 })
@@ -210,7 +220,7 @@ async function loadDrive() {
     driveShares.value = []
     driveUsage.value = null
     selectedItemId.value = ''
-    loadError.value = resolveErrorMessage(
+    loadError.value = resolveRuntimeError(
       error,
       tr(lt('读取云盘数据失败，请稍后重试。', '讀取雲端硬碟資料失敗，請稍後重試。', 'Failed to load drive data. Please try again later.'))
     )
@@ -249,7 +259,7 @@ async function loadDriveShares(itemId: string, token = authStore.accessToken, pa
     }
 
     driveShares.value = []
-    loadError.value = loadError.value || resolveErrorMessage(
+    loadError.value = loadError.value || resolveRuntimeError(
       error,
       tr(lt('读取共享链接失败，请稍后重试。', '讀取共享連結失敗，請稍後重試。', 'Failed to load share links. Please try again later.'))
     )
@@ -280,63 +290,8 @@ function selectItem(itemId: string) {
   void loadDriveShares(itemId)
 }
 
-function filterDriveItems(items: DriveItem[], key: string) {
-  const nextItems = items.slice()
-
-  if (key === 'drive-shared') {
-    return nextItems
-      .filter(item => item.shareCount > 0)
-      .sort(compareByUpdatedDesc)
-  }
-
-  if (key === 'drive-recent') {
-    return nextItems.sort(compareByUpdatedDesc)
-  }
-
-  if (key === 'drive-starred') {
-    return nextItems.sort((left, right) => {
-      const shareDelta = right.shareCount - left.shareCount
-      if (shareDelta !== 0) {
-        return shareDelta
-      }
-
-      return compareByUpdatedDesc(left, right)
-    })
-  }
-
-  if (key === 'drive-trash') {
-    return nextItems.sort((left, right) => {
-      return compareDateDesc(left.createdAt, right.createdAt) || left.name.localeCompare(right.name)
-    })
-  }
-
-  return nextItems.sort((left, right) => {
-    const folderDelta = Number(isFolderItem(left)) - Number(isFolderItem(right))
-    if (folderDelta !== 0) {
-      return folderDelta * -1
-    }
-
-    return left.name.localeCompare(right.name)
-  })
-}
-
-function compareByUpdatedDesc(left: DriveItem, right: DriveItem) {
-  return compareDateDesc(left.updatedAt, right.updatedAt) || left.name.localeCompare(right.name)
-}
-
-function compareDateDesc(left: string, right: string) {
-  const leftValue = parseDateValue(left)
-  const rightValue = parseDateValue(right)
-  return rightValue - leftValue
-}
-
-function parseDateValue(value: string) {
-  const parsed = new Date(value)
-  return Number.isNaN(parsed.getTime()) ? 0 : parsed.getTime()
-}
-
-function isFolderItem(item: DriveItem) {
-  return item.itemType.toLowerCase().includes('folder')
+function openSharePanel() {
+  sharePanelOpen.value = true
 }
 
 function resolveItemType(item: DriveItem) {
@@ -347,64 +302,15 @@ function resolveItemType(item: DriveItem) {
   return item.mimeType || item.itemType || tr(lt('文件', '檔案', 'File'))
 }
 
-function formatFileSize(value: number) {
-  if (!value || value <= 0) {
-    return '0 B'
-  }
-
-  const units = ['B', 'KB', 'MB', 'GB', 'TB']
-  let size = value
-  let unitIndex = 0
-
-  while (size >= 1024 && unitIndex < units.length - 1) {
-    size /= 1024
-    unitIndex += 1
-  }
-
-  return `${size >= 10 || unitIndex === 0 ? size.toFixed(0) : size.toFixed(1)} ${units[unitIndex]}`
-}
-
-function formatDateLabel(value: string) {
-  const parsed = new Date(value)
-
-  if (Number.isNaN(parsed.getTime())) {
-    return value || tr(lt('未知时间', '未知時間', 'Unknown time'))
-  }
-
-  return parsed.toLocaleDateString(undefined, { month: 'short', day: 'numeric' })
-}
-
-function formatDateTime(value: string | null) {
-  if (!value) {
-    return tr(lt('未设置', '未設定', 'Not set'))
-  }
-
-  const parsed = new Date(value)
-
-  if (Number.isNaN(parsed.getTime())) {
-    return value
-  }
-
-  return parsed.toLocaleString()
-}
-
 function describeShare(share: DriveShareLink) {
   const expiresCopy = share.expiresAt
-    ? `${tr(lt('到期', '到期', 'Expires'))} ${formatDateTime(share.expiresAt)}`
+    ? `${tr(lt('到期', '到期', 'Expires'))} ${formatDateTime(share.expiresAt, tr(lt('未设置', '未設定', 'Not set')))}`
     : tr(lt('无到期时间', '無到期時間', 'No expiration'))
   const passwordCopy = share.passwordProtected
     ? tr(lt('受密码保护', '受密碼保護', 'Password protected'))
     : tr(lt('无密码', '無密碼', 'No password'))
 
   return `${share.status} · ${expiresCopy} · ${passwordCopy}`
-}
-
-function resolveErrorMessage(error: unknown, fallback: string) {
-  if (error instanceof Error && error.message) {
-    return error.message
-  }
-
-  return fallback
 }
 
 watch(() => [route.fullPath, authStore.accessToken], () => {
@@ -469,7 +375,7 @@ watch(() => [route.fullPath, authStore.accessToken], () => {
           <strong>{{ item.name }}</strong>
           <span>{{ resolveItemType(item) }}</span>
           <span>{{ formatFileSize(item.sizeBytes) }}</span>
-          <span>{{ formatDateLabel(item.updatedAt) }}</span>
+          <span>{{ formatDateLabel(item.updatedAt, tr(lt('未知时间', '未知時間', 'Unknown time'))) }}</span>
         </button>
         <p v-if="!visibleItems.length" class="drive-surface__empty">{{ tableEmptyCopy }}</p>
       </article>
@@ -486,7 +392,7 @@ watch(() => [route.fullPath, authStore.accessToken], () => {
           <span class="section-label">{{ resolveItemType(item) }}</span>
           <strong>{{ item.name }}</strong>
           <span>{{ formatFileSize(item.sizeBytes) }}</span>
-          <p class="page-subtitle">{{ tr(lt(`最后更新 ${formatDateLabel(item.updatedAt)}。共享详情会在抽屉中加载。`, `最後更新 ${formatDateLabel(item.updatedAt)}。共享詳情會在抽屜中載入。`, `Last updated ${formatDateLabel(item.updatedAt)}. Share details load in the drawer.`)) }}</p>
+          <p class="page-subtitle">{{ tr(lt(`最后更新 ${formatDateLabel(item.updatedAt, tr(lt('未知时间', '未知時間', 'Unknown time')))}。共享详情会在抽屉中加载。`, `最後更新 ${formatDateLabel(item.updatedAt, tr(lt('未知时间', '未知時間', 'Unknown time')))}。共享詳情會在抽屜中載入。`, `Last updated ${formatDateLabel(item.updatedAt, tr(lt('未知时间', '未知時間', 'Unknown time')))}. Share details load in the drawer.`)) }}</p>
         </button>
         <p v-if="!visibleItems.length" class="drive-surface__empty">{{ tableEmptyCopy }}</p>
       </div>
@@ -508,273 +414,29 @@ watch(() => [route.fullPath, authStore.accessToken], () => {
         <span class="section-label">{{ tr(lt('共享', '共享', 'Shares')) }}</span>
         <strong>{{ shareHeading }}</strong>
         <p class="page-subtitle">{{ selectedItem ? selectedItem.name : shareEmptyCopy }}</p>
+        <button class="drive-share-trigger" type="button" @click="openSharePanel">
+          {{ tr(lt('分享设置', '分享設定', 'Share settings')) }}
+        </button>
         <div v-if="driveShares.length" class="drive-surface__share-list">
           <div v-for="share in driveShares" :key="share.id" class="drive-surface__share-item">
             <strong>{{ share.permission }}</strong>
             <span>{{ describeShare(share) }}</span>
-            <span>{{ tr(lt('创建于', '建立於', 'Created')) }} {{ formatDateTime(share.createdAt) }}</span>
+            <span>{{ tr(lt('创建于', '建立於', 'Created')) }} {{ formatDateTime(share.createdAt, tr(lt('未设置', '未設定', 'Not set'))) }}</span>
           </div>
         </div>
         <p v-else class="page-subtitle">{{ shareEmptyCopy }}</p>
       </article>
     </aside>
+    <DriveSharePanel v-model:show="sharePanelOpen" :item="selectedItem" :shares="driveShares" />
   </section>
 </template>
 
+<style scoped src="./drive-section-view.css"></style>
 <style scoped>
-.drive-surface {
-  display: grid;
-  grid-template-columns: 220px minmax(0, 1fr) 300px;
-  min-height: calc(100vh - 56px);
-  background: var(--mm-card);
-}
-
-.drive-surface__nav,
-.drive-surface__detail {
-  display: grid;
-  align-content: start;
-  gap: 12px;
-  padding: 16px;
-  background: var(--mm-side-surface);
-}
-
-.drive-surface__nav {
-  border-right: 1px solid var(--mm-border);
-}
-
-.drive-surface__detail {
-  border-left: 1px solid var(--mm-border);
-}
-
-.drive-surface__primary,
-.drive-surface__nav button,
-.drive-surface__actions button {
-  min-height: 36px;
-  border-radius: 10px;
-}
-
-.drive-surface__primary {
-  border: 0;
-  background: linear-gradient(180deg, #1f2937 0%, #111827 100%);
-  color: #fff;
-}
-
-.drive-surface__nav button {
-  padding: 0 12px;
-  border: 1px solid transparent;
-  background: transparent;
-  color: var(--mm-text-secondary);
-  text-align: left;
-}
-
-.drive-surface__nav--active {
-  border-color: var(--mm-accent-border) !important;
-  background: var(--mm-accent-soft) !important;
-  color: var(--mm-primary) !important;
-}
-
-.drive-surface__storage,
-.drive-surface__panel,
-.drive-surface__table,
-.drive-surface__card {
-  padding: 16px;
-}
-
-.drive-surface__meter {
-  display: flex;
-  height: 6px;
-  border-radius: 999px;
-  background: var(--mm-card-muted);
-  overflow: hidden;
-}
-
-.drive-surface__meter span {
-  display: block;
-  background: linear-gradient(90deg, var(--mm-primary) 0%, var(--mm-primary-pressed) 100%);
-}
-
-.drive-surface__content {
-  display: grid;
-  gap: 16px;
-  padding: 16px;
-}
-
-.drive-surface__head {
-  display: flex;
-  align-items: start;
-  justify-content: space-between;
-  gap: 16px;
-}
-
-.drive-surface__head h1 {
-  margin: 8px 0 0;
-  font-size: 24px;
-  letter-spacing: -0.04em;
-}
-
-.drive-surface__actions {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 10px;
-}
-
-.drive-surface__actions button {
-  padding: 0 12px;
-  border: 1px solid var(--mm-border);
-  background: var(--mm-card);
-}
-
-.drive-surface__status {
-  margin: 0;
-}
-
-.drive-surface__table-head,
-.drive-surface__row {
-  display: grid;
-  grid-template-columns: 1.4fr 0.8fr 0.7fr 0.7fr;
-  gap: 12px;
-  width: 100%;
-  padding: 14px 0;
-  border-bottom: 1px solid var(--mm-border);
-}
-
-.drive-surface__table-head {
-  color: var(--mm-text-secondary);
-  font-size: 11px;
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
-}
-
-.drive-surface__row,
-.drive-surface__card {
-  font: inherit;
-}
-
-.drive-surface__row {
-  border-width: 0 0 1px;
-  border-style: solid;
-  border-color: var(--mm-border);
-  background: transparent;
-  text-align: left;
-}
-
-.drive-surface__row--active {
-  border-radius: 12px;
-  background: var(--mm-accent-soft);
-  border-bottom-color: transparent;
-}
-
-.drive-surface__row span {
-  color: var(--mm-text-secondary);
-  font-size: 13px;
-}
-
-.drive-surface__empty {
-  margin: 0;
-  padding: 18px 0 4px;
-  color: var(--mm-text-secondary);
-  font-size: 13px;
-  line-height: 1.6;
-}
-
-.drive-surface__cards {
-  display: none;
-  gap: 12px;
-}
-
-.drive-surface__card {
-  display: grid;
-  gap: 8px;
-  border: 1px solid var(--mm-border);
-  border-radius: var(--mm-radius);
-  background: var(--mm-card);
-  text-align: left;
-}
-
-.drive-surface__card--active {
-  border-color: var(--mm-accent-border);
-  background: var(--mm-accent-soft);
-}
-
-.drive-surface__facts,
-.drive-surface__share-list {
-  display: grid;
-  gap: 12px;
-  margin-top: 8px;
-}
-
-.drive-surface__fact {
-  display: grid;
-  gap: 6px;
-  padding-top: 12px;
-  border-top: 1px solid var(--mm-border);
-}
-
-.drive-surface__fact strong,
-.drive-surface__share-item strong {
-  font-size: 14px;
-}
-
-.drive-surface__share-item {
-  display: grid;
-  gap: 6px;
-  padding: 12px;
-  border: 1px solid var(--mm-border);
-  border-radius: 14px;
-  background: var(--mm-card-muted);
-}
-
-.drive-surface__share-item span {
-  color: var(--mm-text-secondary);
-  font-size: 12px;
-  line-height: 1.5;
-}
-
-@media (max-width: 1180px) {
-  .drive-surface {
-    grid-template-columns: 220px minmax(0, 1fr);
-  }
-
-  .drive-surface__detail {
-    display: none;
-  }
-}
-
 @media (max-width: 820px) {
-  .drive-surface {
-    grid-template-columns: 1fr;
-    padding-bottom: 88px;
-  }
-
   .drive-surface__nav {
-    display: flex;
-    gap: 10px;
     overflow-x: auto;
-    border-right: 0;
-    border-bottom: 1px solid var(--mm-border);
     white-space: nowrap;
-  }
-
-  .drive-surface__nav button,
-  .drive-surface__primary,
-  .drive-surface__storage {
-    flex: 0 0 auto;
-  }
-
-  .drive-surface__storage {
-    width: 240px;
-  }
-
-  .drive-surface__head {
-    flex-direction: column;
-  }
-
-  .drive-surface__table {
-    display: none;
-  }
-
-  .drive-surface__cards {
-    display: grid;
   }
 }
 </style>

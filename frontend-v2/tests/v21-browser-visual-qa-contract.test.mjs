@@ -69,6 +69,12 @@ const requiredEvidenceIds = [
   'settings-delete-confirmation'
 ]
 
+const requiredOverlayContracts = [
+  { action: 'clickDriveSharePanel', id: 'drive-share-panel', selector: '.drive-share-panel' },
+  { action: 'clickDocsSharePanel', id: 'docs-share-panel', selector: '.docs-share-panel' },
+  { action: 'clickSheetsProtectedRange', id: 'sheets-protected-range', selector: '.sheets-protected-range-modal' }
+]
+
 test('v2.1 browser visual QA runner exposes expanded coverage registry', async () => {
   const [packageJsonRaw, qaScript, scenarioSource, reportSource] = await Promise.all([
     readFile(packageJsonUrl, 'utf8'),
@@ -93,8 +99,20 @@ test('v2.1 browser visual QA runner exposes expanded coverage registry', async (
   for (const evidenceId of requiredEvidenceIds) {
     assert.match(scenarioSource, new RegExp(evidenceId))
   }
+  for (const contract of requiredOverlayContracts) {
+    assert.match(scenarioSource, new RegExp(contract.id))
+    assert.match(scenarioSource, new RegExp(contract.action))
+    assert.match(scenarioSource, new RegExp(escapeRegExp(contract.selector)))
+  }
+  assert.doesNotMatch(scenarioSource, /overlay\('drive-share-panel', '云盘', '\/drive', 'none', \['\.drive-surface', '\.drive-surface__table'\]\)/)
+  assert.doesNotMatch(scenarioSource, /overlay\('docs-share-panel', '文档', '\/docs\/demo-document', 'none', \['\.docs-editor__actions', '\.docs-editor__panel'\]\)/)
+  assert.doesNotMatch(scenarioSource, /overlay\('sheets-protected-range', 'Sheets和labs', '\/sheets\/demo-sheet', 'none', \['\.sheets-editor__formula', '\.sheets-editor__side'\]\)/)
   assert.match(reportSource, /UI group/)
   assert.match(reportSource, /Screenshot evidence/)
   assert.match(reportSource, /Covered overlay and panel evidence/)
   assert.match(reportSource, /v21-browser-visual-qa-report\.md/)
 })
+
+function escapeRegExp(value) {
+  return value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+}

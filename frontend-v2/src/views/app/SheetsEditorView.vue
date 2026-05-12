@@ -17,6 +17,19 @@ import {
   isCurrentRouteEntity,
   isRouteEntityEditingLocked
 } from './route-bound-editor-state'
+import {
+  buildPendingEdits,
+  cloneGrid,
+  createSelectedCell,
+  isProtectedRangeCell,
+  joinText,
+  readGridCell,
+  resolveRuntimeError,
+  resolveSheetGrid,
+  toColumnLabel,
+  updateGridCell
+} from './sheets-editor-helpers'
+import SheetsProtectedRangeModal from './sheets/SheetsProtectedRangeModal.vue'
 
 interface SheetsFact {
   label: string
@@ -32,22 +45,19 @@ const copilotOpen = copilotPanel.open
 const workbook = ref<SheetsWorkbookDetail | null>(null)
 const selectedSheetId = ref('')
 const localGrid = ref<string[][]>([])
-const selectedCell = ref({ rowIndex: 0, colIndex: 0 })
+const selectedCell = ref(createSelectedCell())
 const workbookLoading = ref(false)
 const saveLoading = ref(false)
 const loadError = ref('')
 const saveError = ref('')
+const protectedRangeOpen = ref(false)
 
 let latestSheetsWorkbookRequest = 0
 let latestSheetsSaveRequest = 0
 
 const workbookId = computed(() => String(route.params.id || ''))
-const loadedWorkbookMatchesRoute = computed(() => {
-  return isCurrentRouteEntity(workbookId.value, workbook.value?.id)
-})
-const editingLocked = computed(() => {
-  return isRouteEntityEditingLocked(workbookId.value, workbook.value?.id, workbookLoading.value)
-})
+const loadedWorkbookMatchesRoute = computed(() => isCurrentRouteEntity(workbookId.value, workbook.value?.id))
+const editingLocked = computed(() => isRouteEntityEditingLocked(workbookId.value, workbook.value?.id, workbookLoading.value))
 
 const title = computed(() => {
   return workbook.value?.title
@@ -74,21 +84,10 @@ const columnCount = computed(() => {
   return Math.max(sheetColumnCount, gridColumnCount)
 })
 
-const rowIndices = computed(() => {
-  return Array.from({ length: rowCount.value }, (_, index) => index)
-})
-
-const columnIndices = computed(() => {
-  return Array.from({ length: columnCount.value }, (_, index) => index)
-})
-
-const columnLabels = computed(() => {
-  return columnIndices.value.map(index => toColumnLabel(index))
-})
-
-const selectedCellLabel = computed(() => {
-  return `${toColumnLabel(selectedCell.value.colIndex)}${selectedCell.value.rowIndex + 1}`
-})
+const rowIndices = computed(() => Array.from({ length: rowCount.value }, (_, index) => index))
+const columnIndices = computed(() => Array.from({ length: columnCount.value }, (_, index) => index))
+const columnLabels = computed(() => columnIndices.value.map(index => toColumnLabel(index)))
+const selectedCellLabel = computed(() => `${toColumnLabel(selectedCell.value.colIndex)}${selectedCell.value.rowIndex + 1}`)
 
 const selectedCellValue = computed({
   get() {
@@ -99,13 +98,8 @@ const selectedCellValue = computed({
   }
 })
 
-const canEdit = computed(() => {
-  return loadedWorkbookMatchesRoute.value && Boolean(workbook.value?.canEdit)
-})
-
-const pendingEdits = computed(() => {
-  return buildPendingEdits()
-})
+const canEdit = computed(() => loadedWorkbookMatchesRoute.value && Boolean(workbook.value?.canEdit))
+const pendingEdits = computed(() => buildPendingEdits(activeSheet.value, workbook.value, localGrid.value))
 
 const saveDisabled = computed(() => {
   return !authStore.accessToken || !workbook.value || !activeSheet.value || !canSubmitRouteEntitySave(
@@ -154,7 +148,6 @@ const sideTitle = computed(() => {
   if (!activeSheet.value) {
     return tr(lt('暂无工作表', '暫無工作表', 'No sheet loaded'))
   }
-
   return `${activeSheet.value.name} · ${activeSheet.value.rowCount} × ${activeSheet.value.colCount}`
 })
 
@@ -234,10 +227,7 @@ function clearEditorState(nextRouteWorkbookId = workbookId.value, nextToken = au
   localGrid.value = []
   loadError.value = ''
   saveError.value = ''
-  selectedCell.value = {
-    rowIndex: 0,
-    colIndex: 0
-  }
+  selectedCell.value = createSelectedCell()
 
   const resetState = createRouteEntityNavigationReset(nextRouteWorkbookId, nextToken)
   workbookLoading.value = resetState.entityLoading
@@ -278,7 +268,7 @@ async function loadWorkbook() {
 
     applyWorkbookDetail(null)
     localGrid.value = []
-    loadError.value = resolveErrorMessage(
+    loadError.value = resolveRuntimeError(
       error,
       tr(lt('读取工作簿详情失败，请稍后重试。', '讀取活頁簿詳情失敗，請稍後重試。', 'Failed to load the workbook. Please try again later.'))
     )
@@ -330,7 +320,7 @@ async function saveCells() {
       return
     }
 
-    saveError.value = resolveErrorMessage(
+    saveError.value = resolveRuntimeError(
       error,
       tr(lt('保存工作簿失败，请稍后重试。', '儲存活頁簿失敗，請稍後重試。', 'Failed to save the workbook. Please try again later.'))
     )
@@ -350,7 +340,7 @@ function selectSheet(sheetId: string) {
 }
 
 function selectCell(rowIndex: number, colIndex: number) {
-  selectedCell.value = { rowIndex, colIndex }
+  selectedCell.value = createSelectedCell(rowIndex, colIndex)
 }
 
 function onCellInput(rowIndex: number, colIndex: number, event: Event) {
@@ -368,77 +358,11 @@ function updateCellValue(rowIndex: number, colIndex: number, value: string) {
     return
   }
 
-  while (localGrid.value.length <= rowIndex) {
-    localGrid.value.push([])
-  }
-
-  while ((localGrid.value[rowIndex] || []).length <= colIndex) {
-    localGrid.value[rowIndex].push('')
-  }
-
-  localGrid.value[rowIndex][colIndex] = value
+  localGrid.value = updateGridCell(localGrid.value, rowIndex, colIndex, value)
 }
 
 function getCellValue(rowIndex: number, colIndex: number) {
-  return localGrid.value[rowIndex]?.[colIndex] || ''
-}
-
-function resolveSheetGrid(sheet: SheetsWorkbookSheet | null) {
-  if (sheet?.grid?.length) {
-    return sheet.grid
-  }
-
-  if (workbook.value?.grid?.length) {
-    return workbook.value.grid
-  }
-
-  return []
-}
-
-function buildPendingEdits() {
-  const sheet = activeSheet.value
-  if (!sheet) {
-    return []
-  }
-
-  const baseGrid = resolveSheetGrid(sheet)
-  const maxRows = Math.max(sheet.rowCount, baseGrid.length, localGrid.value.length)
-  const maxColumns = Math.max(
-    sheet.colCount,
-    baseGrid.reduce((max, row) => Math.max(max, row.length), 0),
-    localGrid.value.reduce((max, row) => Math.max(max, row.length), 0)
-  )
-  const edits: Array<{ rowIndex: number; colIndex: number; value: string }> = []
-
-  for (let rowIndex = 0; rowIndex < maxRows; rowIndex += 1) {
-    for (let colIndex = 0; colIndex < maxColumns; colIndex += 1) {
-      const nextValue = getCellValue(rowIndex, colIndex)
-      const previousValue = baseGrid[rowIndex]?.[colIndex] || ''
-
-      if (nextValue !== previousValue) {
-        edits.push({ rowIndex, colIndex, value: nextValue })
-      }
-    }
-  }
-
-  return edits
-}
-
-function cloneGrid(grid: string[][]) {
-  return grid.map(row => row.map(cell => cell || ''))
-}
-
-function toColumnLabel(index: number) {
-  let value = index + 1
-  let label = ''
-
-  while (value > 0) {
-    const remainder = (value - 1) % 26
-    label = String.fromCharCode(65 + remainder) + label
-    value = Math.floor((value - 1) / 26)
-  }
-
-  return label || 'A'
+  return readGridCell(localGrid.value, rowIndex, colIndex)
 }
 
 function resolvePermission(permission: SheetsWorkbookDetail['permission']) {
@@ -467,20 +391,6 @@ function formatDateTime(value: string | null) {
   return parsed.toLocaleString()
 }
 
-function joinText(parts: Array<string | null | undefined>) {
-  return parts
-    .filter((value): value is string => Boolean(value && value.trim()))
-    .join(' · ')
-}
-
-function resolveErrorMessage(error: unknown, fallback: string) {
-  if (error instanceof Error && error.message) {
-    return error.message
-  }
-
-  return fallback
-}
-
 watch(() => [workbookId.value, route.fullPath, authStore.accessToken], (nextValue, previousValue) => {
   if (!previousValue || hasRouteEntityChanged(previousValue[0], nextValue[0])) {
     clearEditorState(nextValue[0], nextValue[2])
@@ -490,11 +400,8 @@ watch(() => [workbookId.value, route.fullPath, authStore.accessToken], (nextValu
 }, { immediate: true })
 
 watch(activeSheet, (sheet) => {
-  localGrid.value = cloneGrid(resolveSheetGrid(sheet))
-  selectedCell.value = {
-    rowIndex: 0,
-    colIndex: 0
-  }
+  localGrid.value = cloneGrid(resolveSheetGrid(sheet, workbook.value))
+  selectedCell.value = createSelectedCell()
 }, { immediate: true })
 </script>
 
@@ -509,6 +416,9 @@ watch(activeSheet, (sheet) => {
       </div>
       <div class="sheets-editor__actions">
         <button type="button">{{ tr(lt('格式', '格式', 'Format')) }}</button>
+        <button class="sheets-protected-range-trigger" type="button" @click="protectedRangeOpen = true">
+          {{ tr(lt('保护区域', '保護範圍', 'Protect range')) }}
+        </button>
         <button type="button">{{ canEdit ? tr(lt('可编辑', '可編輯', 'Editable')) : tr(lt('只读', '唯讀', 'Read only')) }}</button>
         <button type="button" :disabled="saveDisabled" @click="saveCells()">
           {{ saveLoading ? tr(lt('保存中', '儲存中', 'Saving')) : tr(lt('保存', '儲存', 'Save')) }}
@@ -551,7 +461,10 @@ watch(activeSheet, (sheet) => {
                 v-for="columnIndex in columnIndices"
                 :key="`${rowIndex}-${columnIndex}`"
                 class="sheets-editor__cell"
-                :class="{ 'sheets-editor__cell--selected': rowIndex === selectedCell.rowIndex && columnIndex === selectedCell.colIndex }"
+                :class="{
+                  'sheets-editor__cell--protected': protectedRangeOpen && isProtectedRangeCell(rowIndex, columnIndex),
+                  'sheets-editor__cell--selected': rowIndex === selectedCell.rowIndex && columnIndex === selectedCell.colIndex
+                }"
               >
                 <input
                   :value="getCellValue(rowIndex, columnIndex)"
@@ -578,168 +491,8 @@ watch(activeSheet, (sheet) => {
         </div>
       </aside>
     </section>
+    <SheetsProtectedRangeModal v-model:show="protectedRangeOpen" :selected-cell-label="selectedCellLabel" />
   </section>
 </template>
 
-<style scoped>
-.sheets-editor__top,
-.sheets-editor__layout {
-  display: grid;
-  gap: 16px;
-}
-
-.sheets-editor__top {
-  grid-template-columns: minmax(0, 1fr) auto;
-  padding: 18px;
-}
-
-.sheets-editor__top h1 {
-  margin: 8px 0 0;
-  font-size: 24px;
-  letter-spacing: -0.04em;
-  text-transform: capitalize;
-}
-
-.sheets-editor__status {
-  margin-top: 10px;
-}
-
-.sheets-editor__actions {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 10px;
-}
-
-.sheets-editor__actions button {
-  min-height: 34px;
-  padding: 0 12px;
-  border: 1px solid var(--mm-border);
-  border-radius: 10px;
-  background: var(--mm-card);
-}
-
-.sheets-editor__actions button:disabled {
-  opacity: 0.6;
-}
-
-.sheets-editor__layout {
-  grid-template-columns: minmax(0, 1fr) 280px;
-}
-
-.sheets-editor__grid,
-.sheets-editor__side {
-  display: grid;
-  gap: 12px;
-  padding: 18px;
-}
-
-.sheets-editor__sheet-tabs {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 10px;
-}
-
-.sheets-editor__sheet-tabs button {
-  min-height: 34px;
-  padding: 0 12px;
-  border: 1px solid var(--mm-border);
-  border-radius: 10px;
-  background: var(--mm-card);
-}
-
-.sheets-editor__sheet-tab--active {
-  border-color: var(--mm-accent-border) !important;
-  background: var(--mm-accent-soft) !important;
-  color: var(--mm-primary);
-}
-
-.sheets-editor__formula {
-  display: grid;
-  grid-template-columns: auto minmax(0, 1fr);
-  align-items: center;
-  gap: 12px;
-  min-height: 42px;
-  padding: 10px 12px;
-  border: 1px solid var(--mm-border);
-  border-radius: 10px;
-  background: var(--mm-card-muted);
-}
-
-.sheets-editor__formula span {
-  color: var(--mm-text-secondary);
-  font-size: 12px;
-  font-weight: 600;
-}
-
-.sheets-editor__formula input {
-  width: 100%;
-  border: 0;
-  background: transparent;
-  color: var(--mm-text);
-}
-
-.sheets-editor__table-scroll {
-  overflow: auto;
-}
-
-.sheets-editor__table {
-  display: grid;
-  min-width: min-content;
-}
-
-.sheets-editor__corner,
-.sheets-editor__cell {
-  min-height: 58px;
-  border: 1px solid var(--mm-border);
-}
-
-.sheets-editor__corner {
-  background: var(--mm-card-muted);
-}
-
-.sheets-editor__cell {
-  color: var(--mm-text-secondary);
-  font-size: 12px;
-}
-
-.sheets-editor__cell--head {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: var(--mm-card-muted);
-  color: var(--mm-ink);
-  font-weight: 600;
-}
-
-.sheets-editor__cell--selected {
-  box-shadow: inset 0 0 0 2px var(--mm-accent-border);
-}
-
-.sheets-editor__cell input {
-  width: 100%;
-  min-height: 56px;
-  padding: 10px;
-  border: 0;
-  background: transparent;
-  color: var(--mm-text);
-}
-
-.sheets-editor__facts {
-  display: grid;
-  gap: 12px;
-}
-
-.sheets-editor__fact {
-  display: grid;
-  gap: 6px;
-  padding-top: 12px;
-  border-top: 1px solid var(--mm-border);
-}
-
-@media (max-width: 980px) {
-  .sheets-editor__layout,
-  .sheets-editor__top {
-    grid-template-columns: 1fr;
-  }
-}
-</style>
+<style scoped src="./sheets-editor-view.css"></style>
