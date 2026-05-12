@@ -45,6 +45,12 @@ Last updated: 2026-05-12
   - `pnpm --dir frontend-v2 visual:qa`: PASS (`69 screenshots`)
 - File-size status: all touched frontend implementation files are below the 500-line limit; the largest is `frontend-v2/src/views/public/auth/login-view.css` at `420` lines.
 
+## Active Slice
+
+- Slice: `frontend-v21-design-parity-audit-closure`
+- Status: `in progress`
+- Goal: expand the visual parity risk register to every browser visual QA UI group, refresh screenshot evidence, and update this progress file after implementation is committed.
+
 ## Remaining v2.1 Risks
 
 1. Design-image parity findings are now tracked in `docs/superpowers/progress/v21-visual-parity-risk-register.md`.
