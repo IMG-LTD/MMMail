@@ -6,8 +6,8 @@ Last updated: 2026-05-12
 
 - Branch: `main`
 - Latest frontend implementation commit: `f98e8c14 test(frontend-v2): close v2.1 design parity audit`
-- Latest backend implementation commit: `52603ca8 test(backend-v21): close API contract runtime coverage`
-- Local branch status at progress capture: `main...origin/main [ahead 48]`
+- Latest backend implementation commit: `2c1a9ba9 feat(backend-v21): add event outbox foundation`
+- Local branch status at progress capture: `main...origin/main [ahead 53]`
 - Untracked paths intentionally not included in v2.1 commits: `.superpowers/`, `.tmp/`, `docs/MMMail.zip`, `docs/MMMail/`, `frontend/`
 
 ## Completed v2.1 Slices
@@ -27,6 +27,7 @@ Last updated: 2026-05-12
 | Final public auth visual parity closure (`frontend-v21-final-visual-parity-public-auth-closure`) | `v21-final-visual-parity-public-auth-closure-contract.test.mjs`, `docs/superpowers/progress/v21-visual-parity-risk-register.md` |
 | Full design parity audit closure | `v21-design-parity-audit-closure-contract.test.mjs`, `docs/superpowers/progress/v21-visual-parity-risk-register.md` |
 | Backend API contract runtime closure (`backend-v21-api-contract-runtime-closure`) | `BackendV21ApiContractCatalogTest`, `contracts/openapi/v21-api-catalog.yaml`, `/api/v2/platform/contracts` |
+| Backend event outbox foundation (`backend-v21-event-outbox-foundation`) | `BackendV21EventOutboxFoundationTest`, `platform_outbox_event`, `OutboxPublisher`, `InProcessOutboxDispatcher` |
 
 ## Latest Visual QA Baseline
 
@@ -50,13 +51,22 @@ Last updated: 2026-05-12
 
 ## Latest Completed Backend Slice
 
-- Slice: `backend-v21-api-contract-runtime-closure`
-- Commit: `52603ca8 test(backend-v21): close API contract runtime coverage`
-- Files changed: added billing and entitlements runtime catalog coverage, froze the matching OpenAPI paths, tightened `BackendV21ApiContractCatalogTest`, and verified `/api/v2/platform/contracts` exposes 122 v2.1 contracts behind authentication.
+- Slice: `backend-v21-event-outbox-foundation`
+- Commit: `2c1a9ba9 feat(backend-v21): add event outbox foundation`
+- Files changed: added immutable platform event and outbox contracts, MyBatis `platform_outbox_event` persistence, Flyway/schema/baseline table definitions, database-backed publisher, in-process dispatcher, and focused Spring Boot coverage.
 - Verification:
-  - `timeout 60s mvn -pl mmmail-server -am -f backend/pom.xml test -Dtest=BackendV21ApiContractCatalogTest -Dsurefire.failIfNoSpecifiedTests=false`: PASS (`5/5`)
+  - `timeout 60s mvn -pl mmmail-server -am -f backend/pom.xml test -Dtest=BackendV21EventOutboxFoundationTest -Dsurefire.failIfNoSpecifiedTests=false`: PASS (`8/8`)
   - `timeout 60s mvn -pl mmmail-server -am -f backend/pom.xml compile`: PASS
   - `timeout 60s pnpm --dir frontend-v2 test`: PASS (`83/83`)
+
+## Active Backend Slice
+
+- Slice: `backend-v21-event-outbox-foundation`
+- Status: `completed`
+- Started: `2026-05-12`
+- Completed: `2026-05-12`
+- Scope: platform event contract, outbox record contract, database-backed publisher, in-process dispatcher, migration, tests
+- Verification target: `BackendV21EventOutboxFoundationTest`, backend compile, frontend v2.1 test suite
 
 ## Remaining v2.1 Risks
 

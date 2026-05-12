@@ -47,7 +47,7 @@
 - 修改：`docs/superpowers/progress/v21-implementation-progress.md`
 - 创建：`backend/mmmail-server/src/test/java/com/mmmail/server/BackendV21EventOutboxFoundationTest.java`
 
-- [ ] **步骤 1：记录活动切片**
+- [x] **步骤 1：记录活动切片**
 
 在 `## Remaining v2.1 Risks` 之前插入：
 
@@ -61,7 +61,7 @@
 - Verification target: `BackendV21EventOutboxFoundationTest`, backend compile, frontend v2.1 test suite
 ```
 
-- [ ] **步骤 2：编写失败测试**
+- [x] **步骤 2：编写失败测试**
 
 创建 `BackendV21EventOutboxFoundationTest.java`，测试先引用还不存在的事件/outbox 类型，让红灯清晰暴露缺口：
 
@@ -313,7 +313,7 @@ class BackendV21EventOutboxFoundationTest {
 }
 ```
 
-- [ ] **步骤 3：运行红灯测试**
+- [x] **步骤 3：运行红灯测试**
 
 运行：
 
@@ -330,7 +330,7 @@ timeout 60s mvn -pl mmmail-server -am -f backend/pom.xml test -Dtest=BackendV21E
 - 创建：`backend/mmmail-platform/src/main/java/com/mmmail/platform/event/PlatformEventMetadata.java`
 - 创建：`backend/mmmail-platform/src/main/java/com/mmmail/platform/event/PlatformEvent.java`
 
-- [ ] **步骤 1：创建 `PlatformEventType`**
+- [x] **步骤 1：创建 `PlatformEventType`**
 
 每个 enum 常量使用稳定 event name，owner module 与 v2.1 架构文档一致。全部事件均 `tenantRequired=true`、`replayable=true`；`identity.session.revoked` 允许 user ID 缺失，其余事件要求 user ID。
 
@@ -397,7 +397,7 @@ public enum PlatformEventType {
 }
 ```
 
-- [ ] **步骤 2：创建 `PlatformEventMetadata`**
+- [x] **步骤 2：创建 `PlatformEventMetadata`**
 
 ```java
 package com.mmmail.platform.event;
@@ -444,7 +444,7 @@ public record PlatformEventMetadata(
 }
 ```
 
-- [ ] **步骤 3：创建 `PlatformEvent`**
+- [x] **步骤 3：创建 `PlatformEvent`**
 
 ```java
 package com.mmmail.platform.event;
@@ -499,7 +499,7 @@ public record PlatformEvent(
 - 创建：`backend/mmmail-platform/src/main/java/com/mmmail/platform/outbox/OutboxPublisher.java`
 - 创建：`backend/mmmail-platform/src/main/java/com/mmmail/platform/outbox/OutboxDispatcher.java`
 
-- [ ] **步骤 1：扩展状态枚举**
+- [x] **步骤 1：扩展状态枚举**
 
 保持现有四个值，不新增隐式状态：
 
@@ -514,11 +514,11 @@ public enum OutboxEventStatus {
 }
 ```
 
-- [ ] **步骤 2：创建 `OutboxEventRecord`**
+- [x] **步骤 2：创建 `OutboxEventRecord`**
 
 实现 `pending()`、`markPublished()`、`markFailed()`、`markPendingForRetry()`、`markDeadLetter()` 五个状态入口，只允许规格中的状态流。
 
-- [ ] **步骤 3：创建请求、结果和接口**
+- [x] **步骤 3：创建请求、结果和接口**
 
 签名固定为：
 
@@ -546,7 +546,7 @@ public interface OutboxDispatcher {
 }
 ```
 
-- [ ] **步骤 4：运行编译红灯推进**
+- [x] **步骤 4：运行编译红灯推进**
 
 运行：
 
@@ -566,7 +566,7 @@ timeout 60s mvn -pl mmmail-platform -am -f backend/pom.xml compile
 - 创建：`backend/mmmail-server/src/main/java/com/mmmail/server/outbox/PlatformOutboxEventMapper.java`
 - 修改：`backend/mmmail-server/src/main/java/com/mmmail/server/config/MybatisPlusConfig.java`
 
-- [ ] **步骤 1：创建迁移 SQL**
+- [x] **步骤 1：创建迁移 SQL**
 
 使用以下表结构：
 
@@ -610,11 +610,11 @@ set schema_version = '11',
 where id = 1;
 ```
 
-- [ ] **步骤 2：同步 schema 和 baseline**
+- [x] **步骤 2：同步 schema 和 baseline**
 
 把同一张表和四个索引追加到 `schema.sql` 与 `community-v1-schema.sql` 的末尾，确保 H2 test profile 和 legacy baseline 都能看到 `platform_outbox_event`。
 
-- [ ] **步骤 3：创建 entity 和 mapper**
+- [x] **步骤 3：创建 entity 和 mapper**
 
 `PlatformOutboxEvent` 使用 `@TableName("platform_outbox_event")`、`@TableId(type = IdType.ASSIGN_ID)`，字段与 SQL 列一一对应。`PlatformOutboxEventMapper` 放在 `com.mmmail.server.outbox`，提供：
 
@@ -625,7 +625,7 @@ List<PlatformOutboxEvent> findDue(@Param("now") LocalDateTime now, @Param("limit
 
 `findDue` 查询 `status in ('PENDING', 'FAILED')` 且 `next_attempt_at is null or next_attempt_at <= #{now}`。
 
-- [ ] **步骤 4：更新 MapperScan**
+- [x] **步骤 4：更新 MapperScan**
 
 修改为：
 
@@ -638,7 +638,7 @@ List<PlatformOutboxEvent> findDue(@Param("now") LocalDateTime now, @Param("limit
 **文件：**
 - 创建：`backend/mmmail-server/src/main/java/com/mmmail/server/outbox/DatabaseOutboxPublisher.java`
 
-- [ ] **步骤 1：实现 publisher**
+- [x] **步骤 1：实现 publisher**
 
 实现规则：
 
@@ -647,7 +647,7 @@ List<PlatformOutboxEvent> findDue(@Param("now") LocalDateTime now, @Param("limit
 - 相同 `idempotencyKey` 但 event identity 或 payload 不一致时抛 `IllegalStateException`。
 - 记录 Micrometer counter `mmmail.outbox.events.published.total`，tags 为 `event`、`module`、`status`。
 
-- [ ] **步骤 2：运行 publisher 相关测试**
+- [x] **步骤 2：运行 publisher 相关测试**
 
 运行：
 
@@ -663,7 +663,7 @@ timeout 60s mvn -pl mmmail-server -am -f backend/pom.xml test -Dtest=BackendV21E
 - 创建：`backend/mmmail-server/src/main/java/com/mmmail/server/outbox/PlatformOutboxHandler.java`
 - 创建：`backend/mmmail-server/src/main/java/com/mmmail/server/outbox/InProcessOutboxDispatcher.java`
 
-- [ ] **步骤 1：创建 handler 契约**
+- [x] **步骤 1：创建 handler 契约**
 
 ```java
 package com.mmmail.server.outbox;
@@ -676,7 +676,7 @@ public interface PlatformOutboxHandler {
 }
 ```
 
-- [ ] **步骤 2：实现 dispatcher**
+- [x] **步骤 2：实现 dispatcher**
 
 实现规则：
 
@@ -687,7 +687,7 @@ public interface PlatformOutboxHandler {
 - 记录 Micrometer counters：`mmmail.outbox.dispatch.total`、`mmmail.outbox.dispatch.failed.total`、`mmmail.outbox.dead_letter.total`。
 - 不记录 payload JSON。
 
-- [ ] **步骤 3：运行 dispatcher 相关测试**
+- [x] **步骤 3：运行 dispatcher 相关测试**
 
 运行：
 
@@ -702,7 +702,7 @@ timeout 60s mvn -pl mmmail-server -am -f backend/pom.xml test -Dtest=BackendV21E
 **文件：**
 - 所有任务 1-6 中的源码、测试、SQL、进度文件。
 
-- [ ] **步骤 1：运行后端目标测试**
+- [x] **步骤 1：运行后端目标测试**
 
 ```bash
 timeout 60s mvn -pl mmmail-server -am -f backend/pom.xml test -Dtest=BackendV21EventOutboxFoundationTest -Dsurefire.failIfNoSpecifiedTests=false
@@ -710,7 +710,7 @@ timeout 60s mvn -pl mmmail-server -am -f backend/pom.xml test -Dtest=BackendV21E
 
 预期：退出码 0，`Tests run` 大于 0，`Failures: 0`，`Errors: 0`。
 
-- [ ] **步骤 2：运行后端编译**
+- [x] **步骤 2：运行后端编译**
 
 ```bash
 timeout 60s mvn -pl mmmail-server -am -f backend/pom.xml compile
@@ -718,7 +718,7 @@ timeout 60s mvn -pl mmmail-server -am -f backend/pom.xml compile
 
 预期：退出码 0，`BUILD SUCCESS`。
 
-- [ ] **步骤 3：运行前端 v2.1 回归**
+- [x] **步骤 3：运行前端 v2.1 回归**
 
 ```bash
 timeout 60s pnpm --dir frontend-v2 test
@@ -726,7 +726,7 @@ timeout 60s pnpm --dir frontend-v2 test
 
 预期：退出码 0，`# fail 0`。
 
-- [ ] **步骤 4：提交实现**
+- [x] **步骤 4：提交实现**
 
 ```bash
 git status --short --branch
@@ -761,7 +761,7 @@ git commit -m "feat(backend-v21): add event outbox foundation"
 **文件：**
 - 修改：`docs/superpowers/progress/v21-implementation-progress.md`
 
-- [ ] **步骤 1：更新完成记录**
+- [x] **步骤 1：更新完成记录**
 
 移除 `## Active Backend Slice`，增加：
 
@@ -783,7 +783,7 @@ git commit -m "feat(backend-v21): add event outbox foundation"
 | Backend event outbox foundation (`backend-v21-event-outbox-foundation`) | `BackendV21EventOutboxFoundationTest`, `platform_outbox_event`, `OutboxPublisher`, `InProcessOutboxDispatcher` |
 ```
 
-- [ ] **步骤 2：提交进度**
+- [x] **步骤 2：提交进度**
 
 ```bash
 git status --short --branch
