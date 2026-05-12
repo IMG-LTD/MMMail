@@ -52,7 +52,7 @@
 - 修改：`docs/superpowers/progress/v21-implementation-progress.md`
 - 创建：`backend/mmmail-server/src/test/java/com/mmmail/server/BackendV21BackgroundJobFoundationTest.java`
 
-- [ ] **步骤 1：记录活动切片**
+- [x] **步骤 1：记录活动切片**
 
 在 `## Remaining v2.1 Risks` 之前插入：
 
@@ -66,7 +66,7 @@
 - Verification target: `BackendV21BackgroundJobFoundationTest`, backend compile, frontend v2.1 test suite
 ```
 
-- [ ] **步骤 2：编写失败测试**
+- [x] **步骤 2：编写失败测试**
 
 创建 `BackendV21BackgroundJobFoundationTest.java`，测试先引用还不存在的 job 类型与 server 实现：
 
@@ -323,7 +323,7 @@ class BackendV21BackgroundJobFoundationTest {
 }
 ```
 
-- [ ] **步骤 3：运行红灯测试**
+- [x] **步骤 3：运行红灯测试**
 
 运行：
 
@@ -344,7 +344,7 @@ timeout 60s mvn -pl mmmail-server -am -f backend/pom.xml test -Dtest=BackendV21B
 - 创建：`backend/mmmail-platform/src/main/java/com/mmmail/platform/jobs/JobRunHandler.java`
 - 创建：`backend/mmmail-platform/src/main/java/com/mmmail/platform/jobs/JobRunner.java`
 
-- [ ] **步骤 1：创建 `JobRunType`**
+- [x] **步骤 1：创建 `JobRunType`**
 
 实现 enum 常量与 `fromJobName()`。常量：
 
@@ -360,7 +360,7 @@ AUDIT_EXPORT("audit.export", "admin-governance", true, true, true, true)
 
 暴露方法：`jobName()`、`ownerModule()`、`tenantRequired()`、`userRequired()`、`retrySupported()`、`hostedExtractionCandidate()`、`fromJobName(String jobName)`。
 
-- [ ] **步骤 2：创建 `JobRunMetadata`**
+- [x] **步骤 2：创建 `JobRunMetadata`**
 
 字段固定为：
 
@@ -378,7 +378,7 @@ public record JobRunMetadata(
 
 构造器校验 `module`、`operation`、`requestedAt`。方法 `validateFor(JobRunType type)` 校验必需 tenant/user，并要求 `module` 等于 `type.ownerModule()`。
 
-- [ ] **步骤 3：创建 `JobRunRequest`**
+- [x] **步骤 3：创建 `JobRunRequest`**
 
 字段固定为：
 
@@ -396,7 +396,7 @@ public record JobRunRequest(
 
 校验规则：`type`、`metadata` 非空；`aggregateType`、`aggregateId`、`payloadJson`、`idempotencyKey` 非空；`maxAttempts >= 1`；调用 `metadata.validateFor(type)`。
 
-- [ ] **步骤 4：创建 `JobRunRecord`**
+- [x] **步骤 4：创建 `JobRunRecord`**
 
 字段固定为：
 
@@ -458,7 +458,7 @@ RETRYABLE -> FAILED
 
 错误消息裁剪到 `512` 字符，progress 必须为 `0..100`。
 
-- [ ] **步骤 5：创建 runner 相关接口和结果**
+- [x] **步骤 5：创建 runner 相关接口和结果**
 
 签名固定为：
 
@@ -480,7 +480,7 @@ public interface JobRunner {
 }
 ```
 
-- [ ] **步骤 6：运行 platform 编译**
+- [x] **步骤 6：运行 platform 编译**
 
 运行：
 
@@ -500,7 +500,7 @@ timeout 60s mvn -pl mmmail-platform -am -f backend/pom.xml compile
 - 创建：`backend/mmmail-server/src/main/java/com/mmmail/server/jobs/PlatformJobRunMapper.java`
 - 修改：`backend/mmmail-server/src/main/java/com/mmmail/server/config/MybatisPlusConfig.java`
 
-- [ ] **步骤 1：创建迁移 SQL**
+- [x] **步骤 1：创建迁移 SQL**
 
 创建 `V12__platform_job_run.sql`：
 
@@ -548,11 +548,11 @@ set schema_version = '12',
 where id = 1;
 ```
 
-- [ ] **步骤 2：同步 schema 和 baseline**
+- [x] **步骤 2：同步 schema 和 baseline**
 
 把同一张表和五个索引追加到 `schema.sql` 与 `community-v1-schema.sql` 末尾。`schema.sql` 和 baseline 不需要追加 `update system_release_metadata`。
 
-- [ ] **步骤 3：创建 `PlatformJobRun` entity**
+- [x] **步骤 3：创建 `PlatformJobRun` entity**
 
 `PlatformJobRun` 使用：
 
@@ -594,7 +594,7 @@ public class PlatformJobRun {
 
 为所有字段生成 getter/setter。不要添加 `@TableLogic`，该表没有 `deleted` 列。
 
-- [ ] **步骤 4：创建 `PlatformJobRunMapper`**
+- [x] **步骤 4：创建 `PlatformJobRunMapper`**
 
 ```java
 @Mapper
@@ -620,7 +620,7 @@ public interface PlatformJobRunMapper extends BaseMapper<PlatformJobRun> {
 }
 ```
 
-- [ ] **步骤 5：更新 MapperScan**
+- [x] **步骤 5：更新 MapperScan**
 
 把 `MybatisPlusConfig` 改为：
 
@@ -628,7 +628,7 @@ public interface PlatformJobRunMapper extends BaseMapper<PlatformJobRun> {
 @MapperScan({"com.mmmail.server.mapper", "com.mmmail.server.outbox", "com.mmmail.server.jobs"})
 ```
 
-- [ ] **步骤 6：运行 schema 相关目标测试**
+- [x] **步骤 6：运行 schema 相关目标测试**
 
 运行：
 
@@ -643,7 +643,7 @@ timeout 60s mvn -pl mmmail-server -am -f backend/pom.xml test -Dtest=BackendV21B
 **文件：**
 - 创建：`backend/mmmail-server/src/main/java/com/mmmail/server/jobs/DatabaseJobRunRepository.java`
 
-- [ ] **步骤 1：实现 repository API**
+- [x] **步骤 1：实现 repository API**
 
 创建 Spring service：
 
@@ -692,7 +692,7 @@ public class DatabaseJobRunRepository {
 
 同时实现私有 helper：`duplicateResult()`、`sameJob()`、`toEntity()`、`toRecord()`、`safeLimit()`。
 
-- [ ] **步骤 2：幂等冲突规则**
+- [x] **步骤 2：幂等冲突规则**
 
 `sameJob()` 必须比较：
 
@@ -709,7 +709,7 @@ existing.getPayloadJson()
 idempotency key already belongs to a different job
 ```
 
-- [ ] **步骤 3：运行 repository 相关测试**
+- [x] **步骤 3：运行 repository 相关测试**
 
 运行：
 
@@ -725,7 +725,7 @@ timeout 60s mvn -pl mmmail-server -am -f backend/pom.xml test -Dtest=BackendV21B
 - 创建：`backend/mmmail-server/src/main/java/com/mmmail/server/jobs/ExplicitJobRunHandlerRegistry.java`
 - 创建：`backend/mmmail-server/src/main/java/com/mmmail/server/jobs/InProcessJobRunner.java`
 
-- [ ] **步骤 1：创建显式 handler registry**
+- [x] **步骤 1：创建显式 handler registry**
 
 实现：
 
@@ -751,7 +751,7 @@ public class ExplicitJobRunHandlerRegistry {
 }
 ```
 
-- [ ] **步骤 2：实现 runner 构造器和 options**
+- [x] **步骤 2：实现 runner 构造器和 options**
 
 `InProcessJobRunner` 使用 `@Service` 并实现 `JobRunner`：
 
@@ -807,7 +807,7 @@ public record RunnerOptions(
 }
 ```
 
-- [ ] **步骤 3：实现 `runDue()`**
+- [x] **步骤 3：实现 `runDue()`**
 
 行为：
 
@@ -820,7 +820,7 @@ public record RunnerOptions(
 7. handler 抛异常但不可重试或次数耗尽：`markFailed("JOB_HANDLER_FAILED", message, now)`。
 8. 返回 `JobRunResult(scanned, succeeded, retryable, failed)`。
 
-- [ ] **步骤 4：实现 metrics**
+- [x] **步骤 4：实现 metrics**
 
 使用 Micrometer counters/timer：
 
@@ -841,7 +841,7 @@ status
 
 不要把 `payloadJson`、`resultJson`、错误 detail 写进 tag。
 
-- [ ] **步骤 5：运行 runner 相关测试**
+- [x] **步骤 5：运行 runner 相关测试**
 
 运行：
 
@@ -856,7 +856,7 @@ timeout 60s mvn -pl mmmail-server -am -f backend/pom.xml test -Dtest=BackendV21B
 **文件：**
 - 所有任务 1-5 的源码、测试、SQL 文件。
 
-- [ ] **步骤 1：运行后端目标测试**
+- [x] **步骤 1：运行后端目标测试**
 
 ```bash
 timeout 60s mvn -pl mmmail-server -am -f backend/pom.xml test -Dtest=BackendV21BackgroundJobFoundationTest -Dsurefire.failIfNoSpecifiedTests=false
@@ -864,7 +864,7 @@ timeout 60s mvn -pl mmmail-server -am -f backend/pom.xml test -Dtest=BackendV21B
 
 预期：退出码 0，`Tests run` 大于 0，`Failures: 0`，`Errors: 0`。
 
-- [ ] **步骤 2：运行后端编译**
+- [x] **步骤 2：运行后端编译**
 
 ```bash
 timeout 60s mvn -pl mmmail-server -am -f backend/pom.xml compile
@@ -872,7 +872,7 @@ timeout 60s mvn -pl mmmail-server -am -f backend/pom.xml compile
 
 预期：退出码 0，`BUILD SUCCESS`。
 
-- [ ] **步骤 3：运行前端 v2.1 回归**
+- [x] **步骤 3：运行前端 v2.1 回归**
 
 ```bash
 timeout 60s pnpm --dir frontend-v2 test
@@ -880,7 +880,7 @@ timeout 60s pnpm --dir frontend-v2 test
 
 预期：退出码 0，`# fail 0`。
 
-- [ ] **步骤 4：提交实现**
+- [x] **步骤 4：提交实现**
 
 只暂存本切片相关源码、测试和 SQL：
 
@@ -914,7 +914,7 @@ git commit -m "feat(backend-v21): add background job foundation"
 - 修改：`docs/superpowers/progress/v21-implementation-progress.md`
 - 修改：`docs/superpowers/plans/2026-05-13-backend-v21-background-job-foundation.md`
 
-- [ ] **步骤 1：更新进度文档**
+- [x] **步骤 1：更新进度文档**
 
 把 `Latest backend implementation commit` 更新为实现提交 hash，把 `Local branch status at progress capture` 更新为提交后的 ahead 数。
 
@@ -945,11 +945,11 @@ git commit -m "feat(backend-v21): add background job foundation"
 - Completed: `2026-05-13`
 ```
 
-- [ ] **步骤 2：勾选计划任务**
+- [x] **步骤 2：勾选计划任务**
 
 把本计划中所有 `- [ ]` 改为 `- [x]`，只改当前计划文件。
 
-- [ ] **步骤 3：提交进度**
+- [x] **步骤 3：提交进度**
 
 `docs/superpowers` 被 ignore，必须只强制暂存这两个文档：
 

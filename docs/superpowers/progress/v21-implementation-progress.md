@@ -1,13 +1,13 @@
 # Frontend v2.1 Implementation Progress
 
-Last updated: 2026-05-12
+Last updated: 2026-05-13
 
 ## Current Repository State
 
 - Branch: `main`
 - Latest frontend implementation commit: `f98e8c14 test(frontend-v2): close v2.1 design parity audit`
-- Latest backend implementation commit: `2c1a9ba9 feat(backend-v21): add event outbox foundation`
-- Local branch status at progress capture: `main...origin/main [ahead 53]`
+- Latest backend implementation commit: `7681d21c feat(backend-v21): add background job foundation`
+- Local branch status at progress capture: `main...origin/main [ahead 57]`
 - Untracked paths intentionally not included in v2.1 commits: `.superpowers/`, `.tmp/`, `docs/MMMail.zip`, `docs/MMMail/`, `frontend/`
 
 ## Completed v2.1 Slices
@@ -28,6 +28,7 @@ Last updated: 2026-05-12
 | Full design parity audit closure | `v21-design-parity-audit-closure-contract.test.mjs`, `docs/superpowers/progress/v21-visual-parity-risk-register.md` |
 | Backend API contract runtime closure (`backend-v21-api-contract-runtime-closure`) | `BackendV21ApiContractCatalogTest`, `contracts/openapi/v21-api-catalog.yaml`, `/api/v2/platform/contracts` |
 | Backend event outbox foundation (`backend-v21-event-outbox-foundation`) | `BackendV21EventOutboxFoundationTest`, `platform_outbox_event`, `OutboxPublisher`, `InProcessOutboxDispatcher` |
+| Backend background job foundation (`backend-v21-background-job-foundation`) | `BackendV21BackgroundJobFoundationTest`, `platform_job_run`, `JobRunner`, `InProcessJobRunner` |
 
 ## Latest Visual QA Baseline
 
@@ -51,22 +52,22 @@ Last updated: 2026-05-12
 
 ## Latest Completed Backend Slice
 
-- Slice: `backend-v21-event-outbox-foundation`
-- Commit: `2c1a9ba9 feat(backend-v21): add event outbox foundation`
-- Files changed: added immutable platform event and outbox contracts, MyBatis `platform_outbox_event` persistence, Flyway/schema/baseline table definitions, database-backed publisher, in-process dispatcher, and focused Spring Boot coverage.
+- Slice: `backend-v21-background-job-foundation`
+- Commit: `7681d21c feat(backend-v21): add background job foundation`
+- Files changed: added platform job contracts and status transitions, MyBatis `platform_job_run` persistence, Flyway/schema/baseline table definitions, database-backed repository, explicit handler registry, in-process runner, and focused Spring Boot coverage.
 - Verification:
-  - `timeout 60s mvn -pl mmmail-server -am -f backend/pom.xml test -Dtest=BackendV21EventOutboxFoundationTest -Dsurefire.failIfNoSpecifiedTests=false`: PASS (`8/8`)
+  - `timeout 60s mvn -pl mmmail-server -am -f backend/pom.xml test -Dtest=BackendV21BackgroundJobFoundationTest -Dsurefire.failIfNoSpecifiedTests=false`: PASS (`9/9`)
   - `timeout 60s mvn -pl mmmail-server -am -f backend/pom.xml compile`: PASS
   - `timeout 60s pnpm --dir frontend-v2 test`: PASS (`83/83`)
 
 ## Active Backend Slice
 
-- Slice: `backend-v21-event-outbox-foundation`
+- Slice: `backend-v21-background-job-foundation`
 - Status: `completed`
-- Started: `2026-05-12`
-- Completed: `2026-05-12`
-- Scope: platform event contract, outbox record contract, database-backed publisher, in-process dispatcher, migration, tests
-- Verification target: `BackendV21EventOutboxFoundationTest`, backend compile, frontend v2.1 test suite
+- Started: `2026-05-13`
+- Completed: `2026-05-13`
+- Scope: platform job contract, persisted job runs, database repository, in-process runner, migration, tests
+- Verification target: `BackendV21BackgroundJobFoundationTest`, backend compile, frontend v2.1 test suite
 
 ## Remaining v2.1 Risks
 
