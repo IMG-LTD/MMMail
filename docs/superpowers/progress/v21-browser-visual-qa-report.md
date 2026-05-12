@@ -1,6 +1,6 @@
 # v2.1 Browser Visual QA Report
 
-Generated at: 2026-05-12T10:11:45.538Z
+Generated at: 2026-05-12T10:52:52.623Z
 
 Total screenshots: 69
 
@@ -112,5 +112,9 @@ Total screenshots: 69
 - Pass: `pass-secure-link-settings` on `/pass/secure-links`
 - Pass: `pass-risk-detail` on `/pass/monitor`
 - Setting: `settings-delete-confirmation` on `/settings`
+
+## Visual parity risk register
+
+Design-image parity findings are tracked in `docs/superpowers/progress/v21-visual-parity-risk-register.md`. Screenshot capture proves rendered evidence, not final manual design approval.
 
 Screenshots are evidence artifacts under `.tmp/` and are intentionally not committed.

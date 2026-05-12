@@ -1,4 +1,5 @@
 export const REPORT_PATH_SUFFIX = 'docs/superpowers/progress/v21-browser-visual-qa-report.md'
+const PARITY_REGISTER_PATH = 'docs/superpowers/progress/v21-visual-parity-risk-register.md'
 
 export async function writeVisualQaReport({ generatedAt, reportPath, results, writeFile }) {
   const groups = groupResults(results)
@@ -24,6 +25,10 @@ export async function writeVisualQaReport({ generatedAt, reportPath, results, wr
     '## Covered overlay and panel evidence',
     '',
     ...formatOverlayList(results),
+    '',
+    '## Visual parity risk register',
+    '',
+    `Design-image parity findings are tracked in \`${PARITY_REGISTER_PATH}\`. Screenshot capture proves rendered evidence, not final manual design approval.`,
     '',
     'Screenshots are evidence artifacts under `.tmp/` and are intentionally not committed.'
   ].join('\n')
