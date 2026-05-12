@@ -6,7 +6,8 @@ Last updated: 2026-05-12
 
 - Branch: `main`
 - Latest frontend implementation commit: `f98e8c14 test(frontend-v2): close v2.1 design parity audit`
-- Local branch status at progress capture: `main...origin/main [ahead 43]`
+- Latest backend implementation commit: `52603ca8 test(backend-v21): close API contract runtime coverage`
+- Local branch status at progress capture: `main...origin/main [ahead 48]`
 - Untracked paths intentionally not included in v2.1 commits: `.superpowers/`, `.tmp/`, `docs/MMMail.zip`, `docs/MMMail/`, `frontend/`
 
 ## Completed v2.1 Slices
@@ -25,6 +26,7 @@ Last updated: 2026-05-12
 | Mail, Calendar, and Pass core workbench closure | `v21-core-workbench-closure-contract.test.mjs`, latest visual QA report |
 | Final public auth visual parity closure (`frontend-v21-final-visual-parity-public-auth-closure`) | `v21-final-visual-parity-public-auth-closure-contract.test.mjs`, `docs/superpowers/progress/v21-visual-parity-risk-register.md` |
 | Full design parity audit closure | `v21-design-parity-audit-closure-contract.test.mjs`, `docs/superpowers/progress/v21-visual-parity-risk-register.md` |
+| Backend API contract runtime closure (`backend-v21-api-contract-runtime-closure`) | `BackendV21ApiContractCatalogTest`, `contracts/openapi/v21-api-catalog.yaml`, `/api/v2/platform/contracts` |
 
 ## Latest Visual QA Baseline
 
@@ -46,13 +48,15 @@ Last updated: 2026-05-12
   - `pnpm --dir frontend-v2 visual:qa`: PASS (`69 screenshots`)
 - Remaining parity risks: no `must-fix` row remains in the current register; `acceptable-delta` rows document intentional MMMail productization differences.
 
-## Active Slice
+## Latest Completed Backend Slice
 
 - Slice: `backend-v21-api-contract-runtime-closure`
-- Status: `in_progress`
-- Started: `2026-05-12`
-- Scope: backend runtime API contract catalog, OpenAPI catalog, backend catalog tests, progress tracking
-- Verification target: `BackendV21ApiContractCatalogTest`, backend compile, frontend v2.1 contract suite
+- Commit: `52603ca8 test(backend-v21): close API contract runtime coverage`
+- Files changed: added billing and entitlements runtime catalog coverage, froze the matching OpenAPI paths, tightened `BackendV21ApiContractCatalogTest`, and verified `/api/v2/platform/contracts` exposes 122 v2.1 contracts behind authentication.
+- Verification:
+  - `timeout 60s mvn -pl mmmail-server -am -f backend/pom.xml test -Dtest=BackendV21ApiContractCatalogTest -Dsurefire.failIfNoSpecifiedTests=false`: PASS (`5/5`)
+  - `timeout 60s mvn -pl mmmail-server -am -f backend/pom.xml compile`: PASS
+  - `timeout 60s pnpm --dir frontend-v2 test`: PASS (`83/83`)
 
 ## Remaining v2.1 Risks
 
