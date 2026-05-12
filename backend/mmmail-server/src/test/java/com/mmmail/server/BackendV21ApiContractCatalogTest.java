@@ -16,6 +16,7 @@ import org.springframework.test.web.servlet.MvcResult;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Map;
+import java.util.Set;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -31,6 +32,26 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 class BackendV21ApiContractCatalogTest {
 
     private static final String PASSWORD = "Password@123";
+    private static final Set<String> REQUIRED_OWNER_MODULES = Set.of(
+            "workspace",
+            "mail",
+            "calendar",
+            "drive",
+            "docs",
+            "sheets",
+            "labs",
+            "pass",
+            "collaboration",
+            "command-center",
+            "notifications",
+            "admin-governance",
+            "billing",
+            "entitlements",
+            "settings",
+            "identity",
+            "public-share",
+            "system"
+    );
 
     @Autowired
     private MockMvc mockMvc;
@@ -56,6 +77,28 @@ class BackendV21ApiContractCatalogTest {
     }
 
     @Test
+    void catalogShouldCoverBackendRuntimeFamiliesRequiredByFrontendV21() {
+        V21ApiContractCatalog catalog = V21ApiContractCatalog.defaultCatalog();
+        Map<String, V21ApiContract> contractsByIdentity = catalog.contracts().stream()
+                .collect(Collectors.toMap(V21ApiContract::identity, Function.identity()));
+        Set<String> ownerModules = catalog.contracts().stream()
+                .map(V21ApiContract::ownerModule)
+                .collect(Collectors.toSet());
+
+        assertThat(ownerModules).containsAll(REQUIRED_OWNER_MODULES);
+        assertContract(contractsByIdentity, "GET /api/v2/billing/summary", "billing", "BillingSummary", "hosted");
+        assertContract(contractsByIdentity, "GET /api/v2/billing/plans", "billing", "BillingPlan[]", "hosted");
+        assertContract(contractsByIdentity, "GET /api/v2/billing/invoices", "billing", "BillingInvoice[]", "hosted");
+        assertContract(contractsByIdentity, "GET /api/v2/billing/usage", "billing", "BillingUsage", "hosted");
+        assertContract(contractsByIdentity, "GET /api/v2/entitlements", "entitlements", "EntitlementState[]", "community");
+        assertContract(contractsByIdentity, "GET /api/v2/entitlements/matrix", "entitlements", "EntitlementMatrix", "community");
+
+        for (V21ApiContract contract : catalog.contracts()) {
+            assertContractMetadata(contract);
+        }
+    }
+
+    @Test
     void authenticatedPlatformEndpointShouldExposeCatalog() throws Exception {
         String token = login("admin@mmmail.local", PASSWORD);
 
@@ -63,7 +106,7 @@ class BackendV21ApiContractCatalogTest {
                         .header("Authorization", "Bearer " + token))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.data.version").value("v2.1"))
-                .andExpect(jsonPath("$.data.contracts.length()").value(116))
+                .andExpect(jsonPath("$.data.contracts.length()").value(122))
                 .andExpect(jsonPath("$.data.contracts[0].method").value("GET"))
                 .andExpect(jsonPath("$.data.contracts[0].path").value("/api/v2/workspace/summary"));
     }
@@ -84,6 +127,11 @@ class BackendV21ApiContractCatalogTest {
                 .contains("/api/v2/workspace/summary:")
                 .contains("/api/v2/mail/send:")
                 .contains("/api/v2/admin/summary:")
+                .contains("/api/v2/billing/summary:")
+                .contains("x-permission: [\"billing:read\"]")
+                .contains("x-entitlement: hosted")
+                .contains("/api/v2/entitlements:")
+                .contains("x-permission: [\"entitlements:read\"]")
                 .contains("/api/v2/settings/profile:")
                 .contains("x-permission:")
                 .contains("x-entitlement:")
@@ -97,6 +145,17 @@ class BackendV21ApiContractCatalogTest {
         assertThat(contract.responseModel()).isEqualTo(responseModel);
         assertThat(contract.entitlement()).isEqualTo(entitlement);
         assertThat(contract.permissions()).isNotEmpty();
+    }
+
+    private void assertContractMetadata(V21ApiContract contract) {
+        assertThat(contract.method()).isIn("GET", "POST", "PATCH", "DELETE");
+        assertThat(contract.path()).startsWith("/api/v2/");
+        assertThat(contract.ownerModule()).isNotBlank();
+        assertThat(contract.responseModel()).isNotBlank();
+        assertThat(contract.permissions()).isNotEmpty();
+        assertThat(contract.permissions()).allSatisfy(permission -> assertThat(permission).isNotBlank());
+        assertThat(contract.entitlement()).isIn("community", "premium", "hosted", "enterprise-governance");
+        assertThat(contract.designSource()).startsWith("docs/MMMail/UI/");
     }
 
     private String login(String email, String password) throws Exception {

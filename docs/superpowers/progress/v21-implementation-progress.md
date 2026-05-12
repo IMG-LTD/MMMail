@@ -46,6 +46,14 @@ Last updated: 2026-05-12
   - `pnpm --dir frontend-v2 visual:qa`: PASS (`69 screenshots`)
 - Remaining parity risks: no `must-fix` row remains in the current register; `acceptable-delta` rows document intentional MMMail productization differences.
 
+## Active Slice
+
+- Slice: `backend-v21-api-contract-runtime-closure`
+- Status: `in_progress`
+- Started: `2026-05-12`
+- Scope: backend runtime API contract catalog, OpenAPI catalog, backend catalog tests, progress tracking
+- Verification target: `BackendV21ApiContractCatalogTest`, backend compile, frontend v2.1 contract suite
+
 ## Remaining v2.1 Risks
 
 1. Design-image parity findings are tracked for every browser visual QA UI group in `docs/superpowers/progress/v21-visual-parity-risk-register.md`.

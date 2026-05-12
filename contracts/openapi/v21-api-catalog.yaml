@@ -184,6 +184,18 @@ paths:
     get: {summary: Read admin system, x-permission: ["admin:system:read"], x-entitlement: enterprise-governance, x-design-source: docs/MMMail/UI/Admin, responses: {"200": {description: ok}}}
   /api/v2/admin/risk:
     get: {summary: Read admin risk, x-permission: ["admin:risk:read"], x-entitlement: enterprise-governance, x-design-source: docs/MMMail/UI/Admin, responses: {"200": {description: ok}}}
+  /api/v2/billing/summary:
+    get: {summary: Read billing summary, x-permission: ["billing:read"], x-entitlement: hosted, x-design-source: docs/MMMail/UI/Admin, responses: {"200": {description: ok}}}
+  /api/v2/billing/plans:
+    get: {summary: List billing plans, x-permission: ["billing:plans:read"], x-entitlement: hosted, x-design-source: docs/MMMail/UI/Admin, responses: {"200": {description: ok}}}
+  /api/v2/billing/invoices:
+    get: {summary: List billing invoices, x-permission: ["billing:invoices:read"], x-entitlement: hosted, x-design-source: docs/MMMail/UI/Admin, responses: {"200": {description: ok}}}
+  /api/v2/billing/usage:
+    get: {summary: Read billing usage, x-permission: ["billing:usage:read"], x-entitlement: hosted, x-design-source: docs/MMMail/UI/Admin, responses: {"200": {description: ok}}}
+  /api/v2/entitlements:
+    get: {summary: List entitlement states, x-permission: ["entitlements:read"], x-entitlement: community, x-design-source: docs/MMMail/UI/Admin, responses: {"200": {description: ok}}}
+  /api/v2/entitlements/matrix:
+    get: {summary: Read entitlement matrix, x-permission: ["entitlements:matrix:read"], x-entitlement: community, x-design-source: docs/MMMail/UI/Admin, responses: {"200": {description: ok}}}
   /api/v2/settings/profile:
     get: {summary: Read settings profile, x-permission: ["settings:read"], x-entitlement: community, x-design-source: docs/MMMail/UI/Setting, responses: {"200": {description: ok}}}
     patch: {summary: Update settings profile, x-permission: ["settings:write"], x-entitlement: community, x-design-source: docs/MMMail/UI/Setting, responses: {"200": {description: ok}}}

@@ -27,7 +27,8 @@ public record V21ApiContractCatalog(String version, List<V21ApiContract> contrac
                 workspaceContracts(), mailContracts(), calendarContracts(), driveContracts(),
                 docsContracts(), sheetsContracts(), labsContracts(), passContracts(),
                 collaborationContracts(), commandCenterContracts(), notificationContracts(),
-                adminContracts(), settingsContracts(), publicAuthShareSystemContracts()
+                adminContracts(), billingContracts(), entitlementsContracts(),
+                settingsContracts(), publicAuthShareSystemContracts()
         ).flatMap(List::stream).toList();
         return new V21ApiContractCatalog("v2.1", contracts);
     }
@@ -200,6 +201,22 @@ public record V21ApiContractCatalog(String version, List<V21ApiContract> contrac
                 {"GET", "/api/v2/admin/alerts", "AdminAlert[]", GOVERNANCE, "admin:alerts:read"},
                 {"GET", "/api/v2/admin/system", "AdminSystemStatus", GOVERNANCE, "admin:system:read"},
                 {"GET", "/api/v2/admin/risk", "AdminRiskOverview", GOVERNANCE, "admin:risk:read"}
+        });
+    }
+
+    private static List<V21ApiContract> billingContracts() {
+        return module("billing", "docs/MMMail/UI/Admin", new String[][]{
+                {"GET", "/api/v2/billing/summary", "BillingSummary", HOSTED, "billing:read"},
+                {"GET", "/api/v2/billing/plans", "BillingPlan[]", HOSTED, "billing:plans:read"},
+                {"GET", "/api/v2/billing/invoices", "BillingInvoice[]", HOSTED, "billing:invoices:read"},
+                {"GET", "/api/v2/billing/usage", "BillingUsage", HOSTED, "billing:usage:read"}
+        });
+    }
+
+    private static List<V21ApiContract> entitlementsContracts() {
+        return module("entitlements", "docs/MMMail/UI/Admin", new String[][]{
+                {"GET", "/api/v2/entitlements", "EntitlementState[]", COMMUNITY, "entitlements:read"},
+                {"GET", "/api/v2/entitlements/matrix", "EntitlementMatrix", COMMUNITY, "entitlements:matrix:read"}
         });
     }
 
