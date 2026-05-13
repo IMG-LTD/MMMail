@@ -5,9 +5,9 @@ Last updated: 2026-05-13
 ## Current Repository State
 
 - Branch: `main`
-- Latest frontend implementation commit: `964bcbfd feat(backend-v21): add calendar runtime bridge`
-- Latest backend implementation commit: `964bcbfd feat(backend-v21): add calendar runtime bridge`
-- Local branch status at progress capture: `main...origin/main [ahead 66]`
+- Latest frontend implementation commit: `0f744a60 feat(frontend-v2): align drive client with runtime bridge`
+- Latest backend implementation commit: `30ee3579 feat(backend-v21): add drive runtime bridge`
+- Local branch status at progress capture: `main...origin/main [ahead 72]`
 - Untracked paths intentionally not included in v2.1 commits: `.superpowers/`, `.tmp/`, `docs/MMMail.zip`, `docs/MMMail/`, `frontend/`
 
 ## Completed v2.1 Slices
@@ -31,6 +31,7 @@ Last updated: 2026-05-13
 | Backend background job foundation (`backend-v21-background-job-foundation`) | `BackendV21BackgroundJobFoundationTest`, `platform_job_run`, `JobRunner`, `InProcessJobRunner` |
 | Backend access entitlement gates (`backend-v21-access-entitlement-gates`) | `BackendV21AccessEntitlementGatesTest`, `AccessGate`, `V21ApiContractMatcher`, `V21ApiAccessGateInterceptor` |
 | Backend Calendar runtime bridge (`backend-v21-calendar-runtime-bridge`) | `BackendV21CalendarRuntimeBridgeTest`, `V21CalendarController`, `CalendarEventDrawer` save wiring |
+| Backend Drive runtime bridge (`backend-v21-drive-runtime-bridge`) | `BackendV21DriveRuntimeBridgeTest`, `V21DriveController`, `V21DriveRuntimeBridgeService`, frontend Drive client cleanup |
 
 ## Latest Visual QA Baseline
 
@@ -54,25 +55,24 @@ Last updated: 2026-05-13
 
 ## Latest Completed Backend Slice
 
-- Slice: `backend-v21-calendar-runtime-bridge`
-- Commit: `964bcbfd feat(backend-v21): add calendar runtime bridge`
-- Files changed: added v2 Calendar controller, runtime settings service backed by `user_preference.timezone`, v2 availability contract alignment, frontend Calendar mutation APIs, drawer draft save wiring, backend response error message parsing, and focused backend/frontend coverage.
+- Slice: `backend-v21-drive-runtime-bridge`
+- Commits: `8a048be1 feat(backend-v21): add drive share read contract`, `30ee3579 feat(backend-v21): add drive runtime bridge`, `0f744a60 feat(frontend-v2): align drive client with runtime bridge`
+- Files changed: added v2 Drive share read contract, v2 Drive controller and runtime bridge service, upload/read/update/delete/share mappings to existing Drive services, runtime bridge coverage, and frontend Drive client cleanup for v2.1 Drive API boundaries.
 - Verification:
-  - `timeout 60s mvn -pl mmmail-server -am -f backend/pom.xml test -Dtest=BackendV21CalendarRuntimeBridgeTest -Dsurefire.failIfNoSpecifiedTests=false`: PASS (`3/3`)
-  - `timeout 60s mvn -pl mmmail-server -am -f backend/pom.xml test -Dtest=BackendV21CalendarRuntimeBridgeTest,CalendarReleaseBlockingIntegrationTest,BackendV21AccessEntitlementGatesTest -Dsurefire.failIfNoSpecifiedTests=false`: PASS (`15/15`)
+  - `timeout 60s mvn -pl mmmail-server -am -f backend/pom.xml test -Dtest=BackendV21DriveRuntimeBridgeTest,DriveReleaseBlockingIntegrationTest,BackendV21AccessEntitlementGatesTest,BackendV21ApiContractCatalogTest -Dsurefire.failIfNoSpecifiedTests=false`: PASS (`18/18`)
   - `pnpm --dir frontend-v2 test`: PASS (`84/84`)
   - `pnpm --dir frontend-v2 typecheck`: PASS
   - `pnpm --dir frontend-v2 build`: PASS
 
 ## Active Backend Slice
 
-- Slice: `backend-v21-calendar-runtime-bridge`
+- Slice: `backend-v21-drive-runtime-bridge`
 - Status: `completed`
 - Started: `2026-05-13`
 - Completed: `2026-05-13`
-- Scope: v2 Calendar runtime bridge, event mutations, availability, settings timezone persistence, frontend save wiring
+- Scope: v2 Drive runtime bridge, Drive API contract alignment, frontend Drive client cleanup
 - Verification:
-  - `timeout 60s mvn -pl mmmail-server -am -f backend/pom.xml test -Dtest=BackendV21CalendarRuntimeBridgeTest,CalendarReleaseBlockingIntegrationTest,BackendV21AccessEntitlementGatesTest -Dsurefire.failIfNoSpecifiedTests=false`
+  - `timeout 60s mvn -pl mmmail-server -am -f backend/pom.xml test -Dtest=BackendV21DriveRuntimeBridgeTest,DriveReleaseBlockingIntegrationTest,BackendV21AccessEntitlementGatesTest,BackendV21ApiContractCatalogTest -Dsurefire.failIfNoSpecifiedTests=false`
   - `pnpm --dir frontend-v2 test`
   - `pnpm --dir frontend-v2 typecheck`
   - `pnpm --dir frontend-v2 build`
