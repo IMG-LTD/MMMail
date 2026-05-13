@@ -70,6 +70,8 @@ class BackendV21ApiContractCatalogTest {
         assertContract(byPath, "POST /api/v2/mail/send", "mail", "MailSendResult", "community");
         assertContract(byPath, "POST /api/v2/calendar/bookings", "calendar", "CalendarEvent", "premium");
         assertContract(byPath, "POST /api/v2/drive/uploads", "drive", "DriveItem", "community");
+        assertContract(byPath, "GET /api/v2/drive/uploads/:id", "drive", "DriveItem", "community");
+        assertContract(byPath, "GET /api/v2/drive/files/:id/share", "drive", "DriveShareLink[]", "community");
         assertContract(byPath, "GET /api/v2/admin/summary", "admin-governance", "AdminSummary", "enterprise-governance");
         assertContract(byPath, "GET /api/v2/settings/profile", "settings", "UserPreference", "community");
 
@@ -108,10 +110,10 @@ class BackendV21ApiContractCatalogTest {
         String token = login("admin@mmmail.local", PASSWORD);
 
         mockMvc.perform(get("/api/v2/platform/contracts")
-                        .header("Authorization", "Bearer " + token))
+                .header("Authorization", "Bearer " + token))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.data.version").value("v2.1"))
-                .andExpect(jsonPath("$.data.contracts.length()").value(126))
+                .andExpect(jsonPath("$.data.contracts.length()").value(127))
                 .andExpect(jsonPath("$.data.contracts[0].method").value("GET"))
                 .andExpect(jsonPath("$.data.contracts[0].path").value("/api/v2/workspace/summary"));
     }
@@ -140,6 +142,8 @@ class BackendV21ApiContractCatalogTest {
                 .contains("/api/v2/platform/contracts:")
                 .contains("x-permission: [\"platform:contracts:read\"]")
                 .contains("/api/v2/share/capabilities:")
+                .contains("/api/v2/drive/files/{id}/share:")
+                .contains("List drive shares")
                 .contains("/api/v2/settings/profile:")
                 .contains("x-permission:")
                 .contains("x-entitlement:")

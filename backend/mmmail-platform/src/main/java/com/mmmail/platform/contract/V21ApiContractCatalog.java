@@ -88,9 +88,10 @@ public record V21ApiContractCatalog(String version, List<V21ApiContract> contrac
                 {"GET", "/api/v2/drive/folders", "DriveItem[]", COMMUNITY, "drive:read"},
                 {"GET", "/api/v2/drive/files", "DriveItem[]", COMMUNITY, "drive:read"},
                 {"POST", "/api/v2/drive/uploads", "DriveItem", COMMUNITY, "drive:write"},
-                {"GET", "/api/v2/drive/uploads/:id", "UploadQueueItem", COMMUNITY, "drive:read"},
+                {"GET", "/api/v2/drive/uploads/:id", "DriveItem", COMMUNITY, "drive:read"},
                 {"PATCH", "/api/v2/drive/files/:id", "DriveItem", COMMUNITY, "drive:write"},
                 {"DELETE", "/api/v2/drive/files/:id", "Void", COMMUNITY, "drive:write"},
+                {"GET", "/api/v2/drive/files/:id/share", "DriveShareLink[]", COMMUNITY, "drive:share"},
                 {"POST", "/api/v2/drive/files/:id/share", "DriveShareLink", COMMUNITY, "drive:share"},
                 {"GET", "/api/v2/drive/files/:id/versions", "DriveFileVersion[]", PREMIUM, "drive:read"},
                 {"GET", "/api/v2/drive/storage/summary", "DriveUsage", COMMUNITY, "drive:read"}

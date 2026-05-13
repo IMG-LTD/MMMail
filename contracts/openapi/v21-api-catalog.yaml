@@ -61,6 +61,7 @@ paths:
     patch: {summary: Update drive file, x-permission: ["drive:write"], x-entitlement: community, x-design-source: docs/MMMail/UI/云盘, responses: {"200": {description: ok}}}
     delete: {summary: Delete drive file, x-permission: ["drive:write"], x-entitlement: community, x-design-source: docs/MMMail/UI/云盘, responses: {"200": {description: ok}}}
   /api/v2/drive/files/{id}/share:
+    get: {summary: List drive shares, x-permission: ["drive:share"], x-entitlement: community, x-design-source: docs/MMMail/UI/云盘, responses: {"200": {description: ok}}}
     post: {summary: Share drive file, x-permission: ["drive:share"], x-entitlement: community, x-design-source: docs/MMMail/UI/云盘, responses: {"200": {description: ok}}}
   /api/v2/drive/files/{id}/versions:
     get: {summary: List drive file versions, x-permission: ["drive:read"], x-entitlement: premium, x-design-source: docs/MMMail/UI/云盘, responses: {"200": {description: ok}}}
