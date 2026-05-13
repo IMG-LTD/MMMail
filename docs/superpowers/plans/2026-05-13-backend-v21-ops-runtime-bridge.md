@@ -164,7 +164,7 @@ class BackendV21OpsRuntimeBridgeTest {
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.code").value(ErrorCode.INVALID_ARGUMENT.getCode()));
 
-        assertPremiumGate(token, "/api/v2/command-center/runs");
+        assertPremiumPostGate(token, "/api/v2/command-center/runs");
         assertPremiumGate(token, "/api/v2/command-center/workflows");
         assertPremiumGate(token, "/api/v2/command-center/audit");
         assertPremiumGate(token, "/api/v2/notifications/rules");
@@ -238,6 +238,15 @@ class BackendV21OpsRuntimeBridgeTest {
 
     private void assertPremiumGate(String token, String path) throws Exception {
         mockMvc.perform(get(path).header("Authorization", "Bearer " + token))
+                .andExpect(status().isForbidden())
+                .andExpect(jsonPath("$.code").value(ErrorCode.V2_ENTITLEMENT_REQUIRED.getCode()));
+    }
+
+    private void assertPremiumPostGate(String token, String path) throws Exception {
+        mockMvc.perform(post(path)
+                        .header("Authorization", "Bearer " + token)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{}"))
                 .andExpect(status().isForbidden())
                 .andExpect(jsonPath("$.code").value(ErrorCode.V2_ENTITLEMENT_REQUIRED.getCode()));
     }
