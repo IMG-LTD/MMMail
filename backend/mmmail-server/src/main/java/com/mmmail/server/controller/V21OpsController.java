@@ -1,6 +1,10 @@
 package com.mmmail.server.controller;
 
 import com.mmmail.common.model.Result;
+import com.mmmail.server.model.dto.CreateV21CollaborationCommentRequest;
+import com.mmmail.server.model.dto.CreateV21CollaborationProjectRequest;
+import com.mmmail.server.model.dto.CreateV21CollaborationTaskRequest;
+import com.mmmail.server.model.dto.UpdateV21CollaborationTaskRequest;
 import com.mmmail.server.model.dto.V21NotificationPatchRequest;
 import com.mmmail.server.model.dto.V21NotificationQuery;
 import com.mmmail.server.model.vo.V21CollaborationActivityVo;
@@ -31,10 +35,6 @@ import java.util.List;
 @RequestMapping("/api/v2")
 public class V21OpsController {
 
-    private static final String UNSUPPORTED_PROJECT_CREATE = "v2 collaboration project creation is not supported by current runtime bridge";
-    private static final String UNSUPPORTED_TASK_CREATE = "v2 collaboration task creation is not supported by current runtime bridge";
-    private static final String UNSUPPORTED_TASK_UPDATE = "v2 collaboration task update is not supported by current runtime bridge";
-    private static final String UNSUPPORTED_COMMENT_CREATE = "v2 collaboration comments are not supported by current runtime bridge";
     private static final String UNSUPPORTED_SUBSCRIPTION_UPDATE = "v2 notification subscription update is not supported by current runtime bridge";
     private static final String UNSUPPORTED_PREMIUM = "v2 premium ops execution is not supported by current runtime bridge";
 
@@ -53,8 +53,11 @@ public class V21OpsController {
     }
 
     @PostMapping("/collaboration/projects")
-    public Result<Void> createProject() {
-        return unsupported(UNSUPPORTED_PROJECT_CREATE);
+    public Result<V21CollaborationProjectVo> createProject(
+            @Valid @RequestBody CreateV21CollaborationProjectRequest request,
+            HttpServletRequest httpRequest
+    ) {
+        return Result.success(opsRuntimeBridgeService.createProject(SecurityUtils.currentUserId(), request, httpRequest));
     }
 
     @GetMapping("/collaboration/projects/{id}")
@@ -71,18 +74,29 @@ public class V21OpsController {
     }
 
     @PostMapping("/collaboration/tasks")
-    public Result<Void> createTask() {
-        return unsupported(UNSUPPORTED_TASK_CREATE);
+    public Result<V21CollaborationTaskVo> createTask(
+            @Valid @RequestBody CreateV21CollaborationTaskRequest request,
+            HttpServletRequest httpRequest
+    ) {
+        return Result.success(opsRuntimeBridgeService.createTask(SecurityUtils.currentUserId(), request, httpRequest));
     }
 
     @PatchMapping("/collaboration/tasks/{id}")
-    public Result<Void> updateTask(@PathVariable String id) {
-        return unsupported(UNSUPPORTED_TASK_UPDATE);
+    public Result<V21CollaborationTaskVo> updateTask(
+            @PathVariable String id,
+            @Valid @RequestBody UpdateV21CollaborationTaskRequest request,
+            HttpServletRequest httpRequest
+    ) {
+        return Result.success(opsRuntimeBridgeService.updateTask(SecurityUtils.currentUserId(), id, request, httpRequest));
     }
 
     @PostMapping("/collaboration/tasks/{id}/comments")
-    public Result<Void> createTaskComment(@PathVariable String id) {
-        return unsupported(UNSUPPORTED_COMMENT_CREATE);
+    public Result<V21CollaborationActivityVo> createTaskComment(
+            @PathVariable String id,
+            @Valid @RequestBody CreateV21CollaborationCommentRequest request,
+            HttpServletRequest httpRequest
+    ) {
+        return Result.success(opsRuntimeBridgeService.createTaskComment(SecurityUtils.currentUserId(), id, request, httpRequest));
     }
 
     @GetMapping("/collaboration/activity")
