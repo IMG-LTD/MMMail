@@ -1,6 +1,6 @@
 # Backend v2.1 Calendar Runtime Bridge 实现计划
 
-> **面向 AI 代理的工作者：** 必需子技能：使用 superpowers:subagent-driven-development（推荐）或 superpowers:executing-plans 逐任务实现此计划。步骤使用复选框（`- [ ]`）语法来跟踪进度。
+> **面向 AI 代理的工作者：** 必需子技能：使用 superpowers:subagent-driven-development（推荐）或 superpowers:executing-plans 逐任务实现此计划。步骤使用复选框（`- [x]`）语法来跟踪进度。
 
 **目标：** 让 v2.1 Calendar Community runtime 从前端保存动作到后端 `/api/v2/calendar/*` 合同都走真实服务、真实持久化和真实 entitlement gate，不再保留保存占位提示。
 
@@ -43,7 +43,7 @@
 - 修改：`docs/superpowers/progress/v21-implementation-progress.md`
 - 创建：`backend/mmmail-server/src/test/java/com/mmmail/server/BackendV21CalendarRuntimeBridgeTest.java`
 
-- [ ] **步骤 1：记录活动切片**
+- [x] **步骤 1：记录活动切片**
 
 将 `## Active Backend Slice` 更新为：
 
@@ -57,7 +57,7 @@
 - Verification target: `BackendV21CalendarRuntimeBridgeTest`, v1 Calendar regression, v2 gate regression, frontend v2 contract tests
 ```
 
-- [ ] **步骤 2：新增 v2 Calendar runtime bridge 失败测试**
+- [x] **步骤 2：新增 v2 Calendar runtime bridge 失败测试**
 
 创建 `BackendV21CalendarRuntimeBridgeTest.java`，测试命名和 helper 风格沿用 `CalendarReleaseBlockingIntegrationTest`：
 
@@ -237,7 +237,7 @@ private JsonNode readJson(MvcResult result) throws Exception {
 }
 ```
 
-- [ ] **步骤 3：运行后端红灯测试**
+- [x] **步骤 3：运行后端红灯测试**
 
 ```bash
 timeout 60s mvn -pl mmmail-server -am -f backend/pom.xml test -Dtest=BackendV21CalendarRuntimeBridgeTest
@@ -254,7 +254,7 @@ timeout 60s mvn -pl mmmail-server -am -f backend/pom.xml test -Dtest=BackendV21C
 - 创建：`backend/mmmail-server/src/main/java/com/mmmail/server/model/vo/CalendarSettingsVo.java`
 - 修改：`backend/mmmail-server/src/main/java/com/mmmail/server/service/UserPreferenceService.java`
 
-- [ ] **步骤 1：增加 settings DTO 和 VO**
+- [x] **步骤 1：增加 settings DTO 和 VO**
 
 `UpdateCalendarSettingsRequest.java`：
 
@@ -290,7 +290,7 @@ public record CalendarSettingsVo(
 }
 ```
 
-- [ ] **步骤 2：在 UserPreferenceService 中增加真实 timezone 更新方法**
+- [x] **步骤 2：在 UserPreferenceService 中增加真实 timezone 更新方法**
 
 新增公开方法，复用 `findOrCreatePreference()` 的完整默认值，避免只写一个不完整 preference 行：
 
@@ -323,7 +323,7 @@ public UserPreferenceVo updateCalendarTimezone(Long userId, String timezone, Str
 import com.mmmail.server.util.CalendarTimezoneResolver;
 ```
 
-- [ ] **步骤 3：实现 CalendarSettingsService**
+- [x] **步骤 3：实现 CalendarSettingsService**
 
 ```java
 package com.mmmail.server.service;
@@ -375,7 +375,7 @@ public class CalendarSettingsService {
 
 这个服务只持久化已有真实字段 `user_preference.timezone`。`weekStartsOn` 和 `workingHours` 没有现有存储字段，因此不同值必须显式 400，不允许表面返回成功。
 
-- [ ] **步骤 4：实现 V21CalendarController**
+- [x] **步骤 4：实现 V21CalendarController**
 
 ```java
 @RestController
@@ -488,7 +488,7 @@ import org.springframework.util.StringUtils;
 
 不要在 controller 中添加 `/resources` 或 `/bookings` 实现。Community runtime 必须继续通过 v2 access gate 返回 `V2_ENTITLEMENT_REQUIRED`，不能返回空数组或模拟 booking 成功。
 
-- [ ] **步骤 5：运行后端绿灯和回归**
+- [x] **步骤 5：运行后端绿灯和回归**
 
 ```bash
 timeout 60s mvn -pl mmmail-server -am -f backend/pom.xml test -Dtest=BackendV21CalendarRuntimeBridgeTest,CalendarReleaseBlockingIntegrationTest,BackendV21AccessEntitlementGatesTest -Dsurefire.failIfNoSpecifiedTests=false
@@ -501,7 +501,7 @@ timeout 60s mvn -pl mmmail-server -am -f backend/pom.xml test -Dtest=BackendV21C
 **文件：**
 - 修改：`frontend-v2/tests/calendar-workspace-contract.test.mjs`
 
-- [ ] **步骤 1：扩展静态契约断言**
+- [x] **步骤 1：扩展静态契约断言**
 
 在既有测试中追加对 mutation API、PATCH settings、抽屉草稿和占位文案删除的断言：
 
@@ -533,7 +533,7 @@ test('calendar workspace persists drawer drafts through v2 mutation APIs', async
 })
 ```
 
-- [ ] **步骤 2：运行前端红灯测试**
+- [x] **步骤 2：运行前端红灯测试**
 
 ```bash
 pnpm --dir frontend-v2 test
@@ -549,7 +549,7 @@ pnpm --dir frontend-v2 test
 - 修改：`frontend-v2/src/views/app/calendar/CalendarEventDrawer.vue`
 - 修改：`frontend-v2/src/views/app/CalendarView.vue`
 
-- [ ] **步骤 1：补齐 Calendar API mutation**
+- [x] **步骤 1：补齐 Calendar API mutation**
 
 在 `calendar.ts` 增加 payload 类型：
 
@@ -611,7 +611,7 @@ export function updateCalendarSettings(token: string, body: CalendarSettings) {
 }
 ```
 
-- [ ] **步骤 2：增加 CalendarEventDraft 类型**
+- [x] **步骤 2：增加 CalendarEventDraft 类型**
 
 在 `calendar-types.ts` 增加：
 
@@ -628,7 +628,7 @@ export interface CalendarEventDraft {
 }
 ```
 
-- [ ] **步骤 3：把 CalendarEventDrawer 改为真实草稿表单**
+- [x] **步骤 3：把 CalendarEventDrawer 改为真实草稿表单**
 
 在 drawer 中使用 `reactive`、`watch` 初始化草稿：
 
@@ -688,7 +688,7 @@ function emitSave() {
 <button v-if="saveError" class="calendar-save-retry" type="button" @click="$emit('retry', { ...draft })">Retry</button>
 ```
 
-- [ ] **步骤 4：在 CalendarView 中接入真实保存**
+- [x] **步骤 4：在 CalendarView 中接入真实保存**
 
 更新 import：
 
@@ -744,7 +744,7 @@ function buildCalendarEventPayload(draft: CalendarEventDraft): CalendarEventMuta
 
 保留 `@retry="saveEventDraft"` 和 `@save="saveEventDraft"`，因为 drawer 现在会传入草稿。
 
-- [ ] **步骤 5：前端测试和类型检查**
+- [x] **步骤 5：前端测试和类型检查**
 
 ```bash
 pnpm --dir frontend-v2 test
@@ -759,13 +759,13 @@ pnpm --dir frontend-v2 build
 **文件：**
 - 本计划任务 1-4 中列出的源码和测试文件
 
-- [ ] **步骤 1：运行后端目标验证**
+- [x] **步骤 1：运行后端目标验证**
 
 ```bash
 timeout 60s mvn -pl mmmail-server -am -f backend/pom.xml test -Dtest=BackendV21CalendarRuntimeBridgeTest,CalendarReleaseBlockingIntegrationTest,BackendV21AccessEntitlementGatesTest -Dsurefire.failIfNoSpecifiedTests=false
 ```
 
-- [ ] **步骤 2：运行前端目标验证**
+- [x] **步骤 2：运行前端目标验证**
 
 ```bash
 pnpm --dir frontend-v2 test
@@ -773,7 +773,7 @@ pnpm --dir frontend-v2 typecheck
 pnpm --dir frontend-v2 build
 ```
 
-- [ ] **步骤 3：检查只暂存本切片文件**
+- [x] **步骤 3：检查只暂存本切片文件**
 
 ```bash
 git status --short --branch
@@ -794,7 +794,7 @@ git diff --cached --stat
 
 不要暂存 `.superpowers/`、`.tmp/`、`docs/MMMail.zip`、`docs/MMMail/`、仓库根 `frontend/`。
 
-- [ ] **步骤 4：提交实现**
+- [x] **步骤 4：提交实现**
 
 ```bash
 git commit -m "feat(backend-v21): add calendar runtime bridge"
@@ -807,7 +807,7 @@ git status --short --branch
 - 修改：`docs/superpowers/progress/v21-implementation-progress.md`
 - 修改：`docs/superpowers/plans/2026-05-13-backend-v21-calendar-runtime-bridge.md`
 
-- [ ] **步骤 1：更新计划复选框和进度文档**
+- [x] **步骤 1：更新计划复选框和进度文档**
 
 将已完成步骤改为 `[x]`。将 `v21-implementation-progress.md` 中本切片更新为：
 
@@ -828,7 +828,7 @@ git status --short --branch
 
 在 Backend Slices 表中新增或更新 `backend-v21-calendar-runtime-bridge` 为 `completed`，并写入实现提交号。
 
-- [ ] **步骤 2：提交文档进度**
+- [x] **步骤 2：提交文档进度**
 
 ```bash
 git status --short --branch

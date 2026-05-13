@@ -5,9 +5,9 @@ Last updated: 2026-05-13
 ## Current Repository State
 
 - Branch: `main`
-- Latest frontend implementation commit: `f98e8c14 test(frontend-v2): close v2.1 design parity audit`
-- Latest backend implementation commit: `eb8179a8 feat(backend-v21): add access entitlement gates`
-- Local branch status at progress capture: `main...origin/main [ahead 60]`
+- Latest frontend implementation commit: `964bcbfd feat(backend-v21): add calendar runtime bridge`
+- Latest backend implementation commit: `964bcbfd feat(backend-v21): add calendar runtime bridge`
+- Local branch status at progress capture: `main...origin/main [ahead 66]`
 - Untracked paths intentionally not included in v2.1 commits: `.superpowers/`, `.tmp/`, `docs/MMMail.zip`, `docs/MMMail/`, `frontend/`
 
 ## Completed v2.1 Slices
@@ -30,6 +30,7 @@ Last updated: 2026-05-13
 | Backend event outbox foundation (`backend-v21-event-outbox-foundation`) | `BackendV21EventOutboxFoundationTest`, `platform_outbox_event`, `OutboxPublisher`, `InProcessOutboxDispatcher` |
 | Backend background job foundation (`backend-v21-background-job-foundation`) | `BackendV21BackgroundJobFoundationTest`, `platform_job_run`, `JobRunner`, `InProcessJobRunner` |
 | Backend access entitlement gates (`backend-v21-access-entitlement-gates`) | `BackendV21AccessEntitlementGatesTest`, `AccessGate`, `V21ApiContractMatcher`, `V21ApiAccessGateInterceptor` |
+| Backend Calendar runtime bridge (`backend-v21-calendar-runtime-bridge`) | `BackendV21CalendarRuntimeBridgeTest`, `V21CalendarController`, `CalendarEventDrawer` save wiring |
 
 ## Latest Visual QA Baseline
 
@@ -53,23 +54,28 @@ Last updated: 2026-05-13
 
 ## Latest Completed Backend Slice
 
-- Slice: `backend-v21-access-entitlement-gates`
-- Commit: `eb8179a8 feat(backend-v21): add access entitlement gates`
-- Files changed: added platform access decision contracts, v2.1 contract matcher, community entitlement provider, MVC access gate interceptor, public v2 route security alignment, expanded contract catalog/OpenAPI metadata, and focused Spring Boot coverage.
+- Slice: `backend-v21-calendar-runtime-bridge`
+- Commit: `964bcbfd feat(backend-v21): add calendar runtime bridge`
+- Files changed: added v2 Calendar controller, runtime settings service backed by `user_preference.timezone`, v2 availability contract alignment, frontend Calendar mutation APIs, drawer draft save wiring, backend response error message parsing, and focused backend/frontend coverage.
 - Verification:
-  - `timeout 60s mvn -pl mmmail-server -am -f backend/pom.xml test -Dtest=BackendV21AccessEntitlementGatesTest -Dsurefire.failIfNoSpecifiedTests=false`: PASS (`8/8`)
-  - `timeout 60s mvn -pl mmmail-server -am -f backend/pom.xml test -Dtest=BackendV21AccessEntitlementGatesTest,BackendV21ApiContractCatalogTest,PublicShareCapabilityIntegrationTest -Dsurefire.failIfNoSpecifiedTests=false`: PASS (`15/15`)
-  - `timeout 60s mvn -pl mmmail-server -am -f backend/pom.xml compile`: PASS
-  - `timeout 60s pnpm --dir frontend-v2 test`: PASS (`83/83`)
+  - `timeout 60s mvn -pl mmmail-server -am -f backend/pom.xml test -Dtest=BackendV21CalendarRuntimeBridgeTest -Dsurefire.failIfNoSpecifiedTests=false`: PASS (`3/3`)
+  - `timeout 60s mvn -pl mmmail-server -am -f backend/pom.xml test -Dtest=BackendV21CalendarRuntimeBridgeTest,CalendarReleaseBlockingIntegrationTest,BackendV21AccessEntitlementGatesTest -Dsurefire.failIfNoSpecifiedTests=false`: PASS (`15/15`)
+  - `pnpm --dir frontend-v2 test`: PASS (`84/84`)
+  - `pnpm --dir frontend-v2 typecheck`: PASS
+  - `pnpm --dir frontend-v2 build`: PASS
 
 ## Active Backend Slice
 
-- Slice: `backend-v21-access-entitlement-gates`
+- Slice: `backend-v21-calendar-runtime-bridge`
 - Status: `completed`
 - Started: `2026-05-13`
 - Completed: `2026-05-13`
-- Scope: v2.1 access model, contract matcher, entitlement gate, MVC interceptor, public route security, tests
-- Verification: target gate test, catalog/public-share regression, backend compile, frontend v2.1 test suite
+- Scope: v2 Calendar runtime bridge, event mutations, availability, settings timezone persistence, frontend save wiring
+- Verification:
+  - `timeout 60s mvn -pl mmmail-server -am -f backend/pom.xml test -Dtest=BackendV21CalendarRuntimeBridgeTest,CalendarReleaseBlockingIntegrationTest,BackendV21AccessEntitlementGatesTest -Dsurefire.failIfNoSpecifiedTests=false`
+  - `pnpm --dir frontend-v2 test`
+  - `pnpm --dir frontend-v2 typecheck`
+  - `pnpm --dir frontend-v2 build`
 
 ## Remaining v2.1 Risks
 
