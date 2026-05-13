@@ -36,6 +36,8 @@ class BackendV21CollaborationWriteRuntimeTest {
 
     @Test
     void v21CollaborationShouldPersistProjectTaskUpdateCommentAuditAndOutbox() throws Exception {
+        int outboxEventsBefore = outboxEventCount();
+        int auditEventsBefore = auditEventCount();
         String token = register("v21-collab-" + System.nanoTime() + "@mmmail.local");
         String projectId = createProject(token, "Launch Readiness", "WORKSPACE");
         String taskId = createTask(token, projectId, "Prepare acceptance checklist");
@@ -45,8 +47,8 @@ class BackendV21CollaborationWriteRuntimeTest {
         assertProjectReadBack(token, projectId);
         assertTaskReadBack(token, taskId);
         assertActivityReadBack(token);
-        assertOutboxEvents();
-        assertAuditEvents();
+        assertOutboxEvents(outboxEventsBefore);
+        assertAuditEvents(auditEventsBefore);
     }
 
     @Test
@@ -159,8 +161,12 @@ class BackendV21CollaborationWriteRuntimeTest {
                 .andExpect(jsonPath("$.data[0].product").value("WORKSPACE"));
     }
 
-    private void assertOutboxEvents() {
-        Integer count = jdbcTemplate.queryForObject("""
+    private void assertOutboxEvents(int countBefore) {
+        assertThat(outboxEventCount() - countBefore).isEqualTo(4);
+    }
+
+    private int outboxEventCount() {
+        return jdbcTemplate.queryForObject("""
                 select count(*)
                 from platform_outbox_event
                 where event_type in (
@@ -170,11 +176,14 @@ class BackendV21CollaborationWriteRuntimeTest {
                   'collaboration.comment.created.v1'
                 )
                 """, Integer.class);
-        assertThat(count).isEqualTo(4);
     }
 
-    private void assertAuditEvents() {
-        Integer count = jdbcTemplate.queryForObject("""
+    private void assertAuditEvents(int countBefore) {
+        assertThat(auditEventCount() - countBefore).isEqualTo(4);
+    }
+
+    private int auditEventCount() {
+        return jdbcTemplate.queryForObject("""
                 select count(*)
                 from audit_event
                 where event_type in (
@@ -184,7 +193,6 @@ class BackendV21CollaborationWriteRuntimeTest {
                   'V21_COLLABORATION_COMMENT_CREATE'
                 )
                 """, Integer.class);
-        assertThat(count).isEqualTo(4);
     }
 
     private String register(String email) throws Exception {
