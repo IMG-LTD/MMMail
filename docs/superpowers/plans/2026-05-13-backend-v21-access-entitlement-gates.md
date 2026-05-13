@@ -61,7 +61,7 @@
 - 修改：`docs/superpowers/progress/v21-implementation-progress.md`
 - 创建：`backend/mmmail-server/src/test/java/com/mmmail/server/BackendV21AccessEntitlementGatesTest.java`
 
-- [ ] **步骤 1：记录活动切片**
+- [x] **步骤 1：记录活动切片**
 
 将 `## Active Backend Slice` 更新为：
 
@@ -75,7 +75,7 @@
 - Verification target: `BackendV21AccessEntitlementGatesTest`, backend compile, frontend v2.1 test suite
 ```
 
-- [ ] **步骤 2：创建失败测试**
+- [x] **步骤 2：创建失败测试**
 
 创建 `BackendV21AccessEntitlementGatesTest.java`。测试先引用尚不存在的 access 模型与 server access 包：
 
@@ -279,7 +279,7 @@ class BackendV21AccessEntitlementGatesTest {
 }
 ```
 
-- [ ] **步骤 3：运行红灯测试**
+- [x] **步骤 3：运行红灯测试**
 
 运行：
 
@@ -300,7 +300,7 @@ timeout 60s mvn -pl mmmail-server -am -f backend/pom.xml test -Dtest=BackendV21A
 - 创建：`backend/mmmail-platform/src/main/java/com/mmmail/platform/access/AccessGate.java`
 - 修改：`backend/mmmail-platform/src/main/java/com/mmmail/platform/contract/V21ApiAccess.java`
 
-- [ ] **步骤 1：创建 `AccessEntitlement`**
+- [x] **步骤 1：创建 `AccessEntitlement`**
 
 ```java
 package com.mmmail.platform.access;
@@ -332,7 +332,7 @@ public enum AccessEntitlement {
 }
 ```
 
-- [ ] **步骤 2：创建 `AccessPermission`**
+- [x] **步骤 2：创建 `AccessPermission`**
 
 ```java
 package com.mmmail.platform.access;
@@ -359,7 +359,7 @@ public record AccessPermission(String value) {
 }
 ```
 
-- [ ] **步骤 3：创建 `AccessDecisionReason`**
+- [x] **步骤 3：创建 `AccessDecisionReason`**
 
 ```java
 package com.mmmail.platform.access;
@@ -374,7 +374,7 @@ public enum AccessDecisionReason {
 }
 ```
 
-- [ ] **步骤 4：创建 `AccessDecision`**
+- [x] **步骤 4：创建 `AccessDecision`**
 
 ```java
 package com.mmmail.platform.access;
@@ -418,7 +418,7 @@ public record AccessDecision(
 }
 ```
 
-- [ ] **步骤 5：创建 `AccessRequest` 和 `AccessGate`**
+- [x] **步骤 5：创建 `AccessRequest` 和 `AccessGate`**
 
 ```java
 package com.mmmail.platform.access;
@@ -463,7 +463,7 @@ public interface AccessGate {
 }
 ```
 
-- [ ] **步骤 6：强化 `V21ApiAccess` 校验**
+- [x] **步骤 6：强化 `V21ApiAccess` 校验**
 
 将 `V21ApiAccess` 改为在构造时验证空权限和合法 entitlement：
 
@@ -490,7 +490,7 @@ public record V21ApiAccess(List<String> permissions, String entitlement) {
 }
 ```
 
-- [ ] **步骤 7：运行 platform 编译**
+- [x] **步骤 7：运行 platform 编译**
 
 运行：
 
@@ -508,7 +508,7 @@ timeout 60s mvn -pl mmmail-platform -am -f backend/pom.xml compile
 - 创建：`backend/mmmail-server/src/main/java/com/mmmail/server/access/V21ApiContractMatcher.java`
 - 修改：`backend/mmmail-server/src/test/java/com/mmmail/server/BackendV21ApiContractCatalogTest.java`
 
-- [ ] **步骤 1：将 platform metadata 和 share capability 纳入 `V21ApiContractCatalog`**
+- [x] **步骤 1：将 platform metadata 和 share capability 纳入 `V21ApiContractCatalog`**
 
 在 `defaultCatalog()` 的 `Stream.of` 列表中加入 `platformContracts()`，并在 `publicAuthShareSystemContracts()` 的 public-share 模块中加入 capability routes：
 
@@ -531,7 +531,7 @@ module("public-share", "docs/MMMail/UI/首页", new String[][]{
 })
 ```
 
-- [ ] **步骤 2：同步 OpenAPI 冻结文件**
+- [x] **步骤 2：同步 OpenAPI 冻结文件**
 
 在 `contracts/openapi/v21-api-catalog.yaml` 中加入：
 
@@ -546,7 +546,7 @@ module("public-share", "docs/MMMail/UI/首页", new String[][]{
     get: {summary: Read public share compatibility capabilities, x-permission: ["share:public"], x-entitlement: community, x-design-source: docs/MMMail/UI/首页, responses: {"200": {description: ok}}}
 ```
 
-- [ ] **步骤 3：创建 `V21ApiContractMatcher`**
+- [x] **步骤 3：创建 `V21ApiContractMatcher`**
 
 ```java
 package com.mmmail.server.access;
@@ -624,7 +624,7 @@ public class V21ApiContractMatcher {
 }
 ```
 
-- [ ] **步骤 4：更新现有 API catalog 测试**
+- [x] **步骤 4：更新现有 API catalog 测试**
 
 在 `BackendV21ApiContractCatalogTest` 中：
 
@@ -638,7 +638,7 @@ assertContract(contractsByIdentity, "GET /api/v2/platform/capabilities", "platfo
 assertContract(contractsByIdentity, "GET /api/v2/public-share/capabilities", "public-share", "PublicShareCapabilities", "community");
 ```
 
-- [ ] **步骤 5：运行目标测试确认仍有 gate 缺失失败**
+- [x] **步骤 5：运行目标测试确认仍有 gate 缺失失败**
 
 运行：
 
@@ -660,7 +660,7 @@ timeout 60s mvn -pl mmmail-server -am -f backend/pom.xml test -Dtest=BackendV21A
 - 修改：`backend/mmmail-common/src/main/java/com/mmmail/common/exception/ErrorCode.java`
 - 修改：`backend/mmmail-common/src/main/java/com/mmmail/common/exception/GlobalExceptionHandler.java`
 
-- [ ] **步骤 1：增加错误码**
+- [x] **步骤 1：增加错误码**
 
 在 `ErrorCode` 中 `AUTHENTICATOR_BACKUP_INVALID` 之后加入：
 
@@ -676,7 +676,7 @@ V2_PERMISSION_DENIED(30053, "Required permission is not granted"),
 case 10003, 30013, 30045, 30046, 30047, 30051, 30052, 30053 -> HttpStatus.FORBIDDEN;
 ```
 
-- [ ] **步骤 2：创建 entitlement provider**
+- [x] **步骤 2：创建 entitlement provider**
 
 ```java
 package com.mmmail.server.access;
@@ -707,7 +707,7 @@ public class CommunityV21ApiEntitlementProvider implements V21ApiEntitlementProv
 }
 ```
 
-- [ ] **步骤 3：创建 `V21ApiAccessGateService`**
+- [x] **步骤 3：创建 `V21ApiAccessGateService`**
 
 ```java
 package com.mmmail.server.access;
@@ -804,7 +804,7 @@ public class V21ApiAccessGateService implements AccessGate {
 }
 ```
 
-- [ ] **步骤 4：创建 `V21ApiAccessGateInterceptor`**
+- [x] **步骤 4：创建 `V21ApiAccessGateInterceptor`**
 
 ```java
 package com.mmmail.server.access;
@@ -879,7 +879,7 @@ public class V21ApiAccessGateInterceptor implements HandlerInterceptor {
 }
 ```
 
-- [ ] **步骤 5：注册 interceptor 顺序**
+- [x] **步骤 5：注册 interceptor 顺序**
 
 修改 `WebMvcConfig`：
 
@@ -921,7 +921,7 @@ registry.addInterceptor(orgProductAccessInterceptor)
         );
 ```
 
-- [ ] **步骤 6：同步 Spring Security permit 规则**
+- [x] **步骤 6：同步 Spring Security permit 规则**
 
 在 `SecurityConfig.securityFilterChain` 的 public matcher 中保留已有 v1 public routes，并加入：
 
@@ -938,7 +938,7 @@ registry.addInterceptor(orgProductAccessInterceptor)
 
 不要移除现有 `/api/v2/public-share/**` 兼容 matcher，直到 PublicShareCapabilityIntegrationTest 更新为 canonical route。
 
-- [ ] **步骤 7：运行 gate 目标测试**
+- [x] **步骤 7：运行 gate 目标测试**
 
 运行：
 
@@ -953,7 +953,7 @@ timeout 60s mvn -pl mmmail-server -am -f backend/pom.xml test -Dtest=BackendV21A
 **文件：**
 - 所有任务 1-4 的源码、合同、测试文件
 
-- [ ] **步骤 1：运行后端目标测试**
+- [x] **步骤 1：运行后端目标测试**
 
 运行：
 
@@ -963,7 +963,7 @@ timeout 60s mvn -pl mmmail-server -am -f backend/pom.xml test -Dtest=BackendV21A
 
 预期：BUILD SUCCESS，目标测试全部通过。
 
-- [ ] **步骤 2：运行后端编译**
+- [x] **步骤 2：运行后端编译**
 
 运行：
 
@@ -973,7 +973,7 @@ timeout 60s mvn -pl mmmail-server -am -f backend/pom.xml compile
 
 预期：BUILD SUCCESS。
 
-- [ ] **步骤 3：运行前端 v2.1 回归**
+- [x] **步骤 3：运行前端 v2.1 回归**
 
 运行：
 
@@ -983,7 +983,7 @@ timeout 60s pnpm --dir frontend-v2 test
 
 预期：`# pass 83`，失败数为 0。
 
-- [ ] **步骤 4：提交实现**
+- [x] **步骤 4：提交实现**
 
 先检查工作树：
 
@@ -1026,7 +1026,7 @@ git commit -m "feat(backend-v21): add access entitlement gates"
 - 修改：`docs/superpowers/progress/v21-implementation-progress.md`
 - 修改：`docs/superpowers/plans/2026-05-13-backend-v21-access-entitlement-gates.md`
 
-- [ ] **步骤 1：更新进度文档**
+- [x] **步骤 1：更新进度文档**
 
 更新：
 
@@ -1066,11 +1066,11 @@ git commit -m "feat(backend-v21): add access entitlement gates"
 - Verification target: `BackendV21AccessEntitlementGatesTest`, backend compile, frontend v2.1 test suite
 ```
 
-- [ ] **步骤 2：勾选计划任务**
+- [x] **步骤 2：勾选计划任务**
 
 将本计划中已经完成的复选框从 `- [ ]` 改为 `- [x]`。
 
-- [ ] **步骤 3：提交进度**
+- [x] **步骤 3：提交进度**
 
 因为 `docs/superpowers` 被 ignore，使用精确 `git add -f`：
 

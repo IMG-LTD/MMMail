@@ -6,8 +6,8 @@ Last updated: 2026-05-13
 
 - Branch: `main`
 - Latest frontend implementation commit: `f98e8c14 test(frontend-v2): close v2.1 design parity audit`
-- Latest backend implementation commit: `7681d21c feat(backend-v21): add background job foundation`
-- Local branch status at progress capture: `main...origin/main [ahead 57]`
+- Latest backend implementation commit: `eb8179a8 feat(backend-v21): add access entitlement gates`
+- Local branch status at progress capture: `main...origin/main [ahead 60]`
 - Untracked paths intentionally not included in v2.1 commits: `.superpowers/`, `.tmp/`, `docs/MMMail.zip`, `docs/MMMail/`, `frontend/`
 
 ## Completed v2.1 Slices
@@ -29,6 +29,7 @@ Last updated: 2026-05-13
 | Backend API contract runtime closure (`backend-v21-api-contract-runtime-closure`) | `BackendV21ApiContractCatalogTest`, `contracts/openapi/v21-api-catalog.yaml`, `/api/v2/platform/contracts` |
 | Backend event outbox foundation (`backend-v21-event-outbox-foundation`) | `BackendV21EventOutboxFoundationTest`, `platform_outbox_event`, `OutboxPublisher`, `InProcessOutboxDispatcher` |
 | Backend background job foundation (`backend-v21-background-job-foundation`) | `BackendV21BackgroundJobFoundationTest`, `platform_job_run`, `JobRunner`, `InProcessJobRunner` |
+| Backend access entitlement gates (`backend-v21-access-entitlement-gates`) | `BackendV21AccessEntitlementGatesTest`, `AccessGate`, `V21ApiContractMatcher`, `V21ApiAccessGateInterceptor` |
 
 ## Latest Visual QA Baseline
 
@@ -52,22 +53,23 @@ Last updated: 2026-05-13
 
 ## Latest Completed Backend Slice
 
-- Slice: `backend-v21-background-job-foundation`
-- Commit: `7681d21c feat(backend-v21): add background job foundation`
-- Files changed: added platform job contracts and status transitions, MyBatis `platform_job_run` persistence, Flyway/schema/baseline table definitions, database-backed repository, explicit handler registry, in-process runner, and focused Spring Boot coverage.
+- Slice: `backend-v21-access-entitlement-gates`
+- Commit: `eb8179a8 feat(backend-v21): add access entitlement gates`
+- Files changed: added platform access decision contracts, v2.1 contract matcher, community entitlement provider, MVC access gate interceptor, public v2 route security alignment, expanded contract catalog/OpenAPI metadata, and focused Spring Boot coverage.
 - Verification:
-  - `timeout 60s mvn -pl mmmail-server -am -f backend/pom.xml test -Dtest=BackendV21BackgroundJobFoundationTest -Dsurefire.failIfNoSpecifiedTests=false`: PASS (`9/9`)
+  - `timeout 60s mvn -pl mmmail-server -am -f backend/pom.xml test -Dtest=BackendV21AccessEntitlementGatesTest -Dsurefire.failIfNoSpecifiedTests=false`: PASS (`8/8`)
+  - `timeout 60s mvn -pl mmmail-server -am -f backend/pom.xml test -Dtest=BackendV21AccessEntitlementGatesTest,BackendV21ApiContractCatalogTest,PublicShareCapabilityIntegrationTest -Dsurefire.failIfNoSpecifiedTests=false`: PASS (`15/15`)
   - `timeout 60s mvn -pl mmmail-server -am -f backend/pom.xml compile`: PASS
   - `timeout 60s pnpm --dir frontend-v2 test`: PASS (`83/83`)
 
 ## Active Backend Slice
 
-- Slice: `backend-v21-background-job-foundation`
+- Slice: `backend-v21-access-entitlement-gates`
 - Status: `completed`
 - Started: `2026-05-13`
 - Completed: `2026-05-13`
-- Scope: platform job contract, persisted job runs, database repository, in-process runner, migration, tests
-- Verification target: `BackendV21BackgroundJobFoundationTest`, backend compile, frontend v2.1 test suite
+- Scope: v2.1 access model, contract matcher, entitlement gate, MVC interceptor, public route security, tests
+- Verification: target gate test, catalog/public-share regression, backend compile, frontend v2.1 test suite
 
 ## Remaining v2.1 Risks
 
