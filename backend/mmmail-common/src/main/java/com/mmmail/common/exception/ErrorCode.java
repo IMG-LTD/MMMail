@@ -59,6 +59,9 @@ public enum ErrorCode {
     AUTHENTICATOR_IMPORT_INVALID(30048, "Authenticator import is invalid"),
     AUTHENTICATOR_EXPORT_INVALID(30049, "Authenticator export is invalid"),
     AUTHENTICATOR_BACKUP_INVALID(30050, "Authenticator backup is invalid"),
+    V2_API_CONTRACT_NOT_FOUND(30051, "Unknown v2 API contract"),
+    V2_ENTITLEMENT_REQUIRED(30052, "Required entitlement is not enabled"),
+    V2_PERMISSION_DENIED(30053, "Required permission is not granted"),
     INTERNAL_ERROR(90000, "Internal server error");
 
     private final int code;

@@ -3,6 +3,10 @@ info:
   title: MMMail v2.1 API Contract Catalog
   version: v2.1-freeze
 paths:
+  /api/v2/platform/contracts:
+    get: {summary: Read v2.1 platform contract catalog, x-permission: ["platform:contracts:read"], x-entitlement: community, x-design-source: docs/MMMail/UI/Admin, responses: {"200": {description: ok}}}
+  /api/v2/platform/capabilities:
+    get: {summary: Read v2.1 platform capabilities, x-permission: ["platform:capabilities:read"], x-entitlement: community, x-design-source: docs/MMMail/UI/Admin, responses: {"200": {description: ok}}}
   /api/v2/workspace/summary:
     get: {summary: Read workspace summary, x-permission: ["workspace:read"], x-entitlement: community, x-design-source: docs/MMMail/UI/首页, responses: {"200": {description: ok}}}
   /api/v2/workspace/activity:
@@ -219,6 +223,10 @@ paths:
     post: {summary: Login, x-permission: ["auth:public"], x-entitlement: community, x-design-source: docs/MMMail/UI/首页, responses: {"200": {description: ok}}}
   /api/v2/auth/register:
     post: {summary: Register, x-permission: ["auth:public"], x-entitlement: community, x-design-source: docs/MMMail/UI/首页, responses: {"200": {description: ok}}}
+  /api/v2/share/capabilities:
+    get: {summary: Read public share capabilities, x-permission: ["share:public"], x-entitlement: community, x-design-source: docs/MMMail/UI/首页, responses: {"200": {description: ok}}}
+  /api/v2/public-share/capabilities:
+    get: {summary: Read public share compatibility capabilities, x-permission: ["share:public"], x-entitlement: community, x-design-source: docs/MMMail/UI/首页, responses: {"200": {description: ok}}}
   /api/v2/share/mail/{token}:
     get: {summary: Read public mail share, x-permission: ["share:public"], x-entitlement: community, x-design-source: docs/MMMail/UI/首页, responses: {"200": {description: ok}}}
   /api/v2/share/drive/{token}:

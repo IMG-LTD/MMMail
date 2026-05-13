@@ -120,7 +120,7 @@ public class GlobalExceptionHandler {
     private HttpStatus resolveStatus(int code) {
         return switch (code) {
             case 10002 -> HttpStatus.UNAUTHORIZED;
-            case 10003, 30013, 30045, 30046, 30047 -> HttpStatus.FORBIDDEN;
+            case 10003, 30013, 30045, 30046, 30047, 30051, 30052, 30053 -> HttpStatus.FORBIDDEN;
             case 10004 -> HttpStatus.TOO_MANY_REQUESTS;
             case 20001, 30002, 30003, 30011, 30015, 30018, 30019, 30025, 30032, 30041 -> HttpStatus.CONFLICT;
             case 20003, 30001, 30009, 30010, 30012, 30014, 30017, 30020, 30021, 30023, 30024, 30031, 30039, 30042, 30043, 30044 -> HttpStatus.NOT_FOUND;

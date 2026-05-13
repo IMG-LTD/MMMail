@@ -1,5 +1,6 @@
 package com.mmmail.server.config;
 
+import com.mmmail.server.access.V21ApiAccessGateInterceptor;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.web.servlet.config.annotation.InterceptorRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
@@ -7,14 +8,21 @@ import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 @Configuration
 public class WebMvcConfig implements WebMvcConfigurer {
 
+    private final V21ApiAccessGateInterceptor v21ApiAccessGateInterceptor;
     private final OrgProductAccessInterceptor orgProductAccessInterceptor;
 
-    public WebMvcConfig(OrgProductAccessInterceptor orgProductAccessInterceptor) {
+    public WebMvcConfig(
+            V21ApiAccessGateInterceptor v21ApiAccessGateInterceptor,
+            OrgProductAccessInterceptor orgProductAccessInterceptor
+    ) {
+        this.v21ApiAccessGateInterceptor = v21ApiAccessGateInterceptor;
         this.orgProductAccessInterceptor = orgProductAccessInterceptor;
     }
 
     @Override
     public void addInterceptors(InterceptorRegistry registry) {
+        registry.addInterceptor(v21ApiAccessGateInterceptor)
+                .addPathPatterns("/api/v2/**");
         registry.addInterceptor(orgProductAccessInterceptor)
                 .addPathPatterns("/api/v1/**", "/api/v2/**")
                 .excludePathPatterns(
@@ -26,7 +34,9 @@ public class WebMvcConfig implements WebMvcConfigurer {
                         "/api/v1/audit/**",
                         "/api/v2/auth/**",
                         "/api/v2/public/**",
+                        "/api/v2/share/**",
                         "/api/v2/public-share/**",
+                        "/api/v2/system/status",
                         "/actuator/**",
                         "/v3/api-docs/**",
                         "/swagger-ui/**"

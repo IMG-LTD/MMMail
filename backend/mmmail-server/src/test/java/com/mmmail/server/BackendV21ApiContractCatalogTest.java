@@ -47,6 +47,7 @@ class BackendV21ApiContractCatalogTest {
             "admin-governance",
             "billing",
             "entitlements",
+            "platform",
             "settings",
             "identity",
             "public-share",
@@ -92,6 +93,10 @@ class BackendV21ApiContractCatalogTest {
         assertContract(contractsByIdentity, "GET /api/v2/billing/usage", "billing", "BillingUsage", "hosted");
         assertContract(contractsByIdentity, "GET /api/v2/entitlements", "entitlements", "EntitlementState[]", "community");
         assertContract(contractsByIdentity, "GET /api/v2/entitlements/matrix", "entitlements", "EntitlementMatrix", "community");
+        assertContract(contractsByIdentity, "GET /api/v2/platform/contracts", "platform", "V21ApiContractCatalog", "community");
+        assertContract(contractsByIdentity, "GET /api/v2/platform/capabilities", "platform", "PlatformCapabilities", "community");
+        assertContract(contractsByIdentity, "GET /api/v2/share/capabilities", "public-share", "PublicShareCapabilities", "community");
+        assertContract(contractsByIdentity, "GET /api/v2/public-share/capabilities", "public-share", "PublicShareCapabilities", "community");
 
         for (V21ApiContract contract : catalog.contracts()) {
             assertContractMetadata(contract);
@@ -106,7 +111,7 @@ class BackendV21ApiContractCatalogTest {
                         .header("Authorization", "Bearer " + token))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.data.version").value("v2.1"))
-                .andExpect(jsonPath("$.data.contracts.length()").value(122))
+                .andExpect(jsonPath("$.data.contracts.length()").value(126))
                 .andExpect(jsonPath("$.data.contracts[0].method").value("GET"))
                 .andExpect(jsonPath("$.data.contracts[0].path").value("/api/v2/workspace/summary"));
     }
@@ -132,6 +137,9 @@ class BackendV21ApiContractCatalogTest {
                 .contains("x-entitlement: hosted")
                 .contains("/api/v2/entitlements:")
                 .contains("x-permission: [\"entitlements:read\"]")
+                .contains("/api/v2/platform/contracts:")
+                .contains("x-permission: [\"platform:contracts:read\"]")
+                .contains("/api/v2/share/capabilities:")
                 .contains("/api/v2/settings/profile:")
                 .contains("x-permission:")
                 .contains("x-entitlement:")

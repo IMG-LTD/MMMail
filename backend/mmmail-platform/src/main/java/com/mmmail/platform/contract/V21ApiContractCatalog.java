@@ -28,7 +28,7 @@ public record V21ApiContractCatalog(String version, List<V21ApiContract> contrac
                 docsContracts(), sheetsContracts(), labsContracts(), passContracts(),
                 collaborationContracts(), commandCenterContracts(), notificationContracts(),
                 adminContracts(), billingContracts(), entitlementsContracts(),
-                settingsContracts(), publicAuthShareSystemContracts()
+                platformContracts(), settingsContracts(), publicAuthShareSystemContracts()
         ).flatMap(List::stream).toList();
         return new V21ApiContractCatalog("v2.1", contracts);
     }
@@ -220,6 +220,13 @@ public record V21ApiContractCatalog(String version, List<V21ApiContract> contrac
         });
     }
 
+    private static List<V21ApiContract> platformContracts() {
+        return module("platform", "docs/MMMail/UI/Admin", new String[][]{
+                {"GET", "/api/v2/platform/contracts", "V21ApiContractCatalog", COMMUNITY, "platform:contracts:read"},
+                {"GET", "/api/v2/platform/capabilities", "PlatformCapabilities", COMMUNITY, "platform:capabilities:read"}
+        });
+    }
+
     private static List<V21ApiContract> settingsContracts() {
         return module("settings", "docs/MMMail/UI/Setting", new String[][]{
                 {"GET", "/api/v2/settings/profile", "UserPreference", COMMUNITY, "settings:read"},
@@ -243,6 +250,8 @@ public record V21ApiContractCatalog(String version, List<V21ApiContract> contrac
                         {"POST", "/api/v2/auth/register", "AuthPayload", COMMUNITY, "auth:public"}
                 }),
                 module("public-share", "docs/MMMail/UI/首页", new String[][]{
+                        {"GET", "/api/v2/share/capabilities", "PublicShareCapabilities", COMMUNITY, "share:public"},
+                        {"GET", "/api/v2/public-share/capabilities", "PublicShareCapabilities", COMMUNITY, "share:public"},
                         {"GET", "/api/v2/share/mail/:token", "PublicMailShare", COMMUNITY, "share:public"},
                         {"GET", "/api/v2/share/drive/:token", "PublicDriveShareMetadata", COMMUNITY, "share:public"},
                         {"GET", "/api/v2/share/pass/:token", "PublicPassShare", COMMUNITY, "share:public"}
