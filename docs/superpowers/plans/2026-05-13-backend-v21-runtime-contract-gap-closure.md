@@ -8,6 +8,8 @@
 
 **技术栈：** Java 21、Spring Boot、MockMvc、JUnit 5、AssertJ、Vue frontend contract files、Maven、pnpm。
 
+**执行状态（2026-05-13）：** 本 slice 已完成并提交到本地 `main`。实际提交包括 runtime gap 测试、catalog/OpenAPI 对齐、auth cookie helper、v2 auth runtime、v2 public-share runtime，以及进度文档更新。验证结果记录在 `docs/superpowers/progress/v21-implementation-progress.md`。
+
 ---
 
 ## 文件结构
@@ -36,7 +38,7 @@
 **文件：**
 - 创建：`backend/mmmail-server/src/test/java/com/mmmail/server/BackendV21RuntimeContractGapClosureTest.java`
 
-- [ ] **步骤 1：编写失败的测试**
+- [x] **步骤 1：编写失败的测试**
 
 创建 `BackendV21RuntimeContractGapClosureTest.java`：
 
@@ -237,7 +239,7 @@ class BackendV21RuntimeContractGapClosureTest {
 }
 ```
 
-- [ ] **步骤 2：运行测试验证失败**
+- [x] **步骤 2：运行测试验证失败**
 
 运行：
 
@@ -247,7 +249,7 @@ timeout 60s mvn -pl mmmail-server -am -f backend/pom.xml test -Dtest=BackendV21R
 
 预期：FAIL。失败点应包括 frontend routes not subset of catalog，至少暴露 `/api/v2/auth/refresh`、`/api/v2/auth/logout-all`、`/api/v2/auth/sessions`、`/api/v2/auth/sessions/:param/revoke`、`/api/v2/ai-platform/capabilities`、`/api/v2/mcp/registry` 之一。
 
-- [ ] **步骤 3：Commit 失败测试**
+- [x] **步骤 3：Commit 失败测试**
 
 ```bash
 git add backend/mmmail-server/src/test/java/com/mmmail/server/BackendV21RuntimeContractGapClosureTest.java
@@ -263,7 +265,7 @@ git commit -m "test(backend-v21): cover runtime contract gaps"
 - 修改：`backend/mmmail-server/src/test/java/com/mmmail/server/BackendV21AccessEntitlementGatesTest.java`
 - 修改：`contracts/openapi/v21-api-catalog.yaml`
 
-- [ ] **步骤 1：更新 catalog 定义**
+- [x] **步骤 1：更新 catalog 定义**
 
 修改 `V21ApiContractCatalog.defaultCatalog()`，在 `publicAuthShareSystemContracts()` 后追加 `aiPlatformContracts()` 和 `mcpContracts()`：
 
@@ -301,7 +303,7 @@ private static List<V21ApiContract> mcpContracts() {
 }
 ```
 
-- [ ] **步骤 2：更新 catalog 单测**
+- [x] **步骤 2：更新 catalog 单测**
 
 在 `BackendV21ApiContractCatalogTest.REQUIRED_OWNER_MODULES` 增加：
 
@@ -332,7 +334,7 @@ assertContract(contractsByIdentity, "GET /api/v2/mcp/registry", "mcp", "McpRegis
 .contains("/api/v2/mcp/registry:")
 ```
 
-- [ ] **步骤 3：更新 access gate 单测**
+- [x] **步骤 3：更新 access gate 单测**
 
 在 `BackendV21AccessEntitlementGatesTest.catalogShouldExposeAccessMetadataForAllV21Contracts()` 的 containsKeys 增加：
 
@@ -349,7 +351,7 @@ assertThat(matcher.match("POST", "/api/v2/auth/sessions/123/revoke"))
         .hasValueSatisfying(contract -> assertThat(contract.path()).isEqualTo("/api/v2/auth/sessions/:id/revoke"));
 ```
 
-- [ ] **步骤 4：更新 OpenAPI catalog**
+- [x] **步骤 4：更新 OpenAPI catalog**
 
 在 `contracts/openapi/v21-api-catalog.yaml` 中加入：
 
@@ -368,7 +370,7 @@ assertThat(matcher.match("POST", "/api/v2/auth/sessions/123/revoke"))
     get: {summary: Read MCP registry capabilities, x-permission: ["mcp:registry:read"], x-entitlement: community, x-design-source: docs/MMMail/UI/Admin, responses: {"200": {description: ok}}}
 ```
 
-- [ ] **步骤 5：运行 catalog/gap 测试**
+- [x] **步骤 5：运行 catalog/gap 测试**
 
 运行：
 
@@ -378,7 +380,7 @@ timeout 60s mvn -pl mmmail-server -am -f backend/pom.xml test -Dtest=BackendV21R
 
 预期：仍 FAIL。catalog alignment 应通过；runtime auth route 仍可能 404，因为 v2 auth controller 尚未实现。
 
-- [ ] **步骤 6：Commit catalog 修复**
+- [x] **步骤 6：Commit catalog 修复**
 
 ```bash
 git add backend/mmmail-platform/src/main/java/com/mmmail/platform/contract/V21ApiContractCatalog.java \
@@ -395,7 +397,7 @@ git commit -m "feat(backend-v21): align runtime contract catalog gaps"
 - 创建：`backend/mmmail-server/src/main/java/com/mmmail/server/security/AuthCookieService.java`
 - 修改：`backend/mmmail-server/src/main/java/com/mmmail/server/controller/AuthController.java`
 
-- [ ] **步骤 1：创建 AuthCookieService**
+- [x] **步骤 1：创建 AuthCookieService**
 
 创建 `AuthCookieService.java`：
 
@@ -506,7 +508,7 @@ public class AuthCookieService {
 }
 ```
 
-- [ ] **步骤 2：改造 AuthController 使用 helper**
+- [x] **步骤 2：改造 AuthController 使用 helper**
 
 在 `AuthController` 中：
 
@@ -561,7 +563,7 @@ authCookieService.clearAuthCookies(httpResponse, AuthCookieService.V1_AUTH_COOKI
 
 删除 `verifyCsrf`、`readCookie`、`attachAuthCookies`、`clearAuthCookies`、`generateCsrfToken` 私有方法。
 
-- [ ] **步骤 3：运行 v1 auth 回归**
+- [x] **步骤 3：运行 v1 auth 回归**
 
 运行：
 
@@ -577,7 +579,7 @@ timeout 60s mvn -pl mmmail-server -am -f backend/pom.xml test -Dtest=*Auth*Test,
 
 预期：PASS。若通配符没有命中 auth 测试，必须至少保证 `BackendV21CommunityRuntimeClosureTest` PASS，且下一任务的 v2 auth 测试覆盖新路径。
 
-- [ ] **步骤 4：Commit helper 抽取**
+- [x] **步骤 4：Commit helper 抽取**
 
 ```bash
 git add backend/mmmail-server/src/main/java/com/mmmail/server/security/AuthCookieService.java \
@@ -591,7 +593,7 @@ git commit -m "refactor(auth): share auth cookie handling"
 **文件：**
 - 创建：`backend/mmmail-server/src/main/java/com/mmmail/server/controller/V21AuthController.java`
 
-- [ ] **步骤 1：创建 v2 controller**
+- [x] **步骤 1：创建 v2 controller**
 
 创建 `V21AuthController.java`：
 
@@ -709,7 +711,7 @@ public class V21AuthController {
 }
 ```
 
-- [ ] **步骤 2：运行 gap 测试验证通过**
+- [x] **步骤 2：运行 gap 测试验证通过**
 
 运行：
 
@@ -719,7 +721,7 @@ timeout 60s mvn -pl mmmail-server -am -f backend/pom.xml test -Dtest=BackendV21R
 
 预期：PASS，`Tests run: 4, Failures: 0, Errors: 0`。
 
-- [ ] **步骤 3：Commit v2 auth runtime**
+- [x] **步骤 3：Commit v2 auth runtime**
 
 ```bash
 git add backend/mmmail-server/src/main/java/com/mmmail/server/controller/V21AuthController.java
@@ -733,7 +735,7 @@ git commit -m "feat(backend-v21): add v2 auth runtime"
 - 可能修改：`backend/mmmail-server/src/test/java/com/mmmail/server/BackendV21RuntimeContractGapClosureTest.java`
 - 可能修改：与失败原因直接相关的测试文件
 
-- [ ] **步骤 1：运行后端组合回归**
+- [x] **步骤 1：运行后端组合回归**
 
 运行：
 
@@ -743,7 +745,7 @@ timeout 60s mvn -pl mmmail-server -am -f backend/pom.xml test -Dtest=BackendV21R
 
 预期：PASS，覆盖 runtime gap、catalog、gate、Community closure、Collaboration write、Ops runtime。
 
-- [ ] **步骤 2：如果组合回归失败，先根因调试**
+- [x] **步骤 2：如果组合回归失败，先根因调试（未触发：组合回归通过）**
 
 必须使用 `superpowers-zh:systematic-debugging`。只允许针对根因做最小修复。典型允许修复：
 
@@ -755,7 +757,7 @@ assertThat(countEvents() - before).isEqualTo(expectedDelta);
 
 禁止用删除断言、吞异常、放宽为 `isGreaterThanOrEqualTo(0)` 这类方式掩盖问题。
 
-- [ ] **步骤 3：运行前端 contract 测试**
+- [x] **步骤 3：运行前端 contract 测试**
 
 运行：
 
@@ -765,7 +767,7 @@ timeout 60s pnpm --dir frontend-v2 test
 
 预期：PASS，`pass 84` 或当前测试总数全部通过。
 
-- [ ] **步骤 4：Commit 回归修复**
+- [x] **步骤 4：Commit 回归修复（未触发：无回归修复改动）**
 
 如果步骤 2 只修正本 slice 新增测试隔离问题，运行：
 
@@ -783,7 +785,7 @@ git commit -m "test(backend-v21): stabilize runtime contract gap regression"
 - 修改：`docs/superpowers/progress/v21-implementation-progress.md`
 - 修改：`docs/superpowers/plans/2026-05-13-backend-v21-runtime-contract-gap-closure.md`
 
-- [ ] **步骤 1：更新进度文档**
+- [x] **步骤 1：更新进度文档**
 
 在 `Completed v2.1 Slices` 表格新增：
 
@@ -811,11 +813,11 @@ git commit -m "test(backend-v21): stabilize runtime contract gap regression"
 
 将 `Active Backend Slice` 改为本 slice completed，并记录相同验证命令。
 
-- [ ] **步骤 2：更新计划复选框状态**
+- [x] **步骤 2：更新计划复选框状态**
 
 把本计划已完成的步骤由 `- [ ]` 改为 `- [x]`。只更新实际完成的步骤，不提前勾选未执行步骤。
 
-- [ ] **步骤 3：运行文档相关前端 contract**
+- [x] **步骤 3：运行文档相关前端 contract**
 
 运行：
 
@@ -825,7 +827,7 @@ timeout 60s pnpm --dir frontend-v2 test
 
 预期：PASS。
 
-- [ ] **步骤 4：提交进度文档**
+- [x] **步骤 4：提交进度文档**
 
 ```bash
 git add -f docs/superpowers/progress/v21-implementation-progress.md \

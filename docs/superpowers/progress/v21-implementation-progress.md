@@ -6,7 +6,7 @@ Last updated: 2026-05-13
 
 - Branch: `main`
 - Latest frontend implementation commit: `0f744a60 feat(frontend-v2): align drive client with runtime bridge`
-- Latest backend implementation commit: `05f23d39 test(backend-v21): isolate collaboration write event counts`
+- Latest backend implementation commit: `170c9536 feat(public-share): add v2.1 public share runtime routes`
 - Local branch status at progress capture: `main`
 - Untracked paths intentionally not included in v2.1 commits: `.superpowers/`, `.tmp/`, `docs/MMMail.zip`, `docs/MMMail/`, `frontend/`
 
@@ -38,6 +38,7 @@ Last updated: 2026-05-13
 | Backend Ops runtime bridge (`backend-v21-ops-runtime-bridge`) | `BackendV21OpsRuntimeBridgeTest`, `V21OpsController`, `V21OpsRuntimeBridgeService` |
 | Backend Collaboration write runtime (`backend-v21-collaboration-write-runtime`) | `BackendV21CollaborationWriteRuntimeTest`, `BackendV21OpsRuntimeBridgeTest`, `V21CollaborationWriteService`, `v21_collaboration_project/task/comment` |
 | Backend Community runtime closure (`backend-v21-community-runtime-closure`) | `BackendV21CommunityRuntimeClosureTest`, `V21WorkspaceController`, `V21SettingsController`, `V21EntitlementsController` |
+| Backend Runtime contract gap closure (`backend-v21-runtime-contract-gap-closure`) | `BackendV21RuntimeContractGapClosureTest`, `V21ApiContractCatalog`, `V21AuthController`, `V21PublicShareController`, v2 AI/MCP capability catalog coverage |
 
 ## Latest Visual QA Baseline
 
@@ -61,34 +62,30 @@ Last updated: 2026-05-13
 
 ## Latest Completed Backend Slice
 
-- Slice: `backend-v21-community-runtime-closure`
+- Slice: `backend-v21-runtime-contract-gap-closure`
 - Commits:
-  - `f67d95ef docs(backend-v21): add community runtime closure plan`
-  - `da0fceed test(backend-v21): cover community runtime closure`
-  - `e91e407e feat(backend-v21): add community runtime records`
-  - `d8451b85 feat(backend-v21): add workspace community runtime`
-  - `0121ba02 feat(backend-v21): add settings community runtime`
-  - `0cb7e586 feat(backend-v21): add entitlement community runtime`
-  - `05f23d39 test(backend-v21): isolate collaboration write event counts`
-- Files changed: added v2.1 Workspace summary/activity/tasks runtime, Settings profile/security/devices/notifications runtime, Entitlements state/matrix runtime, shared request/response records, and integration coverage for the Community-supported API closure.
+  - `f3be4df2 test(backend-v21): cover runtime contract gaps`
+  - `217bdda7 feat(backend-v21): align runtime contract catalog gaps`
+  - `532982b7 refactor(auth): extract shared auth cookie service`
+  - `4687c8c1 feat(auth): add v2.1 auth runtime routes`
+  - `170c9536 feat(public-share): add v2.1 public share runtime routes`
+- Files changed: added runtime gap closure tests, aligned frontend v2 client paths with backend catalog/OpenAPI, shared auth cookie handling, exposed v2 auth session runtime through real AuthService, and bridged v2 public share routes to real Mail/Drive/Pass share services.
 - Verification:
-  - `timeout 60s mvn -pl mmmail-server -am -f backend/pom.xml test -Dtest=BackendV21CommunityRuntimeClosureTest -Dsurefire.failIfNoSpecifiedTests=false`: PASS (`3/3`)
-  - `timeout 60s mvn -pl mmmail-server -am -f backend/pom.xml test -Dtest=BackendV21CollaborationWriteRuntimeTest,BackendV21CommunityRuntimeClosureTest -Dsurefire.failIfNoSpecifiedTests=false`: PASS (`5/5`)
-  - `timeout 60s mvn -pl mmmail-server -am -f backend/pom.xml test -Dtest=BackendV21CommunityRuntimeClosureTest,BackendV21CollaborationWriteRuntimeTest,BackendV21OpsRuntimeBridgeTest,BackendV21AccessEntitlementGatesTest,BackendV21ApiContractCatalogTest -Dsurefire.failIfNoSpecifiedTests=false`: PASS (`21/21`)
+  - `timeout 60s mvn -pl mmmail-server -am -f backend/pom.xml test -Dtest=BackendV21RuntimeContractGapClosureTest,BackendV21ApiContractCatalogTest,BackendV21AccessEntitlementGatesTest,AuthFlowIntegrationTest -Dsurefire.failIfNoSpecifiedTests=false`: PASS (`25/25`)
+  - `timeout 60s mvn -pl mmmail-server -am -f backend/pom.xml test -Dtest=BackendV21RuntimeContractGapClosureTest,BackendV21ApiContractCatalogTest,BackendV21AccessEntitlementGatesTest,BackendV21CommunityRuntimeClosureTest,BackendV21CollaborationWriteRuntimeTest,BackendV21OpsRuntimeBridgeTest -Dsurefire.failIfNoSpecifiedTests=false`: PASS (`26/26`)
   - `timeout 60s pnpm --dir frontend-v2 test`: PASS (`84/84`)
 
 ## Active Backend Slice
 
-- Slice: `backend-v21-community-runtime-closure`
+- Slice: `backend-v21-runtime-contract-gap-closure`
 - Status: `completed`
 - Started: `2026-05-13`
 - Completed: `2026-05-13`
-- Scope: v2 Workspace runtime reads and task patching, Settings profile/devices runtime reads and supported writes, explicit unsupported security/notification writes, Entitlements state/matrix runtime, and preservation of Premium/Hosted/Governance boundaries through visible locked states
+- Scope: frontend v2 API client, backend v2.1 catalog/OpenAPI, runtime controllers, auth cookies, auth sessions, AI/MCP capabilities, public share capability and Mail/Drive/Pass share route alignment
 - Verification:
-  - `timeout 60s mvn -pl mmmail-server -am -f backend/pom.xml test -Dtest=BackendV21CommunityRuntimeClosureTest -Dsurefire.failIfNoSpecifiedTests=false`
-  - `timeout 60s mvn -pl mmmail-server -am -f backend/pom.xml test -Dtest=BackendV21CollaborationWriteRuntimeTest,BackendV21CommunityRuntimeClosureTest -Dsurefire.failIfNoSpecifiedTests=false`
-  - `timeout 60s mvn -pl mmmail-server -am -f backend/pom.xml test -Dtest=BackendV21CommunityRuntimeClosureTest,BackendV21CollaborationWriteRuntimeTest,BackendV21OpsRuntimeBridgeTest,BackendV21AccessEntitlementGatesTest,BackendV21ApiContractCatalogTest -Dsurefire.failIfNoSpecifiedTests=false`
-  - `timeout 60s pnpm --dir frontend-v2 test`
+  - `timeout 60s mvn -pl mmmail-server -am -f backend/pom.xml test -Dtest=BackendV21RuntimeContractGapClosureTest,BackendV21ApiContractCatalogTest,BackendV21AccessEntitlementGatesTest,AuthFlowIntegrationTest -Dsurefire.failIfNoSpecifiedTests=false`: PASS (`25/25`)
+  - `timeout 60s mvn -pl mmmail-server -am -f backend/pom.xml test -Dtest=BackendV21RuntimeContractGapClosureTest,BackendV21ApiContractCatalogTest,BackendV21AccessEntitlementGatesTest,BackendV21CommunityRuntimeClosureTest,BackendV21CollaborationWriteRuntimeTest,BackendV21OpsRuntimeBridgeTest -Dsurefire.failIfNoSpecifiedTests=false`: PASS (`26/26`)
+  - `timeout 60s pnpm --dir frontend-v2 test`: PASS (`84/84`)
 
 ## Remaining v2.1 Risks
 
