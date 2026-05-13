@@ -60,6 +60,7 @@ export interface RecipientTrustState {
 
 export interface SendMailPayload {
   toEmail: string
+  draftId?: string | number
   fromEmail?: string
   subject: string
   body?: string

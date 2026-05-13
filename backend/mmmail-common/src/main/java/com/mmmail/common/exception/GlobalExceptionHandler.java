@@ -11,6 +11,7 @@ import org.slf4j.LoggerFactory;
 import org.slf4j.MDC;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.validation.BindException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -50,15 +51,22 @@ public class GlobalExceptionHandler {
                 .addKeyValue("status", HttpStatus.BAD_REQUEST.value())
                 .addKeyValue("path", request.getRequestURI())
                 .log(ex.getClass().getSimpleName());
-        report(
-                request,
-                "VALIDATION",
-                "WARN",
-                HttpStatus.BAD_REQUEST.value(),
-                ErrorCode.INVALID_ARGUMENT.getCode(),
-                ErrorCode.INVALID_ARGUMENT.getMessage(),
-                ex.getClass().getSimpleName()
-        );
+        reportInvalidArgument(request, ex.getClass().getSimpleName());
+        return ResponseEntity.badRequest()
+                .body(Result.failure(ErrorCode.INVALID_ARGUMENT.getCode(), ErrorCode.INVALID_ARGUMENT.getMessage()));
+    }
+
+    @ExceptionHandler(HttpMessageNotReadableException.class)
+    public ResponseEntity<Result<Void>> handleUnreadableMessageException(
+            HttpMessageNotReadableException ex,
+            HttpServletRequest request
+    ) {
+        log.atWarn()
+                .addKeyValue("event", "validation_exception")
+                .addKeyValue("status", HttpStatus.BAD_REQUEST.value())
+                .addKeyValue("path", request.getRequestURI())
+                .log(ex.getClass().getSimpleName());
+        reportInvalidArgument(request, ex.getClass().getSimpleName());
         return ResponseEntity.badRequest()
                 .body(Result.failure(ErrorCode.INVALID_ARGUMENT.getCode(), ErrorCode.INVALID_ARGUMENT.getMessage()));
     }
@@ -110,6 +118,18 @@ public class GlobalExceptionHandler {
                 request.getHeader("User-Agent"),
                 LocalDateTime.now()
         ));
+    }
+
+    private void reportInvalidArgument(HttpServletRequest request, String detail) {
+        report(
+                request,
+                "VALIDATION",
+                "WARN",
+                HttpStatus.BAD_REQUEST.value(),
+                ErrorCode.INVALID_ARGUMENT.getCode(),
+                ErrorCode.INVALID_ARGUMENT.getMessage(),
+                detail
+        );
     }
 
     private String requestId(HttpServletRequest request) {

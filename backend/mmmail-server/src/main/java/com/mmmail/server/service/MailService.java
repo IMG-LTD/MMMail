@@ -346,6 +346,28 @@ public class MailService {
         return new MailPageVo(items, pageResult.getTotal(), pageResult.getCurrent(), pageResult.getSize(), countUnread(userId));
     }
 
+    public List<MailSummaryVo> listSummariesByIds(Long userId, List<Long> mailIds) {
+        if (mailIds.isEmpty()) {
+            return List.of();
+        }
+        List<MailMessage> messages = mailMessageMapper.selectList(new LambdaQueryWrapper<MailMessage>()
+                .eq(MailMessage::getOwnerId, userId)
+                .in(MailMessage::getId, mailIds));
+        Map<Long, MailSummaryVo> summariesById = toSummaries(userId, messages).stream()
+                .collect(LinkedHashMap::new, (map, summary) -> map.put(Long.valueOf(summary.id()), summary), Map::putAll);
+        return mailIds.stream()
+                .map(summariesById::get)
+                .map(this::requireSummary)
+                .toList();
+    }
+
+    private MailSummaryVo requireSummary(MailSummaryVo summary) {
+        if (summary == null) {
+            throw new BizException(ErrorCode.MAIL_NOT_FOUND);
+        }
+        return summary;
+    }
+
     public ConversationPageVo listConversations(Long userId, String keyword, String folder, long page, long size) {
         flushDueMails(userId);
         long safePage = Math.max(1, page);
