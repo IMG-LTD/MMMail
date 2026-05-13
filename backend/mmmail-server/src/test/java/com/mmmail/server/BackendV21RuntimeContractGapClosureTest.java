@@ -73,11 +73,33 @@ class BackendV21RuntimeContractGapClosureTest {
                 .andExpect(jsonPath("$.data.refreshToken").isNotEmpty())
                 .andReturn();
 
-        String accessToken = readJson(register).at("/data/accessToken").asText();
+        JsonNode auth = readJson(register).at("/data");
+        String accessToken = auth.at("/accessToken").asText();
+        String refreshToken = auth.at("/refreshToken").asText();
         mockMvc.perform(get("/api/v2/auth/sessions")
                         .header("Authorization", "Bearer " + accessToken))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.data[0].current").value(true));
+
+        MvcResult refresh = mockMvc.perform(post("/api/v2/auth/refresh")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {
+                                  "refreshToken": "%s"
+                                }
+                                """.formatted(refreshToken)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.accessToken").isNotEmpty())
+                .andReturn();
+
+        String rotatedToken = readJson(refresh).at("/data/accessToken").asText();
+        mockMvc.perform(post("/api/v2/auth/logout-all")
+                        .header("Authorization", "Bearer " + rotatedToken))
+                .andExpect(status().isOk());
+        mockMvc.perform(get("/api/v2/auth/sessions")
+                        .header("Authorization", "Bearer " + rotatedToken))
+                .andExpect(status().isUnauthorized())
+                .andExpect(jsonPath("$.code").value(ErrorCode.UNAUTHORIZED.getCode()));
     }
 
     @Test

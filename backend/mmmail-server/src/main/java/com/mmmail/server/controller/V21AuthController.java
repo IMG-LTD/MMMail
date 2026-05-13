@@ -21,11 +21,11 @@ import org.springframework.web.bind.annotation.RestController;
 import java.util.List;
 
 @RestController
-@RequestMapping("/api/v1/auth")
-public class AuthController extends AuthControllerSupport {
+@RequestMapping("/api/v2/auth")
+public class V21AuthController extends AuthControllerSupport {
 
-    public AuthController(AuthService authService, AuthCookieService authCookieService) {
-        super(authService, authCookieService, AuthCookieService.V1_AUTH_COOKIE_PATH);
+    public V21AuthController(AuthService authService, AuthCookieService authCookieService) {
+        super(authService, authCookieService, AuthCookieService.V2_AUTH_COOKIE_PATH);
     }
 
     @PostMapping("/register")
@@ -58,11 +58,6 @@ public class AuthController extends AuthControllerSupport {
     @PostMapping("/logout-all")
     public Result<Void> logoutAll(HttpServletRequest httpRequest, HttpServletResponse httpResponse) {
         return logoutAllSessions(httpRequest, httpResponse);
-    }
-
-    @PostMapping("/logout")
-    public Result<Void> logout(HttpServletRequest httpRequest, HttpServletResponse httpResponse) {
-        return logoutCurrentSession(httpRequest, httpResponse);
     }
 
     @GetMapping("/sessions")
