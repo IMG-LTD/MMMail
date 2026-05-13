@@ -8,14 +8,12 @@ import com.mmmail.server.model.dto.RefreshRequest;
 import com.mmmail.server.model.dto.RegisterRequest;
 import com.mmmail.server.model.vo.AuthResponse;
 import com.mmmail.server.model.vo.UserSessionVo;
+import com.mmmail.server.security.AuthCookieService;
 import com.mmmail.server.service.AuthService;
 import com.mmmail.server.util.SecurityUtils;
-import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.http.ResponseCookie;
 import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -24,37 +22,18 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import java.time.Duration;
 import java.util.List;
-import java.util.UUID;
 
 @RestController
 @RequestMapping("/api/v1/auth")
 public class AuthController {
 
-    private static final String CSRF_HEADER_NAME = "X-MMMAIL-CSRF";
-
     private final AuthService authService;
-    private final String refreshCookieName;
-    private final String csrfCookieName;
-    private final boolean cookieSecure;
-    private final String cookieSameSite;
-    private final long refreshCookieMaxAgeSeconds;
+    private final AuthCookieService authCookieService;
 
-    public AuthController(
-            AuthService authService,
-            @Value("${mmmail.auth.refresh-cookie-name:MMMAIL_REFRESH_TOKEN}") String refreshCookieName,
-            @Value("${mmmail.auth.csrf-cookie-name:MMMAIL_CSRF_TOKEN}") String csrfCookieName,
-            @Value("${mmmail.auth.cookie-secure:false}") boolean cookieSecure,
-            @Value("${mmmail.auth.cookie-same-site:Lax}") String cookieSameSite,
-            @Value("${mmmail.refresh-token-expire-hours:168}") long refreshExpireHours
-    ) {
+    public AuthController(AuthService authService, AuthCookieService authCookieService) {
         this.authService = authService;
-        this.refreshCookieName = refreshCookieName;
-        this.csrfCookieName = csrfCookieName;
-        this.cookieSecure = cookieSecure;
-        this.cookieSameSite = cookieSameSite;
-        this.refreshCookieMaxAgeSeconds = Math.max(3600L, refreshExpireHours * 3600L);
+        this.authCookieService = authCookieService;
     }
 
     @PostMapping("/register")
@@ -64,7 +43,7 @@ public class AuthController {
             HttpServletResponse httpResponse
     ) {
         AuthResponse response = authService.register(request, httpRequest.getRemoteAddr());
-        attachAuthCookies(httpResponse, response.refreshToken(), generateCsrfToken());
+        authCookieService.attachAuthCookies(httpResponse, response.refreshToken(), AuthCookieService.V1_AUTH_COOKIE_PATH);
         return Result.success(response);
     }
 
@@ -75,7 +54,7 @@ public class AuthController {
             HttpServletResponse httpResponse
     ) {
         AuthResponse response = authService.login(request, httpRequest.getRemoteAddr());
-        attachAuthCookies(httpResponse, response.refreshToken(), generateCsrfToken());
+        authCookieService.attachAuthCookies(httpResponse, response.refreshToken(), AuthCookieService.V1_AUTH_COOKIE_PATH);
         return Result.success(response);
     }
 
@@ -85,24 +64,24 @@ public class AuthController {
             HttpServletRequest httpRequest,
             HttpServletResponse httpResponse
     ) {
-        String cookieToken = readCookie(httpRequest, refreshCookieName);
+        String cookieToken = authCookieService.readRefreshToken(httpRequest);
         String bodyToken = request == null ? null : request.refreshToken();
         String refreshToken = StringUtils.hasText(cookieToken) ? cookieToken : bodyToken;
         if (!StringUtils.hasText(refreshToken)) {
             throw new BizException(ErrorCode.SESSION_INVALID, "Refresh token is required");
         }
         if (StringUtils.hasText(cookieToken)) {
-            verifyCsrf(httpRequest);
+            authCookieService.verifyCsrf(httpRequest);
         }
         AuthResponse response = authService.refresh(refreshToken, httpRequest.getRemoteAddr());
-        attachAuthCookies(httpResponse, response.refreshToken(), generateCsrfToken());
+        authCookieService.attachAuthCookies(httpResponse, response.refreshToken(), AuthCookieService.V1_AUTH_COOKIE_PATH);
         return Result.success(response);
     }
 
     @PostMapping("/logout-all")
     public Result<Void> logoutAll(HttpServletRequest httpRequest, HttpServletResponse httpResponse) {
         authService.logoutAll(SecurityUtils.currentUserId(), httpRequest.getRemoteAddr());
-        clearAuthCookies(httpResponse);
+        authCookieService.clearAuthCookies(httpResponse, AuthCookieService.V1_AUTH_COOKIE_PATH);
         return Result.success(null);
     }
 
@@ -113,7 +92,7 @@ public class AuthController {
                 SecurityUtils.currentSessionId(),
                 httpRequest.getRemoteAddr()
         );
-        clearAuthCookies(httpResponse);
+        authCookieService.clearAuthCookies(httpResponse, AuthCookieService.V1_AUTH_COOKIE_PATH);
         return Result.success(null);
     }
 
@@ -134,68 +113,5 @@ public class AuthController {
                 httpRequest.getRemoteAddr()
         );
         return Result.success(null);
-    }
-
-    private void verifyCsrf(HttpServletRequest request) {
-        String csrfCookie = readCookie(request, csrfCookieName);
-        String csrfHeader = request.getHeader(CSRF_HEADER_NAME);
-        if (!StringUtils.hasText(csrfCookie) || !csrfCookie.equals(csrfHeader)) {
-            throw new BizException(ErrorCode.FORBIDDEN, "CSRF token is invalid");
-        }
-    }
-
-    private String readCookie(HttpServletRequest request, String name) {
-        Cookie[] cookies = request.getCookies();
-        if (cookies == null || cookies.length == 0) {
-            return null;
-        }
-        for (Cookie cookie : cookies) {
-            if (name.equals(cookie.getName())) {
-                return cookie.getValue();
-            }
-        }
-        return null;
-    }
-
-    private void attachAuthCookies(HttpServletResponse response, String refreshToken, String csrfToken) {
-        ResponseCookie refreshCookie = ResponseCookie.from(refreshCookieName, refreshToken)
-                .httpOnly(true)
-                .secure(cookieSecure)
-                .path("/api/v1/auth")
-                .sameSite(cookieSameSite)
-                .maxAge(Duration.ofSeconds(refreshCookieMaxAgeSeconds))
-                .build();
-        ResponseCookie csrfCookie = ResponseCookie.from(csrfCookieName, csrfToken)
-                .httpOnly(false)
-                .secure(cookieSecure)
-                .path("/")
-                .sameSite(cookieSameSite)
-                .maxAge(Duration.ofSeconds(refreshCookieMaxAgeSeconds))
-                .build();
-        response.addHeader("Set-Cookie", refreshCookie.toString());
-        response.addHeader("Set-Cookie", csrfCookie.toString());
-    }
-
-    private void clearAuthCookies(HttpServletResponse response) {
-        ResponseCookie refreshCookie = ResponseCookie.from(refreshCookieName, "")
-                .httpOnly(true)
-                .secure(cookieSecure)
-                .path("/api/v1/auth")
-                .sameSite(cookieSameSite)
-                .maxAge(Duration.ZERO)
-                .build();
-        ResponseCookie csrfCookie = ResponseCookie.from(csrfCookieName, "")
-                .httpOnly(false)
-                .secure(cookieSecure)
-                .path("/")
-                .sameSite(cookieSameSite)
-                .maxAge(Duration.ZERO)
-                .build();
-        response.addHeader("Set-Cookie", refreshCookie.toString());
-        response.addHeader("Set-Cookie", csrfCookie.toString());
-    }
-
-    private String generateCsrfToken() {
-        return UUID.randomUUID() + "." + UUID.randomUUID();
     }
 }
