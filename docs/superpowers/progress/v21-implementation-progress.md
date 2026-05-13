@@ -6,7 +6,7 @@ Last updated: 2026-05-13
 
 - Branch: `main`
 - Latest frontend implementation commit: `0f744a60 feat(frontend-v2): align drive client with runtime bridge`
-- Latest backend implementation commit: `2921580b feat(backend-v21): add sheets runtime bridge`
+- Latest backend implementation commit: `4730afdc feat(backend-v21): add mail runtime bridge`
 - Local branch status at progress capture: `main...origin/main [ahead 77]`
 - Untracked paths intentionally not included in v2.1 commits: `.superpowers/`, `.tmp/`, `docs/MMMail.zip`, `docs/MMMail/`, `frontend/`
 
@@ -33,6 +33,7 @@ Last updated: 2026-05-13
 | Backend Calendar runtime bridge (`backend-v21-calendar-runtime-bridge`) | `BackendV21CalendarRuntimeBridgeTest`, `V21CalendarController`, `CalendarEventDrawer` save wiring |
 | Backend Drive runtime bridge (`backend-v21-drive-runtime-bridge`) | `BackendV21DriveRuntimeBridgeTest`, `V21DriveController`, `V21DriveRuntimeBridgeService`, frontend Drive client cleanup |
 | Backend Docs and Sheets runtime bridge (`backend-v21-docs-sheets-runtime-bridge`) | `BackendV21DocsSheetsRuntimeBridgeTest`, `V21DocsController`, `V21SheetsController` |
+| Backend Mail runtime bridge (`backend-v21-mail-runtime-bridge`) | `BackendV21MailRuntimeBridgeTest`, `V21MailController`, `V21MailBulkActionRequest`, JSON body validation handling |
 
 ## Latest Visual QA Baseline
 
@@ -56,24 +57,26 @@ Last updated: 2026-05-13
 
 ## Latest Completed Backend Slice
 
-- Slice: `backend-v21-docs-sheets-runtime-bridge`
-- Commits: `95925254 feat(backend-v21): add docs runtime bridge`, `2921580b feat(backend-v21): add sheets runtime bridge`
-- Files changed: added v2 Docs and Sheets controllers, runtime bridge coverage for Community Docs/Sheets paths, explicit Premium gate assertions, unsupported Sheets JSON import error handling, and test-profile alignment for Sheets verification targets.
+- Slice: `backend-v21-mail-runtime-bridge`
+- Commit: `4730afdc feat(backend-v21): add mail runtime bridge`
+- Files changed: added v2 Mail controller, v2 Mail query/bulk-action/folder adapters, runtime bridge coverage for draft, send, folders, detail, contacts, recipient trust, batch action, unknown folder, Premium mail rule gate, invalid bulk ID prevalidation, and malformed JSON body handling.
 - Verification:
-  - `timeout 60s mvn -pl mmmail-server -am -f backend/pom.xml test -Dtest=BackendV21DocsSheetsRuntimeBridgeTest,DocsCollaborationIntegrationTest,SheetsWorkbookIntegrationTest,SheetsSharingVersionIntegrationTest,BackendV21AccessEntitlementGatesTest,BackendV21ApiContractCatalogTest -Dsurefire.failIfNoSpecifiedTests=false`: PASS (`20/20`)
+  - `timeout 60s mvn -pl mmmail-server -am -f backend/pom.xml test -Dtest=BackendV21MailRuntimeBridgeTest,MailAttachmentIntegrationTest,SmtpOutboundDeliveryIntegrationTest,BackendV21AccessEntitlementGatesTest,BackendV21ApiContractCatalogTest -Dsurefire.failIfNoSpecifiedTests=false`: PASS (`23/23`)
+  - `timeout 60s mvn -pl mmmail-server -am -f backend/pom.xml test -Dtest=BackendV21MailRuntimeBridgeTest -Dsurefire.failIfNoSpecifiedTests=false`: PASS (`4/4`, post-review import cleanup)
   - `pnpm --dir frontend-v2 test`: PASS (`84/84`)
   - `pnpm --dir frontend-v2 typecheck`: PASS
   - `pnpm --dir frontend-v2 build`: PASS
 
 ## Active Backend Slice
 
-- Slice: `backend-v21-docs-sheets-runtime-bridge`
+- Slice: `backend-v21-mail-runtime-bridge`
 - Status: `completed`
 - Started: `2026-05-13`
 - Completed: `2026-05-13`
-- Scope: v2 Docs and Sheets runtime bridge, explicit Premium gates, unsupported Sheets JSON import error
+- Scope: v2 Mail runtime bridge for drafts, send, folders, detail, contacts, recipient trust, batch action, unknown folder, Premium rule gate, invalid bulk ID prevalidation, and malformed JSON body handling
 - Verification:
-  - `timeout 60s mvn -pl mmmail-server -am -f backend/pom.xml test -Dtest=BackendV21DocsSheetsRuntimeBridgeTest,DocsCollaborationIntegrationTest,SheetsWorkbookIntegrationTest,SheetsSharingVersionIntegrationTest,BackendV21AccessEntitlementGatesTest,BackendV21ApiContractCatalogTest -Dsurefire.failIfNoSpecifiedTests=false`
+  - `timeout 60s mvn -pl mmmail-server -am -f backend/pom.xml test -Dtest=BackendV21MailRuntimeBridgeTest,MailAttachmentIntegrationTest,SmtpOutboundDeliveryIntegrationTest,BackendV21AccessEntitlementGatesTest,BackendV21ApiContractCatalogTest -Dsurefire.failIfNoSpecifiedTests=false`
+  - `timeout 60s mvn -pl mmmail-server -am -f backend/pom.xml test -Dtest=BackendV21MailRuntimeBridgeTest -Dsurefire.failIfNoSpecifiedTests=false`
   - `pnpm --dir frontend-v2 test`
   - `pnpm --dir frontend-v2 typecheck`
   - `pnpm --dir frontend-v2 build`

@@ -8,6 +8,19 @@
 
 **技术栈：** Java 21、Spring Boot 3.5、MockMvc、JUnit 5、AssertJ、Vue 3 frontend-v2 contract tests、Maven、pnpm。
 
+**执行状态：** completed on 2026-05-13.
+
+**实现提交：** `4730afdc feat(backend-v21): add mail runtime bridge`
+
+**实际验证证据：**
+- `timeout 60s mvn -pl mmmail-server -am -f backend/pom.xml test -Dtest=BackendV21MailRuntimeBridgeTest,MailAttachmentIntegrationTest,SmtpOutboundDeliveryIntegrationTest,BackendV21AccessEntitlementGatesTest,BackendV21ApiContractCatalogTest -Dsurefire.failIfNoSpecifiedTests=false`: PASS (`23/23`)
+- `timeout 60s mvn -pl mmmail-server -am -f backend/pom.xml test -Dtest=BackendV21MailRuntimeBridgeTest -Dsurefire.failIfNoSpecifiedTests=false`: PASS (`4/4`, post-review import cleanup)
+- `pnpm --dir frontend-v2 test`: PASS (`84/84`)
+- `pnpm --dir frontend-v2 typecheck`: PASS
+- `pnpm --dir frontend-v2 build`: PASS
+
+**执行偏差记录：** 最终实现比原计划多覆盖两项审查风险：`bulk-action` 在变更前先校验全部 `messageIds`，避免无效 ID 造成部分写入；`HttpMessageNotReadableException` 统一映射为 `INVALID_ARGUMENT`，避免 malformed JSON 进入 500。前端同步补充 `SendMailPayload.draftId` 类型以匹配真实发送草稿流程。
+
 ---
 
 ## 文件结构
@@ -31,7 +44,7 @@
 - 创建：`backend/mmmail-server/src/test/java/com/mmmail/server/BackendV21MailRuntimeBridgeTest.java`
 - 测试：`BackendV21MailRuntimeBridgeTest`
 
-- [ ] **步骤 1：创建失败测试文件**
+- [x] **步骤 1：创建失败测试文件**
 
 写入 `backend/mmmail-server/src/test/java/com/mmmail/server/BackendV21MailRuntimeBridgeTest.java`：
 
@@ -253,7 +266,7 @@ class BackendV21MailRuntimeBridgeTest {
 }
 ```
 
-- [ ] **步骤 2：运行红测并确认失败**
+- [x] **步骤 2：运行红测并确认失败**
 
 运行：
 
@@ -270,7 +283,7 @@ timeout 60s mvn -pl mmmail-server -am -f backend/pom.xml test -Dtest=BackendV21M
 - 创建：`backend/mmmail-server/src/main/java/com/mmmail/server/model/dto/V21MailBulkActionRequest.java`
 - 创建：`backend/mmmail-server/src/main/java/com/mmmail/server/model/vo/V21MailFolderVo.java`
 
-- [ ] **步骤 1：创建 messages query 绑定类**
+- [x] **步骤 1：创建 messages query 绑定类**
 
 写入 `backend/mmmail-server/src/main/java/com/mmmail/server/model/dto/V21MailMessagesQuery.java`：
 
@@ -363,7 +376,7 @@ public class V21MailMessagesQuery {
 }
 ```
 
-- [ ] **步骤 2：创建 bulk-action v2 请求 record**
+- [x] **步骤 2：创建 bulk-action v2 请求 record**
 
 写入 `backend/mmmail-server/src/main/java/com/mmmail/server/model/dto/V21MailBulkActionRequest.java`：
 
@@ -395,7 +408,7 @@ public record V21MailBulkActionRequest(
 }
 ```
 
-- [ ] **步骤 3：创建 folder 响应 record**
+- [x] **步骤 3：创建 folder 响应 record**
 
 写入 `backend/mmmail-server/src/main/java/com/mmmail/server/model/vo/V21MailFolderVo.java`：
 
@@ -410,7 +423,7 @@ public record V21MailFolderVo(
 }
 ```
 
-- [ ] **步骤 4：运行编译范围测试验证新增类型可编译**
+- [x] **步骤 4：运行编译范围测试验证新增类型可编译**
 
 运行：
 
@@ -426,7 +439,7 @@ timeout 60s mvn -pl mmmail-server -am -f backend/pom.xml test -Dtest=BackendV21A
 - 创建：`backend/mmmail-server/src/main/java/com/mmmail/server/controller/V21MailController.java`
 - 测试：`BackendV21MailRuntimeBridgeTest`
 
-- [ ] **步骤 1：创建 controller 并接入真实 MailService**
+- [x] **步骤 1：创建 controller 并接入真实 MailService**
 
 写入 `backend/mmmail-server/src/main/java/com/mmmail/server/controller/V21MailController.java`：
 
@@ -637,7 +650,7 @@ public class V21MailController {
 }
 ```
 
-- [ ] **步骤 2：运行 v2 Mail 红测确认转绿**
+- [x] **步骤 2：运行 v2 Mail 红测确认转绿**
 
 运行：
 
@@ -645,9 +658,9 @@ public class V21MailController {
 timeout 60s mvn -pl mmmail-server -am -f backend/pom.xml test -Dtest=BackendV21MailRuntimeBridgeTest -Dsurefire.failIfNoSpecifiedTests=false
 ```
 
-预期：PASS，`BackendV21MailRuntimeBridgeTest` 两个测试全部通过。
+预期：PASS，`BackendV21MailRuntimeBridgeTest` 覆盖的测试全部通过。
 
-- [ ] **步骤 3：运行 v1 Mail 回归**
+- [x] **步骤 3：运行 v1 Mail 回归**
 
 运行：
 
@@ -657,7 +670,7 @@ timeout 60s mvn -pl mmmail-server -am -f backend/pom.xml test -Dtest=MailAttachm
 
 预期：PASS。v1 附件与 SMTP outbound 行为不回归。
 
-- [ ] **步骤 4：运行 v2 gate/catalog 回归**
+- [x] **步骤 4：运行 v2 gate/catalog 回归**
 
 运行：
 
@@ -674,7 +687,7 @@ timeout 60s mvn -pl mmmail-server -am -f backend/pom.xml test -Dtest=BackendV21A
 - 测试：`frontend-v2/tests/v21-core-workspaces-contract.test.mjs`
 - 测试：`frontend-v2` 全量测试、类型检查、构建
 
-- [ ] **步骤 1：运行 frontend-v2 测试**
+- [x] **步骤 1：运行 frontend-v2 测试**
 
 运行：
 
@@ -684,7 +697,7 @@ pnpm --dir frontend-v2 test
 
 预期：PASS，包含 Mail v2 API contract 测试。
 
-- [ ] **步骤 2：运行 frontend-v2 typecheck**
+- [x] **步骤 2：运行 frontend-v2 typecheck**
 
 运行：
 
@@ -694,7 +707,7 @@ pnpm --dir frontend-v2 typecheck
 
 预期：PASS。
 
-- [ ] **步骤 3：运行 frontend-v2 build**
+- [x] **步骤 3：运行 frontend-v2 build**
 
 运行：
 
@@ -712,8 +725,11 @@ pnpm --dir frontend-v2 build
 - 创建：`backend/mmmail-server/src/main/java/com/mmmail/server/model/dto/V21MailBulkActionRequest.java`
 - 创建：`backend/mmmail-server/src/main/java/com/mmmail/server/model/vo/V21MailFolderVo.java`
 - 创建：`backend/mmmail-server/src/main/java/com/mmmail/server/controller/V21MailController.java`
+- 修改：`backend/mmmail-common/src/main/java/com/mmmail/common/exception/GlobalExceptionHandler.java`
+- 修改：`backend/mmmail-server/src/main/java/com/mmmail/server/service/MailService.java`
+- 修改：`frontend-v2/src/service/api/mail.ts`
 
-- [ ] **步骤 1：检查工作树**
+- [x] **步骤 1：检查工作树**
 
 运行：
 
@@ -723,7 +739,7 @@ git status --short --branch
 
 预期：只看到本任务相关源码和测试文件，外加既有无关未跟踪路径。
 
-- [ ] **步骤 2：暂存本任务相关文件**
+- [x] **步骤 2：暂存本任务相关文件**
 
 运行：
 
@@ -737,9 +753,9 @@ git diff --cached --check
 git diff --cached --stat
 ```
 
-预期：`git diff --cached --check` 无输出，stat 只包含上述五个文件。
+预期：`git diff --cached --check` 无输出，stat 只包含本任务相关源码、测试和前端类型文件。
 
-- [ ] **步骤 3：提交实现**
+- [x] **步骤 3：提交实现**
 
 运行：
 
@@ -753,8 +769,9 @@ git commit -m "feat(backend-v21): add mail runtime bridge"
 
 **文件：**
 - 修改：`docs/superpowers/progress/v21-implementation-progress.md`
+- 修改：`docs/superpowers/plans/2026-05-13-backend-v21-mail-runtime-bridge.md`
 
-- [ ] **步骤 1：更新完成切片表**
+- [x] **步骤 1：更新完成切片表**
 
 在 `docs/superpowers/progress/v21-implementation-progress.md` 的 `Completed v2.1 Slices` 表中新增：
 
@@ -762,7 +779,7 @@ git commit -m "feat(backend-v21): add mail runtime bridge"
 | Backend Mail runtime bridge (`backend-v21-mail-runtime-bridge`) | `BackendV21MailRuntimeBridgeTest`, `V21MailController` |
 ```
 
-- [ ] **步骤 2：更新 Latest Completed Backend Slice**
+- [x] **步骤 2：更新 Latest Completed Backend Slice**
 
 将 `Latest Completed Backend Slice` 改成：
 
@@ -770,7 +787,7 @@ git commit -m "feat(backend-v21): add mail runtime bridge"
 ## Latest Completed Backend Slice
 
 - Slice: `backend-v21-mail-runtime-bridge`
-- Commit: `<实现提交 hash> feat(backend-v21): add mail runtime bridge`
+- Commit: `4730afdc feat(backend-v21): add mail runtime bridge`
 - Files changed: added v2 Mail controller, v2 Mail query/bulk-action/folder adapters, runtime bridge coverage for draft, send, folders, detail, contacts, recipient trust, batch action, unknown folder, and Premium mail rule gate.
 - Verification:
   - `timeout 60s mvn -pl mmmail-server -am -f backend/pom.xml test -Dtest=BackendV21MailRuntimeBridgeTest,MailAttachmentIntegrationTest,SmtpOutboundDeliveryIntegrationTest,BackendV21AccessEntitlementGatesTest,BackendV21ApiContractCatalogTest -Dsurefire.failIfNoSpecifiedTests=false`: PASS
@@ -779,9 +796,9 @@ git commit -m "feat(backend-v21): add mail runtime bridge"
   - `pnpm --dir frontend-v2 build`: PASS
 ```
 
-将 `<实现提交 hash>` 替换为任务 5 产生的实际提交号。
+已替换为任务 5 产生的实际提交号。
 
-- [ ] **步骤 3：更新 Active Backend Slice**
+- [x] **步骤 3：更新 Active Backend Slice**
 
 将 `Active Backend Slice` 改成：
 
@@ -800,7 +817,7 @@ git commit -m "feat(backend-v21): add mail runtime bridge"
   - `pnpm --dir frontend-v2 build`
 ```
 
-- [ ] **步骤 4：运行最终聚合验证**
+- [x] **步骤 4：运行最终聚合验证**
 
 运行：
 
@@ -813,7 +830,7 @@ pnpm --dir frontend-v2 build
 
 预期：全部 PASS。
 
-- [ ] **步骤 5：提交进度文档**
+- [x] **步骤 5：提交进度文档**
 
 运行：
 
@@ -832,7 +849,7 @@ git commit -m "docs(backend-v21): update mail runtime bridge progress"
 **文件：**
 - 测试：git 状态和最近提交
 
-- [ ] **步骤 1：确认最新提交**
+- [x] **步骤 1：确认最新提交**
 
 运行：
 
