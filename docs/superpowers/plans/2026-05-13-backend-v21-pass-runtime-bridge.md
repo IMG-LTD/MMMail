@@ -1,6 +1,19 @@
 # Backend v2.1 Pass Runtime Bridge 实现计划
 
-> **面向 AI 代理的工作者：** 必需子技能：使用 superpowers:subagent-driven-development（推荐）或 superpowers:executing-plans 逐任务实现此计划。步骤使用复选框（`- [ ]`）语法来跟踪进度。
+**执行状态：** completed on 2026-05-13.
+
+**实现提交：** `462b6821 feat(backend-v21): add pass runtime bridge`.
+
+**实际验证证据：**
+- 红测：`timeout 60s mvn -pl mmmail-server -am -f backend/pom.xml test -Dtest=BackendV21PassRuntimeBridgeTest -Dsurefire.failIfNoSpecifiedTests=false` initially failed with missing `/api/v2/pass/*` handlers.
+- `timeout 60s mvn -pl mmmail-server -am -f backend/pom.xml test -Dtest=BackendV21PassRuntimeBridgeTest -Dsurefire.failIfNoSpecifiedTests=false`: PASS (`3/3`)
+- `timeout 60s mvn -pl mmmail-server -am -f backend/pom.xml test -Dtest=PassReleaseBlockingIntegrationTest,PassMonitorIntegrationTest,PassAliasIntegrationTest,PassBusinessIntegrationTest -Dsurefire.failIfNoSpecifiedTests=false`: PASS (`11/11`)
+- `timeout 60s mvn -pl mmmail-server -am -f backend/pom.xml test -Dtest=BackendV21AccessEntitlementGatesTest,BackendV21ApiContractCatalogTest -Dsurefire.failIfNoSpecifiedTests=false`: PASS (`13/13`)
+- `pnpm --dir frontend-v2 test`: PASS (`84/84`)
+- `pnpm --dir frontend-v2 typecheck`: PASS
+- `pnpm --dir frontend-v2 build`: PASS
+
+> **面向 AI 代理的工作者：** 必需子技能：使用 superpowers:subagent-driven-development（推荐）或 superpowers:executing-plans 逐任务实现此计划。步骤使用复选框（`- [x]`）语法来跟踪进度。
 
 **目标：** 为 v2.1 Pass 增加真实 `/api/v2/pass/*` 运行时桥接，让 Community Pass item 路径走后端真实状态，并保持 Premium Pass 路径由 v2 access gate 显式拦截。
 
@@ -44,7 +57,7 @@
 - 创建：`backend/mmmail-server/src/test/java/com/mmmail/server/BackendV21PassRuntimeBridgeTest.java`
 - 测试：`BackendV21PassRuntimeBridgeTest`
 
-- [ ] **步骤 1：创建失败测试文件**
+- [x] **步骤 1：创建失败测试文件**
 
 写入 `backend/mmmail-server/src/test/java/com/mmmail/server/BackendV21PassRuntimeBridgeTest.java`：
 
@@ -213,7 +226,7 @@ class BackendV21PassRuntimeBridgeTest {
 }
 ```
 
-- [ ] **步骤 2：运行红测并确认失败**
+- [x] **步骤 2：运行红测并确认失败**
 
 运行：
 
@@ -231,7 +244,7 @@ timeout 60s mvn -pl mmmail-server -am -f backend/pom.xml test -Dtest=BackendV21P
 - 创建：`backend/mmmail-server/src/main/java/com/mmmail/server/model/dto/V21PassSecureLinkQuery.java`
 - 测试：`BackendV21ApiContractCatalogTest`
 
-- [ ] **步骤 1：创建 vault VO**
+- [x] **步骤 1：创建 vault VO**
 
 写入 `backend/mmmail-server/src/main/java/com/mmmail/server/model/vo/V21PassVaultVo.java`：
 
@@ -251,7 +264,7 @@ public record V21PassVaultVo(
 }
 ```
 
-- [ ] **步骤 2：创建 secure-link 请求 DTO**
+- [x] **步骤 2：创建 secure-link 请求 DTO**
 
 写入 `backend/mmmail-server/src/main/java/com/mmmail/server/model/dto/V21PassSecureLinkRequest.java`：
 
@@ -276,7 +289,7 @@ public record V21PassSecureLinkRequest(
 }
 ```
 
-- [ ] **步骤 3：创建 secure-link query DTO**
+- [x] **步骤 3：创建 secure-link query DTO**
 
 写入 `backend/mmmail-server/src/main/java/com/mmmail/server/model/dto/V21PassSecureLinkQuery.java`：
 
@@ -289,7 +302,7 @@ public record V21PassSecureLinkQuery(@NotNull Long orgId) {
 }
 ```
 
-- [ ] **步骤 4：运行编译范围测试**
+- [x] **步骤 4：运行编译范围测试**
 
 运行：
 
@@ -305,7 +318,7 @@ timeout 60s mvn -pl mmmail-server -am -f backend/pom.xml test -Dtest=BackendV21A
 - 创建：`backend/mmmail-server/src/main/java/com/mmmail/server/service/V21PassRuntimeBridgeService.java`
 - 测试：`BackendV21PassRuntimeBridgeTest`
 
-- [ ] **步骤 1：创建 runtime bridge service**
+- [x] **步骤 1：创建 runtime bridge service**
 
 写入 `backend/mmmail-server/src/main/java/com/mmmail/server/service/V21PassRuntimeBridgeService.java`：
 
@@ -501,7 +514,7 @@ public class V21PassRuntimeBridgeService {
 }
 ```
 
-- [ ] **步骤 2：运行红测确认仍失败于 controller 缺失**
+- [x] **步骤 2：运行红测确认仍失败于 controller 缺失**
 
 运行：
 
@@ -517,7 +530,7 @@ timeout 60s mvn -pl mmmail-server -am -f backend/pom.xml test -Dtest=BackendV21P
 - 创建：`backend/mmmail-server/src/main/java/com/mmmail/server/controller/V21PassController.java`
 - 测试：`BackendV21PassRuntimeBridgeTest`
 
-- [ ] **步骤 1：创建 v2 controller**
+- [x] **步骤 1：创建 v2 controller**
 
 写入 `backend/mmmail-server/src/main/java/com/mmmail/server/controller/V21PassController.java`：
 
@@ -711,7 +724,7 @@ public class V21PassController {
 }
 ```
 
-- [ ] **步骤 2：运行 v2 Pass 测试确认转绿**
+- [x] **步骤 2：运行 v2 Pass 测试确认转绿**
 
 运行：
 
@@ -731,7 +744,7 @@ timeout 60s mvn -pl mmmail-server -am -f backend/pom.xml test -Dtest=BackendV21P
 - 测试：`BackendV21AccessEntitlementGatesTest`
 - 测试：`BackendV21ApiContractCatalogTest`
 
-- [ ] **步骤 1：运行 Pass 相关回归**
+- [x] **步骤 1：运行 Pass 相关回归**
 
 运行：
 
@@ -741,7 +754,7 @@ timeout 60s mvn -pl mmmail-server -am -f backend/pom.xml test -Dtest=PassRelease
 
 预期：PASS。个人 item、monitor、alias、business secure-link 等 v1 Pass 行为不回归。
 
-- [ ] **步骤 2：运行 v2 gate/catalog 回归**
+- [x] **步骤 2：运行 v2 gate/catalog 回归**
 
 运行：
 
@@ -758,7 +771,7 @@ timeout 60s mvn -pl mmmail-server -am -f backend/pom.xml test -Dtest=BackendV21A
 - 测试：`frontend-v2/tests/v21-pass-notifications-command-center-contract.test.mjs`
 - 测试：`frontend-v2` 全量测试、类型检查、构建
 
-- [ ] **步骤 1：运行 frontend-v2 测试**
+- [x] **步骤 1：运行 frontend-v2 测试**
 
 运行：
 
@@ -768,7 +781,7 @@ pnpm --dir frontend-v2 test
 
 预期：PASS，包含 Pass API contract 测试。
 
-- [ ] **步骤 2：运行 frontend-v2 typecheck**
+- [x] **步骤 2：运行 frontend-v2 typecheck**
 
 运行：
 
@@ -778,7 +791,7 @@ pnpm --dir frontend-v2 typecheck
 
 预期：PASS。
 
-- [ ] **步骤 3：运行 frontend-v2 build**
+- [x] **步骤 3：运行 frontend-v2 build**
 
 运行：
 
@@ -798,7 +811,7 @@ pnpm --dir frontend-v2 build
 - 创建：`backend/mmmail-server/src/main/java/com/mmmail/server/model/dto/V21PassSecureLinkQuery.java`
 - 创建：`backend/mmmail-server/src/main/java/com/mmmail/server/model/vo/V21PassVaultVo.java`
 
-- [ ] **步骤 1：检查工作树**
+- [x] **步骤 1：检查工作树**
 
 运行：
 
@@ -808,7 +821,7 @@ git status --short --branch
 
 预期：只看到本任务相关源码、测试文件和既有无关未跟踪路径。
 
-- [ ] **步骤 2：暂存本任务相关文件**
+- [x] **步骤 2：暂存本任务相关文件**
 
 运行：
 
@@ -825,7 +838,7 @@ git diff --cached --stat
 
 预期：`git diff --cached --check` 无输出，stat 只包含本任务列出的六个源码和测试文件。
 
-- [ ] **步骤 3：提交实现**
+- [x] **步骤 3：提交实现**
 
 运行：
 
@@ -841,7 +854,7 @@ git commit -m "feat(backend-v21): add pass runtime bridge"
 - 修改：`docs/superpowers/progress/v21-implementation-progress.md`
 - 修改：`docs/superpowers/plans/2026-05-13-backend-v21-pass-runtime-bridge.md`
 
-- [ ] **步骤 1：更新完成切片表**
+- [x] **步骤 1：更新完成切片表**
 
 在 `docs/superpowers/progress/v21-implementation-progress.md` 的 `Completed v2.1 Slices` 表中新增：
 
@@ -849,7 +862,7 @@ git commit -m "feat(backend-v21): add pass runtime bridge"
 | Backend Pass runtime bridge (`backend-v21-pass-runtime-bridge`) | `BackendV21PassRuntimeBridgeTest`, `V21PassController`, `V21PassRuntimeBridgeService` |
 ```
 
-- [ ] **步骤 2：更新 Latest Completed Backend Slice**
+- [x] **步骤 2：更新 Latest Completed Backend Slice**
 
 将 `Latest Completed Backend Slice` 改成：
 
@@ -857,7 +870,7 @@ git commit -m "feat(backend-v21): add pass runtime bridge"
 ## Latest Completed Backend Slice
 
 - Slice: `backend-v21-pass-runtime-bridge`
-- Commit: 使用任务 7 完成后 `git log --oneline -1` 输出的实现提交，提交主题必须是 `feat(backend-v21): add pass runtime bridge`
+- Commit: `462b6821 feat(backend-v21): add pass runtime bridge`
 - Files changed: added v2 Pass controller, runtime bridge service, v2 Pass vault and secure-link adapters, runtime bridge coverage for personal vaults/items, Premium Pass gates, and invalid id handling.
 - Verification:
   - `timeout 60s mvn -pl mmmail-server -am -f backend/pom.xml test -Dtest=BackendV21PassRuntimeBridgeTest -Dsurefire.failIfNoSpecifiedTests=false`: PASS
@@ -868,9 +881,9 @@ git commit -m "feat(backend-v21): add pass runtime bridge"
   - `pnpm --dir frontend-v2 build`: PASS
 ```
 
-提交进度文档前必须把这一行改成任务 7 产生的实际提交号和提交主题。
+已记录任务 7 产生的实现提交号和提交主题。
 
-- [ ] **步骤 3：更新 Active Backend Slice**
+- [x] **步骤 3：更新 Active Backend Slice**
 
 将 `Active Backend Slice` 改成：
 
@@ -891,22 +904,22 @@ git commit -m "feat(backend-v21): add pass runtime bridge"
   - `pnpm --dir frontend-v2 build`
 ```
 
-- [ ] **步骤 4：记录实际执行状态**
+- [x] **步骤 4：记录实际执行状态**
 
 在本计划文档顶部加入：
 
 ```markdown
 **执行状态：** completed on 2026-05-13.
 
-**实现提交：** 使用任务 7 产生的实际提交号和提交主题。
+**实现提交：** `462b6821 feat(backend-v21): add pass runtime bridge`.
 
 **实际验证证据：**
-- 写入本计划中实际执行过的每条验证命令及 PASS 结果。
+- 红测和回归验证命令及 PASS 结果已记录在本计划顶部。
 ```
 
-提交进度文档前，必须把上方两行改成实际提交号、实际验证命令和实际结果。
+计划顶部已记录最终实现提交、验证命令和验证结果。
 
-- [ ] **步骤 5：提交进度文档**
+- [x] **步骤 5：提交进度文档**
 
 运行：
 
@@ -925,7 +938,7 @@ git commit -m "docs(backend-v21): update pass runtime bridge progress"
 **文件：**
 - 测试：git 状态和最近提交
 
-- [ ] **步骤 1：确认功能分支最新提交**
+- [x] **步骤 1：确认功能分支最新提交**
 
 运行：
 
@@ -943,7 +956,7 @@ feat(backend-v21): add pass runtime bridge
 
 工作树干净。
 
-- [ ] **步骤 2：在主工作区 fast-forward 合并**
+- [x] **步骤 2：在主工作区 fast-forward 合并**
 
 在仓库主工作区运行：
 
@@ -955,7 +968,7 @@ git status --short --branch
 
 预期：本地 `main` fast-forward 到最新进度提交；只保留既有无关未跟踪路径。
 
-- [ ] **步骤 3：清理临时 worktree 和分支**
+- [x] **步骤 3：清理临时 worktree 和分支**
 
 在仓库主工作区运行：
 
@@ -970,5 +983,5 @@ git worktree list
 ## 计划自检
 
 - 规格覆盖度：本计划覆盖规格中的 controller、runtime bridge service、vault VO、secure-link request/query、Community item/vault 成功路径、Premium gate、invalid id、回归验证、进度记录和 main 合并清理。
-- 待替换文本扫描：计划未保留需要先补充才能执行的章节或尖括号文本；进度更新任务要求执行者写入实际提交号和实际验证命令。
+- 待替换文本扫描：计划未保留需要先补充才能执行的章节或尖括号文本；进度更新任务已写入最终提交和验证证据。
 - 类型一致性：`V21PassSecureLinkRequest.toCreateRequest()` 返回现有 `CreatePassSecureLinkRequest`；`V21PassRuntimeBridgeService.updateItem()` 使用字符串 path id 并内部解析；`V21PassController` 返回前端已有 `PassItemSummaryVo`、`PassMonitorOverviewVo`、`PassMailAliasVo`、`PassSecureLinkVo` 形状。
