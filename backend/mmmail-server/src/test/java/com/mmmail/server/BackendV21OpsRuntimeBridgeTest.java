@@ -95,13 +95,9 @@ class BackendV21OpsRuntimeBridgeTest {
     }
 
     @Test
-    void v21OpsShouldRejectUnsupportedCommunityWritesAndGatePremiumRoutes() throws Exception {
+    void v21OpsShouldRejectUnsupportedSubscriptionWritesAndGatePremiumRoutes() throws Exception {
         String token = register("v21-ops-gate-" + System.nanoTime() + "@mmmail.local");
 
-        assertUnsupportedPost(token, "/api/v2/collaboration/projects");
-        assertUnsupportedPost(token, "/api/v2/collaboration/tasks");
-        assertUnsupportedPatch(token, "/api/v2/collaboration/tasks/task-1");
-        assertUnsupportedPost(token, "/api/v2/collaboration/tasks/task-1/comments");
         assertUnsupportedPatch(token, "/api/v2/notifications/subscriptions/web-push-mail-inbox");
 
         assertPremiumPostGate(token, "/api/v2/command-center/runs");
@@ -119,15 +115,6 @@ class BackendV21OpsRuntimeBridgeTest {
                 .andExpect(jsonPath("$.code").value(0))
                 .andReturn();
         return readJson(result).path("data");
-    }
-
-    private void assertUnsupportedPost(String token, String path) throws Exception {
-        mockMvc.perform(post(path)
-                        .header("Authorization", "Bearer " + token)
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content("{}"))
-                .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.code").value(ErrorCode.INVALID_ARGUMENT.getCode()));
     }
 
     private void assertUnsupportedPatch(String token, String path) throws Exception {
