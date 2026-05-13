@@ -125,6 +125,7 @@ create table if not exists mail_external_secure_link (
     owner_id bigint not null,
     recipient_email varchar(254) not null,
     token varchar(64) not null,
+    token_hash varchar(64) not null,
     public_url varchar(512) not null,
     password_hint varchar(255),
     expires_at timestamp,
@@ -137,6 +138,7 @@ create table if not exists mail_external_secure_link (
 
 create unique index uk_mail_external_secure_link_mail on mail_external_secure_link(mail_id);
 create unique index uk_mail_external_secure_link_token on mail_external_secure_link(token);
+create unique index uk_mail_external_secure_link_token_hash on mail_external_secure_link(token_hash);
 create index idx_mail_external_secure_link_owner on mail_external_secure_link(owner_id, revoked_at, expires_at);
 
 create table if not exists contact_entry (

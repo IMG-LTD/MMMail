@@ -12,7 +12,6 @@ import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMock
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.MediaType;
-import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
@@ -55,15 +54,11 @@ class MailExternalEncryptedDeliveryIntegrationTest {
     @Autowired
     private ObjectMapper objectMapper;
 
-    @Autowired
-    private JdbcTemplate jdbcTemplate;
-
     @MockBean
     private MailOutboundDeliveryGateway mailOutboundDeliveryGateway;
 
     @BeforeEach
     void setUpGateway() {
-        ensureTokenHashColumn();
         when(mailOutboundDeliveryGateway.isConfigured()).thenReturn(true);
         when(mailOutboundDeliveryGateway.configurationMessage()).thenReturn(null);
         when(mailOutboundDeliveryGateway.send(any())).thenReturn(
@@ -351,10 +346,6 @@ class MailExternalEncryptedDeliveryIntegrationTest {
 
     private String futureExpiresAt() {
         return LocalDateTime.now().plusDays(7).withNano(0).format(EXPIRES_AT_FORMAT);
-    }
-
-    private void ensureTokenHashColumn() {
-        jdbcTemplate.execute("ALTER TABLE mail_external_secure_link ADD COLUMN IF NOT EXISTS token_hash VARCHAR(64)");
     }
 
     private JsonNode readJson(MvcResult result) throws Exception {
