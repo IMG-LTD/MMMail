@@ -118,6 +118,20 @@ class BackendV21RuntimeContractGapClosureTest {
     }
 
     @Test
+    void v21PublicShareRoutesShouldReachRealRuntimeControllers() throws Exception {
+        mockMvc.perform(get("/api/v2/share/capabilities"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.supportsAudit").value(true));
+
+        assertInvalidPublicShareToken("/api/v2/share/mail/missing-token");
+        assertInvalidPublicShareToken("/api/v2/share/mail/missing-token/attachments/1/download");
+        assertInvalidPublicShareToken("/api/v2/share/drive/missing-token");
+        assertInvalidPublicShareToken("/api/v2/share/drive/missing-token/items");
+        assertInvalidPublicShareToken("/api/v2/share/drive/missing-token/items/1/download");
+        assertInvalidPublicShareToken("/api/v2/share/pass/missing-token");
+    }
+
+    @Test
     void premiumHostedAndGovernanceFrontendRoutesShouldFailBeforeControllerFallback() throws Exception {
         String token = register("v21-gap-boundary-" + System.nanoTime() + "@mmmail.local");
 
@@ -131,6 +145,12 @@ class BackendV21RuntimeContractGapClosureTest {
         mockMvc.perform(get(path).header("Authorization", "Bearer " + token))
                 .andExpect(status().isForbidden())
                 .andExpect(jsonPath("$.code").value(ErrorCode.V2_ENTITLEMENT_REQUIRED.getCode()));
+    }
+
+    private void assertInvalidPublicShareToken(String path) throws Exception {
+        mockMvc.perform(get(path))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.code").value(ErrorCode.INVALID_ARGUMENT.getCode()));
     }
 
     private Set<RouteIdentity> frontendV21Routes() throws Exception {

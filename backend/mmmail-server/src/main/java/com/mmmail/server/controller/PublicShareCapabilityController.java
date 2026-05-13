@@ -8,7 +8,7 @@ import org.springframework.web.bind.annotation.RestController;
 import java.util.Map;
 
 @RestController
-@RequestMapping("/api/v2/public-share/capabilities")
+@RequestMapping({"/api/v2/public-share/capabilities", "/api/v2/share/capabilities"})
 public class PublicShareCapabilityController {
 
     @GetMapping
