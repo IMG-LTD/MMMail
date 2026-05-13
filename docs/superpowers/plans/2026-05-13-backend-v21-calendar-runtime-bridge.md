@@ -518,8 +518,8 @@ test('calendar workspace persists drawer drafts through v2 mutation APIs', async
   assert.match(api, /export function createCalendarEvent/)
   assert.match(api, /export function updateCalendarEvent/)
   assert.match(api, /export function deleteCalendarEvent/)
-  assert.match(api, /httpClient\.post<ApiResponse<CalendarEvent>>\('\/api\/v2\/calendar\/events'/)
-  assert.match(api, /httpClient\.patch<ApiResponse<CalendarEvent>>\(`\/api\/v2\/calendar\/events\/\$\{eventId\}`/)
+  assert.match(api, /httpClient\.post<ApiResponse<CalendarEventMutationResult>>\('\/api\/v2\/calendar\/events'/)
+  assert.match(api, /httpClient\.patch<ApiResponse<CalendarEventMutationResult>>\(`\/api\/v2\/calendar\/events\/\$\{eventId\}`/)
   assert.match(api, /httpClient\.delete<ApiResponse<null>>\(`\/api\/v2\/calendar\/events\/\$\{eventId\}`/)
   assert.match(api, /httpClient\.patch<ApiResponse<CalendarSettings>>\('\/api\/v2\/calendar\/settings'/)
   assert.match(view, /createCalendarEvent/)
@@ -528,7 +528,7 @@ test('calendar workspace persists drawer drafts through v2 mutation APIs', async
   assert.match(view, /await loadCalendar\(\)/)
   assert.match(drawer, /CalendarEventDraft/)
   assert.match(drawer, /v-model="draft\.title"/)
-  assert.match(drawer, /\$emit\('save', draft\)/)
+  assert.match(drawer, /emit\('save', \{ \.\.\.draft \}\)/)
   assert.doesNotMatch(view, /Calendar save requires an API endpoint/)
 })
 ```
@@ -570,17 +570,36 @@ export interface CalendarEventMutationPayload {
   timezone?: string
   title: string
 }
+
+export interface CalendarEventMutationResult {
+  allDay: boolean
+  attendees: CalendarAttendeeInput[]
+  canDelete: boolean
+  canEdit: boolean
+  description: string | null
+  endAt: string
+  id: string
+  location: string | null
+  ownerEmail: string | null
+  reminderMinutes: number | null
+  shared: boolean
+  sharePermission: string
+  startAt: string
+  timezone: string
+  title: string
+  updatedAt: string
+}
 ```
 
 增加方法，并将 settings update 改为 PATCH：
 
 ```ts
 export function createCalendarEvent(token: string, body: CalendarEventMutationPayload) {
-  return httpClient.post<ApiResponse<CalendarEvent>>('/api/v2/calendar/events', { body, token })
+  return httpClient.post<ApiResponse<CalendarEventMutationResult>>('/api/v2/calendar/events', { body, token })
 }
 
 export function updateCalendarEvent(token: string, eventId: string, body: CalendarEventMutationPayload) {
-  return httpClient.patch<ApiResponse<CalendarEvent>>(`/api/v2/calendar/events/${eventId}`, { body, token })
+  return httpClient.patch<ApiResponse<CalendarEventMutationResult>>(`/api/v2/calendar/events/${eventId}`, { body, token })
 }
 
 export function deleteCalendarEvent(token: string, eventId: string) {
