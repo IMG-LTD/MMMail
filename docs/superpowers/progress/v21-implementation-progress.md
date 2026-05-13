@@ -6,8 +6,8 @@ Last updated: 2026-05-13
 
 - Branch: `main`
 - Latest frontend implementation commit: `0f744a60 feat(frontend-v2): align drive client with runtime bridge`
-- Latest backend implementation commit: `462b6821 feat(backend-v21): add pass runtime bridge`
-- Local branch status at progress capture: `main...origin/main [ahead 77]`
+- Latest backend implementation commit: `a5e2b522 feat(backend-v21): add ops runtime bridge`
+- Local branch status at progress capture: `backend-v21-ops-runtime-bridge`
 - Untracked paths intentionally not included in v2.1 commits: `.superpowers/`, `.tmp/`, `docs/MMMail.zip`, `docs/MMMail/`, `frontend/`
 
 ## Completed v2.1 Slices
@@ -35,6 +35,7 @@ Last updated: 2026-05-13
 | Backend Docs and Sheets runtime bridge (`backend-v21-docs-sheets-runtime-bridge`) | `BackendV21DocsSheetsRuntimeBridgeTest`, `V21DocsController`, `V21SheetsController` |
 | Backend Mail runtime bridge (`backend-v21-mail-runtime-bridge`) | `BackendV21MailRuntimeBridgeTest`, `V21MailController`, `V21MailBulkActionRequest`, JSON body validation handling |
 | Backend Pass runtime bridge (`backend-v21-pass-runtime-bridge`) | `BackendV21PassRuntimeBridgeTest`, `V21PassController`, `V21PassRuntimeBridgeService` |
+| Backend Ops runtime bridge (`backend-v21-ops-runtime-bridge`) | `BackendV21OpsRuntimeBridgeTest`, `V21OpsController`, `V21OpsRuntimeBridgeService` |
 
 ## Latest Visual QA Baseline
 
@@ -58,27 +59,27 @@ Last updated: 2026-05-13
 
 ## Latest Completed Backend Slice
 
-- Slice: `backend-v21-pass-runtime-bridge`
-- Commit: `462b6821 feat(backend-v21): add pass runtime bridge`
-- Files changed: added v2 Pass controller, runtime bridge service, v2 Pass vault and secure-link adapters, runtime bridge coverage for personal vaults/items, Premium Pass gates, and invalid id handling.
+- Slice: `backend-v21-ops-runtime-bridge`
+- Commit: `a5e2b522 feat(backend-v21): add ops runtime bridge`
+- Files changed: added v2 Ops controller, runtime bridge service, collaboration/notification/command-center adapter VOs, notification query/patch DTOs, explicit unsupported Community write handling, and Premium route stubs for gate interception.
 - Verification:
-  - `timeout 60s mvn -pl mmmail-server -am -f backend/pom.xml test -Dtest=BackendV21PassRuntimeBridgeTest -Dsurefire.failIfNoSpecifiedTests=false`: PASS (`3/3`)
-  - `timeout 60s mvn -pl mmmail-server -am -f backend/pom.xml test -Dtest=PassReleaseBlockingIntegrationTest,PassMonitorIntegrationTest,PassAliasIntegrationTest,PassBusinessIntegrationTest -Dsurefire.failIfNoSpecifiedTests=false`: PASS (`11/11`)
+  - `timeout 60s mvn -pl mmmail-server -am -f backend/pom.xml test -Dtest=BackendV21OpsRuntimeBridgeTest -Dsurefire.failIfNoSpecifiedTests=false`: PASS (`3/3`)
+  - `timeout 60s mvn -pl mmmail-server -am -f backend/pom.xml test -Dtest=BackendV21OpsRuntimeBridgeTest,SuiteCollaborationCenterIntegrationTest,WebPushSubscriptionIntegrationTest,SuiteOrgAccessIntegrationTest -Dsurefire.failIfNoSpecifiedTests=false`: PASS (`7/7`)
   - `timeout 60s mvn -pl mmmail-server -am -f backend/pom.xml test -Dtest=BackendV21AccessEntitlementGatesTest,BackendV21ApiContractCatalogTest -Dsurefire.failIfNoSpecifiedTests=false`: PASS (`13/13`)
-  - `pnpm --dir frontend-v2 test`: PASS (`84/84`)
+  - `pnpm --dir frontend-v2 test`: PASS (`84/84`) after `pnpm --dir frontend-v2 install --frozen-lockfile` restored missing `typescript`
   - `pnpm --dir frontend-v2 typecheck`: PASS
   - `pnpm --dir frontend-v2 build`: PASS
 
 ## Active Backend Slice
 
-- Slice: `backend-v21-pass-runtime-bridge`
+- Slice: `backend-v21-ops-runtime-bridge`
 - Status: `completed`
 - Started: `2026-05-13`
 - Completed: `2026-05-13`
-- Scope: v2 Pass runtime bridge for personal vaults/items, Premium Pass gates, invalid id handling, and v2 adapter types
+- Scope: v2 Collaboration, Notifications, and Command Center runtime bridge for Community read models, explicit unsupported write errors, notification read-state patching, and Premium route gate coverage
 - Verification:
-  - `timeout 60s mvn -pl mmmail-server -am -f backend/pom.xml test -Dtest=BackendV21PassRuntimeBridgeTest -Dsurefire.failIfNoSpecifiedTests=false`
-  - `timeout 60s mvn -pl mmmail-server -am -f backend/pom.xml test -Dtest=PassReleaseBlockingIntegrationTest,PassMonitorIntegrationTest,PassAliasIntegrationTest,PassBusinessIntegrationTest -Dsurefire.failIfNoSpecifiedTests=false`
+  - `timeout 60s mvn -pl mmmail-server -am -f backend/pom.xml test -Dtest=BackendV21OpsRuntimeBridgeTest -Dsurefire.failIfNoSpecifiedTests=false`
+  - `timeout 60s mvn -pl mmmail-server -am -f backend/pom.xml test -Dtest=BackendV21OpsRuntimeBridgeTest,SuiteCollaborationCenterIntegrationTest,WebPushSubscriptionIntegrationTest,SuiteOrgAccessIntegrationTest -Dsurefire.failIfNoSpecifiedTests=false`
   - `timeout 60s mvn -pl mmmail-server -am -f backend/pom.xml test -Dtest=BackendV21AccessEntitlementGatesTest,BackendV21ApiContractCatalogTest -Dsurefire.failIfNoSpecifiedTests=false`
   - `pnpm --dir frontend-v2 test`
   - `pnpm --dir frontend-v2 typecheck`
