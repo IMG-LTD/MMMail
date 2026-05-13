@@ -7,6 +7,10 @@ paths:
     get: {summary: Read v2.1 platform contract catalog, x-permission: ["platform:contracts:read"], x-entitlement: community, x-design-source: docs/MMMail/UI/Admin, responses: {"200": {description: ok}}}
   /api/v2/platform/capabilities:
     get: {summary: Read v2.1 platform capabilities, x-permission: ["platform:capabilities:read"], x-entitlement: community, x-design-source: docs/MMMail/UI/Admin, responses: {"200": {description: ok}}}
+  /api/v2/ai-platform/capabilities:
+    get: {summary: Read AI platform capabilities, x-permission: ["ai-platform:capabilities:read"], x-entitlement: community, x-design-source: docs/MMMail/UI/Admin, responses: {"200": {description: ok}}}
+  /api/v2/mcp/registry:
+    get: {summary: Read MCP registry capabilities, x-permission: ["mcp:registry:read"], x-entitlement: community, x-design-source: docs/MMMail/UI/Admin, responses: {"200": {description: ok}}}
   /api/v2/workspace/summary:
     get: {summary: Read workspace summary, x-permission: ["workspace:read"], x-entitlement: community, x-design-source: docs/MMMail/UI/首页, responses: {"200": {description: ok}}}
   /api/v2/workspace/activity:
@@ -224,14 +228,28 @@ paths:
     post: {summary: Login, x-permission: ["auth:public"], x-entitlement: community, x-design-source: docs/MMMail/UI/首页, responses: {"200": {description: ok}}}
   /api/v2/auth/register:
     post: {summary: Register, x-permission: ["auth:public"], x-entitlement: community, x-design-source: docs/MMMail/UI/首页, responses: {"200": {description: ok}}}
+  /api/v2/auth/refresh:
+    post: {summary: Refresh auth session, x-permission: ["auth:public"], x-entitlement: community, x-design-source: docs/MMMail/UI/首页, responses: {"200": {description: ok}}}
+  /api/v2/auth/logout-all:
+    post: {summary: Logout all sessions, x-permission: ["auth:sessions:write"], x-entitlement: community, x-design-source: docs/MMMail/UI/首页, responses: {"200": {description: ok}}}
+  /api/v2/auth/sessions:
+    get: {summary: List auth sessions, x-permission: ["auth:sessions:read"], x-entitlement: community, x-design-source: docs/MMMail/UI/首页, responses: {"200": {description: ok}}}
+  /api/v2/auth/sessions/{id}/revoke:
+    post: {summary: Revoke auth session, x-permission: ["auth:sessions:write"], x-entitlement: community, x-design-source: docs/MMMail/UI/首页, responses: {"200": {description: ok}}}
   /api/v2/share/capabilities:
     get: {summary: Read public share capabilities, x-permission: ["share:public"], x-entitlement: community, x-design-source: docs/MMMail/UI/首页, responses: {"200": {description: ok}}}
   /api/v2/public-share/capabilities:
     get: {summary: Read public share compatibility capabilities, x-permission: ["share:public"], x-entitlement: community, x-design-source: docs/MMMail/UI/首页, responses: {"200": {description: ok}}}
   /api/v2/share/mail/{token}:
     get: {summary: Read public mail share, x-permission: ["share:public"], x-entitlement: community, x-design-source: docs/MMMail/UI/首页, responses: {"200": {description: ok}}}
+  /api/v2/share/mail/{token}/attachments/{id}/download:
+    get: {summary: Download public mail attachment, x-permission: ["share:public"], x-entitlement: community, x-design-source: docs/MMMail/UI/首页, responses: {"200": {description: ok}}}
   /api/v2/share/drive/{token}:
     get: {summary: Read public drive share, x-permission: ["share:public"], x-entitlement: community, x-design-source: docs/MMMail/UI/首页, responses: {"200": {description: ok}}}
+  /api/v2/share/drive/{token}/items:
+    get: {summary: List public drive share items, x-permission: ["share:public"], x-entitlement: community, x-design-source: docs/MMMail/UI/首页, responses: {"200": {description: ok}}}
+  /api/v2/share/drive/{token}/items/{id}/download:
+    get: {summary: Download public drive share item, x-permission: ["share:public"], x-entitlement: community, x-design-source: docs/MMMail/UI/首页, responses: {"200": {description: ok}}}
   /api/v2/share/pass/{token}:
     get: {summary: Read public pass share, x-permission: ["share:public"], x-entitlement: community, x-design-source: docs/MMMail/UI/首页, responses: {"200": {description: ok}}}
   /api/v2/system/status:

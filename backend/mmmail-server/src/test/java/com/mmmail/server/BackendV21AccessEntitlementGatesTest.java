@@ -56,8 +56,15 @@ class BackendV21AccessEntitlementGatesTest {
         assertThat(contracts).containsKeys(
                 "GET /api/v2/platform/contracts",
                 "GET /api/v2/platform/capabilities",
+                "GET /api/v2/ai-platform/capabilities",
+                "GET /api/v2/mcp/registry",
+                "POST /api/v2/auth/refresh",
+                "GET /api/v2/auth/sessions",
                 "GET /api/v2/share/capabilities",
-                "GET /api/v2/public-share/capabilities"
+                "GET /api/v2/public-share/capabilities",
+                "GET /api/v2/share/mail/:token/attachments/:id/download",
+                "GET /api/v2/share/drive/:token/items",
+                "GET /api/v2/share/drive/:token/items/:id/download"
         );
         for (V21ApiContract contract : contracts.values()) {
             assertThat(contract.permissions()).isNotEmpty();
@@ -71,6 +78,12 @@ class BackendV21AccessEntitlementGatesTest {
                 .hasValueSatisfying(contract -> assertThat(contract.path()).isEqualTo("/api/v2/docs/:id"));
         assertThat(matcher.match("GET", "/api/v2/share/pass/public-token"))
                 .hasValueSatisfying(contract -> assertThat(contract.path()).isEqualTo("/api/v2/share/pass/:token"));
+        assertThat(matcher.match("POST", "/api/v2/auth/sessions/session-1/revoke"))
+                .hasValueSatisfying(contract -> assertThat(contract.path()).isEqualTo("/api/v2/auth/sessions/:id/revoke"));
+        assertThat(matcher.match("GET", "/api/v2/share/mail/public-token/attachments/12/download"))
+                .hasValueSatisfying(contract -> assertThat(contract.path()).isEqualTo("/api/v2/share/mail/:token/attachments/:id/download"));
+        assertThat(matcher.match("GET", "/api/v2/share/drive/public-token/items/15/download"))
+                .hasValueSatisfying(contract -> assertThat(contract.path()).isEqualTo("/api/v2/share/drive/:token/items/:id/download"));
         assertThat(matcher.match("GET", "/api/v2/unknown")).isEmpty();
     }
 
@@ -159,8 +172,13 @@ class BackendV21AccessEntitlementGatesTest {
         assertThat(openApi)
                 .contains("/api/v2/platform/contracts:")
                 .contains("/api/v2/platform/capabilities:")
+                .contains("/api/v2/ai-platform/capabilities:")
+                .contains("/api/v2/mcp/registry:")
                 .contains("/api/v2/share/capabilities:")
-                .contains("/api/v2/public-share/capabilities:");
+                .contains("/api/v2/public-share/capabilities:")
+                .contains("/api/v2/share/mail/{token}/attachments/{id}/download:")
+                .contains("/api/v2/share/drive/{token}/items:")
+                .contains("/api/v2/share/drive/{token}/items/{id}/download:");
     }
 
     private AccessDecision decisionFor(String method, String path) {

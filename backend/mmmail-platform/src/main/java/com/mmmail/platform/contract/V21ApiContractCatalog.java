@@ -28,7 +28,8 @@ public record V21ApiContractCatalog(String version, List<V21ApiContract> contrac
                 docsContracts(), sheetsContracts(), labsContracts(), passContracts(),
                 collaborationContracts(), commandCenterContracts(), notificationContracts(),
                 adminContracts(), billingContracts(), entitlementsContracts(),
-                platformContracts(), settingsContracts(), publicAuthShareSystemContracts()
+                platformContracts(), aiPlatformContracts(), mcpContracts(),
+                settingsContracts(), publicAuthShareSystemContracts()
         ).flatMap(List::stream).toList();
         return new V21ApiContractCatalog("v2.1", contracts);
     }
@@ -228,6 +229,18 @@ public record V21ApiContractCatalog(String version, List<V21ApiContract> contrac
         });
     }
 
+    private static List<V21ApiContract> aiPlatformContracts() {
+        return module("ai-platform", "docs/MMMail/UI/Admin", new String[][]{
+                {"GET", "/api/v2/ai-platform/capabilities", "AiPlatformCapabilities", COMMUNITY, "ai-platform:capabilities:read"}
+        });
+    }
+
+    private static List<V21ApiContract> mcpContracts() {
+        return module("mcp", "docs/MMMail/UI/Admin", new String[][]{
+                {"GET", "/api/v2/mcp/registry", "McpRegistryCapabilities", COMMUNITY, "mcp:registry:read"}
+        });
+    }
+
     private static List<V21ApiContract> settingsContracts() {
         return module("settings", "docs/MMMail/UI/Setting", new String[][]{
                 {"GET", "/api/v2/settings/profile", "UserPreference", COMMUNITY, "settings:read"},
@@ -248,13 +261,20 @@ public record V21ApiContractCatalog(String version, List<V21ApiContract> contrac
         return Stream.of(
                 module("identity", "docs/MMMail/UI/首页", new String[][]{
                         {"POST", "/api/v2/auth/login", "AuthPayload", COMMUNITY, "auth:public"},
-                        {"POST", "/api/v2/auth/register", "AuthPayload", COMMUNITY, "auth:public"}
+                        {"POST", "/api/v2/auth/register", "AuthPayload", COMMUNITY, "auth:public"},
+                        {"POST", "/api/v2/auth/refresh", "AuthPayload", COMMUNITY, "auth:public"},
+                        {"POST", "/api/v2/auth/logout-all", "Void", COMMUNITY, "auth:sessions:write"},
+                        {"GET", "/api/v2/auth/sessions", "UserSession[]", COMMUNITY, "auth:sessions:read"},
+                        {"POST", "/api/v2/auth/sessions/:id/revoke", "Void", COMMUNITY, "auth:sessions:write"}
                 }),
                 module("public-share", "docs/MMMail/UI/首页", new String[][]{
                         {"GET", "/api/v2/share/capabilities", "PublicShareCapabilities", COMMUNITY, "share:public"},
                         {"GET", "/api/v2/public-share/capabilities", "PublicShareCapabilities", COMMUNITY, "share:public"},
                         {"GET", "/api/v2/share/mail/:token", "PublicMailShare", COMMUNITY, "share:public"},
+                        {"GET", "/api/v2/share/mail/:token/attachments/:id/download", "PublicShareDownload", COMMUNITY, "share:public"},
                         {"GET", "/api/v2/share/drive/:token", "PublicDriveShareMetadata", COMMUNITY, "share:public"},
+                        {"GET", "/api/v2/share/drive/:token/items", "DriveItem[]", COMMUNITY, "share:public"},
+                        {"GET", "/api/v2/share/drive/:token/items/:id/download", "PublicShareDownload", COMMUNITY, "share:public"},
                         {"GET", "/api/v2/share/pass/:token", "PublicPassShare", COMMUNITY, "share:public"}
                 }),
                 module("system", "docs/MMMail/UI/首页", new String[][]{

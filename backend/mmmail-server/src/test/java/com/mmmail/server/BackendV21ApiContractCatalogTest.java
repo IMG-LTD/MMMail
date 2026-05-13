@@ -48,6 +48,8 @@ class BackendV21ApiContractCatalogTest {
             "billing",
             "entitlements",
             "platform",
+            "ai-platform",
+            "mcp",
             "settings",
             "identity",
             "public-share",
@@ -97,8 +99,16 @@ class BackendV21ApiContractCatalogTest {
         assertContract(contractsByIdentity, "GET /api/v2/entitlements/matrix", "entitlements", "EntitlementMatrix", "community");
         assertContract(contractsByIdentity, "GET /api/v2/platform/contracts", "platform", "V21ApiContractCatalog", "community");
         assertContract(contractsByIdentity, "GET /api/v2/platform/capabilities", "platform", "PlatformCapabilities", "community");
+        assertContract(contractsByIdentity, "GET /api/v2/ai-platform/capabilities", "ai-platform", "AiPlatformCapabilities", "community");
+        assertContract(contractsByIdentity, "GET /api/v2/mcp/registry", "mcp", "McpRegistryCapabilities", "community");
+        assertContract(contractsByIdentity, "POST /api/v2/auth/refresh", "identity", "AuthPayload", "community");
+        assertContract(contractsByIdentity, "GET /api/v2/auth/sessions", "identity", "UserSession[]", "community");
+        assertContract(contractsByIdentity, "POST /api/v2/auth/sessions/:id/revoke", "identity", "Void", "community");
         assertContract(contractsByIdentity, "GET /api/v2/share/capabilities", "public-share", "PublicShareCapabilities", "community");
         assertContract(contractsByIdentity, "GET /api/v2/public-share/capabilities", "public-share", "PublicShareCapabilities", "community");
+        assertContract(contractsByIdentity, "GET /api/v2/share/mail/:token/attachments/:id/download", "public-share", "PublicShareDownload", "community");
+        assertContract(contractsByIdentity, "GET /api/v2/share/drive/:token/items", "public-share", "DriveItem[]", "community");
+        assertContract(contractsByIdentity, "GET /api/v2/share/drive/:token/items/:id/download", "public-share", "PublicShareDownload", "community");
 
         for (V21ApiContract contract : catalog.contracts()) {
             assertContractMetadata(contract);
@@ -113,7 +123,7 @@ class BackendV21ApiContractCatalogTest {
                 .header("Authorization", "Bearer " + token))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.data.version").value("v2.1"))
-                .andExpect(jsonPath("$.data.contracts.length()").value(127))
+                .andExpect(jsonPath("$.data.contracts.length()").value(136))
                 .andExpect(jsonPath("$.data.contracts[0].method").value("GET"))
                 .andExpect(jsonPath("$.data.contracts[0].path").value("/api/v2/workspace/summary"));
     }
@@ -141,7 +151,16 @@ class BackendV21ApiContractCatalogTest {
                 .contains("x-permission: [\"entitlements:read\"]")
                 .contains("/api/v2/platform/contracts:")
                 .contains("x-permission: [\"platform:contracts:read\"]")
+                .contains("/api/v2/ai-platform/capabilities:")
+                .contains("x-permission: [\"ai-platform:capabilities:read\"]")
+                .contains("/api/v2/mcp/registry:")
+                .contains("x-permission: [\"mcp:registry:read\"]")
+                .contains("/api/v2/auth/refresh:")
+                .contains("/api/v2/auth/sessions:")
                 .contains("/api/v2/share/capabilities:")
+                .contains("/api/v2/share/mail/{token}/attachments/{id}/download:")
+                .contains("/api/v2/share/drive/{token}/items:")
+                .contains("/api/v2/share/drive/{token}/items/{id}/download:")
                 .contains("/api/v2/drive/files/{id}/share:")
                 .contains("List drive shares")
                 .contains("/api/v2/settings/profile:")
