@@ -19,6 +19,29 @@ export interface CalendarEvent {
   canDelete: boolean
 }
 
+export interface CalendarAttendeeInput {
+  displayName?: string
+  email: string
+}
+
+export interface CalendarEventMutationPayload {
+  allDay?: boolean
+  attendees: CalendarAttendeeInput[]
+  description?: string
+  endAt: string
+  location?: string
+  reminderMinutes?: number | null
+  startAt: string
+  timezone?: string
+  title: string
+}
+
+export interface CalendarEventMutationResult extends Omit<CalendarEvent, 'attendeeCount'> {
+  attendees: CalendarAttendeeInput[]
+  createdAt: string
+  description: string | null
+}
+
 export interface CalendarAgendaItem {
   id: string
   title: string
@@ -102,6 +125,18 @@ export function listCalendarAgenda(token: string, days = 7) {
   })
 }
 
+export function createCalendarEvent(token: string, body: CalendarEventMutationPayload) {
+  return httpClient.post<ApiResponse<CalendarEventMutationResult>>('/api/v2/calendar/events', { body, token })
+}
+
+export function updateCalendarEvent(token: string, eventId: string, body: CalendarEventMutationPayload) {
+  return httpClient.patch<ApiResponse<CalendarEventMutationResult>>(`/api/v2/calendar/events/${eventId}`, { body, token })
+}
+
+export function deleteCalendarEvent(token: string, eventId: string) {
+  return httpClient.delete<ApiResponse<null>>(`/api/v2/calendar/events/${eventId}`, { token })
+}
+
 export function queryCalendarAvailability(token: string, body: QueryCalendarAvailabilityBody) {
   return httpClient.post<ApiResponse<CalendarAvailability>>('/api/v2/calendar/availability', {
     token,
@@ -122,5 +157,5 @@ export function readCalendarSettings(token: string) {
 }
 
 export function updateCalendarSettings(token: string, body: CalendarSettings) {
-  return httpClient.put<ApiResponse<CalendarSettings>>('/api/v2/calendar/settings', { body, token })
+  return httpClient.patch<ApiResponse<CalendarSettings>>('/api/v2/calendar/settings', { body, token })
 }

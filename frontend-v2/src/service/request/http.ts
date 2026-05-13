@@ -33,6 +33,26 @@ async function parseResponse<T>(response: Response) {
   return payload ? (JSON.parse(payload) as T) : (undefined as T)
 }
 
+async function createHttpError(response: Response) {
+  const payload = await response.text()
+  const message = resolveErrorMessage(response, payload)
+  return new Error(message)
+}
+
+function resolveErrorMessage(response: Response, payload: string) {
+  if (!payload) {
+    return `HTTP ${response.status} ${response.statusText}`
+  }
+  try {
+    const parsed = JSON.parse(payload) as { message?: unknown }
+    return typeof parsed.message === 'string' && parsed.message
+      ? parsed.message
+      : `HTTP ${response.status} ${response.statusText}`
+  } catch {
+    return `HTTP ${response.status} ${response.statusText}`
+  }
+}
+
 async function request<T>(path: string, options: RequestOptions = {}) {
   const headers = new Headers(options.headers)
 
@@ -55,7 +75,7 @@ async function request<T>(path: string, options: RequestOptions = {}) {
   })
 
   if (!response.ok) {
-    throw new Error(`HTTP ${response.status} ${response.statusText}`)
+    throw await createHttpError(response)
   }
 
   return parseResponse<T>(response)
@@ -78,7 +98,7 @@ async function requestBlob<T extends boolean = false>(path: string, options: Omi
   })
 
   if (!response.ok) {
-    throw new Error(`HTTP ${response.status} ${response.statusText}`)
+    throw await createHttpError(response)
   }
 
   return {

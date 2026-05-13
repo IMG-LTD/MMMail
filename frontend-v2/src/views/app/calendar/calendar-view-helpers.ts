@@ -69,12 +69,16 @@ function fromEvent(item: CalendarEvent): CalendarSurfaceItem {
   return {
     allDay: item.allDay,
     attendeeCount: item.attendeeCount,
+    canDelete: item.canDelete,
+    canEdit: item.canEdit,
     endAt: item.endAt,
     id: item.id,
     location: item.location,
     ownerEmail: item.ownerEmail,
+    reminderMinutes: item.reminderMinutes,
     shared: item.shared,
     startAt: item.startAt,
+    timezone: item.timezone,
     title: item.title
   }
 }

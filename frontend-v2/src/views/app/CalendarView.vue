@@ -2,12 +2,15 @@
 import { computed, onMounted, ref, watch } from 'vue'
 import { lt, useLocaleText } from '@/locales'
 import {
+  createCalendarEvent,
   listCalendarAgenda,
   listCalendarEvents,
   queryCalendarAvailability,
+  updateCalendarEvent,
   type CalendarAgendaItem,
   type CalendarAvailability,
-  type CalendarEvent
+  type CalendarEvent,
+  type CalendarEventMutationPayload
 } from '@/service/api/calendar'
 import { useCopilotPanel } from '@/shared/composables/useCopilotPanel'
 import { useAuthStore } from '@/store/modules/auth'
@@ -25,7 +28,7 @@ import {
   startOfWeek,
   workWeekLength
 } from './calendar/calendar-view-helpers'
-import type { CalendarDayCell, CalendarSurfaceItem, CalendarTimeSlot, CalendarViewMode, PositionedCalendarEvent } from './calendar/calendar-types'
+import type { CalendarDayCell, CalendarEventDraft, CalendarSurfaceItem, CalendarTimeSlot, CalendarViewMode, PositionedCalendarEvent } from './calendar/calendar-types'
 import './calendar-view.css'
 
 const { tr } = useLocaleText()
@@ -165,8 +168,42 @@ function openEventDrawer(itemId = '') {
   eventDrawerOpen.value = true
 }
 
-function saveEventDraft() {
-  calendarSaveError.value = 'Calendar save requires an API endpoint in the next backend slice.'
+async function saveEventDraft(draft: CalendarEventDraft) {
+  const token = authStore.accessToken
+  if (!token) {
+    calendarSaveError.value = 'Sign in to save calendar events.'
+    return
+  }
+  try {
+    calendarSaveError.value = ''
+    const payload = buildCalendarEventPayload(draft)
+    const response = selectedItem.value?.id
+      ? await updateCalendarEvent(token, selectedItem.value.id, payload)
+      : await createCalendarEvent(token, payload)
+    selectedEventId.value = response.data.id
+    eventDrawerOpen.value = false
+    await loadCalendar()
+  } catch (error) {
+    calendarSaveError.value = resolveErrorMessage(error)
+  }
+}
+
+function buildCalendarEventPayload(draft: CalendarEventDraft): CalendarEventMutationPayload {
+  return {
+    allDay: draft.allDay,
+    attendees: [],
+    description: draft.description,
+    endAt: normalizeDraftDateTime(draft.endAt),
+    location: draft.location,
+    reminderMinutes: draft.reminderMinutes,
+    startAt: normalizeDraftDateTime(draft.startAt),
+    timezone: draft.timezone,
+    title: draft.title
+  }
+}
+
+function normalizeDraftDateTime(value: string) {
+  return value.length === 16 ? `${value}:00` : value
 }
 
 function createScheduleDays() {

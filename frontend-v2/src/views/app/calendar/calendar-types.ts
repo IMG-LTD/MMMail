@@ -5,12 +5,27 @@ export type CalendarViewMode = 'month' | 'week' | 'day' | 'agenda'
 export interface CalendarSurfaceItem {
   allDay: boolean
   attendeeCount: number
+  canDelete: boolean
+  canEdit: boolean
   endAt: string
   id: string
   location: string | null
   ownerEmail: string | null
+  reminderMinutes: number | null
   shared: boolean
   startAt: string
+  timezone: string
+  title: string
+}
+
+export interface CalendarEventDraft {
+  allDay: boolean
+  description: string
+  endAt: string
+  location: string
+  reminderMinutes: number | null
+  startAt: string
+  timezone: string
   title: string
 }
 

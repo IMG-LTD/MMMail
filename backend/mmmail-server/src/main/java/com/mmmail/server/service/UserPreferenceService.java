@@ -10,6 +10,7 @@ import com.mmmail.server.model.entity.UserAccount;
 import com.mmmail.server.model.entity.UserPreference;
 import com.mmmail.server.model.enums.MailAddressMode;
 import com.mmmail.server.model.vo.UserPreferenceVo;
+import com.mmmail.server.util.CalendarTimezoneResolver;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -55,6 +56,20 @@ public class UserPreferenceService {
     }
 
     @Transactional
+    public UserPreferenceVo updateCalendarTimezone(Long userId, String timezone, String ipAddress) {
+        UserAccount user = requireUser(userId);
+        LocalDateTime now = LocalDateTime.now();
+        UserPreference preference = findOrCreatePreference(userId);
+        preference.setTimezone(CalendarTimezoneResolver.normalizeOrDefault(timezone, "UTC", "Calendar timezone"));
+        applyAuthenticatorDefaults(preference);
+        preference.setUpdatedAt(now);
+        savePreference(preference, now);
+
+        auditService.record(userId, "CALENDAR_SETTINGS_UPDATED", "Timezone updated", ipAddress);
+        return toVo(user, preference);
+    }
+
+    @Transactional
     public UserPreferenceVo updateProfile(Long userId, UpdateProfileRequest request, String ipAddress) {
         UserAccount user = requireUser(userId);
         LocalDateTime now = LocalDateTime.now();
@@ -85,17 +100,20 @@ public class UserPreferenceService {
         ));
         applyAuthenticatorDefaults(preference);
         preference.setUpdatedAt(now);
+        savePreference(preference, now);
 
+        auditService.record(userId, "PROFILE_UPDATED", "User preferences updated", ipAddress);
+        return toVo(user, preference);
+    }
+
+    private void savePreference(UserPreference preference, LocalDateTime now) {
         if (preference.getId() == null) {
             preference.setCreatedAt(now);
             preference.setDeleted(0);
             userPreferenceMapper.insert(preference);
-        } else {
-            userPreferenceMapper.updateById(preference);
+            return;
         }
-
-        auditService.record(userId, "PROFILE_UPDATED", "User preferences updated", ipAddress);
-        return toVo(user, preference);
+        userPreferenceMapper.updateById(preference);
     }
 
     private UserAccount requireUser(Long userId) {

@@ -75,7 +75,7 @@ public record V21ApiContractCatalog(String version, List<V21ApiContract> contrac
                 {"POST", "/api/v2/calendar/events", "CalendarEvent", COMMUNITY, "calendar:write"},
                 {"PATCH", "/api/v2/calendar/events/:id", "CalendarEvent", COMMUNITY, "calendar:write"},
                 {"DELETE", "/api/v2/calendar/events/:id", "Void", COMMUNITY, "calendar:write"},
-                {"GET", "/api/v2/calendar/availability", "CalendarAvailability", PREMIUM, "calendar:read"},
+                {"POST", "/api/v2/calendar/availability", "CalendarAvailability", COMMUNITY, "calendar:read"},
                 {"GET", "/api/v2/calendar/resources", "CalendarResource[]", PREMIUM, "calendar:resources:read"},
                 {"POST", "/api/v2/calendar/bookings", "CalendarEvent", PREMIUM, "calendar:resources:book"},
                 {"GET", "/api/v2/calendar/settings", "CalendarSettings", COMMUNITY, "calendar:read"},

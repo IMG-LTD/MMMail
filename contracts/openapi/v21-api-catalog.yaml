@@ -41,7 +41,7 @@ paths:
     patch: {summary: Update calendar event, x-permission: ["calendar:write"], x-entitlement: community, x-design-source: docs/MMMail/UI/日历, responses: {"200": {description: ok}}}
     delete: {summary: Delete calendar event, x-permission: ["calendar:write"], x-entitlement: community, x-design-source: docs/MMMail/UI/日历, responses: {"200": {description: ok}}}
   /api/v2/calendar/availability:
-    get: {summary: Read calendar availability, x-permission: ["calendar:read"], x-entitlement: premium, x-design-source: docs/MMMail/UI/日历, responses: {"200": {description: ok}}}
+    post: {summary: Query calendar availability, x-permission: ["calendar:read"], x-entitlement: community, x-design-source: docs/MMMail/UI/日历, responses: {"200": {description: ok}}}
   /api/v2/calendar/resources:
     get: {summary: List calendar resources, x-permission: ["calendar:resources:read"], x-entitlement: premium, x-design-source: docs/MMMail/UI/日历, responses: {"200": {description: ok}}}
   /api/v2/calendar/bookings:
