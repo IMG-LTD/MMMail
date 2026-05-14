@@ -57,7 +57,7 @@ defineEmits<{
       </div>
       <button
         v-for="event in positionedEvents"
-        :key="event.id"
+        :key="event.key"
         class="calendar-board__event calendar-event-trigger"
         :class="{ 'calendar-board__event--selected': event.selected, 'calendar-board__event--shared': event.shared }"
         :style="event.style"

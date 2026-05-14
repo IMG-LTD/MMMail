@@ -9,7 +9,14 @@ interface RequestOptions {
   token?: string
 }
 
+type UnauthorizedHandler = () => void
+
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || ''
+let unauthorizedHandler: UnauthorizedHandler | null = null
+
+export function registerUnauthorizedHandler(handler: UnauthorizedHandler) {
+  unauthorizedHandler = handler
+}
 
 function createRequestUrl(path: string, query?: RequestOptions['query']) {
   const baseUrl = API_BASE_URL || window.location.origin
@@ -75,6 +82,7 @@ async function request<T>(path: string, options: RequestOptions = {}) {
   })
 
   if (!response.ok) {
+    notifyUnauthorized(response, options)
     throw await createHttpError(response)
   }
 
@@ -98,6 +106,7 @@ async function requestBlob<T extends boolean = false>(path: string, options: Omi
   })
 
   if (!response.ok) {
+    notifyUnauthorized(response, options)
     throw await createHttpError(response)
   }
 
@@ -105,6 +114,12 @@ async function requestBlob<T extends boolean = false>(path: string, options: Omi
     blob: await response.blob(),
     contentDisposition: response.headers.get('Content-Disposition') || '',
     contentType: response.headers.get('Content-Type') || ''
+  }
+}
+
+function notifyUnauthorized(response: Response, options: RequestOptions) {
+  if (response.status === 401 && options.token) {
+    unauthorizedHandler?.()
   }
 }
 

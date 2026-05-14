@@ -29,7 +29,7 @@
 所有自托管路径都应从环境模板开始：
 1. 复制模板：`cp .env.example .env`
 2. 编辑 `.env` 并至少替换这些占位值：
-   - `MMMAIL_JWT_SECRET`
+   - `MMMAIL_JWT_SECRET`，或设置 `MMMAIL_JWT_SECRET_FILE` 指向容器内挂载的 secret 文件
    - `SPRING_DATASOURCE_PASSWORD`
    - `SPRING_REDIS_PASSWORD`
    - `MYSQL_ROOT_PASSWORD`

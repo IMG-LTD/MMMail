@@ -46,6 +46,7 @@ export interface CalendarTimeSlot {
 
 export interface PositionedCalendarEvent {
   id: string
+  key: string
   meta: string
   selected: boolean
   shared: boolean

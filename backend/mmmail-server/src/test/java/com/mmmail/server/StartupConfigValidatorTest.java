@@ -5,6 +5,9 @@ import org.junit.jupiter.api.Test;
 import org.springframework.mock.env.MockEnvironment;
 import org.springframework.test.util.ReflectionTestUtils;
 
+import java.nio.file.Files;
+import java.nio.file.Path;
+
 import static org.assertj.core.api.Assertions.assertThatCode;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
@@ -27,10 +30,22 @@ class StartupConfigValidatorTest {
                 .hasMessageContaining("spring.cloud.nacos.password");
     }
 
+    @Test
+    void acceptsJwtSecretFromFileWhenInlineSecretIsBlank() throws Exception {
+        Path secretFile = Files.createTempFile("mmmail-jwt-secret", ".txt");
+        Files.writeString(secretFile, "fedcba9876543210fedcba9876543210\n");
+        StartupConfigValidator validator = newValidator(false, "", "");
+        setField(validator, "jwtSecret", "");
+        setField(validator, "jwtSecretFile", secretFile.toString());
+
+        assertThatCode(validator::validate).doesNotThrowAnyException();
+    }
+
     private StartupConfigValidator newValidator(boolean nacosEnabled, String username, String password) {
         MockEnvironment environment = new MockEnvironment();
         StartupConfigValidator validator = new StartupConfigValidator(environment);
         setField(validator, "jwtSecret", "0123456789abcdef0123456789abcdef");
+        setField(validator, "jwtSecretFile", "");
         setField(validator, "corsAllowedOrigins", "http://127.0.0.1:3001");
         setField(validator, "datasourceUrl", "jdbc:mysql://127.0.0.1:3306/mmmail");
         setField(validator, "datasourceUsername", "mmmail_app");

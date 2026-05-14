@@ -29,7 +29,7 @@ Mode boundaries:
 All self-hosted paths should start from the environment template:
 1. Copy the template: `cp .env.example .env`
 2. Edit `.env` and replace at least these placeholders:
-   - `MMMAIL_JWT_SECRET`
+   - `MMMAIL_JWT_SECRET`, or set `MMMAIL_JWT_SECRET_FILE` to a mounted secret file inside the container
    - `SPRING_DATASOURCE_PASSWORD`
    - `SPRING_REDIS_PASSWORD`
    - `MYSQL_ROOT_PASSWORD`

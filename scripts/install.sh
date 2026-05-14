@@ -93,6 +93,23 @@ require_env_boolean_equals() {
   fi
 }
 
+require_jwt_secret_source() {
+  local secret
+  local secret_file
+  secret="$(read_env_value MMMAIL_JWT_SECRET)"
+  secret_file="$(read_env_value MMMAIL_JWT_SECRET_FILE)"
+
+  if [[ -n "$secret" && "$secret" != replace-with-* ]]; then
+    return
+  fi
+  if [[ -n "$secret_file" && "$secret_file" != replace-with-* ]]; then
+    return
+  fi
+
+  printf '%s\n' "MMMAIL_JWT_SECRET or MMMAIL_JWT_SECRET_FILE is required in $ENV_FILE" >&2
+  exit 1
+}
+
 ensure_env_file() {
   if [[ -f "$ENV_FILE" ]]; then
     return
@@ -133,7 +150,7 @@ check_env_for_mode() {
   local mode="$1"
 
   require_env_value MMMAIL_AUTH_CSRF_COOKIE_NAME
-  require_env_value MMMAIL_JWT_SECRET
+  require_jwt_secret_source
   require_env_value SPRING_DATASOURCE_USERNAME
   require_env_value SPRING_DATASOURCE_PASSWORD
   require_env_value SPRING_REDIS_PASSWORD

@@ -33,7 +33,6 @@ done < "$ENV_FILE"
 
 required_keys=(
   MMMAIL_AUTH_CSRF_COOKIE_NAME
-  MMMAIL_JWT_SECRET
   SPRING_DATASOURCE_USERNAME
   SPRING_DATASOURCE_PASSWORD
   SPRING_REDIS_PASSWORD
@@ -52,6 +51,19 @@ if [[ "$nacos_enabled" == "true" ]]; then
 fi
 
 errors=()
+
+validate_jwt_secret_source() {
+  local secret="${MMMAIL_JWT_SECRET:-}"
+  local secret_file="${MMMAIL_JWT_SECRET_FILE:-}"
+  if [[ -n "$secret" && "$secret" != replace-with-* ]]; then
+    return
+  fi
+  if [[ -n "$secret_file" && "$secret_file" != replace-with-* ]]; then
+    return
+  fi
+  errors+=("MMMAIL_JWT_SECRET or MMMAIL_JWT_SECRET_FILE is required")
+}
+
 for key in "${required_keys[@]}"; do
   value="${!key:-}"
   if [[ -z "$value" ]]; then
@@ -62,6 +74,8 @@ for key in "${required_keys[@]}"; do
     errors+=("$key still uses placeholder value")
   fi
 done
+
+validate_jwt_secret_source
 
 sql_init_mode="${SPRING_SQL_INIT_MODE:-never}"
 if [[ "$sql_init_mode" != "never" ]]; then

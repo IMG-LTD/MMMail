@@ -29,6 +29,7 @@ public class V21DriveRuntimeBridgeService {
     private static final String SHARE_STATUS_ACTIVE = "ACTIVE";
     private static final String DEFAULT_BINARY_MIME = "application/octet-stream";
     private static final int DELETED_FLAG_ACTIVE = 0;
+    private static final int MAX_LIST_LIMIT = 100;
     private static final long EMPTY_SIZE_BYTES = 0L;
 
     private final DriveService driveService;
@@ -49,11 +50,11 @@ public class V21DriveRuntimeBridgeService {
     }
 
     public List<DriveItemVo> listFiles(Long userId, Long parentId, String keyword, Integer limit) {
-        return driveService.listItems(userId, parentId, keyword, ITEM_TYPE_FILE, limit);
+        return driveService.listItems(userId, parentId, keyword, ITEM_TYPE_FILE, normalizeListLimit(limit));
     }
 
     public List<DriveItemVo> listFolders(Long userId, Long parentId, String keyword, Integer limit) {
-        return driveService.listItems(userId, parentId, keyword, ITEM_TYPE_FOLDER, limit);
+        return driveService.listItems(userId, parentId, keyword, ITEM_TYPE_FOLDER, normalizeListLimit(limit));
     }
 
     public DriveUsageVo usage(Long userId, String ipAddress) {
@@ -109,6 +110,16 @@ public class V21DriveRuntimeBridgeService {
                 null,
                 null
         );
+    }
+
+    private static Integer normalizeListLimit(Integer limit) {
+        if (limit == null) {
+            return null;
+        }
+        if (limit < 1 || limit > MAX_LIST_LIMIT) {
+            throw new BizException(ErrorCode.INVALID_ARGUMENT, "Drive list limit must be between 1 and " + MAX_LIST_LIMIT);
+        }
+        return limit;
     }
 
     private DriveItem loadOwnedItem(Long userId, Long itemId) {

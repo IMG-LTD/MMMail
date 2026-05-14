@@ -100,6 +100,7 @@ placeholder_checks=(
   ".env.example|MMMAIL_NACOS_ENABLED=false"
   ".env.example|VITE_API_BASE_URL=http://localhost:8080"
   ".env.example|MMMAIL_JWT_SECRET=replace-with-32-plus-char-random-secret"
+  ".env.example|MMMAIL_JWT_SECRET_FILE="
   ".env.example|NACOS_AUTH_TOKEN=replace-with-32-plus-char-random-secret"
   "config/backend.env.example|MMMAIL_NACOS_ENABLED=true"
   "config/backend.env.example|SPRING_DATASOURCE_PASSWORD=replace-with-db-password"
@@ -107,13 +108,14 @@ placeholder_checks=(
   "config/backend.env.example|NACOS_PASSWORD=replace-with-nacos-password"
   "config/backend.env.example|NACOS_AUTH_TOKEN=replace-with-32-plus-char-random-secret"
   "config/backend.env.example|MMMAIL_JWT_SECRET=replace-with-32-plus-char-random-secret"
+  "config/backend.env.example|MMMAIL_JWT_SECRET_FILE="
   "backend/mmmail-server/src/main/resources/application-local.yml|      enabled: \${MMMAIL_NACOS_ENABLED:true}"
   "backend/mmmail-server/src/main/resources/application-local.yml|    password: \${SPRING_DATASOURCE_PASSWORD:replace-with-db-password}"
   "backend/mmmail-server/src/main/resources/application-local.yml|      password: \${SPRING_REDIS_PASSWORD:replace-with-redis-password}"
-  "backend/mmmail-server/src/main/resources/application-local.yml|    bootstrap-servers: \${SPRING_KAFKA_BOOTSTRAP_SERVERS:127.0.0.1:9092}"
   "backend/mmmail-server/src/main/resources/application-local.yml|      username: \${NACOS_USERNAME:replace-with-nacos-user}"
   "backend/mmmail-server/src/main/resources/application-local.yml|      password: \${NACOS_PASSWORD:replace-with-nacos-password}"
   "backend/mmmail-server/src/main/resources/application-local.yml|  jwt-secret: \${MMMAIL_JWT_SECRET:replace-with-32-plus-char-random-secret}"
+  "backend/mmmail-server/src/main/resources/application-local.yml|  jwt-secret-file: \${MMMAIL_JWT_SECRET_FILE:}"
 )
 for entry in "${placeholder_checks[@]}"; do
   file="${entry%%|*}"
@@ -129,6 +131,7 @@ required_env_keys=(
   VITE_API_BASE_URL
   MMMAIL_NACOS_ENABLED
   MMMAIL_JWT_SECRET
+  MMMAIL_JWT_SECRET_FILE
   MMMAIL_CORS_ALLOWED_ORIGINS
   SPRING_DATASOURCE_URL
   SPRING_DATASOURCE_USERNAME

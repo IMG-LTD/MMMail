@@ -139,6 +139,27 @@ function Require-EnvBooleanEquals {
   }
 }
 
+function Require-JwtSecretSource {
+  param([hashtable]$EnvMap)
+
+  $secret = ''
+  $secretFile = ''
+  if ($EnvMap.ContainsKey('MMMAIL_JWT_SECRET')) {
+    $secret = $EnvMap['MMMAIL_JWT_SECRET']
+  }
+  if ($EnvMap.ContainsKey('MMMAIL_JWT_SECRET_FILE')) {
+    $secretFile = $EnvMap['MMMAIL_JWT_SECRET_FILE']
+  }
+  if (-not [string]::IsNullOrWhiteSpace($secret) -and -not $secret.StartsWith('replace-with-')) {
+    return
+  }
+  if (-not [string]::IsNullOrWhiteSpace($secretFile) -and -not $secretFile.StartsWith('replace-with-')) {
+    return
+  }
+
+  throw "MMMAIL_JWT_SECRET or MMMAIL_JWT_SECRET_FILE is required in $EnvFile"
+}
+
 function Select-InstallMode {
   param([string]$RequestedMode)
 
@@ -170,7 +191,7 @@ function Check-EnvForMode {
   )
 
   Require-EnvValue $EnvMap 'MMMAIL_AUTH_CSRF_COOKIE_NAME'
-  Require-EnvValue $EnvMap 'MMMAIL_JWT_SECRET'
+  Require-JwtSecretSource $EnvMap
   Require-EnvValue $EnvMap 'SPRING_DATASOURCE_USERNAME'
   Require-EnvValue $EnvMap 'SPRING_DATASOURCE_PASSWORD'
   Require-EnvValue $EnvMap 'SPRING_REDIS_PASSWORD'

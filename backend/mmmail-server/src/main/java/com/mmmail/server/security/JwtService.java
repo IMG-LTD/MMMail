@@ -19,9 +19,10 @@ public class JwtService {
     private final long expireMinutes;
 
     public JwtService(
-            @Value("${mmmail.jwt-secret}") String jwtSecret,
+            JwtSecretProvider jwtSecretProvider,
             @Value("${mmmail.jwt-expire-minutes:15}") long expireMinutes
     ) {
+        String jwtSecret = jwtSecretProvider.resolve();
         this.secretKey = Keys.hmacShaKeyFor(jwtSecret.getBytes(StandardCharsets.UTF_8));
         this.expireMinutes = expireMinutes;
     }

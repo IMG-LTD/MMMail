@@ -12,6 +12,7 @@ import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
 
+import static org.hamcrest.Matchers.containsString;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
@@ -137,6 +138,23 @@ class BackendV21DriveRuntimeBridgeTest {
         mockMvc.perform(get("/api/v2/drive/uploads/" + fileId).header("Authorization", "Bearer " + token))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.data.name").value("v21-strict.bin"));
+    }
+
+    @Test
+    void v21DriveShouldRejectOversizedListLimit() throws Exception {
+        String token = register("v21-drive-limit-" + System.nanoTime() + "@mmmail.local", "V21 Drive Limit");
+
+        mockMvc.perform(get("/api/v2/drive/files")
+                        .header("Authorization", "Bearer " + token)
+                        .param("limit", "999999"))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.message", containsString("Drive list limit")));
+
+        mockMvc.perform(get("/api/v2/drive/folders")
+                        .header("Authorization", "Bearer " + token)
+                        .param("limit", "999999"))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.message", containsString("Drive list limit")));
     }
 
     private String createV21Upload(String token, String fileName, String parentId, long sizeBytes) throws Exception {

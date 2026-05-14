@@ -17,6 +17,7 @@ import { useAuthStore } from '@/store/modules/auth'
 import CalendarBoard from './calendar/CalendarBoard.vue'
 import CalendarEventDrawer from './calendar/CalendarEventDrawer.vue'
 import CalendarFilterSidebar from './calendar/CalendarFilterSidebar.vue'
+import { resolveCalendarTimeSlotHours, resolvePositionedCalendarEvents } from './calendar/calendar-layout'
 import {
   addDays,
   formatDateKey,
@@ -247,10 +248,8 @@ function resolveCalendarSummaries() {
 }
 
 function resolveTimeSlots() {
-  const boundaries = surfaceItems.value.flatMap(item => [parseDate(item.startAt), parseDate(item.endAt)]).filter((value): value is Date => Boolean(value))
-  const startHour = boundaries.length ? Math.max(0, Math.min(...boundaries.map(date => date.getHours())) - 1) : Math.max(0, new Date().getHours() - 1)
-  const endHour = boundaries.length ? Math.min(23, Math.max(...boundaries.map(date => date.getHours() + 1)) + 1) : Math.min(23, startHour + 5)
-  return Array.from({ length: Math.max(1, endHour - startHour + 1) }, (_, index) => createTimeSlot(startHour + index))
+  const hours = resolveCalendarTimeSlotHours(surfaceItems.value, new Date().getHours())
+  return hours.map(createTimeSlot)
 }
 
 function createTimeSlot(hour: number) {
@@ -260,29 +259,11 @@ function createTimeSlot(hour: number) {
 }
 
 function resolvePositionedEvents() {
-  return calendarEvents.value.map(toPositionedEvent).filter((item): item is PositionedCalendarEvent => Boolean(item))
-}
-
-function toPositionedEvent(item: CalendarEvent) {
-  const startAt = parseDate(item.startAt)
-  const endAt = parseDate(item.endAt)
-  if (!startAt || !endAt) return null
-  const dayIndex = scheduleDays.value.findIndex(day => day.key === formatDateKey(startAt))
-  if (dayIndex === -1) return null
-  return createPositionedEvent(item, startAt, endAt, dayIndex)
-}
-
-function createPositionedEvent(item: CalendarEvent, startAt: Date, endAt: Date, dayIndex: number) {
-  const rowStart = Math.max(2, Math.floor(startAt.getHours() - firstSlotHour.value) + 2)
-  const rowSpan = Math.max(1, Math.ceil(Math.max(0.5, endAt.getHours() - startAt.getHours())))
-  return {
-    id: item.id,
-    meta: formatDateWindow(item.startAt, item.endAt, item.allDay),
-    selected: item.id === selectedEventId.value,
-    shared: item.shared,
-    style: { gridColumn: String(dayIndex + 2), gridRow: `${rowStart} / span ${rowSpan}` },
-    title: item.title || 'Untitled event'
-  }
+  return resolvePositionedCalendarEvents(calendarEvents.value, {
+    days: scheduleDays.value,
+    firstSlotHour: firstSlotHour.value,
+    selectedEventId: selectedEventId.value
+  })
 }
 
 function resolveAgendaPreviewItems() {

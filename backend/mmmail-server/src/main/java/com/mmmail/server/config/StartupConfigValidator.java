@@ -1,5 +1,6 @@
 package com.mmmail.server.config;
 
+import com.mmmail.server.security.JwtSecretProvider;
 import jakarta.annotation.PostConstruct;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.env.Environment;
@@ -25,6 +26,9 @@ public class StartupConfigValidator {
 
     @Value("${mmmail.jwt-secret}")
     private String jwtSecret;
+
+    @Value("${mmmail.jwt-secret-file:}")
+    private String jwtSecretFile;
 
     @Value("${mmmail.cors-allowed-origins}")
     private String corsAllowedOrigins;
@@ -73,9 +77,9 @@ public class StartupConfigValidator {
     public void validate() {
         List<String> errors = new ArrayList<>();
         boolean prodProfile = Arrays.asList(environment.getActiveProfiles()).contains("prod");
+        String resolvedJwtSecret = resolveJwtSecret(errors);
 
-        validateNotBlank("mmmail.jwt-secret", jwtSecret, errors);
-        if (jwtSecret != null && jwtSecret.length() < 32) {
+        if (resolvedJwtSecret != null && resolvedJwtSecret.length() < 32) {
             errors.add("`mmmail.jwt-secret` must be at least 32 characters");
         }
 
@@ -86,7 +90,7 @@ public class StartupConfigValidator {
 
         validateCoreConfig(errors);
         validateNacosConfig(prodProfile, errors);
-        validateProdSecurity(prodProfile, errors);
+        validateProdSecurity(prodProfile, resolvedJwtSecret, errors);
 
         if (prodProfile && corsAllowedOrigins != null) {
             String normalized = corsAllowedOrigins.toLowerCase();
@@ -126,13 +130,22 @@ public class StartupConfigValidator {
         }
     }
 
-    private void validateProdSecurity(boolean prodProfile, List<String> errors) {
+    private String resolveJwtSecret(List<String> errors) {
+        try {
+            return JwtSecretProvider.resolve(jwtSecret, jwtSecretFile);
+        } catch (IllegalStateException exception) {
+            errors.add(exception.getMessage());
+            return null;
+        }
+    }
+
+    private void validateProdSecurity(boolean prodProfile, String resolvedJwtSecret, List<String> errors) {
         if (!prodProfile) {
             return;
         }
 
         validateNotForbidden("spring.datasource.password", datasourcePassword, errors);
-        validateNotForbidden("mmmail.jwt-secret", jwtSecret, errors);
+        validateNotForbidden("mmmail.jwt-secret", resolvedJwtSecret, errors);
     }
 
     private static void validateNotBlank(String field, String value, List<String> errors) {
