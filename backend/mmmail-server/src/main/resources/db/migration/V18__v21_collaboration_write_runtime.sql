@@ -54,6 +54,6 @@ create index idx_v21_collab_comment_owner_created
     on v21_collaboration_comment(owner_id, created_at);
 
 update system_release_metadata
-set schema_version = '13',
+set schema_version = '18',
     updated_at = current_timestamp
 where id = 1;

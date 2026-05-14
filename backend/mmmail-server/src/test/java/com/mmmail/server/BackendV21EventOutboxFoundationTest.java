@@ -189,7 +189,7 @@ class BackendV21EventOutboxFoundationTest {
     @Test
     void migrationShouldFreezeOutboxTableAndIndexes() throws Exception {
         Path root = resolveRepoRoot();
-        String migration = Files.readString(root.resolve("src/main/resources/db/migration/V11__platform_outbox_event.sql"));
+        String migration = Files.readString(root.resolve("src/main/resources/db/migration/V16__platform_outbox_event.sql"));
         String schema = Files.readString(root.resolve("src/main/resources/schema.sql"));
 
         assertThat(migration).contains("create table if not exists platform_outbox_event");

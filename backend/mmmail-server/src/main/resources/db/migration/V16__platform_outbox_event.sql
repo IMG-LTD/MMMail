@@ -29,6 +29,6 @@ create index idx_platform_outbox_tenant_created
     on platform_outbox_event(tenant_id, created_at);
 
 update system_release_metadata
-set schema_version = '11',
+set schema_version = '16',
     updated_at = current_timestamp
 where id = 1;

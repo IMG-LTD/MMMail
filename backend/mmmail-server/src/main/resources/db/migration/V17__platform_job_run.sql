@@ -34,6 +34,6 @@ create index idx_platform_job_run_tenant_created
     on platform_job_run(tenant_id, created_at);
 
 update system_release_metadata
-set schema_version = '12',
+set schema_version = '17',
     updated_at = current_timestamp
 where id = 1;

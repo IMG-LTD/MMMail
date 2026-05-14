@@ -195,7 +195,7 @@ class BackendV21BackgroundJobFoundationTest {
     @Test
     void migrationShouldFreezeJobRunTableAndIndexes() throws Exception {
         Path root = resolveRepoRoot();
-        String migration = Files.readString(root.resolve("src/main/resources/db/migration/V12__platform_job_run.sql"));
+        String migration = Files.readString(root.resolve("src/main/resources/db/migration/V17__platform_job_run.sql"));
         String schema = Files.readString(root.resolve("src/main/resources/schema.sql"));
 
         assertThat(migration).contains("create table if not exists platform_job_run");
