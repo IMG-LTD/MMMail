@@ -34,6 +34,8 @@ const FIRST_EVENT_ROW = 2
 const HOURS_PER_DAY = 24
 const MAX_HOUR = 23
 const MIN_HOUR = 0
+const NEXT_DAY_OFFSET = 1
+const NO_DAY_OFFSET = 0
 
 export function resolveCalendarTimeSlotHours(items: Array<{ endAt: string; startAt: string }>, fallbackHour: number) {
   const hours = items.flatMap(resolveBoundaryHours)
@@ -75,7 +77,7 @@ function createSegment(item: CalendarLayoutEvent, bounds: SegmentBounds): Calend
   const { day, endAt, startAt } = bounds
   const dayStart = parseDate(`${day.key}T00:00:00`)
   if (!dayStart) return null
-  const dayEnd = addDays(dayStart, 1)
+  const dayEnd = addDays(dayStart, NEXT_DAY_OFFSET)
   const segmentStart = new Date(Math.max(startAt.getTime(), dayStart.getTime()))
   const segmentEnd = new Date(Math.min(endAt.getTime(), dayEnd.getTime()))
   if (segmentEnd <= segmentStart) return null
@@ -113,9 +115,19 @@ function parseDate(value?: string | null) {
 }
 
 function addDays(value: Date, days: number) {
-  const next = new Date(value)
-  next.setDate(next.getDate() + days)
-  return next
+  return createLocalDate(value, days)
+}
+
+function createLocalDate(value: Date, dayOffset = NO_DAY_OFFSET) {
+  return new Date(
+    value.getFullYear(),
+    value.getMonth(),
+    value.getDate() + dayOffset,
+    value.getHours(),
+    value.getMinutes(),
+    value.getSeconds(),
+    value.getMilliseconds()
+  )
 }
 
 function formatDateKey(value: Date) {

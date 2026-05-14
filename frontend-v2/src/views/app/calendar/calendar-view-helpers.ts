@@ -2,6 +2,21 @@ import type { CalendarAgendaItem, CalendarEvent } from '@/service/api/calendar'
 import type { CalendarSurfaceItem } from './calendar-types'
 
 const DAYS_IN_WORK_WEEK = 5
+const DAYS_FROM_SUNDAY_TO_MONDAY = 6
+const MONDAY_WEEKDAY = 1
+const NO_DAY_OFFSET = 0
+const SUNDAY_WEEKDAY = 0
+const MIDNIGHT = Object.freeze({
+  hour: 0,
+  millisecond: 0,
+  minute: 0,
+  second: 0
+})
+
+interface LocalDateOptions {
+  readonly dayOffset?: number
+  readonly resetTime?: boolean
+}
 
 export function parseDate(value?: string | null) {
   if (!value) return null
@@ -10,22 +25,16 @@ export function parseDate(value?: string | null) {
 }
 
 export function startOfDay(value: Date) {
-  const next = new Date(value)
-  next.setHours(0, 0, 0, 0)
-  return next
+  return createLocalDate(value, { resetTime: true })
 }
 
 export function startOfWeek(value: Date) {
-  const next = startOfDay(value)
-  const offset = next.getDay() === 0 ? -6 : 1 - next.getDay()
-  next.setDate(next.getDate() + offset)
-  return next
+  const dayStart = startOfDay(value)
+  return addDays(dayStart, weekStartOffset(dayStart))
 }
 
 export function addDays(value: Date, days: number) {
-  const next = new Date(value)
-  next.setDate(next.getDate() + days)
-  return next
+  return createLocalDate(value, { dayOffset: days })
 }
 
 export function formatDateKey(value: Date) {
@@ -63,6 +72,32 @@ export function mergeCalendarSurfaceItems(events: CalendarEvent[], agenda: Calen
 
 export function workWeekLength(mode: string) {
   return mode === 'day' ? 1 : DAYS_IN_WORK_WEEK
+}
+
+function createLocalDate(value: Date, options: LocalDateOptions = {}) {
+  const time = options.resetTime ? MIDNIGHT : localTime(value)
+  return new Date(
+    value.getFullYear(),
+    value.getMonth(),
+    value.getDate() + (options.dayOffset ?? NO_DAY_OFFSET),
+    time.hour,
+    time.minute,
+    time.second,
+    time.millisecond
+  )
+}
+
+function localTime(value: Date) {
+  return {
+    hour: value.getHours(),
+    millisecond: value.getMilliseconds(),
+    minute: value.getMinutes(),
+    second: value.getSeconds()
+  }
+}
+
+function weekStartOffset(value: Date) {
+  return value.getDay() === SUNDAY_WEEKDAY ? -DAYS_FROM_SUNDAY_TO_MONDAY : MONDAY_WEEKDAY - value.getDay()
 }
 
 function fromEvent(item: CalendarEvent): CalendarSurfaceItem {
