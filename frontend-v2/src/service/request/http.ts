@@ -14,6 +14,31 @@ type UnauthorizedHandler = () => void
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || ''
 let unauthorizedHandler: UnauthorizedHandler | null = null
 
+interface HttpRequestErrorOptions {
+  message: string
+  payload: string
+  status: number
+  statusText: string
+}
+
+export class HttpRequestError extends Error {
+  readonly payload: string
+  readonly status: number
+  readonly statusText: string
+
+  constructor(options: HttpRequestErrorOptions) {
+    super(options.message)
+    this.name = 'HttpRequestError'
+    this.payload = options.payload
+    this.status = options.status
+    this.statusText = options.statusText
+  }
+}
+
+export function isHttpRequestError(error: unknown, status?: number): error is HttpRequestError {
+  return error instanceof HttpRequestError && (status === undefined || error.status === status)
+}
+
 export function registerUnauthorizedHandler(handler: UnauthorizedHandler) {
   unauthorizedHandler = handler
 }
@@ -43,7 +68,12 @@ async function parseResponse<T>(response: Response) {
 async function createHttpError(response: Response) {
   const payload = await response.text()
   const message = resolveErrorMessage(response, payload)
-  return new Error(message)
+  return new HttpRequestError({
+    message,
+    payload,
+    status: response.status,
+    statusText: response.statusText
+  })
 }
 
 function resolveErrorMessage(response: Response, payload: string) {

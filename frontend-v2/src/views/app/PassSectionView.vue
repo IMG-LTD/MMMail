@@ -19,6 +19,7 @@ import {
   derivePassSectionState,
   isPassItemShared
 } from './pass-section-state'
+import { isPremiumGateError, resolvePremiumNotice } from '@/shared/utils/premium-runtime'
 import PassConfirmDialog from './pass/PassConfirmDialog.vue'
 import PassItemDetail from './pass/PassItemDetail.vue'
 import PassItemList from './pass/PassItemList.vue'
@@ -53,6 +54,8 @@ const passMailboxes = ref<PassMailbox[]>([])
 const passMonitor = ref<PassMonitorOverview | null>(null)
 const passLoading = ref(false)
 const loadError = ref('')
+const passMonitorError = ref('')
+const passMonitorLocked = ref(false)
 const selectedEntryKey = ref('')
 const secretVisible = ref(false)
 const shareSettingsOpen = ref(false)
@@ -77,6 +80,10 @@ const activeRisk = computed(() => policyItems.value.find(item => item.id === sel
 const cappedStateNotice = computed(() => authStore.accessToken && derivedState.value.itemCoverageCapped ? 'Showing the first 200 items only. Summaries reflect this subset.' : '')
 const boardSubtitle = computed(resolveBoardSubtitle)
 const emptyCopy = computed(() => authStore.accessToken ? 'No items are available for this view.' : 'Sign in to load your pass workspace.')
+const passMonitorNotice = computed(() => {
+  if (passMonitorLocked.value) return 'Security monitor requires premium access.'
+  return passMonitorError.value
+})
 const primaryCard = computed<PassDetailCard>(() => createPrimaryCard())
 const secondaryCard = computed<PassDetailCard>(() => createSecondaryCard())
 
@@ -87,16 +94,22 @@ async function loadPass() {
   if (!requestToken) return resetSignedOutPass(requestId, requestToken, requestPath)
   passLoading.value = true
   loadError.value = ''
+  passMonitorError.value = ''
+  passMonitorLocked.value = false
   try {
-    const [itemsResponse, mailboxesResponse, monitorResponse] = await Promise.all([
+    const coreRuntimePromise = Promise.all([
       listPassItems(requestToken, { limit: String(PASS_ITEMS_FETCH_LIMIT) }),
-      listPassMailboxes(requestToken),
-      readPassMonitor(requestToken)
+      listPassMailboxes(requestToken)
     ])
+    const monitorPromise = loadOptionalPassMonitor(requestToken)
+    const [itemsResponse, mailboxesResponse] = await coreRuntimePromise
+    const monitorResult = await monitorPromise
     if (!isCurrentPassRequest(requestId, requestToken, requestPath)) return
     passItems.value = Array.isArray(itemsResponse.data) ? itemsResponse.data : []
     passMailboxes.value = Array.isArray(mailboxesResponse.data) ? mailboxesResponse.data : []
-    passMonitor.value = monitorResponse.data || null
+    passMonitor.value = monitorResult.monitor
+    passMonitorError.value = monitorResult.notice
+    passMonitorLocked.value = monitorResult.locked
   } catch (error) {
     if (isCurrentPassRequest(requestId, requestToken, requestPath)) resetPassAfterError(resolveErrorMessage(error))
   } finally {
@@ -113,6 +126,8 @@ function resetSignedOutPass(requestId: number, requestToken: string, requestPath
   passItems.value = []
   passMailboxes.value = []
   passMonitor.value = null
+  passMonitorError.value = ''
+  passMonitorLocked.value = false
   selectedEntryKey.value = ''
   loadError.value = ''
   passLoading.value = false
@@ -122,8 +137,23 @@ function resetPassAfterError(message: string) {
   passItems.value = []
   passMailboxes.value = []
   passMonitor.value = null
+  passMonitorError.value = ''
+  passMonitorLocked.value = false
   selectedEntryKey.value = ''
   loadError.value = message
+}
+
+async function loadOptionalPassMonitor(token: string) {
+  try {
+    const response = await readPassMonitor(token)
+    return { locked: false, monitor: response.data || null, notice: '' }
+  } catch (error) {
+    return {
+      locked: isPremiumGateError(error),
+      monitor: null,
+      notice: resolvePremiumNotice(error, 'Security monitor requires premium access.')
+    }
+  }
 }
 
 function openSection(key: string) {
@@ -201,6 +231,9 @@ function createPrimaryCard() {
 }
 
 function createSecondaryCard() {
+  if (passMonitorNotice.value) {
+    return createCard('Monitor summary', passMonitorLocked.value ? 'Premium locked' : 'Unavailable', passMonitorNotice.value)
+  }
   return createCard('Monitor summary', `${derivedState.value.trackedItemCount} / ${passMonitor.value?.totalItemCount || 0}`, 'Items, mailboxes, and monitor state come from authenticated runtime APIs.', [
     { label: 'Weak passwords', value: `${derivedState.value.weakPasswordCount}` },
     { label: 'Reused passwords', value: `${derivedState.value.reusedPasswordCount}` },
@@ -245,6 +278,7 @@ function resolveBoardSubtitle() {
   if (!authStore.accessToken) return 'Sign in to switch this pass surface to authenticated runtime data.'
   if (loadError.value) return loadError.value
   if (passLoading.value && !passItems.value.length) return 'Loading items, mailboxes, and monitor summary.'
+  if (passMonitorNotice.value) return `${visibleEntries.value.length} entries loaded · ${passMonitorNotice.value}`
   return `${visibleEntries.value.length} entries loaded · ${derivedState.value.trackedItemCount} monitored`
 }
 

@@ -19,6 +19,7 @@ import {
 import { useScopeGuard } from '@/shared/composables/useScopeGuard'
 import { useAutomationRunbook } from '@/shared/composables/useAutomationRunbook'
 import { useAuthStore } from '@/store/modules/auth'
+import { resolveOptionalRuntimeNotice } from '@/shared/utils/premium-runtime'
 
 const { tr } = useLocaleText()
 const authStore = useAuthStore()
@@ -31,6 +32,7 @@ const activeRun = ref<CommandCenterRun | null>(null)
 const commandCenterLoading = ref(false)
 const runError = ref('')
 const loadError = ref('')
+const premiumRuntimeNotice = ref('')
 let latestCommandCenterRequest = 0
 
 const enabledCommands = computed(() => commands.value.filter(command => command.enabled))
@@ -96,6 +98,7 @@ function clearCommandCenterState() {
   activeRun.value = null
   runError.value = ''
   loadError.value = ''
+  premiumRuntimeNotice.value = ''
   commandCenterLoading.value = false
 }
 
@@ -116,20 +119,21 @@ async function loadCommandCenter() {
 
   commandCenterLoading.value = true
   loadError.value = ''
+  premiumRuntimeNotice.value = ''
 
   try {
     const options = { scopeHeaders, token: requestToken }
-    const [nextCommands, nextWorkflows, nextAudit] = await Promise.all([
-      listCommandCenterCommands(options),
-      listCommandCenterWorkflows(options),
-      listCommandCenterAudit(options)
-    ])
+    const commandsPromise = listCommandCenterCommands(options)
+    const premiumRuntimePromise = loadOptionalCommandCenterRuntime(options)
+    const nextCommands = await commandsPromise
+    const premiumRuntime = await premiumRuntimePromise
     if (requestId !== latestCommandCenterRequest || requestToken !== authStore.accessToken) {
       return
     }
     commands.value = Array.isArray(nextCommands) ? nextCommands : []
-    workflows.value = Array.isArray(nextWorkflows) ? nextWorkflows : []
-    auditEntries.value = Array.isArray(nextAudit) ? nextAudit : []
+    workflows.value = premiumRuntime.workflows
+    auditEntries.value = premiumRuntime.auditEntries
+    premiumRuntimeNotice.value = premiumRuntime.notice
   } catch (error) {
     if (requestId !== latestCommandCenterRequest || requestToken !== authStore.accessToken) {
       return
@@ -141,6 +145,23 @@ async function loadCommandCenter() {
       commandCenterLoading.value = false
     }
   }
+}
+
+async function loadOptionalCommandCenterRuntime(options: Parameters<typeof listCommandCenterWorkflows>[0]) {
+  const [workflowResult, auditResult] = await Promise.allSettled([
+    listCommandCenterWorkflows(options),
+    listCommandCenterAudit(options)
+  ])
+
+  return {
+    auditEntries: optionalList(auditResult),
+    notice: resolveOptionalRuntimeNotice([workflowResult, auditResult], 'Command Center automation requires premium access.'),
+    workflows: optionalList(workflowResult)
+  }
+}
+
+function optionalList<T>(result: PromiseSettledResult<T[]>) {
+  return result.status === 'fulfilled' && Array.isArray(result.value) ? result.value : []
 }
 
 async function runCommand(command: CommandCenterCommand) {
@@ -234,6 +255,7 @@ watch(
         </button>
         <div class="command-card__stack">
           <strong v-for="workflow in workflows" :key="workflow.id">{{ workflow.name }} · {{ workflow.status }}</strong>
+          <p v-if="premiumRuntimeNotice" class="page-subtitle">{{ premiumRuntimeNotice }}</p>
           <p v-if="!workflows.length" class="page-subtitle">{{ statusCopy }}</p>
         </div>
       </ChartCard>
@@ -261,16 +283,18 @@ watch(
           :title="tr(lt('命令运行失败', '命令執行失敗', 'Command run failed'))"
           variant="inline"
         />
-        <DataTable
-          v-else
-          :columns="auditColumns"
-          density="compact"
-          :empty="!auditRows.length"
-          row-key="id"
-          :rows="auditRows"
-          stacked
-          @row-action="setView('runs')"
-        />
+        <template v-else>
+          <p v-if="premiumRuntimeNotice" class="page-subtitle">{{ premiumRuntimeNotice }}</p>
+          <DataTable
+            :columns="auditColumns"
+            density="compact"
+            :empty="!auditRows.length"
+            row-key="id"
+            :rows="auditRows"
+            stacked
+            @row-action="setView('runs')"
+          />
+        </template>
       </ChartCard>
     </div>
 

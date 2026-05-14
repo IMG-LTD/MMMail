@@ -25,6 +25,16 @@ function assertContainsAll(source, patterns) {
   }
 }
 
+function functionBody(source, functionName) {
+  const marker = new RegExp(`(?:async\\s+)?function\\s+${functionName}\\s*\\(`)
+  const match = marker.exec(source)
+  const start = match?.index ?? -1
+  assert.notEqual(start, -1, `expected ${functionName} to exist`)
+  const searchOffset = start + match[0].length
+  const nextFunction = /\n(?:async\s+)?function\s+\w+/.exec(source.slice(searchOffset))
+  return source.slice(start, nextFunction ? searchOffset + nextFunction.index : source.length)
+}
+
 test('v2.1 pass API and monitor boundaries use section 14 endpoints', async () => {
   const [passApi, passMonitorView] = await Promise.all([
     readRequiredFile(files.passApi, 'Pass API client'),
@@ -148,4 +158,49 @@ test('v2.1 command center API and runtime boundaries use section 14 endpoints', 
   assert.doesNotMatch(commandCenterView, /const routes = \[/)
   assert.doesNotMatch(commandCenterView, /const history = \[/)
   assert.doesNotMatch(commandCenterView, /const feed = \[/)
+})
+
+test('v2.1 community surfaces keep core data visible when premium endpoints are gated', async () => {
+  const [passView, notificationsView, commandCenterView, httpClient, premiumRuntime] = await Promise.all([
+    readRequiredFile(new URL('../src/views/app/PassSectionView.vue', import.meta.url), 'Pass section view'),
+    readRequiredFile(files.notificationsView, 'Notifications view'),
+    readRequiredFile(files.commandCenterView, 'Command Center view'),
+    readRequiredFile(new URL('../src/service/request/http.ts', import.meta.url), 'HTTP client'),
+    readRequiredFile(new URL('../src/shared/utils/premium-runtime.ts', import.meta.url), 'Premium runtime utility')
+  ])
+
+  assert.match(httpClient, /class HttpRequestError extends Error/)
+  assert.match(httpClient, /isHttpRequestError/)
+  assertContainsAll(premiumRuntime, [
+    /isPremiumGateError/,
+    /resolveOptionalRuntimeNotice/,
+    /runtimeError/
+  ])
+
+  assertContainsAll(passView, [
+    /passMonitorLocked/,
+    /isPremiumGateError/,
+    /loadOptionalPassMonitor/,
+    /Security monitor requires premium access/
+  ])
+  const passLoadBody = functionBody(passView, 'loadPass')
+  assert.doesNotMatch(passLoadBody, /Promise\.all\(\[[\s\S]*?readPassMonitor/)
+
+  assertContainsAll(commandCenterView, [
+    /premiumRuntimeNotice/,
+    /loadOptionalCommandCenterRuntime/,
+    /Command Center automation requires premium access/,
+    /resolveOptionalRuntimeNotice/
+  ])
+  const commandCenterLoadBody = functionBody(commandCenterView, 'loadCommandCenter')
+  assert.doesNotMatch(commandCenterLoadBody, /Promise\.all\(\[[\s\S]*?listCommandCenterWorkflows/)
+
+  assertContainsAll(notificationsView, [
+    /premiumRuntimeNotice/,
+    /loadOptionalNotificationRuntime/,
+    /Notification automation and analytics require premium access/,
+    /resolveOptionalRuntimeNotice/
+  ])
+  const notificationsLoadBody = functionBody(notificationsView, 'loadNotifications')
+  assert.doesNotMatch(notificationsLoadBody, /Promise\.all\(\[[\s\S]*?listNotificationRules/)
 })

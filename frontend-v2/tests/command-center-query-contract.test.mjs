@@ -192,6 +192,11 @@ test('notifications runtime client stays scope-aware and ignores stale responses
         patchNotification: () => Promise.resolve({}),
         readNotificationAnalytics: createDeferredCall('analytics')
       },
+      '@/shared/utils/premium-runtime': {
+        isPremiumGateError: () => false,
+        resolveOptionalRuntimeNotice: () => '',
+        resolvePremiumNotice: (_error, notice) => notice
+      },
       '@/store/modules/auth': {
         useAuthStore: () => authStore
       }

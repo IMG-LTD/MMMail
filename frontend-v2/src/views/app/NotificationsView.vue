@@ -20,6 +20,7 @@ import {
   type NotificationTemplate
 } from '@/service/api/notifications'
 import { useAuthStore } from '@/store/modules/auth'
+import { resolveOptionalRuntimeNotice } from '@/shared/utils/premium-runtime'
 
 const { tr } = useLocaleText()
 const authStore = useAuthStore()
@@ -31,6 +32,7 @@ const templates = ref<NotificationTemplate[]>([])
 const analytics = ref<NotificationAnalytics | null>(null)
 const notificationsLoading = ref(false)
 const loadError = ref('')
+const premiumRuntimeNotice = ref('')
 let latestNotificationsRequest = 0
 
 const unreadCount = computed(() => notifications.value.filter(item => item.status === 'UNREAD').length)
@@ -84,6 +86,7 @@ function clearNotificationsState() {
   templates.value = []
   analytics.value = null
   loadError.value = ''
+  premiumRuntimeNotice.value = ''
   notificationsLoading.value = false
 }
 
@@ -104,24 +107,26 @@ async function loadNotifications() {
 
   notificationsLoading.value = true
   loadError.value = ''
+  premiumRuntimeNotice.value = ''
 
   try {
     const options = { scopeHeaders, token: requestToken }
-    const [nextNotifications, nextRules, nextSubscriptions, nextTemplates, nextAnalytics] = await Promise.all([
+    const coreRuntimePromise = Promise.all([
       listNotifications(options),
-      listNotificationRules(options),
-      listNotificationSubscriptions(options),
-      listNotificationTemplates(options),
-      readNotificationAnalytics(options)
+      listNotificationSubscriptions(options)
     ])
+    const premiumRuntimePromise = loadOptionalNotificationRuntime(options)
+    const [nextNotifications, nextSubscriptions] = await coreRuntimePromise
+    const premiumRuntime = await premiumRuntimePromise
     if (requestId !== latestNotificationsRequest || requestToken !== authStore.accessToken) {
       return
     }
     notifications.value = Array.isArray(nextNotifications) ? nextNotifications : []
-    rules.value = Array.isArray(nextRules) ? nextRules : []
     subscriptions.value = Array.isArray(nextSubscriptions) ? nextSubscriptions : []
-    templates.value = Array.isArray(nextTemplates) ? nextTemplates : []
-    analytics.value = nextAnalytics || null
+    rules.value = premiumRuntime.rules
+    templates.value = premiumRuntime.templates
+    analytics.value = premiumRuntime.analytics
+    premiumRuntimeNotice.value = premiumRuntime.notice
   } catch (error) {
     if (requestId !== latestNotificationsRequest || requestToken !== authStore.accessToken) {
       return
@@ -133,6 +138,29 @@ async function loadNotifications() {
       notificationsLoading.value = false
     }
   }
+}
+
+async function loadOptionalNotificationRuntime(options: Parameters<typeof listNotificationRules>[0]) {
+  const [rulesResult, templatesResult, analyticsResult] = await Promise.allSettled([
+    listNotificationRules(options),
+    listNotificationTemplates(options),
+    readNotificationAnalytics(options)
+  ])
+
+  return {
+    analytics: optionalValue(analyticsResult),
+    notice: resolveOptionalRuntimeNotice([rulesResult, templatesResult, analyticsResult], 'Notification automation and analytics require premium access.'),
+    rules: optionalList(rulesResult),
+    templates: optionalList(templatesResult)
+  }
+}
+
+function optionalList<T>(result: PromiseSettledResult<T[]>) {
+  return result.status === 'fulfilled' && Array.isArray(result.value) ? result.value : []
+}
+
+function optionalValue<T>(result: PromiseSettledResult<T>) {
+  return result.status === 'fulfilled' ? result.value : null
 }
 
 async function markAllRead() {
@@ -222,6 +250,7 @@ watch(
             <span>{{ tr(label) }}</span>
             <strong>{{ value }}</strong>
           </div>
+          <p v-if="premiumRuntimeNotice" class="page-subtitle">{{ premiumRuntimeNotice }}</p>
         </ChartCard>
 
         <ChartCard
@@ -233,6 +262,7 @@ watch(
           :value="`${enabledRules}`"
         >
           <p class="page-subtitle">{{ rulesSummary }}</p>
+          <p v-if="premiumRuntimeNotice" class="page-subtitle">{{ premiumRuntimeNotice }}</p>
           <span v-for="item in templates" :key="item.id" class="metric-chip">{{ item.name }}</span>
         </ChartCard>
       </aside>
