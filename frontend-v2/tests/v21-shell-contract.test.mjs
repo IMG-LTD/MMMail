@@ -9,6 +9,7 @@ const ts = require('typescript')
 
 const files = {
   app: new URL('../src/app/App.vue', import.meta.url),
+  appStore: new URL('../src/store/modules/app.ts', import.meta.url),
   baseLayout: new URL('../src/layouts/base-layout/BaseLayout.vue', import.meta.url),
   contextPanel: new URL('../src/layouts/modules/ContextPanel.vue', import.meta.url),
   globalCss: new URL('../src/styles/global.css', import.meta.url),
@@ -60,8 +61,22 @@ function createPiniaRuntime() {
 
 function createLocaleRuntime() {
   return {
+    detectAppLocale() {
+      return 'en'
+    },
+    getNextLocale(locale) {
+      return locale === 'en' ? 'zh-CN' : 'en'
+    },
     lt(_zhCn, _zhTw, en) {
       return en
+    }
+  }
+}
+
+function createVueUseRuntime() {
+  return {
+    useStorage(_key, value) {
+      return { value }
     }
   }
 }
@@ -143,6 +158,21 @@ test('v2.1 shell state model exposes behavior needed by shell components', async
   assert.equal(store.quickCreateOpen.value, false)
   assert.equal(store.mobileMorePanelOpen.value, false)
   assert.equal(store.sideNavCollapsed.value, false)
+})
+
+test('app store leaves side navigation collapse state owned by shell store', async () => {
+  const { useAppStore } = await loadTsModule(files.appStore, {
+    '@/locales': createLocaleRuntime(),
+    '@vueuse/core': createVueUseRuntime(),
+    pinia: createPiniaRuntime(),
+    vue: createVueRuntime()
+  })
+  const store = useAppStore()
+
+  assert.equal(Object.hasOwn(store, 'collapsed'), false)
+  assert.equal(Object.hasOwn(store, 'toggleCollapsed'), false)
+  assert.equal(Object.hasOwn(store, 'activeScope'), true)
+  assert.equal(Object.hasOwn(store, 'locale'), true)
 })
 
 test('v2.1 navigation model includes structured canonical and fallback product entries', async () => {
