@@ -36,6 +36,9 @@
 3. 标准模式还需要替换：
    - `NACOS_USERNAME`
    - `NACOS_PASSWORD`
+   - `NACOS_AUTH_TOKEN`
+   - `NACOS_AUTH_IDENTITY_KEY`
+   - `NACOS_AUTH_IDENTITY_VALUE`
 4. 保持 `SPRING_SQL_INIT_MODE=never`，数据库结构迁移由 Flyway 管理。
 
 ## 2. 一键安装
@@ -78,7 +81,7 @@ Windows PowerShell：
 
 1. 确认 `.env`：
    - `MMMAIL_NACOS_ENABLED=true`
-   - `NACOS_USERNAME` 与 `NACOS_PASSWORD` 已替换占位值
+   - `NACOS_USERNAME`、`NACOS_PASSWORD`、`NACOS_AUTH_TOKEN`、`NACOS_AUTH_IDENTITY_KEY`、`NACOS_AUTH_IDENTITY_VALUE` 已替换占位值
    - 其他必填密钥与密码已替换占位值
 2. 启动：
    - `docker compose --env-file .env up -d --build`
@@ -110,7 +113,7 @@ Windows PowerShell：
    - 替换所有 `replace-with-*` 占位值。
    - 设置 `SPRING_DATASOURCE_URL` 指向裸机 MySQL。
    - 设置 `SPRING_REDIS_HOST`、`SPRING_REDIS_PORT`、`SPRING_REDIS_PASSWORD` 指向裸机 Redis。
-   - 不使用 Nacos 时设置 `MMMAIL_NACOS_ENABLED=false`；需要 Nacos 时准备 Nacos 并设置 `MMMAIL_NACOS_ENABLED=true`、`NACOS_SERVER_ADDR`、`NACOS_USERNAME`、`NACOS_PASSWORD`。
+   - 不使用 Nacos 时设置 `MMMAIL_NACOS_ENABLED=false`；需要 Nacos 时准备 Nacos 并设置 `MMMAIL_NACOS_ENABLED=true`、`NACOS_SERVER_ADDR`、`NACOS_USERNAME`、`NACOS_PASSWORD`、`NACOS_AUTH_TOKEN`、`NACOS_AUTH_IDENTITY_KEY`、`NACOS_AUTH_IDENTITY_VALUE`。
    - 保持 `SPRING_SQL_INIT_MODE=never`，Flyway 负责 schema migration。
 3. 启动后端：
    - `bash scripts/start-backend-local.sh` 与 Maven 命令不会自动读取仓库根目录 `.env`；运行前先在当前 shell 导出或加载变量，例如：`set -a; source .env; set +a`。
@@ -163,7 +166,7 @@ Windows PowerShell：
 - 最小模式仍要求 Nacos 凭据：
   - 确认 `.env` 中 `MMMAIL_NACOS_ENABLED=false`，并使用 `docker-compose.minimal.yml` 或 `scripts/install.sh minimal` / `scripts/install.ps1 minimal`。
 - 标准模式启动后后端无法连接 Nacos：
-  - 确认使用默认 `docker-compose.yml`，并设置 `MMMAIL_NACOS_ENABLED=true`、`NACOS_USERNAME`、`NACOS_PASSWORD`。
+  - 确认使用默认 `docker-compose.yml`，并设置 `MMMAIL_NACOS_ENABLED=true`、`NACOS_USERNAME`、`NACOS_PASSWORD`、`NACOS_AUTH_TOKEN`、`NACOS_AUTH_IDENTITY_KEY`、`NACOS_AUTH_IDENTITY_VALUE`。
 - Frontend 页面可打开但 API 指向错误：
   - 检查 `VITE_API_BASE_URL`，重新构建前端镜像或重新启动 Vite dev server。
 - Backend 无法连接 MySQL：

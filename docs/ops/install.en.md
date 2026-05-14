@@ -36,6 +36,9 @@ All self-hosted paths should start from the environment template:
 3. Standard mode also requires replacing:
    - `NACOS_USERNAME`
    - `NACOS_PASSWORD`
+   - `NACOS_AUTH_TOKEN`
+   - `NACOS_AUTH_IDENTITY_KEY`
+   - `NACOS_AUTH_IDENTITY_VALUE`
 4. Keep `SPRING_SQL_INIT_MODE=never`; Flyway owns schema migrations.
 
 ## 2. One-click install
@@ -78,7 +81,7 @@ Standard mode additionally includes Nacos in Compose. Use it when you need to va
 
 1. Check `.env`:
    - `MMMAIL_NACOS_ENABLED=true`
-   - `NACOS_USERNAME` and `NACOS_PASSWORD` have replaced placeholder values
+   - `NACOS_USERNAME`, `NACOS_PASSWORD`, `NACOS_AUTH_TOKEN`, `NACOS_AUTH_IDENTITY_KEY`, and `NACOS_AUTH_IDENTITY_VALUE` have replaced placeholder values
    - Other required secrets and passwords have replaced placeholder values
 2. Start:
    - `docker compose --env-file .env up -d --build`
@@ -110,7 +113,7 @@ Use the bare-metal path when installing without Docker. These are high-level ste
    - Replace every `replace-with-*` placeholder.
    - Set `SPRING_DATASOURCE_URL` for the bare-metal MySQL instance.
    - Set `SPRING_REDIS_HOST`, `SPRING_REDIS_PORT`, and `SPRING_REDIS_PASSWORD` for the bare-metal Redis instance.
-   - Without Nacos, set `MMMAIL_NACOS_ENABLED=false`; with Nacos, prepare Nacos and set `MMMAIL_NACOS_ENABLED=true`, `NACOS_SERVER_ADDR`, `NACOS_USERNAME`, and `NACOS_PASSWORD`.
+   - Without Nacos, set `MMMAIL_NACOS_ENABLED=false`; with Nacos, prepare Nacos and set `MMMAIL_NACOS_ENABLED=true`, `NACOS_SERVER_ADDR`, `NACOS_USERNAME`, `NACOS_PASSWORD`, `NACOS_AUTH_TOKEN`, `NACOS_AUTH_IDENTITY_KEY`, and `NACOS_AUTH_IDENTITY_VALUE`.
    - Keep `SPRING_SQL_INIT_MODE=never`; Flyway owns schema migrations.
 3. Start the backend:
    - `bash scripts/start-backend-local.sh` and Maven commands do not automatically read the repository-root `.env`; export or load it in the current shell first, for example: `set -a; source .env; set +a`.
@@ -163,7 +166,7 @@ Optional checks:
 - Minimal mode still asks for Nacos credentials:
   - Confirm `.env` has `MMMAIL_NACOS_ENABLED=false`, and use `docker-compose.minimal.yml` or `scripts/install.sh minimal` / `scripts/install.ps1 minimal`.
 - Standard mode starts but the backend cannot connect to Nacos:
-  - Confirm you are using the default `docker-compose.yml`, and set `MMMAIL_NACOS_ENABLED=true`, `NACOS_USERNAME`, and `NACOS_PASSWORD`.
+  - Confirm you are using the default `docker-compose.yml`, and set `MMMAIL_NACOS_ENABLED=true`, `NACOS_USERNAME`, `NACOS_PASSWORD`, `NACOS_AUTH_TOKEN`, `NACOS_AUTH_IDENTITY_KEY`, and `NACOS_AUTH_IDENTITY_VALUE`.
 - The frontend opens but calls the wrong API:
   - Check `VITE_API_BASE_URL`, then rebuild the frontend image or restart the Vite dev server.
 - The backend cannot connect to MySQL:

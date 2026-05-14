@@ -94,8 +94,10 @@ async function loadWorkspace() {
   workspaceLoading.value = true
   loadError.value = ''
   try {
-    const items = await loadFolderForRequest(request)
-    await loadSenderOptionsForRequest(request)
+    const [items] = await Promise.all([
+      loadFolderForRequest(request),
+      loadSenderOptionsForRequest(request)
+    ])
     await loadDetailForRequest(request, items)
   } finally {
     if (isCurrentWorkspaceRequest(request)) workspaceLoading.value = false

@@ -15,6 +15,7 @@ import com.mmmail.server.model.vo.MailboxStatsVo;
 import com.mmmail.server.model.vo.V21MailFolderVo;
 import com.mmmail.server.service.MailService;
 import com.mmmail.server.service.PublicBaseUrlResolver;
+import com.mmmail.server.util.ClientIpResolver;
 import com.mmmail.server.util.SecurityUtils;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
@@ -41,6 +42,7 @@ public class V21MailController {
 
     private static final long DEFAULT_PAGE = 1L;
     private static final long DEFAULT_SIZE = 20L;
+    private static final long MAX_SIZE = 100L;
     private static final String UNSUPPORTED_FOLDER = "Unsupported v2 mail folder";
     private static final String INVALID_MAIL_ID = "Mail message id is invalid";
     private static final String RECIPIENT_TRUST = "recipient-trust";
@@ -63,10 +65,16 @@ public class V21MailController {
 
     private final MailService mailService;
     private final PublicBaseUrlResolver publicBaseUrlResolver;
+    private final ClientIpResolver clientIpResolver;
 
-    public V21MailController(MailService mailService, PublicBaseUrlResolver publicBaseUrlResolver) {
+    public V21MailController(
+            MailService mailService,
+            PublicBaseUrlResolver publicBaseUrlResolver,
+            ClientIpResolver clientIpResolver
+    ) {
         this.mailService = mailService;
         this.publicBaseUrlResolver = publicBaseUrlResolver;
+        this.clientIpResolver = clientIpResolver;
     }
 
     @GetMapping("/folders")
@@ -211,11 +219,19 @@ public class V21MailController {
     }
 
     private long page(V21MailMessagesQuery query) {
-        return query.page() == null ? DEFAULT_PAGE : query.page();
+        long page = query.page() == null ? DEFAULT_PAGE : query.page();
+        if (page < 1) {
+            throw new BizException(ErrorCode.INVALID_ARGUMENT, "Mail page must be greater than 0");
+        }
+        return page;
     }
 
     private long size(V21MailMessagesQuery query) {
-        return query.size() == null ? DEFAULT_SIZE : query.size();
+        long size = query.size() == null ? DEFAULT_SIZE : query.size();
+        if (size < 1 || size > MAX_SIZE) {
+            throw new BizException(ErrorCode.INVALID_ARGUMENT, "Mail page size must be between 1 and " + MAX_SIZE);
+        }
+        return size;
     }
 
     private Long parseMailId(String id) {
@@ -227,7 +243,7 @@ public class V21MailController {
     }
 
     private String ip(HttpServletRequest httpRequest) {
-        return httpRequest.getRemoteAddr();
+        return clientIpResolver.resolve(httpRequest);
     }
 
     private record FolderSpec(String key, String label) {

@@ -45,6 +45,9 @@ if [[ "$nacos_enabled" == "true" ]]; then
   required_keys+=(
     NACOS_USERNAME
     NACOS_PASSWORD
+    NACOS_AUTH_TOKEN
+    NACOS_AUTH_IDENTITY_KEY
+    NACOS_AUTH_IDENTITY_VALUE
   )
 fi
 

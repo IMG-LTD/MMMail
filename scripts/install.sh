@@ -147,6 +147,9 @@ check_env_for_mode() {
     require_env_boolean_equals MMMAIL_NACOS_ENABLED true
     require_env_value NACOS_USERNAME
     require_env_value NACOS_PASSWORD
+    require_env_value NACOS_AUTH_TOKEN
+    require_env_value NACOS_AUTH_IDENTITY_KEY
+    require_env_value NACOS_AUTH_IDENTITY_VALUE
   fi
 }
 

@@ -1,7 +1,6 @@
 package com.mmmail.server.service;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
-import com.fasterxml.jackson.databind.JsonNode;
 import com.mmmail.common.exception.BizException;
 import com.mmmail.common.exception.ErrorCode;
 import com.mmmail.server.mapper.DriveItemMapper;
@@ -10,6 +9,7 @@ import com.mmmail.server.model.dto.CreateDriveFileRequest;
 import com.mmmail.server.model.dto.CreateDriveShareRequest;
 import com.mmmail.server.model.dto.MoveDriveItemRequest;
 import com.mmmail.server.model.dto.RenameDriveItemRequest;
+import com.mmmail.server.model.dto.V21DriveFileUpdateRequest;
 import com.mmmail.server.model.dto.V21DriveUploadRequest;
 import com.mmmail.server.model.entity.DriveItem;
 import com.mmmail.server.model.entity.DriveShareLink;
@@ -69,21 +69,21 @@ public class V21DriveRuntimeBridgeService {
         return toItemVo(item, activeShareCount(itemId));
     }
 
-    public DriveItemVo updateFile(Long userId, Long itemId, JsonNode payload, String ipAddress) {
-        if (payload == null || !payload.isObject()) {
+    public DriveItemVo updateFile(Long userId, Long itemId, V21DriveFileUpdateRequest request, String ipAddress) {
+        if (request == null) {
             throw new BizException(ErrorCode.INVALID_ARGUMENT, "Drive file update payload is required");
         }
-        boolean rename = payload.has("name");
-        boolean move = payload.has("parentId");
+        boolean rename = request.hasName();
+        boolean move = request.hasParentId();
         if (!rename && !move) {
             throw new BizException(ErrorCode.INVALID_ARGUMENT, "Drive file update requires name or parentId");
         }
         DriveItemVo updated = null;
         if (rename) {
-            updated = driveService.renameItem(userId, itemId, renameRequest(payload), ipAddress);
+            updated = driveService.renameItem(userId, itemId, renameRequest(request), ipAddress);
         }
         if (move) {
-            updated = driveService.moveItem(userId, itemId, moveRequest(payload), ipAddress);
+            updated = driveService.moveItem(userId, itemId, moveRequest(request), ipAddress);
         }
         return updated;
     }
@@ -144,39 +144,18 @@ public class V21DriveRuntimeBridgeService {
         );
     }
 
-    private static RenameDriveItemRequest renameRequest(JsonNode payload) {
-        return new RenameDriveItemRequest(text(payload.get("name"), "name"));
+    private static RenameDriveItemRequest renameRequest(V21DriveFileUpdateRequest request) {
+        return new RenameDriveItemRequest(text(request.getName(), "name"));
     }
 
-    private static MoveDriveItemRequest moveRequest(JsonNode payload) {
-        return new MoveDriveItemRequest(nullableLong(payload.get("parentId")));
+    private static MoveDriveItemRequest moveRequest(V21DriveFileUpdateRequest request) {
+        return new MoveDriveItemRequest(request.getParentId());
     }
 
-    private static String text(JsonNode node, String fieldName) {
-        if (node == null || !node.isTextual() || !StringUtils.hasText(node.asText())) {
+    private static String text(String value, String fieldName) {
+        if (!StringUtils.hasText(value)) {
             throw new BizException(ErrorCode.INVALID_ARGUMENT, "Drive file " + fieldName + " is required");
         }
-        return node.asText().trim();
-    }
-
-    private static Long nullableLong(JsonNode node) {
-        if (node == null || node.isNull()) {
-            return null;
-        }
-        if (node.isIntegralNumber()) {
-            return node.longValue();
-        }
-        if (node.isTextual() && StringUtils.hasText(node.asText())) {
-            return parseLong(node.asText().trim());
-        }
-        throw new BizException(ErrorCode.INVALID_ARGUMENT, "Drive parentId must be a number");
-    }
-
-    private static Long parseLong(String value) {
-        try {
-            return Long.valueOf(value);
-        } catch (NumberFormatException exception) {
-            throw new BizException(ErrorCode.INVALID_ARGUMENT, "Drive parentId must be a number");
-        }
+        return value.trim();
     }
 }

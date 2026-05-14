@@ -100,10 +100,12 @@ placeholder_checks=(
   ".env.example|MMMAIL_NACOS_ENABLED=false"
   ".env.example|VITE_API_BASE_URL=http://localhost:8080"
   ".env.example|MMMAIL_JWT_SECRET=replace-with-32-plus-char-random-secret"
+  ".env.example|NACOS_AUTH_TOKEN=replace-with-32-plus-char-random-secret"
   "config/backend.env.example|MMMAIL_NACOS_ENABLED=true"
   "config/backend.env.example|SPRING_DATASOURCE_PASSWORD=replace-with-db-password"
   "config/backend.env.example|SPRING_REDIS_PASSWORD=replace-with-redis-password"
   "config/backend.env.example|NACOS_PASSWORD=replace-with-nacos-password"
+  "config/backend.env.example|NACOS_AUTH_TOKEN=replace-with-32-plus-char-random-secret"
   "config/backend.env.example|MMMAIL_JWT_SECRET=replace-with-32-plus-char-random-secret"
   "backend/mmmail-server/src/main/resources/application-local.yml|      enabled: \${MMMAIL_NACOS_ENABLED:true}"
   "backend/mmmail-server/src/main/resources/application-local.yml|    password: \${SPRING_DATASOURCE_PASSWORD:replace-with-db-password}"
@@ -134,6 +136,9 @@ required_env_keys=(
   MYSQL_ROOT_PASSWORD
   NACOS_USERNAME
   NACOS_PASSWORD
+  NACOS_AUTH_TOKEN
+  NACOS_AUTH_IDENTITY_KEY
+  NACOS_AUTH_IDENTITY_VALUE
 )
 for key in "${required_env_keys[@]}"; do
   if ! grep -Eq "^${key}=" .env.example config/backend.env.example; then
@@ -154,6 +159,8 @@ sed -i 's/replace-with-redis-password/RedisPassword123!/' "$tmp_env_standard"
 sed -i 's/MMMAIL_NACOS_ENABLED=false/MMMAIL_NACOS_ENABLED=true/' "$tmp_env_standard"
 sed -i 's/replace-with-nacos-user/nacos/' "$tmp_env_standard"
 sed -i 's/replace-with-nacos-password/nacos/' "$tmp_env_standard"
+sed -i 's/replace-with-nacos-identity-key/mmmail-nacos-identity-key/' "$tmp_env_standard"
+sed -i 's/replace-with-nacos-identity-value/mmmail-nacos-identity-value/' "$tmp_env_standard"
 bash scripts/validate-runtime-env.sh "$tmp_env_standard" >/tmp/mmmail-runtime-env.log 2>&1
 
 echo "[validate-local] runtime env template (minimal mode)"

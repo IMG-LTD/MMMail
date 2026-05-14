@@ -108,6 +108,18 @@ class BackendV21MailRuntimeBridgeTest {
                 .andExpect(jsonPath("$.code").value(ErrorCode.INVALID_ARGUMENT.getCode()));
     }
 
+    @Test
+    void v21MailShouldRejectOversizedMessagePageSize() throws Exception {
+        String token = register("v21-mail-page-size-" + System.nanoTime() + "@mmmail.local", "V21 Mail Page Size");
+
+        mockMvc.perform(get("/api/v2/mail/messages")
+                        .header("Authorization", "Bearer " + token)
+                        .param("folder", "inbox")
+                        .param("size", "999999"))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.code").value(ErrorCode.INVALID_ARGUMENT.getCode()));
+    }
+
     private MailPair registerMailPair(String suffix) throws Exception {
         String senderEmail = "v21-mail-sender-" + suffix + "@mmmail.local";
         String receiverEmail = "v21-mail-receiver-" + suffix + "@mmmail.local";

@@ -117,6 +117,28 @@ class BackendV21DriveRuntimeBridgeTest {
                 .andExpect(jsonPath("$.code").value(ErrorCode.V2_ENTITLEMENT_REQUIRED.getCode()));
     }
 
+    @Test
+    void v21DrivePatchShouldRejectUnknownFieldsBeforeMutation() throws Exception {
+        String token = register("v21-drive-strict-" + System.nanoTime() + "@mmmail.local", "V21 Drive Strict");
+        String fileId = createV21Upload(token, "v21-strict.bin", null, 7);
+
+        mockMvc.perform(patch("/api/v2/drive/files/" + fileId)
+                        .header("Authorization", "Bearer " + token)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {
+                                  "name": "v21-strict-renamed.bin",
+                                  "visibility": "public"
+                                }
+                                """))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.code").value(ErrorCode.INVALID_ARGUMENT.getCode()));
+
+        mockMvc.perform(get("/api/v2/drive/uploads/" + fileId).header("Authorization", "Bearer " + token))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.name").value("v21-strict.bin"));
+    }
+
     private String createV21Upload(String token, String fileName, String parentId, long sizeBytes) throws Exception {
         String parentField = parentId == null ? "null" : '"' + parentId + '"';
         MvcResult result = mockMvc.perform(post("/api/v2/drive/uploads")

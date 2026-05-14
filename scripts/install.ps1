@@ -188,6 +188,9 @@ function Check-EnvForMode {
     Require-EnvBooleanEquals $EnvMap 'MMMAIL_NACOS_ENABLED' 'true'
     Require-EnvValue $EnvMap 'NACOS_USERNAME'
     Require-EnvValue $EnvMap 'NACOS_PASSWORD'
+    Require-EnvValue $EnvMap 'NACOS_AUTH_TOKEN'
+    Require-EnvValue $EnvMap 'NACOS_AUTH_IDENTITY_KEY'
+    Require-EnvValue $EnvMap 'NACOS_AUTH_IDENTITY_VALUE'
   }
 }
 
