@@ -1,12 +1,12 @@
 # Frontend v2.1 Implementation Progress
 
-Last updated: 2026-05-13
+Last updated: 2026-05-14
 
 ## Current Repository State
 
 - Branch: `main`
 - Latest frontend implementation commit: `0f744a60 feat(frontend-v2): align drive client with runtime bridge`
-- Latest backend implementation commit: `170c9536 feat(public-share): add v2.1 public share runtime routes`
+- Latest backend implementation commit: `7e3a4af4 ci(backend-v21): gate v21 runtime regressions`
 - Local branch status at progress capture: `main`
 - Untracked paths intentionally not included in v2.1 commits: `.superpowers/`, `.tmp/`, `docs/MMMail.zip`, `docs/MMMail/`, `frontend/`
 
@@ -39,6 +39,7 @@ Last updated: 2026-05-13
 | Backend Collaboration write runtime (`backend-v21-collaboration-write-runtime`) | `BackendV21CollaborationWriteRuntimeTest`, `BackendV21OpsRuntimeBridgeTest`, `V21CollaborationWriteService`, `v21_collaboration_project/task/comment` |
 | Backend Community runtime closure (`backend-v21-community-runtime-closure`) | `BackendV21CommunityRuntimeClosureTest`, `V21WorkspaceController`, `V21SettingsController`, `V21EntitlementsController` |
 | Backend Runtime contract gap closure (`backend-v21-runtime-contract-gap-closure`) | `BackendV21RuntimeContractGapClosureTest`, `V21ApiContractCatalog`, `V21AuthController`, `V21PublicShareController`, v2 AI/MCP capability catalog coverage |
+| Backend v2.1 release gate hardening (`backend-v21-release-gate-hardening`) | `v21-release-gate-hardening-contract.test.mjs`, `scripts/validate-local.sh`, GitHub Actions backend v2.1 runtime regression |
 
 ## Latest Visual QA Baseline
 
@@ -62,30 +63,31 @@ Last updated: 2026-05-13
 
 ## Latest Completed Backend Slice
 
-- Slice: `backend-v21-runtime-contract-gap-closure`
+- Slice: `backend-v21-release-gate-hardening`
 - Commits:
-  - `f3be4df2 test(backend-v21): cover runtime contract gaps`
-  - `217bdda7 feat(backend-v21): align runtime contract catalog gaps`
-  - `532982b7 refactor(auth): extract shared auth cookie service`
-  - `4687c8c1 feat(auth): add v2.1 auth runtime routes`
-  - `170c9536 feat(public-share): add v2.1 public share runtime routes`
-- Files changed: added runtime gap closure tests, aligned frontend v2 client paths with backend catalog/OpenAPI, shared auth cookie handling, exposed v2 auth session runtime through real AuthService, and bridged v2 public share routes to real Mail/Drive/Pass share services.
+  - `8f534fee docs(backend-v21): add release gate hardening design`
+  - `b000cf6c docs(backend-v21): add release gate hardening plan`
+  - `6504dbf4 test(backend-v21): cover release gate runtime regressions`
+  - `7e3a4af4 ci(backend-v21): gate v21 runtime regressions`
+- Files changed: added a release gate contract test, promoted all committed `BackendV21*` regressions into `scripts/validate-local.sh`, mirrored the same v2.1 runtime group in GitHub Actions, and kept failures visible through direct Maven exits.
 - Verification:
-  - `timeout 60s mvn -pl mmmail-server -am -f backend/pom.xml test -Dtest=BackendV21RuntimeContractGapClosureTest,BackendV21ApiContractCatalogTest,BackendV21AccessEntitlementGatesTest,AuthFlowIntegrationTest -Dsurefire.failIfNoSpecifiedTests=false`: PASS (`25/25`)
-  - `timeout 60s mvn -pl mmmail-server -am -f backend/pom.xml test -Dtest=BackendV21RuntimeContractGapClosureTest,BackendV21ApiContractCatalogTest,BackendV21AccessEntitlementGatesTest,BackendV21CommunityRuntimeClosureTest,BackendV21CollaborationWriteRuntimeTest,BackendV21OpsRuntimeBridgeTest -Dsurefire.failIfNoSpecifiedTests=false`: PASS (`26/26`)
-  - `timeout 60s pnpm --dir frontend-v2 test`: PASS (`84/84`)
+  - `timeout 60s pnpm --dir frontend-v2 exec node --test tests/v21-release-gate-hardening-contract.test.mjs`: PASS (`1/1`)
+  - `bash -n scripts/validate-local.sh`: PASS
+  - `timeout 60s mvn -f backend/pom.xml -pl mmmail-server -am -Dtest=BackendV21AccessEntitlementGatesTest,BackendV21ApiContractCatalogTest,BackendV21BackgroundJobFoundationTest,BackendV21CalendarRuntimeBridgeTest,BackendV21CollaborationWriteRuntimeTest,BackendV21CommunityRuntimeClosureTest,BackendV21DocsSheetsRuntimeBridgeTest,BackendV21DriveRuntimeBridgeTest,BackendV21EventOutboxFoundationTest,BackendV21MailRuntimeBridgeTest,BackendV21OpsRuntimeBridgeTest,BackendV21PassRuntimeBridgeTest,BackendV21RuntimeContractGapClosureTest -Dsurefire.failIfNoSpecifiedTests=false test`: PASS (`58/58`)
+  - `timeout 60s pnpm --dir frontend-v2 test`: PASS (`85/85`)
 
 ## Active Backend Slice
 
-- Slice: `backend-v21-runtime-contract-gap-closure`
+- Slice: `backend-v21-release-gate-hardening`
 - Status: `completed`
-- Started: `2026-05-13`
-- Completed: `2026-05-13`
-- Scope: frontend v2 API client, backend v2.1 catalog/OpenAPI, runtime controllers, auth cookies, auth sessions, AI/MCP capabilities, public share capability and Mail/Drive/Pass share route alignment
+- Started: `2026-05-14`
+- Completed: `2026-05-14`
+- Scope: local and CI release gate coverage for every committed `BackendV21*` runtime, contract, access-gate, outbox, job, and bridge regression
 - Verification:
-  - `timeout 60s mvn -pl mmmail-server -am -f backend/pom.xml test -Dtest=BackendV21RuntimeContractGapClosureTest,BackendV21ApiContractCatalogTest,BackendV21AccessEntitlementGatesTest,AuthFlowIntegrationTest -Dsurefire.failIfNoSpecifiedTests=false`: PASS (`25/25`)
-  - `timeout 60s mvn -pl mmmail-server -am -f backend/pom.xml test -Dtest=BackendV21RuntimeContractGapClosureTest,BackendV21ApiContractCatalogTest,BackendV21AccessEntitlementGatesTest,BackendV21CommunityRuntimeClosureTest,BackendV21CollaborationWriteRuntimeTest,BackendV21OpsRuntimeBridgeTest -Dsurefire.failIfNoSpecifiedTests=false`: PASS (`26/26`)
-  - `timeout 60s pnpm --dir frontend-v2 test`: PASS (`84/84`)
+  - `timeout 60s pnpm --dir frontend-v2 exec node --test tests/v21-release-gate-hardening-contract.test.mjs`: PASS (`1/1`)
+  - `bash -n scripts/validate-local.sh`: PASS
+  - `timeout 60s mvn -f backend/pom.xml -pl mmmail-server -am -Dtest=BackendV21AccessEntitlementGatesTest,BackendV21ApiContractCatalogTest,BackendV21BackgroundJobFoundationTest,BackendV21CalendarRuntimeBridgeTest,BackendV21CollaborationWriteRuntimeTest,BackendV21CommunityRuntimeClosureTest,BackendV21DocsSheetsRuntimeBridgeTest,BackendV21DriveRuntimeBridgeTest,BackendV21EventOutboxFoundationTest,BackendV21MailRuntimeBridgeTest,BackendV21OpsRuntimeBridgeTest,BackendV21PassRuntimeBridgeTest,BackendV21RuntimeContractGapClosureTest -Dsurefire.failIfNoSpecifiedTests=false test`: PASS (`58/58`)
+  - `timeout 60s pnpm --dir frontend-v2 test`: PASS (`85/85`)
 
 ## Remaining v2.1 Risks
 
