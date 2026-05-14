@@ -17,6 +17,7 @@ BACKEND_OBSERVABILITY_TESTS="JobRunMonitorServiceTest,GlobalExceptionHandlerUnit
 BACKEND_SHEETS_TESTS="SheetsWorkbookIntegrationTest,SheetsWorkbookDataManagementIntegrationTest,SheetsSharingVersionIntegrationTest,SheetsWorkbookMultiSheetIntegrationTest"
 FRONTEND_V2_CONTRACT_TESTS="tests/foundation-route-contract.test.mjs tests/redirect-contract.test.mjs tests/auth-scope-contract.test.mjs tests/public-share-contract.test.mjs tests/public-share-runtime-contract.test.mjs tests/public-share-view-contract.test.mjs tests/mail-workspace-contract.test.mjs tests/calendar-workspace-contract.test.mjs tests/drive-workspace-contract.test.mjs tests/pass-workspace-contract.test.mjs tests/docs-sheets-runtime-contract.test.mjs tests/workspace-aggregation-contract.test.mjs tests/settings-panel-contract.test.mjs tests/system-health-contract.test.mjs tests/command-center-query-contract.test.mjs"
 BACKEND_V2_CONTRACT_TESTS="PlatformCapabilityIntegrationTest,PublicShareCapabilityIntegrationTest,WorkspaceAggregationIntegrationTest,AiMcpCapabilityIntegrationTest,RequestHeaderContractIntegrationTest,ObservabilityIntegrationTest,BillingReadinessIntegrationTest,ContractCatalogRegressionTest,TenantScopeFoundationContractTest,BackendModuleExtractionContractTest,PublicShareTokenHashMigrationIntegrationTest,MailPublicShareTokenHashContractTest,PassPublicShareTokenHashContractTest,DrivePublicShareTokenHashContractTest"
+BACKEND_V21_RUNTIME_TESTS="BackendV21AccessEntitlementGatesTest,BackendV21ApiContractCatalogTest,BackendV21BackgroundJobFoundationTest,BackendV21CalendarRuntimeBridgeTest,BackendV21CollaborationWriteRuntimeTest,BackendV21CommunityRuntimeClosureTest,BackendV21DocsSheetsRuntimeBridgeTest,BackendV21DriveRuntimeBridgeTest,BackendV21EventOutboxFoundationTest,BackendV21MailRuntimeBridgeTest,BackendV21OpsRuntimeBridgeTest,BackendV21PassRuntimeBridgeTest,BackendV21RuntimeContractGapClosureTest"
 
 echo "[validate-local] frontend-v2 tests"
 env -u http_proxy -u https_proxy -u HTTP_PROXY -u HTTPS_PROXY -u ALL_PROXY -u all_proxy \
@@ -197,6 +198,11 @@ echo "[validate-local] backend v2 contract regression"
 timeout 60s "$MVN_BIN" -f backend/pom.xml -pl mmmail-server -am \
   -Dtest="$BACKEND_V2_CONTRACT_TESTS" -Dsurefire.failIfNoSpecifiedTests=false test \
   >/tmp/mmmail-backend-v2-contract.log 2>&1
+
+echo "[validate-local] backend v2.1 runtime regression"
+timeout 60s "$MVN_BIN" -f backend/pom.xml -pl mmmail-server -am \
+  -Dtest="$BACKEND_V21_RUNTIME_TESTS" -Dsurefire.failIfNoSpecifiedTests=false test \
+  >/tmp/mmmail-backend-v21-runtime.log 2>&1
 
 echo "[validate-local] backend docs regression"
 timeout 60s "$MVN_BIN" -f backend/pom.xml -pl mmmail-server -am \
