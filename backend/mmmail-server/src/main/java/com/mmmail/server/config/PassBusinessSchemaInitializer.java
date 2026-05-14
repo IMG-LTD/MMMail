@@ -42,8 +42,6 @@ public class PassBusinessSchemaInitializer implements ApplicationRunner {
         ensureMailFolderSchema();
         ensurePassMailboxSchema();
         ensureAliasMailboxRouteSchema();
-        ensureSimpleLoginRelayPolicySchema();
-        ensureStandardNotesSchema();
         ensureMailMessageDeliveryTargetsColumn();
         ensureDriveShareSchema();
     }
@@ -168,55 +166,6 @@ public class PassBusinessSchemaInitializer implements ApplicationRunner {
                 "create index idx_pass_alias_route_owner_alias on pass_alias_mailbox_route(owner_id, alias_id, updated_at)");
         ensureIndex("pass_alias_mailbox_route", "idx_pass_alias_route_owner_mailbox",
                 "create index idx_pass_alias_route_owner_mailbox on pass_alias_mailbox_route(owner_id, mailbox_email, updated_at)");
-    }
-
-    private void ensureSimpleLoginRelayPolicySchema() {
-        ensureTable("simplelogin_relay_policy", """
-                create table if not exists simplelogin_relay_policy (
-                    id bigint primary key,
-                    org_id bigint not null,
-                    custom_domain_id bigint not null,
-                    owner_id bigint not null,
-                    catch_all_enabled tinyint not null default 0,
-                    subdomain_mode varchar(32) not null,
-                    default_mailbox_id bigint not null,
-                    default_mailbox_email varchar(254) not null,
-                    note varchar(500),
-                    created_at timestamp not null,
-                    updated_at timestamp not null,
-                    deleted tinyint not null default 0
-                )
-                """);
-        ensureIndex("simplelogin_relay_policy", "uk_simplelogin_relay_policy_domain",
-                "create unique index uk_simplelogin_relay_policy_domain on simplelogin_relay_policy(custom_domain_id, deleted)");
-        ensureIndex("simplelogin_relay_policy", "idx_simplelogin_relay_policy_org_updated",
-                "create index idx_simplelogin_relay_policy_org_updated on simplelogin_relay_policy(org_id, updated_at)");
-        ensureIndex("simplelogin_relay_policy", "idx_simplelogin_relay_policy_owner_updated",
-                "create index idx_simplelogin_relay_policy_owner_updated on simplelogin_relay_policy(owner_id, updated_at)");
-        ensureIndex("simplelogin_relay_policy", "idx_simplelogin_relay_policy_mailbox",
-                "create index idx_simplelogin_relay_policy_mailbox on simplelogin_relay_policy(default_mailbox_id, updated_at)");
-    }
-
-    private void ensureStandardNotesSchema() {
-        ensureTable("standard_note_folder", """
-                create table if not exists standard_note_folder (
-                    id bigint primary key,
-                    owner_id bigint not null,
-                    name varchar(64) not null,
-                    color varchar(7) not null,
-                    description varchar(160),
-                    created_at timestamp not null,
-                    updated_at timestamp not null,
-                    deleted tinyint not null default 0
-                )
-                """);
-        ensureColumn("standard_note_profile", "folder_id", "alter table standard_note_profile add column folder_id bigint null");
-        ensureIndex("standard_note_profile", "idx_standard_note_profile_owner_folder",
-                "create index idx_standard_note_profile_owner_folder on standard_note_profile(owner_id, folder_id, updated_at)");
-        ensureIndex("standard_note_folder", "uk_standard_note_folder_owner_name",
-                "create unique index uk_standard_note_folder_owner_name on standard_note_folder(owner_id, name, deleted)");
-        ensureIndex("standard_note_folder", "idx_standard_note_folder_owner_updated",
-                "create index idx_standard_note_folder_owner_updated on standard_note_folder(owner_id, updated_at)");
     }
 
     private void ensureMailMessageDeliveryTargetsColumn() {

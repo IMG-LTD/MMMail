@@ -100,6 +100,7 @@ public class SuiteInsightService {
     private static final String RISK_MEDIUM = "MEDIUM";
     private static final String RISK_HIGH = "HIGH";
     private static final String RISK_CRITICAL = "CRITICAL";
+    private static final String PRODUCT_STATUS_PREVIEW = "PREVIEW";
     private static final String PRODUCT_SECURITY = "SECURITY";
     private static final String ACTION_MAIL_ADD_BLOCKED_DOMAIN_BASELINE = "MAIL_ADD_BLOCKED_DOMAIN_BASELINE";
     private static final String ACTION_MAIL_ADD_BLOCKED_SENDER_BASELINE = "MAIL_ADD_BLOCKED_SENDER_BASELINE";
@@ -2251,7 +2252,7 @@ public class SuiteInsightService {
     }
 
     private SuiteReadinessItemVo assessProduct(SuiteProductStatusVo product, ProductSnapshot snapshot) {
-        if (!product.enabledByPlan()) {
+        if (!isReadinessRuntimeVisible(product)) {
             return new SuiteReadinessItemVo(
                     product.code(),
                     product.name(),
@@ -2510,6 +2511,10 @@ public class SuiteInsightService {
                 blockers,
                 deduplicateAndSortActions(actions)
         );
+    }
+
+    private boolean isReadinessRuntimeVisible(SuiteProductStatusVo product) {
+        return product.enabledByPlan() || PRODUCT_STATUS_PREVIEW.equals(product.status());
     }
 
     private long countActiveSessions(Long userId) {

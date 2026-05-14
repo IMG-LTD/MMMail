@@ -1609,6 +1609,26 @@ create unique index uk_pass_alias_route_alias_mailbox on pass_alias_mailbox_rout
 create index idx_pass_alias_route_owner_alias on pass_alias_mailbox_route(owner_id, alias_id, updated_at);
 create index idx_pass_alias_route_owner_mailbox on pass_alias_mailbox_route(owner_id, mailbox_email, updated_at);
 
+create table if not exists simplelogin_relay_policy (
+    id bigint primary key,
+    org_id bigint not null,
+    custom_domain_id bigint not null,
+    owner_id bigint not null,
+    catch_all_enabled tinyint not null default 0,
+    subdomain_mode varchar(32) not null,
+    default_mailbox_id bigint not null,
+    default_mailbox_email varchar(254) not null,
+    note varchar(500),
+    created_at timestamp not null,
+    updated_at timestamp not null,
+    deleted tinyint not null default 0
+);
+
+create unique index uk_simplelogin_relay_policy_domain on simplelogin_relay_policy(custom_domain_id, deleted);
+create index idx_simplelogin_relay_policy_org_updated on simplelogin_relay_policy(org_id, updated_at);
+create index idx_simplelogin_relay_policy_owner_updated on simplelogin_relay_policy(owner_id, updated_at);
+create index idx_simplelogin_relay_policy_mailbox on simplelogin_relay_policy(default_mailbox_id, updated_at);
+
 create table if not exists pass_alias_contact (
     id bigint primary key,
     alias_id bigint not null,

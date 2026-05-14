@@ -45,6 +45,13 @@ public final class SqlScriptMigrationSupport {
         executeRaw(connection, "create index " + indexName + " on " + tableName + definition, tableName + "." + indexName);
     }
 
+    public static void createUniqueIndexIfMissing(Connection connection, String tableName, String indexName, String definition) {
+        if (indexExists(connection, tableName, indexName)) {
+            return;
+        }
+        executeRaw(connection, "create unique index " + indexName + " on " + tableName + definition, tableName + "." + indexName);
+    }
+
     static void execute(Connection connection, String sourceName, String scriptContent) {
         for (String statement : splitStatements(scriptContent)) {
             executeStatement(connection, sourceName, statement);

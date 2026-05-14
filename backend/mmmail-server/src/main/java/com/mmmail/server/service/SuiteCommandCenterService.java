@@ -873,7 +873,7 @@ public class SuiteCommandCenterService {
 
     private List<SuiteCommandItemVo> buildQuickRoutes(List<SuiteProductStatusVo> products) {
         return products.stream()
-                .filter(SuiteProductStatusVo::enabledByPlan)
+                .filter(this::isQuickRouteVisible)
                 .map(product -> new SuiteCommandItemVo(
                         "ROUTE",
                         product.name(),
@@ -884,6 +884,10 @@ public class SuiteCommandCenterService {
                         null
                 ))
                 .toList();
+    }
+
+    private boolean isQuickRouteVisible(SuiteProductStatusVo product) {
+        return product.enabledByPlan() || "PREVIEW".equals(product.status());
     }
 
     private List<SuiteCommandItemVo> buildPinnedSearches(List<SearchPresetVo> presets) {

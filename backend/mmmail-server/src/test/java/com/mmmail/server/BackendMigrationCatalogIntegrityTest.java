@@ -8,6 +8,9 @@ import java.io.IOException;
 import java.nio.file.DirectoryStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.sql.Connection;
+import java.sql.DatabaseMetaData;
+import java.sql.ResultSet;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -22,6 +25,9 @@ class BackendMigrationCatalogIntegrityTest {
 
     private static final Pattern VERSION_PATTERN = Pattern.compile("^V(\\d+)__.+\\.(?:java|sql)$");
     private static final String FLYWAY_CATALOG_JDBC_URL = "jdbc:h2:mem:flyway_catalog;MODE=MySQL;DB_CLOSE_DELAY=-1";
+    private static final String FLYWAY_SUITE_PREVIEW_JDBC_URL =
+            "jdbc:h2:mem:flyway_suite_preview;MODE=MySQL;DATABASE_TO_LOWER=TRUE;"
+                    + "CASE_INSENSITIVE_IDENTIFIERS=TRUE;DB_CLOSE_DELAY=-1";
     private static final int MAX_MIGRATIONS_PER_VERSION = 1;
     private static final List<String> PRODUCTION_MIGRATION_DIRS = List.of(
             "src/main/java/db/migration",
@@ -49,6 +55,20 @@ class BackendMigrationCatalogIntegrityTest {
                 .load();
 
         assertThatCode(flyway::info).doesNotThrowAnyException();
+    }
+
+    @Test
+    void flywayShouldCreateSuitePreviewRuntimeSchema() throws Exception {
+        Flyway flyway = MigrationDefaults.apply(Flyway.configure()
+                .dataSource(FLYWAY_SUITE_PREVIEW_JDBC_URL, "sa", ""))
+                .load();
+        flyway.migrate();
+
+        try (Connection connection = flyway.getConfiguration().getDataSource().getConnection()) {
+            assertThat(tableExists(connection, "simplelogin_relay_policy")).isTrue();
+            assertThat(tableExists(connection, "standard_note_folder")).isTrue();
+            assertThat(columnExists(connection, "standard_note_profile", "folder_id")).isTrue();
+        }
     }
 
     private static Map<Integer, List<Path>> productionMigrationsByVersion() throws IOException {
@@ -88,5 +108,19 @@ class BackendMigrationCatalogIntegrityTest {
                 .as("module root containing src/main/java/db/migration should exist")
                 .isNotNull();
         return current;
+    }
+
+    private static boolean tableExists(Connection connection, String tableName) throws Exception {
+        DatabaseMetaData metadata = connection.getMetaData();
+        try (ResultSet tables = metadata.getTables(null, null, tableName, new String[]{"TABLE"})) {
+            return tables.next();
+        }
+    }
+
+    private static boolean columnExists(Connection connection, String tableName, String columnName) throws Exception {
+        DatabaseMetaData metadata = connection.getMetaData();
+        try (ResultSet columns = metadata.getColumns(null, null, tableName, columnName)) {
+            return columns.next();
+        }
     }
 }
