@@ -49,6 +49,7 @@ public record V21ApiContractCatalog(String version, List<V21ApiContract> contrac
     private static List<V21ApiContract> workspaceContracts() {
         return module("workspace", "docs/MMMail/UI/首页", new String[][]{
                 {"GET", "/api/v2/workspace/summary", "WorkspaceSummary", COMMUNITY, "workspace:read"},
+                {"GET", "/api/v2/workspace/aggregation", "WorkspaceAggregationCapabilities", COMMUNITY, "workspace:read"},
                 {"GET", "/api/v2/workspace/activity", "WorkspaceActivityItem[]", COMMUNITY, "workspace:read"},
                 {"GET", "/api/v2/workspace/tasks", "WorkspaceTask[]", COMMUNITY, "workspace:read"},
                 {"PATCH", "/api/v2/workspace/tasks/:id", "WorkspaceTask", COMMUNITY, "workspace:write"}
@@ -208,6 +209,7 @@ public record V21ApiContractCatalog(String version, List<V21ApiContract> contrac
 
     private static List<V21ApiContract> billingContracts() {
         return module("billing", "docs/MMMail/UI/Admin", new String[][]{
+                {"GET", "/api/v2/billing/readiness", "BillingReadinessCapabilities", COMMUNITY, "billing:readiness:read"},
                 {"GET", "/api/v2/billing/summary", "BillingSummary", HOSTED, "billing:read"},
                 {"GET", "/api/v2/billing/plans", "BillingPlan[]", HOSTED, "billing:plans:read"},
                 {"GET", "/api/v2/billing/invoices", "BillingInvoice[]", HOSTED, "billing:invoices:read"},

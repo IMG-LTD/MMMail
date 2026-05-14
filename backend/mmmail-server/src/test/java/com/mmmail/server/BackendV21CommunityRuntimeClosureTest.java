@@ -98,6 +98,35 @@ class BackendV21CommunityRuntimeClosureTest {
         assertThat(containsText(matrix.path("hosted"), "GET /api/v2/billing/summary")).isTrue();
     }
 
+    @Test
+    void labsShouldExposePreviewModuleReadModels() throws Exception {
+        String token = register("v21-community-labs-" + System.nanoTime() + "@mmmail.local", "V21 Labs");
+
+        JsonNode modules = getData(token, "/api/v2/labs/modules");
+        JsonNode authenticator = findByKey(modules, "authenticator");
+        assertThat(authenticator.path("label").asText()).isEqualTo("Authenticator");
+        assertThat(authenticator.path("maturity").asText()).isEqualTo("preview");
+        assertThat(authenticator.path("premium").asBoolean()).isFalse();
+        assertThat(authenticator.path("hosted").asBoolean()).isFalse();
+
+        JsonNode lumo = getData(token, "/api/v2/labs/modules/lumo");
+        assertThat(lumo.path("key").asText()).isEqualTo("lumo");
+        assertThat(lumo.path("description").asText()).contains("preview");
+    }
+
+    @Test
+    void publicSystemStatusShouldExposeHighLevelStateWithoutAuthentication() throws Exception {
+        MvcResult result = mockMvc.perform(get("/api/v2/system/status"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.updatedAt").isNotEmpty())
+                .andExpect(jsonPath("$.data.incidentMessage").isEmpty())
+                .andExpect(jsonPath("$.data.maintenanceWindow").isEmpty())
+                .andReturn();
+
+        JsonNode status = readJson(result).at("/data/status");
+        assertThat(status.asText()).isIn("operational", "degraded", "maintenance", "offline");
+    }
+
     private void assertSecuritySettings(String token) throws Exception {
         JsonNode security = getData(token, "/api/v2/settings/security");
         assertThat(security.path("mfaEnabled").asBoolean()).isFalse();

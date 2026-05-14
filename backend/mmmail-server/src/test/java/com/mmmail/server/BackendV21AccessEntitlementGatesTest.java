@@ -54,6 +54,8 @@ class BackendV21AccessEntitlementGatesTest {
                 .collect(Collectors.toMap(V21ApiContract::identity, Function.identity()));
 
         assertThat(contracts).containsKeys(
+                "GET /api/v2/workspace/aggregation",
+                "GET /api/v2/billing/readiness",
                 "GET /api/v2/platform/contracts",
                 "GET /api/v2/platform/capabilities",
                 "GET /api/v2/ai-platform/capabilities",

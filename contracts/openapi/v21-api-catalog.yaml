@@ -13,6 +13,8 @@ paths:
     get: {summary: Read MCP registry capabilities, x-permission: ["mcp:registry:read"], x-entitlement: community, x-design-source: docs/MMMail/UI/Admin, x-response-model: "McpRegistryCapabilities", responses: {"200": {description: "Successful McpRegistryCapabilities response", content: {application/json: {schema: {allOf: [{$ref: "#/components/schemas/ResultEnvelope"}, {type: object, properties: {data: {$ref: "#/components/schemas/McpRegistryCapabilities"}}}]}}}}}}
   /api/v2/workspace/summary:
     get: {summary: Read workspace summary, x-permission: ["workspace:read"], x-entitlement: community, x-design-source: docs/MMMail/UI/首页, x-response-model: "WorkspaceSummary", responses: {"200": {description: "Successful WorkspaceSummary response", content: {application/json: {schema: {allOf: [{$ref: "#/components/schemas/ResultEnvelope"}, {type: object, properties: {data: {$ref: "#/components/schemas/WorkspaceSummary"}}}]}}}}}}
+  /api/v2/workspace/aggregation:
+    get: {summary: Read workspace aggregation capabilities, x-permission: ["workspace:read"], x-entitlement: community, x-design-source: docs/MMMail/UI/首页, x-response-model: "WorkspaceAggregationCapabilities", responses: {"200": {description: "Successful WorkspaceAggregationCapabilities response", content: {application/json: {schema: {allOf: [{$ref: "#/components/schemas/ResultEnvelope"}, {type: object, properties: {data: {$ref: "#/components/schemas/WorkspaceAggregationCapabilities"}}}]}}}}}}
   /api/v2/workspace/activity:
     get: {summary: Read workspace activity, x-permission: ["workspace:read"], x-entitlement: community, x-design-source: docs/MMMail/UI/首页, x-response-model: "WorkspaceActivityItem[]", responses: {"200": {description: "Successful WorkspaceActivityItem[] response", content: {application/json: {schema: {allOf: [{$ref: "#/components/schemas/ResultEnvelope"}, {type: object, properties: {data: {type: array, items: {$ref: "#/components/schemas/WorkspaceActivityItem"}}}}]}}}}}}
   /api/v2/workspace/tasks:
@@ -193,6 +195,8 @@ paths:
     get: {summary: Read admin system, x-permission: ["admin:system:read"], x-entitlement: enterprise-governance, x-design-source: docs/MMMail/UI/Admin, x-response-model: "AdminSystemStatus", responses: {"200": {description: "Successful AdminSystemStatus response", content: {application/json: {schema: {allOf: [{$ref: "#/components/schemas/ResultEnvelope"}, {type: object, properties: {data: {$ref: "#/components/schemas/AdminSystemStatus"}}}]}}}}}}
   /api/v2/admin/risk:
     get: {summary: Read admin risk, x-permission: ["admin:risk:read"], x-entitlement: enterprise-governance, x-design-source: docs/MMMail/UI/Admin, x-response-model: "AdminRiskOverview", responses: {"200": {description: "Successful AdminRiskOverview response", content: {application/json: {schema: {allOf: [{$ref: "#/components/schemas/ResultEnvelope"}, {type: object, properties: {data: {$ref: "#/components/schemas/AdminRiskOverview"}}}]}}}}}}
+  /api/v2/billing/readiness:
+    get: {summary: Read billing readiness capabilities, x-permission: ["billing:readiness:read"], x-entitlement: community, x-design-source: docs/MMMail/UI/Admin, x-response-model: "BillingReadinessCapabilities", responses: {"200": {description: "Successful BillingReadinessCapabilities response", content: {application/json: {schema: {allOf: [{$ref: "#/components/schemas/ResultEnvelope"}, {type: object, properties: {data: {$ref: "#/components/schemas/BillingReadinessCapabilities"}}}]}}}}}}
   /api/v2/billing/summary:
     get: {summary: Read billing summary, x-permission: ["billing:read"], x-entitlement: hosted, x-design-source: docs/MMMail/UI/Admin, x-response-model: "BillingSummary", responses: {"200": {description: "Successful BillingSummary response", content: {application/json: {schema: {allOf: [{$ref: "#/components/schemas/ResultEnvelope"}, {type: object, properties: {data: {$ref: "#/components/schemas/BillingSummary"}}}]}}}}}}
   /api/v2/billing/plans:
@@ -271,6 +275,7 @@ components:
     AuthPayload: {type: object, additionalProperties: true}
     BillingInvoice: {type: object, additionalProperties: true}
     BillingPlan: {type: object, additionalProperties: true}
+    BillingReadinessCapabilities: {type: object, additionalProperties: true}
     BillingSummary: {type: object, additionalProperties: true}
     BillingUsage: {type: object, additionalProperties: true}
     CalendarAvailability: {type: object, additionalProperties: true}
@@ -333,5 +338,6 @@ components:
     V21ApiContractCatalog: {type: object, additionalProperties: true}
     Void: {nullable: true}
     WorkspaceActivityItem: {type: object, additionalProperties: true}
+    WorkspaceAggregationCapabilities: {type: object, additionalProperties: true}
     WorkspaceSummary: {type: object, additionalProperties: true}
     WorkspaceTask: {type: object, additionalProperties: true}

@@ -54,6 +54,9 @@
 - `Collaboration / Command Center / Notifications / Labs` 保持 `Preview`
 - `frontend-v2` tests、contract regression、typecheck 与 audit 门禁全部通过
 - backend migration、security 与 capability 回归全部通过
+- 发布门禁必须覆盖 `token-hash public-share contract`
+- 发布门禁必须覆盖 `tenant/scope foundation kernel`
+- 发布门禁必须覆盖 `module kernel extraction`
 
 ## 6. 故障处理
 - 应用健康异常、指标、后台任务、权限边界等运行态排查，参考 `docs/ops/runbook.md`

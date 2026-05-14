@@ -69,6 +69,7 @@ class BackendV21ApiContractCatalogTest {
 
         assertThat(catalog.moduleCount()).isGreaterThanOrEqualTo(15);
         assertContract(byPath, "GET /api/v2/workspace/summary", "workspace", "WorkspaceSummary", "community");
+        assertContract(byPath, "GET /api/v2/workspace/aggregation", "workspace", "WorkspaceAggregationCapabilities", "community");
         assertContract(byPath, "POST /api/v2/mail/send", "mail", "MailSendResult", "community");
         assertContract(byPath, "POST /api/v2/calendar/bookings", "calendar", "CalendarEvent", "premium");
         assertContract(byPath, "POST /api/v2/drive/uploads", "drive", "DriveItem", "community");
@@ -91,6 +92,7 @@ class BackendV21ApiContractCatalogTest {
                 .collect(Collectors.toSet());
 
         assertThat(ownerModules).containsAll(REQUIRED_OWNER_MODULES);
+        assertContract(contractsByIdentity, "GET /api/v2/billing/readiness", "billing", "BillingReadinessCapabilities", "community");
         assertContract(contractsByIdentity, "GET /api/v2/billing/summary", "billing", "BillingSummary", "hosted");
         assertContract(contractsByIdentity, "GET /api/v2/billing/plans", "billing", "BillingPlan[]", "hosted");
         assertContract(contractsByIdentity, "GET /api/v2/billing/invoices", "billing", "BillingInvoice[]", "hosted");
@@ -123,7 +125,7 @@ class BackendV21ApiContractCatalogTest {
                 .header("Authorization", "Bearer " + token))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.data.version").value("v2.1"))
-                .andExpect(jsonPath("$.data.contracts.length()").value(136))
+                .andExpect(jsonPath("$.data.contracts.length()").value(138))
                 .andExpect(jsonPath("$.data.contracts[0].method").value("GET"))
                 .andExpect(jsonPath("$.data.contracts[0].path").value("/api/v2/workspace/summary"));
     }
@@ -142,8 +144,10 @@ class BackendV21ApiContractCatalogTest {
         assertThat(openApi)
                 .contains("title: MMMail v2.1 API Contract Catalog")
                 .contains("/api/v2/workspace/summary:")
+                .contains("/api/v2/workspace/aggregation:")
                 .contains("/api/v2/mail/send:")
                 .contains("/api/v2/admin/summary:")
+                .contains("/api/v2/billing/readiness:")
                 .contains("/api/v2/billing/summary:")
                 .contains("x-permission: [\"billing:read\"]")
                 .contains("x-entitlement: hosted")
