@@ -169,6 +169,25 @@ class BackendV21ApiContractCatalogTest {
                 .contains("x-design-source:");
     }
 
+    @Test
+    void openApiCatalogShouldExposeSdkUsableResponseSchemas() throws Exception {
+        Path repoRoot = resolveRepoRoot();
+        String openApi = Files.readString(repoRoot.resolve("contracts/openapi/v21-api-catalog.yaml"));
+
+        assertThat(openApi)
+                .doesNotContain("description: ok")
+                .contains("components:")
+                .contains("ResultEnvelope:")
+                .contains("WorkspaceSummary:")
+                .contains("MailSendResult:")
+                .contains("PublicShareDownload:")
+                .contains("$ref: \"#/components/schemas/ResultEnvelope\"")
+                .contains("$ref: \"#/components/schemas/WorkspaceSummary\"")
+                .contains("$ref: \"#/components/schemas/MailSendResult\"")
+                .contains("application/json:")
+                .contains("items:");
+    }
+
     private void assertContract(Map<String, V21ApiContract> byPath, String identity, String owner, String responseModel, String entitlement) {
         assertThat(byPath).containsKey(identity);
         V21ApiContract contract = byPath.get(identity);
