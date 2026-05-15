@@ -1,6 +1,6 @@
 # v2.1 Browser Visual QA Report
 
-Generated at: 2026-05-12T11:52:21.920Z
+Generated at: 2026-05-15T02:37:22.380Z
 
 Total screenshots: 69
 
@@ -41,11 +41,11 @@ Total screenshots: 69
 | 文档 | docs-workspace | desktop 1440x900 | `/docs` | `.base-layout`, `.top-bar`, `.base-layout__content`, `.docs-shell`, `.docs-shell__list` | `.tmp/v21-browser-visual-qa/docs-workspace-desktop.png` |
 | 文档 | docs-workspace | tablet 1024x768 | `/docs` | `.base-layout`, `.top-bar`, `.base-layout__content`, `.docs-shell`, `.docs-shell__list` | `.tmp/v21-browser-visual-qa/docs-workspace-tablet.png` |
 | 文档 | docs-workspace | mobile 390x844 | `/docs` | `.base-layout`, `.top-bar`, `.base-layout__content`, `.docs-shell`, `.docs-shell__list` | `.tmp/v21-browser-visual-qa/docs-workspace-mobile.png` |
-| 文档 | docs-editor | desktop 1440x900 | `/docs/demo-document` | `.base-layout`, `.top-bar`, `.base-layout__content`, `.docs-editor`, `.docs-editor__canvas` | `.tmp/v21-browser-visual-qa/docs-editor-desktop.png` |
+| 文档 | docs-editor | desktop 1440x900 | `/docs/2055114660261715969` | `.base-layout`, `.top-bar`, `.base-layout__content`, `.docs-editor`, `.docs-editor__canvas` | `.tmp/v21-browser-visual-qa/docs-editor-desktop.png` |
 | Sheets和labs | sheets-workspace | desktop 1440x900 | `/sheets` | `.base-layout`, `.top-bar`, `.base-layout__content`, `.sheets-workspace`, `.data-table`, `.sheets-preview` | `.tmp/v21-browser-visual-qa/sheets-workspace-desktop.png` |
 | Sheets和labs | sheets-workspace | tablet 1024x768 | `/sheets` | `.base-layout`, `.top-bar`, `.base-layout__content`, `.sheets-workspace`, `.data-table`, `.sheets-preview` | `.tmp/v21-browser-visual-qa/sheets-workspace-tablet.png` |
 | Sheets和labs | sheets-workspace | mobile 390x844 | `/sheets` | `.base-layout`, `.top-bar`, `.base-layout__content`, `.sheets-workspace`, `.data-table`, `.sheets-preview` | `.tmp/v21-browser-visual-qa/sheets-workspace-mobile.png` |
-| Sheets和labs | sheets-editor | desktop 1440x900 | `/sheets/demo-sheet` | `.base-layout`, `.top-bar`, `.base-layout__content`, `.sheets-editor`, `.sheets-editor__grid` | `.tmp/v21-browser-visual-qa/sheets-editor-desktop.png` |
+| Sheets和labs | sheets-editor | desktop 1440x900 | `/sheets/2055114660261715970` | `.base-layout`, `.top-bar`, `.base-layout__content`, `.sheets-editor`, `.sheets-editor__grid` | `.tmp/v21-browser-visual-qa/sheets-editor-desktop.png` |
 | Sheets和labs | labs-overview | desktop 1440x900 | `/labs` | `.base-layout`, `.top-bar`, `.base-layout__content`, `.labs-grid` | `.tmp/v21-browser-visual-qa/labs-overview-desktop.png` |
 | Pass | pass-vault | desktop 1440x900 | `/pass` | `.base-layout`, `.top-bar`, `.base-layout__content`, `.pass-surface`, `.pass-item-list` | `.tmp/v21-browser-visual-qa/pass-vault-desktop.png` |
 | Pass | pass-vault | tablet 1024x768 | `/pass` | `.base-layout`, `.top-bar`, `.base-layout__content`, `.pass-surface`, `.pass-item-list` | `.tmp/v21-browser-visual-qa/pass-vault-tablet.png` |
@@ -87,10 +87,10 @@ Total screenshots: 69
 | 邮件 | mail-compose | desktop 1440x900 | `/mail/compose` | `.mail-compose`, `.mail-compose-panel`, `.mail-trust-panel` | `.tmp/v21-browser-visual-qa/mail-compose-desktop.png` |
 | 邮件 | mail-compose-security | desktop 1440x900 | `/mail/compose` | `.mail-compose-panel`, `.mail-trust-panel`, `.mail-attachment-strip`, `.mail-send-error`, `.mail-send-retry`, `.mail-discard-confirmation` | `.tmp/v21-browser-visual-qa/mail-compose-security-desktop.png` |
 | 邮件 | mail-thread-workbench | desktop 1440x900 | `/mail/inbox` | `.mail-folder-rail`, `.mail-message-list`, `.mail-thread-reader`, `.mail-attachment-strip` | `.tmp/v21-browser-visual-qa/mail-thread-workbench-desktop.png` |
-| 日历 | calendar-event-drawer | desktop 1440x900 | `/calendar` | `.calendar-event-drawer`, `.calendar-conflict-panel`, `.calendar-resource-state`, `.calendar-save-error`, `.calendar-save-retry` | `.tmp/v21-browser-visual-qa/calendar-event-drawer-desktop.png` |
+| 日历 | calendar-event-drawer | desktop 1440x900 | `/calendar` | `.calendar-event-drawer`, `.calendar-conflict-panel`, `.calendar-resource-state` | `.tmp/v21-browser-visual-qa/calendar-event-drawer-desktop.png` |
 | 云盘 | drive-share-panel | desktop 1440x900 | `/drive` | `.drive-share-panel`, `.drive-share-panel__title`, `.drive-share-panel__members`, `.drive-share-panel__public-link`, `.drive-share-panel__revoke`, `.drive-share-panel__retry` | `.tmp/v21-browser-visual-qa/drive-share-panel-desktop.png` |
-| 文档 | docs-share-panel | desktop 1440x900 | `/docs/demo-document` | `.docs-share-panel`, `.docs-share-panel__invite-input`, `.docs-share-panel__role-select`, `.docs-share-panel__link-access`, `.docs-share-panel__collaborators`, `.docs-share-panel__error`, `.docs-share-panel__retry` | `.tmp/v21-browser-visual-qa/docs-share-panel-desktop.png` |
-| Sheets和labs | sheets-protected-range | desktop 1440x900 | `/sheets/demo-sheet` | `.sheets-protected-range-modal`, `.sheets-protected-range-modal__range-input`, `.sheets-protected-range-modal__editors`, `.sheets-protected-range-modal__conflict`, `.sheets-protected-range-modal__error`, `.sheets-protected-range-modal__retry` | `.tmp/v21-browser-visual-qa/sheets-protected-range-desktop.png` |
+| 文档 | docs-share-panel | desktop 1440x900 | `/docs/2055114660261715969` | `.docs-share-panel`, `.docs-share-panel__invite-input`, `.docs-share-panel__role-select`, `.docs-share-panel__link-access`, `.docs-share-panel__collaborators`, `.docs-share-panel__error`, `.docs-share-panel__retry` | `.tmp/v21-browser-visual-qa/docs-share-panel-desktop.png` |
+| Sheets和labs | sheets-protected-range | desktop 1440x900 | `/sheets/2055114660261715970` | `.sheets-protected-range-modal`, `.sheets-protected-range-modal__range-input`, `.sheets-protected-range-modal__editors`, `.sheets-protected-range-modal__conflict`, `.sheets-protected-range-modal__error`, `.sheets-protected-range-modal__retry` | `.tmp/v21-browser-visual-qa/sheets-protected-range-desktop.png` |
 | Pass | pass-secret-actions | desktop 1440x900 | `/pass` | `.pass-item-detail`, `.pass-secret-reveal`, `.pass-rotate-confirmation`, `.pass-action-error`, `.pass-action-retry` | `.tmp/v21-browser-visual-qa/pass-secret-actions-desktop.png` |
 | Pass | pass-secure-link-settings | desktop 1440x900 | `/pass/secure-links` | `.pass-share-settings-modal`, `.pass-action-error`, `.pass-action-retry` | `.tmp/v21-browser-visual-qa/pass-secure-link-settings-desktop.png` |
 | Pass | pass-risk-detail | desktop 1440x900 | `/pass/monitor` | `.pass-risk-monitor-panel`, `.pass-risk-detail`, `.pass-action-retry` | `.tmp/v21-browser-visual-qa/pass-risk-detail-desktop.png` |
@@ -106,8 +106,8 @@ Total screenshots: 69
 - 邮件: `mail-thread-workbench` on `/mail/inbox`
 - 日历: `calendar-event-drawer` on `/calendar`
 - 云盘: `drive-share-panel` on `/drive`
-- 文档: `docs-share-panel` on `/docs/demo-document`
-- Sheets和labs: `sheets-protected-range` on `/sheets/demo-sheet`
+- 文档: `docs-share-panel` on `/docs/2055114660261715969`
+- Sheets和labs: `sheets-protected-range` on `/sheets/2055114660261715970`
 - Pass: `pass-secret-actions` on `/pass`
 - Pass: `pass-secure-link-settings` on `/pass/secure-links`
 - Pass: `pass-risk-detail` on `/pass/monitor`

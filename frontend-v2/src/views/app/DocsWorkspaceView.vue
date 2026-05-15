@@ -352,4 +352,14 @@ watch(() => [route.fullPath, authStore.accessToken], () => {
     border-bottom: 1px solid var(--mm-border);
   }
 }
+
+@media (max-width: 820px) {
+  .docs-shell__list {
+    padding-bottom: 96px;
+  }
+
+  .docs-row:last-of-type {
+    margin-bottom: 8px;
+  }
+}
 </style>

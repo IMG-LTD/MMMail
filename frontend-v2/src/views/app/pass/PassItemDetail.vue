@@ -33,6 +33,12 @@ defineEmits<{
       <span class="section-label">{{ secondaryCard.label }}</span>
       <strong>{{ secondaryCard.title }}</strong>
       <p>{{ secondaryCard.copy }}</p>
+      <dl v-if="secondaryCard.facts.length">
+        <div v-for="fact in secondaryCard.facts" :key="fact.label">
+          <dt>{{ fact.label }}</dt>
+          <dd>{{ fact.value }}</dd>
+        </div>
+      </dl>
     </article>
     <div class="pass-item-detail__actions">
       <button class="pass-secret-reveal" type="button" @click="$emit('toggleSecret')">

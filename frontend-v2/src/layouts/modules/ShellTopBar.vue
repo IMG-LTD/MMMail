@@ -306,11 +306,15 @@ function openQuickCreate() {
 @media (max-width: 820px) {
   .top-bar {
     gap: 10px;
-    padding-inline: 10px;
+    padding-inline: 10px 12px;
   }
 
   .top-bar__center {
     min-width: 0;
+  }
+
+  .top-bar__right {
+    padding-right: 4px;
   }
 
   .top-bar__surface {
@@ -334,6 +338,11 @@ function openQuickCreate() {
   .quick-create-button,
   .scope-pill {
     display: none;
+  }
+
+  .avatar-chip {
+    min-width: 34px;
+    height: 34px;
   }
 }
 </style>

@@ -165,4 +165,27 @@
   .sheets-editor__top {
     grid-template-columns: 1fr;
   }
+
+  .sheets-editor__actions {
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    padding: 0 28px 6px 0;
+    scrollbar-color: var(--mm-border-strong) transparent;
+    scrollbar-width: thin;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .sheets-editor__actions::after {
+    content: "";
+    position: sticky;
+    right: -28px;
+    flex: 0 0 28px;
+    margin-left: -28px;
+    pointer-events: none;
+    background: linear-gradient(90deg, rgba(255, 255, 255, 0), var(--mm-card));
+  }
+
+  .sheets-editor__actions button {
+    flex: 0 0 auto;
+  }
 }

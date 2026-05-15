@@ -190,4 +190,14 @@ watch(
     grid-template-columns: 1fr;
   }
 }
+
+@media (max-width: 820px) {
+  .collaboration-filters {
+    gap: 12px;
+  }
+
+  .collaboration-activity {
+    margin-bottom: 96px;
+  }
+}
 </style>

@@ -46,7 +46,8 @@ withDefaults(
 .compact-page-header__title-row {
   display: flex;
   align-items: center;
-  gap: 10px;
+  flex-wrap: wrap;
+  gap: 8px 12px;
 }
 
 .compact-page-header__copy {

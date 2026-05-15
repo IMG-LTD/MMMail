@@ -302,10 +302,17 @@ watch(
   background: var(--mm-card);
 }
 
+.admin-page__action,
+.admin-nav button {
+  flex: 0 0 auto;
+}
+
 .admin-nav {
   display: flex;
   flex-wrap: wrap;
   gap: 10px;
+  min-width: 0;
+  padding-right: 4px;
 }
 
 .admin-nav__active {
@@ -362,12 +369,19 @@ watch(
   align-items: center;
   justify-content: space-between;
   gap: 12px;
+  min-width: 0;
 }
 
 .admin-row span,
 .admin-billing span {
   color: var(--mm-text-secondary);
   font-size: 12px;
+}
+
+.admin-row strong,
+.admin-row span {
+  min-width: 0;
+  overflow-wrap: anywhere;
 }
 
 .admin-billing {

@@ -120,6 +120,19 @@
   display: flex;
   justify-content: space-between;
   gap: 10px;
+  min-width: 0;
+}
+
+.mail-message-list__row-head strong {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.mail-message-list__row-head span {
+  flex: 0 0 auto;
+  white-space: nowrap;
 }
 
 .mail-message-list__row {
@@ -127,12 +140,19 @@
   padding: 14px;
 }
 
+.mail-message-list__row > div {
+  min-width: 0;
+}
+
 .mail-message-list__row p,
+.mail-message-list__row small,
 .mail-thread-reader__body p,
 .mail-directory__card p,
 .mail-trust-panel p,
 .mail-discard-confirmation p {
   margin: 4px 0 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .mail-message-list__badge {
@@ -247,7 +267,7 @@
   .mail-folder-rail,
   .mail-message-list {
     border-right: 0;
-    border-bottom: 1px solid var(--mm-border);
+    border-bottom: 1px solid var(--mm-border-strong);
   }
 }
 

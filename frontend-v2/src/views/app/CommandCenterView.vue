@@ -192,7 +192,7 @@ watch(
 </script>
 
 <template>
-  <section class="page-shell surface-grid">
+  <section class="page-shell surface-grid command-center-page">
     <compact-page-header
       :eyebrow="lt('聚合', '聚合', 'Aggregation')"
       :title="lt('指挥中心', '指揮中心', 'Command Center')"
@@ -346,6 +346,12 @@ watch(
 @media (max-width: 920px) {
   .command-grid {
     grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 820px) {
+  .command-center-page {
+    gap: 20px;
   }
 }
 </style>

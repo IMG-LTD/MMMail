@@ -185,7 +185,11 @@ function toggleSelection(row: DataTableRow, index: number) {
 
 .data-table th button,
 .data-table td button {
+  min-width: 40px;
+  min-height: 34px;
+  padding: 0 10px;
   border: 0;
+  border-radius: 8px;
   background: transparent;
   color: var(--mm-brand-primary);
   font-weight: 800;
@@ -215,6 +219,13 @@ function toggleSelection(row: DataTableRow, index: number) {
 
 .data-table--stacked table {
   min-width: 0;
+}
+
+@media (max-width: 900px) {
+  .data-table td button {
+    min-width: 44px;
+    min-height: 40px;
+  }
 }
 
 @media (max-width: 520px) {

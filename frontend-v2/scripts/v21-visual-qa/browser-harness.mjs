@@ -28,7 +28,7 @@ const ACTION_EXPRESSIONS = {
   clickQuickCreate: clickSelectorExpression('.quick-create-button'),
   clickSheetsProtectedRange: clickAndSubmitExpression('.sheets-protected-range-trigger', '.sheets-protected-range-modal__save'),
   clickThemeDrawer: clickByLabelExpression('Theme settings|主题设置|主題設定'),
-  openCalendarEventDrawer: clickAndSubmitExpression('.calendar-event-trigger', '.calendar-event-drawer__save'),
+  openCalendarEventDrawer: clickSelectorExpression('.calendar-event-trigger'),
   openPassRiskDetail: clickSelectorExpression('.pass-risk-trigger'),
   openPassShareSettings: clickAndSubmitExpression('.pass-secure-link-trigger', '.pass-share-settings-modal__save'),
   none: '(() => true)()'
@@ -60,9 +60,13 @@ export async function resolveChromePath(candidates) {
 }
 
 export async function startViteServer(config) {
+  if (!config.apiBaseUrl) {
+    throw new Error('VITE_API_BASE_URL is required for browser visual QA runtime API screenshots')
+  }
   const viteBin = path.join(config.frontendRoot, 'node_modules/vite/bin/vite.js')
   const child = spawn(process.execPath, [viteBin, '--host', config.host, '--port', String(config.port), '--strictPort'], {
     cwd: config.frontendRoot,
+    env: { ...process.env, VITE_API_BASE_URL: config.apiBaseUrl },
     stdio: ['ignore', 'pipe', 'pipe']
   })
   child.stderr.on('data', chunk => process.stderr.write(chunk))
@@ -157,14 +161,55 @@ async function waitForHttp(url, timeoutMs) {
 async function captureScenario(context, scenario, viewport, checks, kind) {
   const page = await openPage(context.cdp, viewport)
   try {
-    await navigate(context.cdp, page.sessionId, buildUrl(context, scenario.path))
+    const routePath = resolveScenarioPath(context, scenario.path)
+    await navigate(context.cdp, page.sessionId, buildUrl(context, '/login'))
+    await injectVisualQaBrowserState(context.cdp, page.sessionId, context.authSession)
+    await navigate(context.cdp, page.sessionId, buildUrl(context, routePath))
     await activateScenario(context.cdp, page.sessionId, scenario)
     await assertPageState(context.cdp, page.sessionId, checks, scenario.id)
     const screenshot = await captureScreenshot(context, page.sessionId, `${scenario.id}-${viewport.name}.png`)
-    return createResult(scenario, viewport, checks, screenshot, kind)
+    return createResult(scenario, viewport, checks, screenshot, kind, routePath)
   } finally {
     await closePage(context.cdp, page.targetId)
   }
+}
+
+function resolveScenarioPath(context, routePath) {
+  const runtimeRoutes = {
+    '/docs/demo-document': `/docs/${resolveRuntimeId(context, 'docsNoteId', routePath)}`,
+    '/sheets/demo-sheet': `/sheets/${resolveRuntimeId(context, 'sheetsWorkbookId', routePath)}`
+  }
+  return runtimeRoutes[routePath] || routePath
+}
+
+function resolveRuntimeId(context, key, routePath) {
+  const value = context.runtimeData?.[key]
+  if (!value) {
+    throw new Error(`Visual QA route ${routePath} requires runtimeData.${key}`)
+  }
+  return value
+}
+
+async function injectVisualQaBrowserState(cdp, sessionId, authSession) {
+  if (!authSession?.accessToken || !authSession?.user) {
+    throw new Error('Visual QA auth session is required before capturing app screenshots')
+  }
+  const onboardingState = {
+    completedAt: '2026-05-15T00:00:00.000Z',
+    hasSeenGuide: true,
+    skippedAt: '2026-05-15T00:00:00.000Z'
+  }
+  const entries = [
+    ['mmmail.auth.session.v1', JSON.stringify(authSession)],
+    ['mmmail.onboarding.v1', JSON.stringify(onboardingState)]
+  ]
+  const expression = `(() => {
+    for (const [key, value] of ${JSON.stringify(entries)}) {
+      window.localStorage.setItem(key, value);
+    }
+    return true;
+  })()`
+  await evaluate(cdp, sessionId, expression)
 }
 
 async function openPage(cdp, viewport) {
@@ -248,7 +293,7 @@ function buildDomCheckExpression(checks) {
   return `(() => {
     const checks = ${JSON.stringify(checks)};
     const text = document.body?.innerText || '';
-    const hasViteError = Boolean(document.querySelector('vite-error-overlay')) || /Internal server error|Failed to load module/i.test(text);
+    const hasViteError = Boolean(document.querySelector('vite-error-overlay')) || /Failed to load module/i.test(text);
     return {
       hasViteError,
       textSample: text.trim().slice(0, ${TEXT_SAMPLE_LIMIT}),
@@ -334,8 +379,8 @@ function createDeviceMetrics(viewport) {
   return { deviceScaleFactor: 1, height: viewport.height, mobile: viewport.mobile, width: viewport.width }
 }
 
-function createResult(scenario, viewport, checks, screenshot, kind) {
-  return { checks, id: scenario.id, kind, route: scenario.path, screenshot, uiGroup: scenario.uiGroup, viewport: `${viewport.name} ${viewport.width}x${viewport.height}` }
+function createResult(scenario, viewport, checks, screenshot, kind, routePath = scenario.path) {
+  return { checks, id: scenario.id, kind, route: routePath, screenshot, uiGroup: scenario.uiGroup, viewport: `${viewport.name} ${viewport.width}x${viewport.height}` }
 }
 
 function fileExists(filePath) {

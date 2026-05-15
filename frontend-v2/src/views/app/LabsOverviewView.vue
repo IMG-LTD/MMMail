@@ -129,8 +129,9 @@ watch(() => authStore.accessToken, () => {
 
 .labs-card__stack {
   display: flex;
+  align-items: flex-start;
   flex-wrap: wrap;
-  gap: 10px;
+  gap: 12px 10px;
   margin-top: 12px;
 }
 

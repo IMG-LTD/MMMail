@@ -319,6 +319,14 @@ watch(
   .notifications-layout {
     grid-template-columns: 1fr;
   }
+
+  .notification-filters {
+    gap: 12px;
+  }
+
+  .notifications-mark-all {
+    min-height: 40px;
+  }
 }
 
 @media (max-width: 720px) {

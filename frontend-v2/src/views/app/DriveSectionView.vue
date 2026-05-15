@@ -290,6 +290,11 @@ function selectItem(itemId: string) {
   void loadDriveShares(itemId)
 }
 
+function openItemMenu(itemId: string) {
+  selectItem(itemId)
+  openSharePanel()
+}
+
 function openSharePanel() {
   sharePanelOpen.value = true
 }
@@ -381,19 +386,27 @@ watch(() => [route.fullPath, authStore.accessToken], () => {
       </article>
 
       <div class="drive-surface__cards">
-        <button
+        <article
           v-for="item in visibleItems"
           :key="`${item.id}-card`"
           class="surface-card drive-surface__card"
           :class="{ 'drive-surface__card--active': item.id === selectedItem?.id }"
-          type="button"
-          @click="selectItem(item.id)"
         >
-          <span class="section-label">{{ resolveItemType(item) }}</span>
-          <strong>{{ item.name }}</strong>
-          <span>{{ formatFileSize(item.sizeBytes) }}</span>
-          <p class="page-subtitle">{{ tr(lt(`最后更新 ${formatDateLabel(item.updatedAt, tr(lt('未知时间', '未知時間', 'Unknown time')))}。共享详情会在抽屉中加载。`, `最後更新 ${formatDateLabel(item.updatedAt, tr(lt('未知时间', '未知時間', 'Unknown time')))}。共享詳情會在抽屜中載入。`, `Last updated ${formatDateLabel(item.updatedAt, tr(lt('未知时间', '未知時間', 'Unknown time')))}. Share details load in the drawer.`)) }}</p>
-        </button>
+          <button class="drive-surface__card-main" type="button" @click="selectItem(item.id)">
+            <span class="section-label">{{ resolveItemType(item) }}</span>
+            <strong>{{ item.name }}</strong>
+            <span>{{ formatFileSize(item.sizeBytes) }}</span>
+            <span class="page-subtitle">{{ tr(lt(`最后更新 ${formatDateLabel(item.updatedAt, tr(lt('未知时间', '未知時間', 'Unknown time')))}。共享详情会在抽屉中加载。`, `最後更新 ${formatDateLabel(item.updatedAt, tr(lt('未知时间', '未知時間', 'Unknown time')))}。共享詳情會在抽屜中載入。`, `Last updated ${formatDateLabel(item.updatedAt, tr(lt('未知时间', '未知時間', 'Unknown time')))}. Share details load in the drawer.`)) }}</span>
+          </button>
+          <button
+            class="drive-surface__card-menu"
+            type="button"
+            :aria-label="`${tr(lt('打开共享设置', '開啟共享設定', 'Open share settings'))}: ${item.name}`"
+            @click="openItemMenu(item.id)"
+          >
+            ...
+          </button>
+        </article>
         <p v-if="!visibleItems.length" class="drive-surface__empty">{{ tableEmptyCopy }}</p>
       </div>
     </div>

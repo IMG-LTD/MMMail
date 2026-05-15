@@ -4,6 +4,7 @@ import { readFile } from 'node:fs/promises'
 
 const packageJsonUrl = new URL('../package.json', import.meta.url)
 const qaScriptUrl = new URL('../scripts/v21-browser-visual-qa.mjs', import.meta.url)
+const browserHarnessUrl = new URL('../scripts/v21-visual-qa/browser-harness.mjs', import.meta.url)
 const scenariosUrl = new URL('../scripts/v21-visual-qa/scenarios.mjs', import.meta.url)
 const reportUrl = new URL('../scripts/v21-visual-qa/report.mjs', import.meta.url)
 
@@ -87,9 +88,10 @@ const requiredOverlayContracts = [
 ]
 
 test('v2.1 browser visual QA runner exposes expanded coverage registry', async () => {
-  const [packageJsonRaw, qaScript, scenarioSource, reportSource] = await Promise.all([
+  const [packageJsonRaw, qaScript, browserHarness, scenarioSource, reportSource] = await Promise.all([
     readFile(packageJsonUrl, 'utf8'),
     readFile(qaScriptUrl, 'utf8'),
+    readFile(browserHarnessUrl, 'utf8'),
     readFile(scenariosUrl, 'utf8'),
     readFile(reportUrl, 'utf8')
   ])
@@ -98,6 +100,21 @@ test('v2.1 browser visual QA runner exposes expanded coverage registry', async (
   assert.equal(packageJson.scripts['visual:qa'], 'node scripts/v21-browser-visual-qa.mjs')
   assert.match(qaScript, /runVisualQa/)
   assert.match(qaScript, /Chrome DevTools Protocol/)
+  assert.match(qaScript, /apiBaseUrl/)
+  assert.match(qaScript, /prepareRuntimeData/)
+  assert.match(qaScript, /docsNoteId/)
+  assert.match(qaScript, /sheetsWorkbookId/)
+  assert.match(browserHarness, /injectVisualQaBrowserState/)
+  assert.match(browserHarness, /resolveScenarioPath/)
+  assert.match(browserHarness, /VITE_API_BASE_URL/)
+  assert.match(browserHarness, /mmmail\.auth\.session\.v1/)
+  assert.match(browserHarness, /mmmail\.onboarding\.v1/)
+  assert.match(browserHarness, /hasSeenGuide:\s*true/)
+  assert.match(browserHarness, /vite-error-overlay/)
+  assert.match(browserHarness, /Failed to load module/)
+  assert.doesNotMatch(browserHarness, /Internal server error\|Failed to load module/)
+  assert.match(browserHarness, /openCalendarEventDrawer:\s*clickSelectorExpression\('\.calendar-event-trigger'\)/)
+  assert.doesNotMatch(browserHarness, /openCalendarEventDrawer:\s*clickAndSubmitExpression/)
   assert.match(scenarioSource, /1440/)
   assert.match(scenarioSource, /1024/)
   assert.match(scenarioSource, /390/)

@@ -163,16 +163,39 @@
 }
 
 .drive-surface__card {
+  position: relative;
   display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
   gap: 8px;
   border: 1px solid var(--mm-border);
   background: var(--mm-card);
+}
+
+.drive-surface__card-main {
+  display: grid;
+  gap: 8px;
+  min-width: 0;
+  padding: 0;
+  border: 0;
+  background: transparent;
   text-align: left;
 }
 
 .drive-surface__card--active {
   border-color: var(--mm-accent-border);
   background: var(--mm-accent-soft);
+}
+
+.drive-surface__card-menu {
+  align-self: start;
+  min-width: 44px;
+  min-height: 44px;
+  padding: 0;
+  border: 1px solid var(--mm-border);
+  border-radius: 12px;
+  background: var(--mm-card);
+  color: var(--mm-text-secondary);
+  font-weight: 700;
 }
 
 .drive-surface__facts,
@@ -259,5 +282,10 @@
 
   .drive-surface__head h1 {
     font-size: 20px;
+  }
+
+  .drive-surface__actions button,
+  .drive-share-trigger {
+    min-height: 44px;
   }
 }

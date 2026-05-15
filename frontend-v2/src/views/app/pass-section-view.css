@@ -120,6 +120,36 @@
   gap: 10px;
 }
 
+.pass-item-detail__card dl {
+  display: grid;
+  gap: 8px;
+  margin: 4px 0 0;
+}
+
+.pass-item-detail__card dl div {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 12px;
+  align-items: center;
+  min-height: 28px;
+  padding-top: 8px;
+  border-top: 1px solid var(--mm-border);
+}
+
+.pass-item-detail__card dt,
+.pass-item-detail__card dd {
+  margin: 0;
+}
+
+.pass-item-detail__card dt {
+  color: var(--mm-text-secondary);
+  font-size: 12px;
+}
+
+.pass-item-detail__card dd {
+  font-weight: 700;
+}
+
 .pass-secret-reveal,
 .pass-share-settings-modal__save,
 .pass-action-retry {
