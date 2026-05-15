@@ -32,6 +32,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 class BackendV21ApiContractCatalogTest {
 
     private static final String PASSWORD = "Password@123";
+    private static final int EXPECTED_CONTRACT_COUNT = 139;
     private static final Set<String> REQUIRED_OWNER_MODULES = Set.of(
             "workspace",
             "mail",
@@ -125,7 +126,7 @@ class BackendV21ApiContractCatalogTest {
                 .header("Authorization", "Bearer " + token))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.data.version").value("v2.1"))
-                .andExpect(jsonPath("$.data.contracts.length()").value(138))
+                .andExpect(jsonPath("$.data.contracts.length()").value(EXPECTED_CONTRACT_COUNT))
                 .andExpect(jsonPath("$.data.contracts[0].method").value("GET"))
                 .andExpect(jsonPath("$.data.contracts[0].path").value("/api/v2/workspace/summary"));
     }
@@ -155,6 +156,8 @@ class BackendV21ApiContractCatalogTest {
                 .contains("x-permission: [\"entitlements:read\"]")
                 .contains("/api/v2/platform/contracts:")
                 .contains("x-permission: [\"platform:contracts:read\"]")
+                .contains("/api/v2/platform/capabilities:")
+                .contains("x-permission: [\"platform:public\"]")
                 .contains("/api/v2/ai-platform/capabilities:")
                 .contains("x-permission: [\"ai-platform:capabilities:read\"]")
                 .contains("/api/v2/mcp/registry:")
@@ -165,6 +168,7 @@ class BackendV21ApiContractCatalogTest {
                 .contains("/api/v2/share/mail/{token}/attachments/{id}/download:")
                 .contains("/api/v2/share/drive/{token}/items:")
                 .contains("/api/v2/share/drive/{token}/items/{id}/download:")
+                .contains("/api/v2/system/health:")
                 .contains("/api/v2/drive/files/{id}/share:")
                 .contains("List drive shares")
                 .contains("/api/v2/settings/profile:")

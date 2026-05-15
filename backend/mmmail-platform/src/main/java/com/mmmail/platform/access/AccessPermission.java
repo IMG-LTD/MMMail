@@ -6,6 +6,7 @@ public record AccessPermission(String value) {
 
     private static final Set<String> PUBLIC_PERMISSIONS = Set.of(
             "auth:public",
+            "platform:public",
             "share:public",
             "system:public"
     );

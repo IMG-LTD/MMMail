@@ -62,6 +62,7 @@ public enum ErrorCode {
     V2_API_CONTRACT_NOT_FOUND(30051, "Unknown v2 API contract"),
     V2_ENTITLEMENT_REQUIRED(30052, "Required entitlement is not enabled"),
     V2_PERMISSION_DENIED(30053, "Required permission is not granted"),
+    PUBLIC_SHARE_NOT_FOUND(30054, "Public share not found"),
     INTERNAL_ERROR(90000, "Internal server error");
 
     private final int code;

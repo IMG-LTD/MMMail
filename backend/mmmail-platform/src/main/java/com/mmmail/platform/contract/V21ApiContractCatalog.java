@@ -227,7 +227,7 @@ public record V21ApiContractCatalog(String version, List<V21ApiContract> contrac
     private static List<V21ApiContract> platformContracts() {
         return module("platform", "docs/MMMail/UI/Admin", new String[][]{
                 {"GET", "/api/v2/platform/contracts", "V21ApiContractCatalog", COMMUNITY, "platform:contracts:read"},
-                {"GET", "/api/v2/platform/capabilities", "PlatformCapabilities", COMMUNITY, "platform:capabilities:read"}
+                {"GET", "/api/v2/platform/capabilities", "PlatformCapabilities", COMMUNITY, "platform:public"}
         });
     }
 
@@ -280,7 +280,8 @@ public record V21ApiContractCatalog(String version, List<V21ApiContract> contrac
                         {"GET", "/api/v2/share/pass/:token", "PublicPassShare", COMMUNITY, "share:public"}
                 }),
                 module("system", "docs/MMMail/UI/首页", new String[][]{
-                        {"GET", "/api/v2/system/status", "PublicSystemStatus", COMMUNITY, "system:public"}
+                        {"GET", "/api/v2/system/status", "PublicSystemStatus", COMMUNITY, "system:public"},
+                        {"GET", "/api/v2/system/health", "PublicSystemStatus", COMMUNITY, "system:public"}
                 })
         ).flatMap(List::stream).toList();
     }

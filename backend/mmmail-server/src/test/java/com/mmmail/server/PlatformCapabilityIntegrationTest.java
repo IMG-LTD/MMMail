@@ -29,9 +29,11 @@ class PlatformCapabilityIntegrationTest {
     private ObjectMapper objectMapper;
 
     @Test
-    void capabilityEndpointShouldRequireAuthentication() throws Exception {
+    void capabilityEndpointShouldExposeStablePayloadPublicly() throws Exception {
         mockMvc.perform(get("/api/v2/platform/capabilities"))
-                .andExpect(status().isUnauthorized());
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.softAuthSupported").value(true))
+                .andExpect(jsonPath("$.data.scopeHeaders[0]").value("X-MMMAIL-ORG-ID"));
     }
 
     @Test

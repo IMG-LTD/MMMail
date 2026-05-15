@@ -92,6 +92,11 @@
   gap: 6px;
 }
 
+.calendar-filter-sidebar__grid button {
+  min-height: 36px;
+  padding: 0 8px;
+}
+
 .calendar-filter-sidebar__day--active {
   border-color: var(--mm-accent-border) !important;
   background: var(--mm-accent-soft) !important;
@@ -263,6 +268,26 @@
   .calendar-board__toolbar {
     align-items: start;
     flex-direction: column;
+    gap: 14px;
+    padding: 18px;
+  }
+
+  .calendar-board__actions {
+    width: 100%;
+    justify-content: flex-start;
+  }
+
+  .calendar-board__switcher {
+    width: 100%;
+    gap: 10px;
+  }
+
+  .calendar-board__switcher button {
+    flex: 1 1 78px;
+  }
+
+  .calendar-filter-sidebar__grid {
+    gap: 8px 10px;
   }
 
   .calendar-board__schedule {

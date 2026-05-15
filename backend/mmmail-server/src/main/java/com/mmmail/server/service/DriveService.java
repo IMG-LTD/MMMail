@@ -1178,7 +1178,7 @@ public class DriveService {
                 .eq(DriveShareLink::getTokenHash, tokenHash));
         if (share == null) {
             recordPublicAccess(null, token, action, ACCESS_STATUS_DENY_INVALID_TOKEN, ipAddress, userAgent);
-            throw new BizException(ErrorCode.INVALID_ARGUMENT, "Share link is unavailable");
+            throw new BizException(ErrorCode.PUBLIC_SHARE_NOT_FOUND, "Share link is unavailable");
         }
         if (!SHARE_STATUS_ACTIVE.equals(share.getStatus())) {
             recordPublicAccess(new ShareAndItem(share, null), token, action, ACCESS_STATUS_DENY_REVOKED, ipAddress, userAgent);
@@ -1193,7 +1193,7 @@ public class DriveService {
                 .eq(DriveItem::getOwnerId, share.getOwnerId()));
         if (item == null) {
             recordPublicAccess(new ShareAndItem(share, null), token, action, ACCESS_STATUS_DENY_FILE_MISSING, ipAddress, userAgent);
-            throw new BizException(ErrorCode.INVALID_ARGUMENT, "Share link is unavailable");
+            throw new BizException(ErrorCode.PUBLIC_SHARE_NOT_FOUND, "Share link is unavailable");
         }
         ShareAndItem pair = new ShareAndItem(share, item);
         if (requirePassword) {

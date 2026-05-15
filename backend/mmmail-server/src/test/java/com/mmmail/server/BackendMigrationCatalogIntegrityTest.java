@@ -68,6 +68,9 @@ class BackendMigrationCatalogIntegrityTest {
             assertThat(tableExists(connection, "simplelogin_relay_policy")).isTrue();
             assertThat(tableExists(connection, "standard_note_folder")).isTrue();
             assertThat(columnExists(connection, "standard_note_profile", "folder_id")).isTrue();
+            assertThat(indexExists(connection, "mail_external_secure_link", "uk_mail_external_secure_link_token_hash")).isTrue();
+            assertThat(indexExists(connection, "drive_share_link", "uk_drive_share_link_token_hash")).isTrue();
+            assertThat(indexExists(connection, "pass_secure_link", "uk_pass_secure_link_token_hash")).isTrue();
         }
     }
 
@@ -121,6 +124,19 @@ class BackendMigrationCatalogIntegrityTest {
         DatabaseMetaData metadata = connection.getMetaData();
         try (ResultSet columns = metadata.getColumns(null, null, tableName, columnName)) {
             return columns.next();
+        }
+    }
+
+    private static boolean indexExists(Connection connection, String tableName, String indexName) throws Exception {
+        DatabaseMetaData metadata = connection.getMetaData();
+        try (ResultSet indexes = metadata.getIndexInfo(null, null, tableName, false, false)) {
+            while (indexes.next()) {
+                String currentIndexName = indexes.getString("INDEX_NAME");
+                if (indexName.equalsIgnoreCase(currentIndexName)) {
+                    return true;
+                }
+            }
+            return false;
         }
     }
 }

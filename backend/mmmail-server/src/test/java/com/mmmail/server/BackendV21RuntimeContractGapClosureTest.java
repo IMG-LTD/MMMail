@@ -34,6 +34,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 class BackendV21RuntimeContractGapClosureTest {
 
     private static final String PASSWORD = "Password@123";
+    private static final Set<String> PUBLIC_SYSTEM_STATUSES = Set.of("operational", "degraded", "offline");
     private static final Pattern HTTP_CLIENT_CALL = Pattern.compile(
             "httpClient\\.(get|post|patch|delete)[^(]*\\((['`])([^'`]+)\\2"
     );
@@ -106,6 +107,10 @@ class BackendV21RuntimeContractGapClosureTest {
     void v21CapabilityRoutesShouldBeCatalogedAndMapped() throws Exception {
         String token = login("admin@mmmail.local", PASSWORD);
 
+        mockMvc.perform(get("/api/v2/platform/capabilities"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.softAuthSupported").value(true));
+
         mockMvc.perform(get("/api/v2/ai-platform/capabilities")
                         .header("Authorization", "Bearer " + token))
                 .andExpect(status().isOk())
@@ -118,11 +123,19 @@ class BackendV21RuntimeContractGapClosureTest {
     }
 
     @Test
+    void v21SystemHealthProbeShouldBePublic() throws Exception {
+        mockMvc.perform(get("/api/v2/system/health"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.status").value(org.hamcrest.Matchers.in(PUBLIC_SYSTEM_STATUSES)));
+    }
+
+    @Test
     void v21PublicShareRoutesShouldReachRealRuntimeControllers() throws Exception {
         mockMvc.perform(get("/api/v2/share/capabilities"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.data.supportsAudit").value(true));
 
+        assertInvalidPublicShareToken("/api/v2/share/mail/demo-token");
         assertInvalidPublicShareToken("/api/v2/share/mail/missing-token");
         assertInvalidPublicShareToken("/api/v2/share/mail/missing-token/attachments/1/download");
         assertInvalidPublicShareToken("/api/v2/share/drive/missing-token");
@@ -149,8 +162,8 @@ class BackendV21RuntimeContractGapClosureTest {
 
     private void assertInvalidPublicShareToken(String path) throws Exception {
         mockMvc.perform(get(path))
-                .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.code").value(ErrorCode.INVALID_ARGUMENT.getCode()));
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.code").value(ErrorCode.PUBLIC_SHARE_NOT_FOUND.getCode()));
     }
 
     private Set<RouteIdentity> frontendV21Routes() throws Exception {

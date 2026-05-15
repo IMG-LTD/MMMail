@@ -629,13 +629,13 @@ public class PassBusinessService {
         PassSecureLink link = passSecureLinkMapper.selectOne(new LambdaQueryWrapper<PassSecureLink>()
                 .eq(PassSecureLink::getTokenHash, tokenHash));
         if (link == null) {
-            throw new BizException(ErrorCode.INVALID_ARGUMENT, "Pass secure link is not found");
+            throw new BizException(ErrorCode.PUBLIC_SHARE_NOT_FOUND, "Pass secure link is not found");
         }
         validateSecureLinkActive(link);
         PassVaultItem item = passVaultItemMapper.selectById(link.getItemId());
         PassSharedVault vault = passSharedVaultMapper.selectById(link.getSharedVaultId());
         if (item == null || vault == null) {
-            throw new BizException(ErrorCode.INVALID_ARGUMENT, "Pass secure link target is not found");
+            throw new BizException(ErrorCode.PUBLIC_SHARE_NOT_FOUND, "Pass secure link target is not found");
         }
         link.setCurrentViews(link.getCurrentViews() + 1);
         link.setUpdatedAt(LocalDateTime.now());

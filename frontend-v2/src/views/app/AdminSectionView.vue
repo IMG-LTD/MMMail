@@ -389,6 +389,30 @@ watch(
   .admin-nav {
     overflow-x: auto;
     flex-wrap: nowrap;
+    position: relative;
+    padding: 0 26px 8px 0;
+    scrollbar-color: var(--mm-border-strong) transparent;
+    scrollbar-width: thin;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .admin-nav::after {
+    content: "";
+    position: sticky;
+    right: -26px;
+    flex: 0 0 30px;
+    margin-left: -30px;
+    pointer-events: none;
+    background: linear-gradient(90deg, rgba(255, 255, 255, 0), var(--mm-bg));
+  }
+
+  .admin-nav::-webkit-scrollbar {
+    height: 8px;
+  }
+
+  .admin-nav::-webkit-scrollbar-thumb {
+    border-radius: 999px;
+    background: var(--mm-border-strong);
   }
 
   .admin-nav button {

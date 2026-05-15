@@ -192,7 +192,7 @@ public class MailExternalSecureLinkService {
                 .eq(MailExternalSecureLink::getTokenHash, tokenHash)
                 .last("limit 1"));
         if (link == null) {
-            throw new BizException(ErrorCode.INVALID_ARGUMENT, "Mail secure link is not found");
+            throw new BizException(ErrorCode.PUBLIC_SHARE_NOT_FOUND, "Mail secure link is not found");
         }
         validateLinkActive(link);
         return link;
@@ -201,7 +201,7 @@ public class MailExternalSecureLinkService {
     private MailMessage requireEncryptedMail(Long mailId) {
         MailMessage mail = mailMessageMapper.selectById(mailId);
         if (mail == null || mail.getBodyE2eeEnabled() == null || mail.getBodyE2eeEnabled() != 1) {
-            throw new BizException(ErrorCode.INVALID_ARGUMENT, "Mail secure link target is not found");
+            throw new BizException(ErrorCode.PUBLIC_SHARE_NOT_FOUND, "Mail secure link target is not found");
         }
         return mail;
     }

@@ -9,7 +9,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
-@RequestMapping("/api/v2/system/status")
+@RequestMapping("/api/v2/system")
 public class V21SystemStatusController {
 
     private static final String DEGRADED = "degraded";
@@ -22,7 +22,7 @@ public class V21SystemStatusController {
         this.systemHealthService = systemHealthService;
     }
 
-    @GetMapping
+    @GetMapping({"/status", "/health"})
     public Result<PublicSystemStatusVo> status() {
         SystemHealthOverviewVo overview = systemHealthService.getOverview();
         return Result.success(new PublicSystemStatusVo(null, null, publicStatus(overview.status()), overview.generatedAt().toString()));

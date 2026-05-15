@@ -62,6 +62,7 @@ class BackendV21AccessEntitlementGatesTest {
                 "GET /api/v2/mcp/registry",
                 "POST /api/v2/auth/refresh",
                 "GET /api/v2/auth/sessions",
+                "GET /api/v2/system/health",
                 "GET /api/v2/share/capabilities",
                 "GET /api/v2/public-share/capabilities",
                 "GET /api/v2/share/mail/:token/attachments/:id/download",
@@ -176,6 +177,7 @@ class BackendV21AccessEntitlementGatesTest {
                 .contains("/api/v2/platform/capabilities:")
                 .contains("/api/v2/ai-platform/capabilities:")
                 .contains("/api/v2/mcp/registry:")
+                .contains("/api/v2/system/health:")
                 .contains("/api/v2/share/capabilities:")
                 .contains("/api/v2/public-share/capabilities:")
                 .contains("/api/v2/share/mail/{token}/attachments/{id}/download:")

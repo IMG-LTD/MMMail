@@ -192,6 +192,20 @@ watch(() => props.show, value => {
   font-weight: 700;
 }
 
+.sheets-protected-range-modal__conflict {
+  border-color: rgba(217, 119, 6, 0.42);
+  background: rgba(217, 119, 6, 0.12);
+  color: #7c2d12;
+  font-weight: 700;
+}
+
+.sheets-protected-range-modal__error {
+  border-color: rgba(196, 59, 59, 0.42);
+  background: rgba(196, 59, 59, 0.12);
+  color: #8f1d1d;
+  font-weight: 700;
+}
+
 .sheets-protected-range-modal button {
   min-height: 34px;
   padding: 0 12px;
