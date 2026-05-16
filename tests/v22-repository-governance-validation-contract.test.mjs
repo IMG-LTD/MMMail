@@ -421,7 +421,7 @@ test('v2.2 supply chain SBOM and license report are generated and gated', async 
   assert.match(releaseGate, /sbom-license/);
   assert.match(validateLocal, /generate-sbom-license-report\.mjs/);
   assert.match(ciWorkflow, /Generate SBOM and dependency license report/);
-  assert.match(ciWorkflow, /actions\/upload-artifact@v4/);
+  assert.match(ciWorkflow, /actions\/upload-artifact@v7/);
 });
 
 test('v2.2 supply chain report script writes CycloneDX and dependency license artifacts', async () => {

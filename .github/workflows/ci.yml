@@ -8,22 +8,25 @@ on:
 permissions:
   contents: read
 
+env:
+  MMMAIL_PNPM_VERSION: "10.5.0"
+
 jobs:
   frontend:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
         with:
           fetch-depth: 0
 
       - name: Setup pnpm
-        uses: pnpm/action-setup@v4
+        uses: pnpm/action-setup@v6
         with:
-          version: 9
+          version: ${{ env.MMMAIL_PNPM_VERSION }}
 
       - name: Setup Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v6
         with:
           node-version: 22
           cache: pnpm
@@ -41,7 +44,7 @@ jobs:
           MMMAIL_SUPPLY_CHAIN_REPORT_DIR: ${{ runner.temp }}/supply-chain
 
       - name: Upload supply chain reports
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: supply-chain-reports
           path: ${{ runner.temp }}/supply-chain/
@@ -67,10 +70,10 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       - name: Setup Java
-        uses: actions/setup-java@v4
+        uses: actions/setup-java@v5
         with:
           distribution: temurin
           java-version: 21
@@ -123,7 +126,7 @@ jobs:
       MMMAIL_NVD_API_KEY: ${{ secrets.MMMAIL_NVD_API_KEY }}
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
         with:
           fetch-depth: 0
 
@@ -136,12 +139,12 @@ jobs:
           fi
 
       - name: Setup pnpm
-        uses: pnpm/action-setup@v4
+        uses: pnpm/action-setup@v6
         with:
-          version: 9
+          version: ${{ env.MMMAIL_PNPM_VERSION }}
 
       - name: Setup Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v6
         with:
           node-version: 22
           cache: pnpm
@@ -151,20 +154,20 @@ jobs:
         run: pnpm --dir frontend-admin install --frozen-lockfile
 
       - name: Setup Java
-        uses: actions/setup-java@v4
+        uses: actions/setup-java@v5
         with:
           distribution: temurin
           java-version: 21
           cache: maven
 
       - name: Setup Helm
-        uses: azure/setup-helm@v4
+        uses: azure/setup-helm@v5
         with:
           version: v3.14.4
 
       - name: Restore dependency-check data
         id: dependency-check-cache
-        uses: actions/cache/restore@v4
+        uses: actions/cache/restore@v5
         with:
           path: .tools/dependency-check-data
           key: dependency-check-${{ runner.os }}-${{ github.run_id }}-${{ github.run_attempt }}
@@ -185,7 +188,7 @@ jobs:
 
       - name: Save dependency-check data
         if: always()
-        uses: actions/cache/save@v4
+        uses: actions/cache/save@v5
         with:
           path: .tools/dependency-check-data
           key: dependency-check-${{ runner.os }}-${{ github.run_id }}-${{ github.run_attempt }}
@@ -206,7 +209,7 @@ jobs:
 
       - name: Upload validation artifacts
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: mmmail-validate-artifacts
           if-no-files-found: warn
@@ -219,15 +222,15 @@ jobs:
     name: Docker test baseline (v2.1.2 shipping-clean release-gate)
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       - name: Setup pnpm
-        uses: pnpm/action-setup@v4
+        uses: pnpm/action-setup@v6
         with:
-          version: 9
+          version: ${{ env.MMMAIL_PNPM_VERSION }}
 
       - name: Setup Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v6
         with:
           node-version: 22
           cache: pnpm
@@ -237,7 +240,7 @@ jobs:
         run: pnpm --dir frontend-admin install --frozen-lockfile
 
       - name: Setup Java
-        uses: actions/setup-java@v4
+        uses: actions/setup-java@v5
         with:
           distribution: temurin
           java-version: 21
@@ -258,31 +261,31 @@ jobs:
     needs: [frontend, backend, docker-test-baseline]
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
         with:
           fetch-depth: 0
 
       - name: Setup pnpm
-        uses: pnpm/action-setup@v4
+        uses: pnpm/action-setup@v6
         with:
-          version: 9
+          version: ${{ env.MMMAIL_PNPM_VERSION }}
 
       - name: Setup Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v6
         with:
           node-version: 22
           cache: pnpm
           cache-dependency-path: frontend-admin/pnpm-lock.yaml
 
       - name: Setup Java
-        uses: actions/setup-java@v4
+        uses: actions/setup-java@v5
         with:
           distribution: temurin
           java-version: 21
           cache: maven
 
       - name: Setup Helm
-        uses: azure/setup-helm@v4
+        uses: azure/setup-helm@v5
         with:
           version: v3.14.4
 

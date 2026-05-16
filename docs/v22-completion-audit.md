@@ -61,22 +61,26 @@ The latest targeted verification for this audit:
 
 | Command | Result |
 |---|---|
-| `node --test tests/v22-repository-governance-contract.test.mjs tests/v22-repository-governance-validation-contract.test.mjs` | 22 passed after pass-77 active source line-limit and local artifact ignore guardrails |
+| `node --test tests/v22-repository-governance-contract.test.mjs tests/v22-repository-governance-validation-contract.test.mjs` | 22 passed after pass-81 CI/image governance updates |
 | `node --test tests/v22-dsr-inventory-contract.test.mjs tests/v22-repository-governance-contract.test.mjs tests/v22-repository-governance-validation-contract.test.mjs` | 24 passed |
-| `node --test tests/*.test.mjs` | 83 passed after pass-77 governance-only additions |
+| `node --test tests/v22-ci-toolchain-contract.test.mjs tests/v212-shipping-cleanup-contract.test.mjs tests/v212-coverage-gates-contract.test.mjs tests/v212-module-design-docs-contract.test.mjs` | 22 passed; covers tracked v2.1.2 fixture docs, no runner `rg` dependency, pnpm engine-compatible CI setup, action major upgrades, direct `@iconify/utils` dependency and Docker context exclusions |
+| `node --test tests/*.test.mjs` | 88 passed after pass-81 governance, CI toolchain and image context additions |
 | `pnpm --dir frontend-admin test:v212` | 124 passed, including v2.2 commercial license, billing, OIDC entry, entitlement localization, and commercial a11y gate contracts |
 | `sg docker -c "cd /home/xiang/桌面/project/MMMail-test/MMMail && env -u http_proxy -u https_proxy -u HTTP_PROXY -u HTTPS_PROXY -u ALL_PROXY -u all_proxy pnpm --dir frontend-admin test:e2e"` | 11 passed; confirms backend Spring startup after the OIDC constructor fix |
 | `pnpm --dir frontend-admin test:lighthouse` | Passed after a fresh build; `/login` Lighthouse performance=84 |
 | `sg docker -c "cd /home/xiang/桌面/project/MMMail-test/MMMail && bash scripts/validate-batch3.sh"` | 9 passed, build success after V39 release metadata update |
 | `sg docker -c "PATH=/tmp/mmmail-helm-bin:$PATH env -u http_proxy -u https_proxy -u HTTP_PROXY -u HTTPS_PROXY -u ALL_PROXY -u all_proxy bash scripts/validate-local.sh"` | `all checks passed` after the pass-77 repository governance changes; includes root repository contract gates, legacy frontend freeze, split route/locale/limiter governance, active source line-limit allowlist, generated type hygiene and `git diff --check`; confirms default local validation does not execute the manual-only external evidence verifier; local shell required Docker group refresh via `sg docker` and temporary Helm 3.14.4 on `PATH` |
-| `pnpm --dir frontend-admin typecheck && pnpm --dir frontend-admin exec oxlint && pnpm --dir frontend-admin exec eslint . && pnpm --dir frontend-admin exec oxfmt --check && git diff --cached --check` | Passed after fixing pre-commit formatting; `vue-tsc`, `oxlint`, `eslint`, `oxfmt --check` and staged diff whitespace were clean |
-| `git commit -s -m "feat(v22): implement open source commercial readiness"` | Created a local DCO-signed v2.2 commit; this audit refresh is amended into that same commit, and no push or tag was performed |
+| `pnpm --dir frontend-admin build` | Build successful after declaring `@iconify/utils` as a direct devDependency |
+| `pnpm --dir frontend-admin typecheck` | Passed |
+| `pnpm --dir frontend-admin exec oxlint`, `pnpm --dir frontend-admin exec eslint .`, `pnpm --dir frontend-admin exec oxfmt --check` | `oxlint` found 0 warnings / 0 errors; ESLint exited 0; `oxfmt --check` reported all matched files use the correct format |
+| `sg docker -c 'cd /home/xiang/桌面/project/MMMail-test/MMMail && docker build --platform linux/amd64 -f frontend-admin/Dockerfile -t mmmail-frontend-admin:ci-contract .'` | Frontend-admin Docker clean build passed; after `.dockerignore` update the build context transfer reported `48.53kB` instead of the prior ~1GB local context |
+| `git commit -s -m "feat(v22): implement open source commercial readiness"` and `git push origin main && git push origin v2.2.0-rc.1` | Published DCO-signed commit `f29a151054be4fbceaf1d72b938fb1fba8449487` to `origin/main`; annotated tag `v2.2.0-rc.1` was pushed and points to that commit |
 | `git diff --check` | Passed after generated type hygiene fix and pass-77 governance edits |
 | `bash -n scripts/validate-local.sh scripts/validate-v22-external-evidence.sh` | Passed |
-| `bash scripts/validate-v22-external-evidence.sh` | Failed as required while external evidence is incomplete; output lists 7 status markers and 8 read-only evidence gaps, including that the local v2.2 commit is not published to a remote commit/tag |
+| `bash scripts/validate-v22-external-evidence.sh` | Failed as required while external evidence is incomplete; earlier pre-publication output included the unpublished-commit gap; after publishing, rc1 still cannot satisfy DEP-02 because the tag workflow failed for frontend-admin image publishing |
 | `rg -n "[ \t]+$" frontend-admin/src/typings/elegant-router.d.ts AGENTS.md README.md CONTRIBUTING.md DCO.md .github/pull_request_template.md docs/frontend/v22-frontend-topology-audit.md docs/frontend/v22-frontend-convergence-decision.md docs/v22-open-source-commercial-spec.md docs/v22-completion-audit.md docs/v22-external-evidence-checklist.md scripts/validate-local.sh scripts/validate-v22-external-evidence.sh tests/v22-dsr-inventory-contract.test.mjs tests/v22-repository-governance-contract.test.mjs tests/v22-repository-governance-validation-contract.test.mjs` | No trailing whitespace matches |
 | Final newline check for the same touched governance files | Passed |
-| `wc -l scripts/validate-v22-external-evidence.sh tests/v22-repository-governance-contract.test.mjs tests/v22-repository-governance-validation-contract.test.mjs DCO.md` | External verifier is 426 lines; governance test files are 468 and 450 lines; `DCO.md` is 36 lines |
+| `wc -l scripts/validate-v22-external-evidence.sh tests/v22-repository-governance-contract.test.mjs tests/v22-repository-governance-validation-contract.test.mjs tests/v22-ci-toolchain-contract.test.mjs DCO.md` | External verifier is 426 lines; governance test files are 471, 450 and 96 lines; `DCO.md` is 36 lines |
 | `gh api --method GET repos/IMG-LTD/MMMail/private-vulnerability-reporting` | `{"enabled":true}` |
 | `gh repo view IMG-LTD/mmmail-billing-gateway --json name,owner,visibility,isPrivate,defaultBranchRef,url` | Not found / not accessible; org repo list currently does not include `mmmail-billing-gateway` |
 | `docker ps --format '{{.Names}}\t{{.Image}}\t{{.Ports}}'` | Docker daemon access denied in the normal shell |
@@ -84,20 +88,17 @@ The latest targeted verification for this audit:
 | `sg docker -c "docker compose ps --format json"` | Compose emitted missing-env warnings and did not produce live Keycloak/OIDC service evidence |
 | `env | cut -d= -f1 | rg -i 'MMMAIL_OIDC|OIDC|KEYCLOAK|OTEL|MMMAIL_BILLING|MMMAIL_LICENSE'` | No matching environment variable names in the current shell |
 | `ss -ltnp | rg '(:8080|:8081|:5173|:3000|:8443|:9000|:18080|:3306|:6379|:9725|:19527)'` | Only Java on `:8080` was visible; no Keycloak/OIDC listener evidence |
-| `git rev-parse HEAD origin/main` | `HEAD` resolves to the local v2.2 commit while `origin/main` remains `e8903bf6c99c36fae7ee59f4ce039feb8d988bb3`; the v2.2 implementation is committed locally but has not been pushed to the remote default branch |
-| `git status --short --branch` and `git rev-list --left-right --count origin/main...HEAD` | Worktree is clean with `main...origin/main [ahead 1]`; ahead/behind count is `0 1`, so remote workflow and GHCR evidence cannot reflect this v2.2 commit until it is pushed and tagged |
-| `git diff --name-only | wc -l`, `git ls-files --others --exclude-standard | wc -l`, and `git diff --cached --name-only | wc -l` | All three counts are `0`; no unstaged, untracked, or staged work remains after the local v2.2 commit |
-| `git ls-remote --tags origin 'refs/tags/v2.1.2*' 'refs/tags/v2.2*'` | `refs/tags/v2.1.2-shipping-clean` exists on origin |
-| `gh workflow list --repo IMG-LTD/MMMail` | Only `MMMail CI` is listed; no remote `MMMail Images` workflow |
-| `gh run list --repo IMG-LTD/MMMail --workflow 'MMMail Images' --limit 5` | Fails with `could not find any workflows named MMMail Images` |
-| `gh run view 25959159527 --repo IMG-LTD/MMMail --json jobs` | Latest visible remote `main` run for `e8903bf6` failed in the old frontend and docker baseline jobs |
-| `git show e8903bf6:.github/workflows/ci.yml` | Remote `e8903bf6` workflow still contains old Soybean and `frontend-v2` CI jobs; current local workflow is covered separately by root governance contracts |
+| `git ls-remote --tags origin 'refs/tags/v2.1.2*' 'refs/tags/v2.2*'` | `refs/tags/v2.1.2-shipping-clean` and `refs/tags/v2.2.0-rc.1` exist on origin |
+| `gh workflow list --repo IMG-LTD/MMMail` | `MMMail CI`, `DCO`, `MMMail Images`, and Dependabot workflows are visible after the v2.2 workflow push |
+| `gh run view 25975040608 --repo IMG-LTD/MMMail --json status,conclusion,jobs,url,headSha,headBranch,event,displayTitle` | Remote `main` CI for `f29a1510` completed with failure: root contracts failed because required `docs/superpowers/specs/2026-05-15-*` fixture documents were not tracked and the shipping cleanup contract called `rg` on a runner without that binary; docker baseline failed because workflow pnpm was 9 while `frontend-admin` requires pnpm `>=10.5.0` |
+| `gh run view 25975044095 --repo IMG-LTD/MMMail --json status,conclusion,jobs,url,headSha,headBranch,event,displayTitle` | Tag workflow `v2.2.0-rc.1` completed with failure: backend image succeeded, frontend-admin image failed during `pnpm build` |
+| `gh api repos/IMG-LTD/MMMail/actions/jobs/76353625731/logs` | Frontend-admin Docker build failed with `ERR_MODULE_NOT_FOUND` for `@iconify/utils`, because `build/plugins/unocss.ts` imported it directly while `frontend-admin/package.json` did not declare it as a direct dependency |
 | `gh api orgs/IMG-LTD/packages/container/mmmail-backend/versions` | Package not found, HTTP 404 |
 | `gh api orgs/IMG-LTD/packages/container/mmmail-frontend-admin/versions` | Package not found, HTTP 404 |
 | `timeout 60s mvn -f backend/pom.xml -pl mmmail-server -am -Dtest=BackendV22EditionCoreContractTest -Dsurefire.failIfNoSpecifiedTests=false test` | 6 passed, build success |
 | `timeout 60s mvn -f backend/pom.xml -pl mmmail-server -am -Dtest=BackendV22CommercialSurfaceCoverageContractTest -Dsurefire.failIfNoSpecifiedTests=false test` | 4 passed, build success |
 | `timeout 60s mvn -f backend/pom.xml -pl mmmail-server -am -Dtest=BackendV22EditionCoreContractTest,BackendV22LicenseVerifierContractTest,BackendV22BillingWebhookContractTest,BackendV22EntitlementEnforcementContractTest,BackendV22CommercialSurfaceCoverageContractTest,BackendV22LicenseManagementApiContractTest,BackendV22AuditExportContractTest,BackendV22DsrContractTest,BackendV22OpenTelemetryContractTest,BackendV22OidcSsoContractTest -Dsurefire.failIfNoSpecifiedTests=false test` | 41 passed, build success |
-| `bash scripts/validate-v22-external-evidence.sh` | Expected failure; lists the 7 remaining incomplete external evidence markers plus live read-only checks for missing evidence files, unpublished local v2.2 commit state, Images workflow, GHCR packages, and private billing repository access |
+| `bash scripts/validate-v22-external-evidence.sh` | Expected failure while external evidence remains incomplete; after rc1, successful image workflow and GHCR frontend-admin package evidence are still unavailable |
 
 ## Remaining Evidence Gaps
 
@@ -109,16 +110,16 @@ These items cannot be completed by repository edits alone without live infrastru
 4. GATE-01 requires the live Keycloak e2e gate evidence before the release gate expansion can move from partial done to done.
 5. Real payment processing, customer portal, invoices/refunds, and license signing private keys remain outside the public repository in the independent billing repository.
 
-## Publication Authorization Blocker
+## Remote Publication Status
 
-The current v2.2 worktree is clean and committed locally, but it is still unpublished because `main` is ahead of `origin/main` by one commit. The remaining external evidence cannot be produced until an authorized maintainer explicitly allows the publication sequence:
+The v2.2 main-repo implementation was published as commit `f29a151054be4fbceaf1d72b938fb1fba8449487` on `origin/main`, and tag `v2.2.0-rc.1` was pushed. That rc1 is not acceptable release evidence because the remote gates exposed repository-governance drift:
 
-1. Push the local v2.2 commit to a public remote branch.
-2. Push the matching release tag.
-3. Wait for the remote `MMMail Images` tag workflow and GHCR backend/frontend-admin package digests.
-4. Attach live OIDC evidence and private billing evidence packages that reference the same Public MMMail commit.
+1. CI used pnpm 9 while the product frontend requires pnpm `>=10.5.0`.
+2. Root contracts depended on three untracked `docs/superpowers/specs/2026-05-15-*` fixture documents.
+3. One root contract depended on an undeclared `rg` runner binary.
+4. Frontend image publishing depended on a transitive `@iconify/utils` package that the Vite config imports directly.
 
-Until that authorization and external infrastructure exist, the objective must remain `not-complete-external-evidence-required`.
+The next acceptable release evidence must come from a follow-up commit and a new tag-triggered `MMMail Images` run that succeeds for both backend and frontend-admin. Live OIDC and private billing evidence are still external and remain outside what repository edits alone can complete.
 
 ## Completion Decision
 

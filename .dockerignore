@@ -1,7 +1,14 @@
 .git
+.claude
+.gstack
+.superpowers
+.tmp
+.tools
+.worktrees
 .codex-tasks
 .idea
 .vscode
+artifacts
 
 .env
 .env.local
@@ -9,8 +16,19 @@
 
 frontend-v2/node_modules
 frontend-v2/dist
+frontend-v2/coverage
+frontend-v2/test-results
+frontend-v2/playwright-report
+
+frontend-admin/node_modules
+frontend-admin/dist
+frontend-admin/coverage
+frontend-admin/test-results
+frontend-admin/playwright-report
 
 backend/**/target
 
 docs/assets
+docs/MMMail
+docs/MMMail.zip
 *.log

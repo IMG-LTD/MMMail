@@ -21,11 +21,11 @@ test('v2.2 image publishing workflow exists for tags and manual dry runs', async
   assert.match(workflow, /push:[\s\S]+tags:[\s\S]+v\*/);
   assert.match(workflow, /workflow_dispatch:/);
   assert.match(workflow, /packages: write/);
-  assert.match(workflow, /docker\/setup-qemu-action@v3/);
-  assert.match(workflow, /docker\/setup-buildx-action@v3/);
-  assert.match(workflow, /docker\/login-action@v3/);
-  assert.match(workflow, /docker\/metadata-action@v5/);
-  assert.match(workflow, /docker\/build-push-action@v6/);
+  assert.match(workflow, /docker\/setup-qemu-action@v4/);
+  assert.match(workflow, /docker\/setup-buildx-action@v4/);
+  assert.match(workflow, /docker\/login-action@v4/);
+  assert.match(workflow, /docker\/metadata-action@v6/);
+  assert.match(workflow, /docker\/build-push-action@v7/);
   assert.match(workflow, /linux\/amd64,linux\/arm64/);
   assert.match(workflow, /startsWith\(github\.ref, 'refs\/tags\/'\)/);
 });

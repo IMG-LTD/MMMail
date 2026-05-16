@@ -1,13 +1,22 @@
 import assert from 'node:assert/strict';
 import { execFileSync } from 'node:child_process';
-import { existsSync } from 'node:fs';
+import { existsSync, readdirSync, readFileSync, statSync } from 'node:fs';
 import { readFile } from 'node:fs/promises';
+import { join } from 'node:path';
 import { test } from 'node:test';
 import { fileURLToPath } from 'node:url';
 
 const rootUrl = new URL('../', import.meta.url);
 const root = fileURLToPath(rootUrl);
 const legacyAdminPath = ['soybean', 'admin', 'main'].join('-');
+const legacySearchRoots = ['docs', 'scripts', 'tests', '.github', 'frontend-v2', 'README.md', 'CONTRIBUTING.md'];
+const legacySearchExclusions = [
+  /^docs\/v212-shipping-cleanup-spec\.md$/,
+  /^node_modules(?:\/|$)/,
+  /^\.git(?:\/|$)/,
+  /^\.claude(?:\/|$)/,
+  /^\.worktrees(?:\/|$)/
+];
 
 function pathUrl(path) {
   return new URL(path, rootUrl);
@@ -32,37 +41,27 @@ function checkIgnored(path) {
   execFileSync('git', ['check-ignore', path], { cwd: root, encoding: 'utf8' });
 }
 
-function rgLegacyAdminRefs() {
-  try {
-    return execFileSync(
-      'rg',
-      [
-        '-n',
-        legacyAdminPath,
-        'docs',
-        'scripts',
-        'tests',
-        '.github',
-        'frontend-v2',
-        'README.md',
-        'CONTRIBUTING.md',
-        '-g',
-        '!docs/v212-shipping-cleanup-spec.md',
-        '-g',
-        '!node_modules/**',
-        '-g',
-        '!.git/**',
-        '-g',
-        '!.claude/**',
-        '-g',
-        '!.worktrees/**'
-      ],
-      { cwd: root, encoding: 'utf8' }
-    );
-  } catch (error) {
-    if (error.status === 1) return '';
-    throw error;
-  }
+function isExcludedSearchPath(path) {
+  return legacySearchExclusions.some(pattern => pattern.test(path));
+}
+
+function collectSearchFiles(relativePath) {
+  if (isExcludedSearchPath(relativePath) || !exists(relativePath)) return [];
+
+  const absolutePath = join(root, relativePath);
+  const stats = statSync(absolutePath);
+  if (!stats.isDirectory()) return [relativePath];
+
+  return readdirSync(absolutePath)
+    .flatMap(child => collectSearchFiles(`${relativePath}/${child}`));
+}
+
+function legacyAdminRefs() {
+  return legacySearchRoots
+    .flatMap(collectSearchFiles)
+    .filter(file => readFileSync(join(root, file), 'utf8').includes(legacyAdminPath))
+    .map(file => `${file}: contains ${legacyAdminPath}`)
+    .join('\n');
 }
 
 test('v2.1.2 shipping cleanup renames the admin frontend and removes legacy residues', () => {
@@ -121,7 +120,7 @@ test('v2.1.2 shipping cleanup updates active repository references to frontend-a
     assert.match(content, /frontend-admin/, file);
   }
 
-  assert.equal(rgLegacyAdminRefs(), '');
+  assert.equal(legacyAdminRefs(), '');
 });
 
 test('v2.1.2 shipping cleanup scopes imported admin git hooks to frontend-admin', async () => {

@@ -87,7 +87,7 @@ test('v2.2 DCO policy is documented and enforced by workflow', async () => {
   }
   assert.match(workflow, /Verify Signed-off-by/);
   assert.match(workflow, /pull-requests: read/);
-  assert.match(workflow, /actions\/github-script@v7/);
+  assert.match(workflow, /actions\/github-script@v9/);
   assert.match(workflow, /github\.rest\.pulls\.listCommits/);
   assert.match(workflow, /context\.payload\.pull_request\.number/);
   assert.doesNotMatch(workflow, /git rev-list "origin\/\$BASE_REF"\.\.HEAD/);
@@ -273,9 +273,10 @@ test('v2.2 completion audit maps the objective to concrete evidence and external
   assert.match(audit, /legacy `frontend-v2` Dependabot version PRs are disabled with `open-pull-requests-limit: 0`/);
   assert.match(audit, /Docker daemon access denied in the normal shell/);
   assert.match(audit, /No matching environment variable names in the current shell/);
-  assert.match(audit, /Only `MMMail CI` is listed; no remote `MMMail Images` workflow/);
-  assert.match(audit, /Latest visible remote `main` run for `e8903bf6` failed/);
-  assert.match(audit, /workflow still contains old Soybean and `frontend-v2` CI jobs/);
+  assert.match(audit, /`MMMail CI`, `DCO`, `MMMail Images`, and Dependabot workflows are visible/);
+  assert.match(audit, /Remote `main` CI for `f29a1510` completed with failure/);
+  assert.match(audit, /workflow pnpm was 9 while `frontend-admin` requires pnpm `>=10\.5\.0`/);
+  assert.match(audit, /Frontend-admin Docker build failed with `ERR_MODULE_NOT_FOUND` for `@iconify\/utils`/);
   assert.match(audit, /Package not found, HTTP 404/);
   assert.match(audit, /41 passed, build success/);
   assert.match(audit, /performance=84/);
@@ -294,14 +295,14 @@ test('v2.2 completion audit maps the objective to concrete evidence and external
   assert.match(audit, /reports current read-only evidence gaps/);
   assert.match(audit, /requires completed evidence files with non-empty metadata fields, not templates/);
   assert.match(audit, /successful tag-push image workflow/);
-  assert.match(audit, /Publication Authorization Blocker/);
-  assert.match(audit, /explicitly allows the publication sequence/);
-  assert.match(audit, /Push the local v2\.2 commit to a public remote branch/);
-  assert.match(audit, /Push the matching release tag/);
+  assert.match(audit, /Remote Publication Status/);
+  assert.match(audit, /tag `v2\.2\.0-rc\.1` was pushed/);
+  assert.match(audit, /not acceptable release evidence/);
+  assert.match(audit, /follow-up commit and a new tag-triggered `MMMail Images` run/);
   assert.match(audit, /same Public MMMail commit/);
   assert.match(audit, /not complete until the external evidence gaps above are resolved/);
   assert.match(spec, /status: main-repo-implemented-external-evidence-required/);
-  assert.match(spec, /spec_version: oss-comm-v1\.75/);
+  assert.match(spec, /spec_version: oss-comm-v1\.79/);
   assert.match(spec, /pass-51 外部状态核查/);
   assert.match(spec, /pass-52 OTel 文档复查/);
   assert.match(spec, /pass-53 live OIDC 证据模板复查/);
@@ -328,6 +329,7 @@ test('v2.2 completion audit maps the objective to concrete evidence and external
   assert.match(spec, /pass-74 默认门禁外部 verifier 隔离复查/);
   assert.match(spec, /pass-75 完成态发布前置条件加固复查/);
   assert.match(spec, /pass-76 仓库规范超大文件复查/);
+  assert.match(spec, /pass-81 Docker context 复查/);
   assert.match(spec, /pass-77 仓库规范源码行数与本地产物复查/);
   assert.match(spec, /active-source-size-guardrail/);
   assert.match(spec, /7 个 status markers 加 8 个 read-only evidence gaps/);

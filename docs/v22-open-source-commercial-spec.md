@@ -1,7 +1,7 @@
 ---
 name: v2.2 开源 + 商业化筹备 spec
 date: 2026-05-16
-spec_version: oss-comm-v1.75
+spec_version: oss-comm-v1.79
 based_on:
   - docs/v213-closure-spec-v1.1.md (implemented)
   - docs/v212-shipping-cleanup-spec.md (implemented)
@@ -103,6 +103,10 @@ iteration_history:
   - v1.73 同步完成态发布前置条件加固：外部 verifier 完成态会比较 OIDC backend/frontend commit、image commit、private billing 记录的 Public MMMail commit、origin release tag commit 和 origin branch containment，防止 evidence package 指向不同代码版本
   - v1.74 同步仓库规范超大文件复查：`frontend-admin/src/router/routes/index.ts` 拆出 `custom-routes.ts` / `public-share-routes.ts`，locale 字典拆出 `v22-commercial/*`，`DriveService` 拆出 `DrivePublicShareRateLimiter`，避免本轮新增路由、commercial i18n 和 Redis tracing 继续扩大历史 oversized 文件
   - v1.75 同步仓库规范复查：新增活跃源码 500 行 allowlist contract，CONTRIBUTING / PR template 纳入源码行数检查，`.gitignore` 明确忽略本地 agent / validation 产物
+  - v1.76 同步远端 CI 规范复查：修复 root contract 依赖未跟踪 `docs/superpowers/specs/*` 文档的问题，并把依赖这些文档的 fixtures 纳入 Git 跟踪
+  - v1.77 同步 CI 工具链复查：CI pnpm 版本对齐 `frontend-admin` 的 `engines.pnpm >=10.5.0`，并把 GitHub Actions / Docker Actions 升到当前 Node 24 兼容主版本
+  - v1.78 同步镜像构建复查：`frontend-admin` 显式声明 Vite config 直接依赖的 `@iconify/utils`，避免 Docker fresh install 依赖 pnpm transitive dependency 泄漏
+  - v1.79 同步 Docker context 规范复查：`.dockerignore` 排除 `frontend-admin` 生成产物、本地 agent 目录和 validation cache，避免镜像构建上传 GB 级无关上下文
 review_passes:
   - pass-1 现状对账：用 grep / ls / package.json / CI / release-gate 核对已存在与缺失项
   - pass-2 一致性复查：统一 Free-Pro-Business、Adapay 独立仓、个人开发者容量
@@ -181,6 +185,10 @@ review_passes:
   - pass-75 完成态发布前置条件加固复查：`scripts/validate-v22-external-evidence.sh` 完成态会要求 OIDC backend/frontend commit、image evidence commit、private billing evidence 的 Public MMMail commit 互相一致，origin release tag 指向同一 commit，并且该 commit 出现在 `origin/main` 或 `origin/release/*`
   - pass-76 仓库规范超大文件复查：把新增公共分享路由从 router index 拆到自定义路由模块，把 commercial i18n 文案拆到 `v22-commercial/*`，把 public share Redis limiter 从 `DriveService` 拆到 `DrivePublicShareRateLimiter`，并用治理 contract 固定本轮新增逻辑不得继续扩大已超限文件
   - pass-77 仓库规范源码行数与本地产物复查：root governance validation contract 扫描活跃源码文件，未列入历史 allowlist 或生成类型例外的文件不得超过 500 行；CONTRIBUTING / PR template 要求新 PR 检查该边界；`.gitignore` 忽略 `.claude/` 等本地 agent 产物
+  - pass-78 远端 CI 根因复查：`v2.2.0-rc.1` 的 root contract 失败来自三份被本地 `.git/info/exclude` 忽略但未跟踪的 spec fixture 文档，以及测试直接依赖 runner 未声明的 `rg`；修复为跟踪文档并用 Node 文件扫描替代 `rg`
+  - pass-79 CI 工具链复查：`v2.2.0-rc.1` 的 docker baseline 失败来自 workflow 使用 pnpm 9，而 `frontend-admin/package.json` 要求 pnpm `>=10.5.0`；修复为统一 `MMMAIL_PNPM_VERSION=10.5.0` 并升级 actions major，避免 Node 20 actions deprecation 进入 2026-06 强制切换窗口
+  - pass-80 image publishing 复查：frontend-admin 镜像 fresh install 失败来自 `build/plugins/unocss.ts` 直接 import `@iconify/utils` 但 package 未声明直接依赖；修复为显式 devDependency，并用 CI toolchain contract 固定
+  - pass-81 Docker context 复查：本地 frontend-admin 镜像 clean build 证明缺失依赖修复有效，同时暴露 `.dockerignore` 未排除 `frontend-admin/node_modules`、`.claude`、`.tools` 等目录导致 context 约 1GB；修复后由 CI toolchain contract 固定
 ---
 
 # v2.2 开源 + 商业化筹备 spec
@@ -1059,7 +1067,7 @@ mmmail-billing-gateway (private)
 - `bash scripts/release-gate.sh` 输出新增 step。
 - 最终 `git diff --exit-code` 仍保留。
 
-**当前落地状态（2026-05-17 / pass-77）**：
+**当前落地状态（2026-05-17 / pass-81）**：
 - `tests/v22-legacy-frontend-contract-migration.test.mjs` 已作为 `legacy-contract-migration` gate，证明 selected legacy contracts 已迁入 root tests / `frontend-admin`，并证明旧迁移信号脚本和 CI job 不会被重新引入。
 - `BackendV22CommercialSurfaceCoverageContractTest` 已作为 commercial surface coverage gate，证明当前 v2.2 OIDC / audit / DSR Business API 有服务端 feature gate，并证明 license upgrade path 与 billing webhook 是显式例外而非 silent paid fallback。
 - 已新增 `scripts/generate-sbom-license-report.mjs`，默认输出到系统临时目录 `mmmail-supply-chain`；可用 `MMMAIL_SUPPLY_CHAIN_REPORT_DIR` 显式指定目录，避免在仓库内留下 `artifacts/`。
@@ -1073,7 +1081,10 @@ mmmail-billing-gateway (private)
 - 外部 verifier 完成态会校验 OIDC backend/frontend commit、image evidence commit、private billing evidence 的 Public MMMail commit、origin release tag commit 和 `origin/main` / `origin/release/*` branch containment，防止不同代码版本的 evidence package 混用。
 - `tests/v22-repository-governance-validation-contract.test.mjs` 已新增活跃源码 500 行 allowlist 扫描；生成类型和历史超限债务显式例外，新超限活跃源码会失败；`.gitignore` 同步忽略本地 agent / validation 产物。
 - `BackendV22DsrContractTest` 已进入 `scripts/validate-local.sh` 的 v2.2 commercial backend regression 和 CI backend job。
-- `.github/workflows/ci.yml` 已新增 “Generate SBOM and dependency license report” 与 `actions/upload-artifact@v4`，从 `${{ runner.temp }}/supply-chain/` 上传报告。
+- `.github/workflows/ci.yml` 已新增 “Generate SBOM and dependency license report” 与 `actions/upload-artifact@v7`，从 `${{ runner.temp }}/supply-chain/` 上传报告。
+- `.github/workflows/ci.yml` 使用 `MMMAIL_PNPM_VERSION=10.5.0`，和 `frontend-admin/package.json` 的 pnpm engine 下限一致；`.github/workflows/ci.yml`、`.github/workflows/images.yml`、`.github/workflows/dco.yml` 已升级到当前 Node 24 兼容 action major。
+- `docs/superpowers/specs/2026-05-15-v212-decision-log.md`、`2026-05-15-v212-module-design-coverage.md`、`2026-05-15-collab-sheets-board-design.md` 是 root contract 读取的 fixture 文档，必须跟随测试一起进入 Git 跟踪。
+- `.dockerignore` 明确排除 `frontend-admin/node_modules`、`frontend-admin/dist`、`.claude`、`.tools`、`artifacts` 等本地产物和缓存目录，防止 image workflow 上传无关 GB 级 context。
 - `.github/workflows/ci.yml` 已在 validate / release-gate job 安装 Helm。
 - `tests/v22-repository-governance-contract.test.mjs`、`tests/v22-repository-governance-validation-contract.test.mjs`、`tests/v22-deployment-helm-contract.test.mjs` 与 `tests/v22-image-publishing-contract.test.mjs` 已覆盖脚本存在、门禁接入和产物可解析。
 
