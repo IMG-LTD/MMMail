@@ -41,7 +41,7 @@ jobs:
           MMMAIL_SUPPLY_CHAIN_REPORT_DIR: ${{ runner.temp }}/supply-chain
 
       - name: Upload supply chain reports
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: supply-chain-reports
           path: ${{ runner.temp }}/supply-chain/
@@ -206,7 +206,7 @@ jobs:
 
       - name: Upload validation artifacts
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: mmmail-validate-artifacts
           if-no-files-found: warn
