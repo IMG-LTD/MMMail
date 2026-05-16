@@ -70,7 +70,7 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Setup Java
-        uses: actions/setup-java@v4
+        uses: actions/setup-java@v5
         with:
           distribution: temurin
           java-version: 21
@@ -151,7 +151,7 @@ jobs:
         run: pnpm --dir frontend-admin install --frozen-lockfile
 
       - name: Setup Java
-        uses: actions/setup-java@v4
+        uses: actions/setup-java@v5
         with:
           distribution: temurin
           java-version: 21
@@ -237,7 +237,7 @@ jobs:
         run: pnpm --dir frontend-admin install --frozen-lockfile
 
       - name: Setup Java
-        uses: actions/setup-java@v4
+        uses: actions/setup-java@v5
         with:
           distribution: temurin
           java-version: 21
@@ -275,7 +275,7 @@ jobs:
           cache-dependency-path: frontend-admin/pnpm-lock.yaml
 
       - name: Setup Java
-        uses: actions/setup-java@v4
+        uses: actions/setup-java@v5
         with:
           distribution: temurin
           java-version: 21
