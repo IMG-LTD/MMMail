@@ -94,7 +94,7 @@
     "@soybeanjs/eslint-config-vue": "^0.0.2",
     "@types/node": "25.7.0",
     "@types/nprogress": "0.2.3",
-    "@vitejs/plugin-vue": "6.0.6",
+    "@vitejs/plugin-vue": "6.0.7",
     "@vitejs/plugin-vue-jsx": "5.1.5",
     "@vitest/coverage-v8": "^4.1.6",
     "@vue/test-utils": "^2.4.10",
