@@ -102,7 +102,7 @@
     "axe-core": "4.11.4",
     "chrome-launcher": "1.2.1",
     "consola": "3.4.2",
-    "eslint": "10.3.0",
+    "eslint": "10.4.0",
     "jsdom": "^29.1.1",
     "kolorist": "1.8.0",
     "lighthouse": "^13.3.0",
