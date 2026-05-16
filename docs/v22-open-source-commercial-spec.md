@@ -1,7 +1,7 @@
 ---
 name: v2.2 开源 + 商业化筹备 spec
 date: 2026-05-16
-spec_version: oss-comm-v1.82
+spec_version: oss-comm-v1.83
 based_on:
   - docs/v213-closure-spec-v1.1.md (implemented)
   - docs/v212-shipping-cleanup-spec.md (implemented)
@@ -110,6 +110,7 @@ iteration_history:
   - v1.80 同步 API 生成规范复查：`frontend-admin/scripts/gen-api.mjs` 在 openapi-typescript 后直接执行 `oxfmt`，避免远端 CI 生成类型后因格式漂移触发 clean-diff guard
   - v1.81 同步前端构建 env 规范复查：`frontend-admin/.env` 与 `.env.test` 作为非敏感 Vite 默认值显式进入 Git 和 Docker context，根目录本地 env 仍保持 ignored
   - v1.82 同步 frontend e2e 工具链复查：CI frontend job 在运行 Docker-backed `test:e2e` 前显式安装 Java 21，避免 Maven `--release 21` 使用 runner 默认 JDK 失败
+  - v1.83 同步 Lighthouse 直接依赖复查：`frontend-admin/scripts/run-lighthouse.mjs` 直接 import `chrome-launcher`，因此 `frontend-admin/package.json` 必须显式声明该 devDependency
 review_passes:
   - pass-1 现状对账：用 grep / ls / package.json / CI / release-gate 核对已存在与缺失项
   - pass-2 一致性复查：统一 Free-Pro-Business、Adapay 独立仓、个人开发者容量
@@ -195,6 +196,7 @@ review_passes:
   - pass-82 API 生成 clean-diff 复查：远端 rc2 CI 暴露 `gen:api` 输出未格式化，根因是脚本只跑 openapi-typescript 未跑项目 formatter；修复为生成脚本内联 `oxfmt`
   - pass-83 frontend-admin env 复查：远端 rc2 镜像 fresh build 暴露 Vite config 必需的 `VITE_ICON_LOCAL_PREFIX` 只存在本地未跟踪 `.env`；修复为跟踪非敏感前端默认 env，并让 `.dockerignore` 只排除根目录 env
   - pass-84 frontend e2e Java 工具链复查：远端 rc3 CI 暴露 frontend job 的 `test:e2e` 会编译后端但未安装 Java 21；修复为在 frontend job 中显式 `actions/setup-java@v5` + Temurin 21
+  - pass-85 Lighthouse 直接依赖复查：远端 rc4 CI 暴露 `scripts/run-lighthouse.mjs` 直接 import `chrome-launcher` 但 package 未声明；修复为显式 devDependency 并纳入 CI toolchain contract
 ---
 
 # v2.2 开源 + 商业化筹备 spec
@@ -1073,7 +1075,7 @@ mmmail-billing-gateway (private)
 - `bash scripts/release-gate.sh` 输出新增 step。
 - 最终 `git diff --exit-code` 仍保留。
 
-**当前落地状态（2026-05-17 / pass-84）**：
+**当前落地状态（2026-05-17 / pass-85）**：
 - `tests/v22-legacy-frontend-contract-migration.test.mjs` 已作为 `legacy-contract-migration` gate，证明 selected legacy contracts 已迁入 root tests / `frontend-admin`，并证明旧迁移信号脚本和 CI job 不会被重新引入。
 - `BackendV22CommercialSurfaceCoverageContractTest` 已作为 commercial surface coverage gate，证明当前 v2.2 OIDC / audit / DSR Business API 有服务端 feature gate，并证明 license upgrade path 与 billing webhook 是显式例外而非 silent paid fallback。
 - 已新增 `scripts/generate-sbom-license-report.mjs`，默认输出到系统临时目录 `mmmail-supply-chain`；可用 `MMMAIL_SUPPLY_CHAIN_REPORT_DIR` 显式指定目录，避免在仓库内留下 `artifacts/`。
@@ -1094,6 +1096,7 @@ mmmail-billing-gateway (private)
 - `frontend-admin/scripts/gen-api.mjs` 在 `openapi-typescript` 后立即执行 `oxfmt`，因此 CI 的 generated API clean-diff guard 不再依赖开发者手动格式化生成产物。
 - `frontend-admin/.env` 与 `frontend-admin/.env.test` 仅包含非敏感 Vite 构建默认值并进入 Git 跟踪；`.dockerignore` 只排除根目录 `.env*`，确保 Docker fresh build 能读取 `VITE_ICON_PREFIX`、`VITE_ICON_LOCAL_PREFIX` 等必需配置。
 - `.github/workflows/ci.yml` 的 frontend job 在 `pnpm --dir frontend-admin test:e2e` 前安装 Temurin Java 21，匹配 Docker e2e setup 构建后端时使用的 Maven `--release 21`。
+- `frontend-admin/package.json` 显式声明 `chrome-launcher@1.2.1`，匹配 `scripts/run-lighthouse.mjs` 的直接 import，避免 CI 依赖 Lighthouse transitive dependency。
 - `.github/workflows/ci.yml` 已在 validate / release-gate job 安装 Helm。
 - `tests/v22-repository-governance-contract.test.mjs`、`tests/v22-repository-governance-validation-contract.test.mjs`、`tests/v22-deployment-helm-contract.test.mjs` 与 `tests/v22-image-publishing-contract.test.mjs` 已覆盖脚本存在、门禁接入和产物可解析。
 

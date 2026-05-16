@@ -87,10 +87,11 @@ test('v2.1.2 contract fixture docs are tracked with the contracts that read them
   }
 });
 
-test('frontend Docker build declares direct Vite config dependencies', async () => {
+test('frontend CI declares direct toolchain dependencies', async () => {
   const packageJson = JSON.parse(await read('frontend-admin/package.json'));
 
   assert.equal(packageJson.devDependencies['@iconify/utils'], '3.1.3');
+  assert.equal(packageJson.devDependencies['chrome-launcher'], '1.2.1');
 });
 
 test('frontend API type generation formats generated output before CI diff guard', async () => {

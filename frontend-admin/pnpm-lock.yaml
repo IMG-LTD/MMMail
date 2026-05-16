@@ -135,6 +135,9 @@ importers:
       axe-core:
         specifier: 4.11.4
         version: 4.11.4
+      chrome-launcher:
+        specifier: 1.2.1
+        version: 1.2.1
       consola:
         specifier: 3.4.2
         version: 3.4.2
