@@ -123,6 +123,8 @@ test('v2.2 repository agent instructions describe MMMail boundaries', async () =
   assert.match(agents, /frontend-admin\/\.env/);
   assert.match(agents, /非敏感 Vite 构建默认值/);
   assert.match(agents, /OpenAPI 类型生成必须在同一脚本内完成格式化/);
+  assert.match(agents, /frontend-admin test:e2e/);
+  assert.match(agents, /CI frontend job 必须在 e2e 前显式安装 Java 21/);
   assert.match(agents, /版本化 spec、release audit、验收矩阵类文档允许超过常规文件行数建议/);
   assert.match(agents, /新代码质量上限/);
   assert.match(agents, /函数.*50 行/);
@@ -295,6 +297,8 @@ test('v2.2 completion audit maps the objective to concrete evidence and external
   assert.match(audit, /`gen:api` runs `openapi-typescript` and then `oxfmt`/);
   assert.match(audit, /Frontend build env defaults/);
   assert.match(audit, /tracked non-secret Vite defaults/);
+  assert.match(audit, /Frontend e2e Java toolchain/);
+  assert.match(audit, /installs Temurin Java 21 before `pnpm --dir frontend-admin test:e2e`/);
   assert.match(audit, /git diff --check/);
   assert.match(audit, /Only `mmmail-nacos` and `mmmail-kafka` are running/);
   assert.match(audit, /rechecks GitHub private vulnerability reporting via GitHub API/);
@@ -306,12 +310,14 @@ test('v2.2 completion audit maps the objective to concrete evidence and external
   assert.match(audit, /tag `v2\.2\.0-rc\.2`/);
   assert.match(audit, /MMMail admin API type generation guard/);
   assert.match(audit, /VITE_ICON_LOCAL_PREFIX/);
+  assert.match(audit, /tag `v2\.2\.0-rc\.3`/);
+  assert.match(audit, /Fatal error compiling: error: release version 21 not supported/);
   assert.match(audit, /not acceptable release evidence/);
   assert.match(audit, /follow-up commit and a new tag-triggered `MMMail Images` run/);
   assert.match(audit, /same Public MMMail commit/);
   assert.match(audit, /not complete until the external evidence gaps above are resolved/);
   assert.match(spec, /status: main-repo-implemented-external-evidence-required/);
-  assert.match(spec, /spec_version: oss-comm-v1\.81/);
+  assert.match(spec, /spec_version: oss-comm-v1\.82/);
   assert.match(spec, /pass-51 外部状态核查/);
   assert.match(spec, /pass-52 OTel 文档复查/);
   assert.match(spec, /pass-53 live OIDC 证据模板复查/);
@@ -341,9 +347,11 @@ test('v2.2 completion audit maps the objective to concrete evidence and external
   assert.match(spec, /pass-81 Docker context 复查/);
   assert.match(spec, /pass-82 API 生成 clean-diff 复查/);
   assert.match(spec, /pass-83 frontend-admin env 复查/);
+  assert.match(spec, /pass-84 frontend e2e Java 工具链复查/);
   assert.match(spec, /pass-77 仓库规范源码行数与本地产物复查/);
   assert.match(spec, /frontend-admin\/scripts\/gen-api\.mjs` 在 `openapi-typescript` 后立即执行 `oxfmt`/);
   assert.match(spec, /frontend-admin\/\.env` 与 `frontend-admin\/\.env\.test` 仅包含非敏感 Vite 构建默认值/);
+  assert.match(spec, /frontend job 在 `pnpm --dir frontend-admin test:e2e` 前安装 Temurin Java 21/);
   assert.match(spec, /active-source-size-guardrail/);
   assert.match(spec, /7 个 status markers 加 8 个 read-only evidence gaps/);
   assert.match(spec, /all checks passed/);

@@ -32,6 +32,13 @@ jobs:
           cache: pnpm
           cache-dependency-path: frontend-admin/pnpm-lock.yaml
 
+      - name: Setup Java for frontend e2e
+        uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: 21
+          cache: maven
+
       - name: Root repository contract gates
         run: node --test tests/*.test.mjs
 

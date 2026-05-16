@@ -66,6 +66,19 @@ test('v2.2 workflows use Node 24-compatible action majors', async () => {
   }
 });
 
+test('frontend CI job declares Java 21 before Docker-backed e2e', async () => {
+  const ciWorkflow = await read('.github/workflows/ci.yml');
+  const javaSetupIndex = ciWorkflow.indexOf('Setup Java for frontend e2e');
+  const frontendE2eIndex = ciWorkflow.indexOf('pnpm --dir frontend-admin test:e2e');
+
+  assert.ok(javaSetupIndex > -1, 'frontend job must install Java 21 before e2e');
+  assert.ok(frontendE2eIndex > javaSetupIndex, 'frontend e2e must run after Java setup');
+  assert.match(
+    ciWorkflow.slice(javaSetupIndex, frontendE2eIndex),
+    /actions\/setup-java@v5[\s\S]*distribution: temurin[\s\S]*java-version: 21/
+  );
+});
+
 test('v2.1.2 contract fixture docs are tracked with the contracts that read them', async () => {
   const tracked = await trackedFiles(requiredTrackedDocs);
 
