@@ -1,23 +1,23 @@
 <script setup lang="ts">
-import EmptyState from './EmptyState.vue'
+import EmptyState from "./EmptyState.vue";
 
 withDefaults(
   defineProps<{
-    actionLabel?: string
-    allowed: boolean
-    description?: string
-    title?: string
+    actionLabel?: string;
+    allowed: boolean;
+    description?: string;
+    title?: string;
   }>(),
   {
-    actionLabel: 'Upgrade',
-    description: 'This surface is available on premium plans.',
-    title: 'Premium access required'
-  }
-)
+    actionLabel: "Upgrade",
+    description: "This surface is available on premium plans.",
+    title: "Premium access required",
+  },
+);
 
 const emit = defineEmits<{
-  upgrade: []
-}>()
+  upgrade: [];
+}>();
 </script>
 
 <template>

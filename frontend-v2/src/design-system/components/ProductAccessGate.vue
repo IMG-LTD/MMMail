@@ -1,24 +1,24 @@
 <script setup lang="ts">
-import EmptyState from './EmptyState.vue'
+import EmptyState from "./EmptyState.vue";
 
 withDefaults(
   defineProps<{
-    actionLabel?: string
-    description?: string
-    enabled: boolean
-    productKey: string
-    title?: string
+    actionLabel?: string;
+    description?: string;
+    enabled: boolean;
+    productKey: string;
+    title?: string;
   }>(),
   {
-    actionLabel: 'Request access',
+    actionLabel: "Request access",
     description: undefined,
-    title: undefined
-  }
-)
+    title: undefined,
+  },
+);
 
 const emit = defineEmits<{
-  requestAccess: []
-}>()
+  requestAccess: [];
+}>();
 </script>
 
 <template>

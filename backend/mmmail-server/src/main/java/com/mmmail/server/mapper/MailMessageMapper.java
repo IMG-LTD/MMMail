@@ -50,8 +50,8 @@ public interface MailMessageMapper extends BaseMapper<MailMessage> {
                        participant_key,
                        CASE
                            WHEN subject IS NULL OR TRIM(subject) = '' THEN #{noSubjectKey}
-                           WHEN TRIM(REGEXP_REPLACE(LOWER(TRIM(subject)), '^((re:|fwd:)\\s*)+', '')) = '' THEN #{noSubjectKey}
-                           ELSE TRIM(REGEXP_REPLACE(LOWER(TRIM(subject)), '^((re:|fwd:)\\s*)+', ''))
+                           WHEN TRIM(REGEXP_REPLACE(LOWER(TRIM(subject)), '^((re:|fwd:)[[:space:]]*)+', '')) = '' THEN #{noSubjectKey}
+                           ELSE TRIM(REGEXP_REPLACE(LOWER(TRIM(subject)), '^((re:|fwd:)[[:space:]]*)+', ''))
                        END AS conversation_key
                 FROM participant_scoped_messages
             ),

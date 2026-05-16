@@ -1,4 +1,4 @@
-FROM maven:3.9.9-eclipse-temurin-21 AS build
+FROM maven:3.9.9-eclipse-temurin-21-jammy AS build
 
 WORKDIR /app
 
@@ -22,7 +22,7 @@ COPY backend backend
 
 RUN mvn -f backend/pom.xml -pl mmmail-server -am -DskipTests package
 
-FROM eclipse-temurin:21-jre
+FROM eclipse-temurin:21-jre-jammy
 
 ENV JAVA_TOOL_OPTIONS="-XX:MaxRAMPercentage=75 -XX:+ExitOnOutOfMemoryError"
 

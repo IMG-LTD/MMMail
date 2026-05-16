@@ -1,17 +1,17 @@
 <script setup lang="ts">
-import { RouterLink } from 'vue-router'
-import { useLocaleText, type TextLike } from '@/locales'
+import { RouterLink } from "vue-router";
+import { useLocaleText, type TextLike } from "@/locales";
 
-const { tr } = useLocaleText()
+const { tr } = useLocaleText();
 
 defineProps<{
-  eyebrow: TextLike
-  title: TextLike
-  description: TextLike
-  accent: string
-  primaryLabel: TextLike
-  secondaryLabel: TextLike
-}>()
+  eyebrow: TextLike;
+  title: TextLike;
+  description: TextLike;
+  accent: string;
+  primaryLabel: TextLike;
+  secondaryLabel: TextLike;
+}>();
 </script>
 
 <template>
@@ -22,8 +22,12 @@ defineProps<{
       <h1>{{ tr(title) }}</h1>
       <p>{{ tr(description) }}</p>
       <div class="system-state__actions">
-        <RouterLink class="system-state__primary" to="/workspace">{{ tr(primaryLabel) }}</RouterLink>
-        <RouterLink class="system-state__secondary" to="/boundary">{{ tr(secondaryLabel) }}</RouterLink>
+        <RouterLink class="system-state__primary" to="/workspace">{{
+          tr(primaryLabel)
+        }}</RouterLink>
+        <RouterLink class="system-state__secondary" to="/boundary">{{
+          tr(secondaryLabel)
+        }}</RouterLink>
       </div>
     </article>
   </section>

@@ -95,6 +95,33 @@ create table if not exists mail_folder (
 
 create index idx_mail_folder_owner_parent on mail_folder(owner_id, parent_id, updated_at);
 
+create table if not exists mail_external_account (
+    id bigint primary key,
+    owner_id bigint not null,
+    provider varchar(32) not null,
+    auth_mode varchar(32) not null,
+    email varchar(254) not null,
+    username varchar(254) not null,
+    secret_ciphertext text not null,
+    imap_host varchar(255) not null,
+    imap_port int not null,
+    imap_ssl tinyint not null default 1,
+    smtp_host varchar(255) not null,
+    smtp_port int not null,
+    smtp_starttls tinyint not null default 1,
+    smtp_ssl tinyint not null default 0,
+    sync_status varchar(32) not null,
+    uid_high_watermark varchar(128),
+    last_sync_at timestamp,
+    last_error varchar(512),
+    created_at timestamp not null,
+    updated_at timestamp not null,
+    deleted tinyint not null default 0
+);
+
+create unique index uk_mail_external_account_owner_email on mail_external_account(owner_id, email);
+create index idx_mail_external_account_owner_status on mail_external_account(owner_id, sync_status, updated_at);
+
 create table if not exists mail_filter (
     id bigint primary key,
     owner_id bigint not null,
@@ -277,6 +304,9 @@ create table if not exists audit_event (
     org_id bigint,
     actor_id bigint not null,
     event_type varchar(64) not null,
+    target_type varchar(64),
+    target_id varchar(128),
+    severity varchar(16) not null default 'low',
     ip_address varchar(64),
     detail text,
     created_at timestamp not null,
@@ -286,8 +316,12 @@ create table if not exists audit_event (
 
 alter table audit_event add column org_id bigint;
 alter table audit_event modify column actor_id bigint null;
+alter table audit_event add column target_type varchar(64);
+alter table audit_event add column target_id varchar(128);
+alter table audit_event add column severity varchar(16) not null default 'low';
 create index idx_audit_actor_created on audit_event(actor_id, created_at);
 create index idx_audit_org_created on audit_event(org_id, created_at);
+create index idx_audit_event_type_severity_created on audit_event(event_type, severity, created_at);
 
 create table if not exists user_session (
     id bigint primary key,
@@ -302,6 +336,64 @@ create table if not exists user_session (
 
 create unique index uk_user_session_refresh on user_session(refresh_token_hash);
 create index idx_user_session_owner_expires on user_session(owner_id, expires_at);
+
+create table if not exists auth_login_attempt (
+    id bigint primary key,
+    user_id bigint,
+    email varchar(255) not null,
+    ip_address varchar(64) not null,
+    success tinyint not null,
+    city varchar(128),
+    country varchar(64),
+    latitude double,
+    longitude double,
+    geo_source varchar(64),
+    created_at timestamp not null,
+    deleted tinyint not null default 0
+);
+
+create index idx_auth_login_attempt_user_created on auth_login_attempt(user_id, created_at);
+create index idx_auth_login_attempt_email_ip_created on auth_login_attempt(email, ip_address, created_at);
+
+create table if not exists auth_login_lock (
+    id bigint primary key,
+    email varchar(255) not null,
+    ip_address varchar(64) not null,
+    failure_count int not null,
+    locked_until timestamp not null,
+    created_at timestamp not null,
+    updated_at timestamp not null,
+    deleted tinyint not null default 0
+);
+
+create index idx_auth_login_lock_email_ip on auth_login_lock(email, ip_address);
+
+create table if not exists security_event (
+    id bigint primary key,
+    user_id bigint,
+    email varchar(255),
+    type varchar(64) not null,
+    severity varchar(16) not null,
+    risk varchar(16) not null,
+    reasons varchar(255),
+    ip_address varchar(64),
+    city varchar(128),
+    country varchar(64),
+    source varchar(64),
+    detail text,
+    locked_until timestamp,
+    acknowledged_at timestamp,
+    action_status varchar(32),
+    action_taken varchar(64),
+    action_by bigint,
+    action_at timestamp,
+    created_at timestamp not null,
+    updated_at timestamp not null,
+    deleted tinyint not null default 0
+);
+
+create index idx_security_event_user_created on security_event(user_id, created_at);
+create index idx_security_event_severity_created on security_event(severity, created_at);
 
 create table if not exists user_preference (
     id bigint primary key,
@@ -556,6 +648,11 @@ create table if not exists calendar_event (
     location varchar(256),
     start_at timestamp not null,
     end_at timestamp not null,
+    series_id bigint,
+    rrule varchar(512),
+    recurrence_until timestamp,
+    recurrence_rdates_json text,
+    recurrence_exdates_json text,
     all_day tinyint not null default 0,
     timezone varchar(64) not null,
     reminder_minutes int,
@@ -566,6 +663,7 @@ create table if not exists calendar_event (
 
 create index idx_calendar_event_owner_start on calendar_event(owner_id, start_at);
 create index idx_calendar_event_owner_updated on calendar_event(owner_id, updated_at);
+create index idx_calendar_event_owner_rrule on calendar_event(owner_id, rrule, recurrence_until);
 
 create table if not exists calendar_event_attendee (
     id bigint primary key,
@@ -601,6 +699,35 @@ create unique index uk_calendar_share_event_target on calendar_event_share(event
 create index idx_calendar_share_target_status on calendar_event_share(target_user_id, response_status, updated_at);
 create index idx_calendar_share_owner_event on calendar_event_share(owner_id, event_id, updated_at);
 create index idx_calendar_share_owner_event_source on calendar_event_share(owner_id, event_id, source, updated_at);
+
+create table if not exists calendar_subscription (
+    id bigint primary key,
+    owner_id bigint not null,
+    url varchar(2048) not null,
+    label varchar(128) not null,
+    auth_mode varchar(32) not null default 'none',
+    color varchar(32),
+    sync_status varchar(32) not null default 'PENDING',
+    last_sync_at timestamp,
+    last_error varchar(512),
+    next_sync_at timestamp,
+    created_at timestamp not null,
+    updated_at timestamp not null,
+    deleted tinyint not null default 0
+);
+
+create index idx_calendar_subscription_owner on calendar_subscription(owner_id, updated_at);
+
+create table if not exists calendar_subscription_event (
+    id bigint primary key,
+    owner_id bigint not null,
+    subscription_id bigint not null,
+    event_id bigint not null,
+    created_at timestamp not null
+);
+
+create index idx_calendar_subscription_event_subscription on calendar_subscription_event(subscription_id, event_id);
+create index idx_calendar_subscription_event_owner on calendar_subscription_event(owner_id, subscription_id);
 
 create table if not exists org_workspace (
     id bigint primary key,
@@ -988,6 +1115,37 @@ create table if not exists docs_note_presence (
 
 create index idx_docs_note_presence_note on docs_note_presence(note_id, last_heartbeat_at);
 create unique index uk_docs_note_presence_note_session on docs_note_presence(note_id, user_id, session_id, deleted);
+
+create table if not exists collab_snapshot (
+    id bigint primary key,
+    resource_type varchar(32) not null,
+    resource_id varchar(64) not null,
+    version int not null,
+    snapshot blob not null,
+    created_at timestamp not null,
+    updated_at timestamp not null,
+    deleted tinyint not null default 0
+);
+
+create unique index if not exists uk_collab_snapshot_resource_version
+    on collab_snapshot(resource_type, resource_id, version, deleted);
+create index if not exists idx_collab_snapshot_resource_updated
+    on collab_snapshot(resource_type, resource_id, updated_at);
+
+create table if not exists collab_update (
+    id bigint primary key,
+    resource_type varchar(32) not null,
+    resource_id varchar(64) not null,
+    seq bigint not null,
+    update_payload blob not null,
+    created_at timestamp not null,
+    deleted tinyint not null default 0
+);
+
+create unique index if not exists uk_collab_update_resource_seq
+    on collab_update(resource_type, resource_id, seq, deleted);
+create index if not exists idx_collab_update_resource_created
+    on collab_update(resource_type, resource_id, created_at);
 
 create table if not exists pass_vault_item (
     id bigint primary key,
@@ -1517,6 +1675,7 @@ create table if not exists web_push_subscription (
     auth_key varchar(255) not null,
     content_encoding varchar(32) not null,
     user_agent varchar(255),
+    label varchar(64),
     last_success_at timestamp,
     last_failure_at timestamp,
     last_error_message varchar(255),
@@ -1721,6 +1880,8 @@ create table if not exists v21_collaboration_task (
     title varchar(220) not null,
     product varchar(32) not null,
     status varchar(32) not null,
+    board_column varchar(32) not null default 'OPEN',
+    position varchar(64) not null default '0|i001000:',
     assignee_email varchar(190),
     due_at timestamp,
     created_at timestamp not null,
@@ -1731,6 +1892,7 @@ create table if not exists v21_collaboration_task (
 create index idx_v21_collab_task_owner_updated on v21_collaboration_task(owner_id, updated_at);
 create index idx_v21_collab_task_project_status_updated on v21_collaboration_task(project_id, status, updated_at);
 create index idx_v21_collab_task_owner_status_due on v21_collaboration_task(owner_id, status, due_at);
+create index idx_v21_collab_task_project_board_position on v21_collaboration_task(project_id, board_column, position, id);
 
 create table if not exists v21_collaboration_comment (
     id bigint primary key,
@@ -1802,3 +1964,202 @@ create unique index uk_platform_job_run_idempotency on platform_job_run(idempote
 create index idx_platform_job_run_status_next_attempt on platform_job_run(status, next_attempt_at);
 create index idx_platform_job_run_owner_created on platform_job_run(owner_module, created_at);
 create index idx_platform_job_run_tenant_created on platform_job_run(tenant_id, created_at);
+
+create table if not exists command_panel_preference (
+    id bigint primary key,
+    owner_id bigint not null,
+    command_id varchar(120) not null,
+    pinned tinyint not null default 0,
+    usage_count int not null default 0,
+    last_used_at timestamp,
+    pinned_at timestamp,
+    created_at timestamp not null,
+    updated_at timestamp not null,
+    deleted tinyint not null default 0
+);
+
+create unique index uk_command_panel_pref_owner_command on command_panel_preference(owner_id, command_id, deleted);
+create index idx_command_panel_pref_owner_recent on command_panel_preference(owner_id, last_used_at);
+create index idx_command_panel_pref_owner_pinned on command_panel_preference(owner_id, pinned, pinned_at);
+
+create table if not exists community_topic (
+    id varchar(64) primary key,
+    slug varchar(64) not null,
+    title varchar(120) not null,
+    description varchar(500),
+    sort_order int not null default 0,
+    created_at timestamp not null,
+    updated_at timestamp not null,
+    deleted tinyint not null default 0
+);
+
+create unique index if not exists uk_community_topic_slug on community_topic(slug, deleted);
+create index if not exists idx_community_topic_sort on community_topic(sort_order, title);
+
+create table if not exists community_post (
+    id varchar(64) primary key,
+    author_user_id bigint not null,
+    org_id bigint,
+    topic_id varchar(64) not null,
+    title varchar(180) not null,
+    body_md text not null,
+    body_html text not null,
+    tags_json text not null,
+    like_count int not null default 0,
+    comment_count int not null default 0,
+    view_count int not null default 0,
+    pinned tinyint not null default 0,
+    locked tinyint not null default 0,
+    status varchar(32) not null,
+    created_at timestamp not null,
+    updated_at timestamp not null,
+    deleted_at timestamp,
+    deleted tinyint not null default 0
+);
+
+create index if not exists idx_community_post_status_updated on community_post(status, pinned, updated_at);
+create index if not exists idx_community_post_topic_status_updated on community_post(topic_id, status, updated_at);
+create index if not exists idx_community_post_author_updated on community_post(author_user_id, updated_at);
+
+create table if not exists community_comment (
+    id varchar(64) primary key,
+    post_id varchar(64) not null,
+    parent_comment_id varchar(64),
+    author_user_id bigint not null,
+    body_md text not null,
+    body_html text not null,
+    status varchar(32) not null,
+    created_at timestamp not null,
+    updated_at timestamp not null,
+    deleted_at timestamp,
+    deleted tinyint not null default 0
+);
+
+create index if not exists idx_community_comment_post_created on community_comment(post_id, created_at);
+create index if not exists idx_community_comment_parent_created on community_comment(parent_comment_id, created_at);
+
+create table if not exists community_post_like (
+    id bigint primary key,
+    post_id varchar(64) not null,
+    user_id bigint not null,
+    created_at timestamp not null,
+    deleted tinyint not null default 0
+);
+
+create unique index if not exists uk_community_like_post_user on community_post_like(post_id, user_id, deleted);
+
+create table if not exists community_post_bookmark (
+    id bigint primary key,
+    post_id varchar(64) not null,
+    user_id bigint not null,
+    created_at timestamp not null,
+    deleted tinyint not null default 0
+);
+
+create unique index if not exists uk_community_bookmark_post_user on community_post_bookmark(post_id, user_id, deleted);
+create index if not exists idx_community_bookmark_user_created on community_post_bookmark(user_id, created_at);
+
+create table if not exists community_post_view (
+    id bigint primary key,
+    post_id varchar(64) not null,
+    user_id bigint not null,
+    last_viewed_at timestamp not null,
+    view_count int not null default 1
+);
+
+create unique index if not exists uk_community_view_post_user on community_post_view(post_id, user_id);
+create index if not exists idx_community_view_last_seen on community_post_view(last_viewed_at);
+
+create table if not exists community_report (
+    id varchar(64) primary key,
+    target_type varchar(32) not null,
+    target_id varchar(64) not null,
+    reporter_user_id bigint not null,
+    reason varchar(64) not null,
+    detail varchar(1000),
+    status varchar(32) not null,
+    assignee_user_id bigint,
+    action varchar(32),
+    action_note varchar(1000),
+    created_at timestamp not null,
+    actioned_at timestamp,
+    updated_at timestamp not null,
+    deleted tinyint not null default 0
+);
+
+create index if not exists idx_community_report_status_created on community_report(status, created_at);
+create index if not exists idx_community_report_target on community_report(target_type, target_id);
+
+create table if not exists search_index (
+    id bigint primary key,
+    module_type varchar(32) not null,
+    resource_id varchar(128) not null,
+    org_id bigint,
+    owner_user_id bigint,
+    acl_user_ids text,
+    title varchar(255) not null,
+    body text,
+    route_path varchar(512) not null,
+    updated_at timestamp not null,
+    created_at timestamp not null,
+    deleted tinyint not null default 0
+);
+
+create unique index if not exists uk_search_index_module_resource on search_index(module_type, resource_id);
+create index if not exists idx_search_index_owner_module_updated on search_index(owner_user_id, module_type, updated_at);
+create index if not exists idx_search_index_org_module_updated on search_index(org_id, module_type, updated_at);
+create index if not exists idx_search_index_title on search_index(module_type, title);
+
+create table if not exists search_index_staging (
+    id bigint primary key,
+    job_id varchar(64) not null,
+    module_type varchar(32) not null,
+    resource_id varchar(128) not null,
+    org_id bigint,
+    owner_user_id bigint,
+    acl_user_ids text,
+    title varchar(255) not null,
+    body text,
+    route_path varchar(512) not null,
+    updated_at timestamp not null,
+    created_at timestamp not null,
+    deleted tinyint not null default 0
+);
+
+create index if not exists idx_search_stage_job on search_index_staging(job_id, module_type);
+
+create table if not exists search_reindex_job (
+    id varchar(64) primary key,
+    module_type varchar(32) not null,
+    status varchar(32) not null,
+    processed int not null default 0,
+    total int not null default 0,
+    errors int not null default 0,
+    error_message text,
+    created_at timestamp not null,
+    updated_at timestamp not null,
+    completed_at timestamp
+);
+
+create index if not exists idx_search_reindex_status_created on search_reindex_job(status, created_at);
+
+create table if not exists feature_flag (
+    flag_key varchar(128) primary key,
+    enabled tinyint not null default 0,
+    description varchar(255),
+    created_at timestamp not null default current_timestamp,
+    updated_at timestamp not null default current_timestamp
+);
+
+insert into feature_flag (flag_key, enabled, description)
+values
+    ('feat.community.enabled', 1, 'Enable v2.1.2 community module'),
+    ('feat.wallet.enabled', 0, 'Enable v2.1.2 wallet module'),
+    ('feat.vpn.enabled', 0, 'Enable v2.1.2 vpn module'),
+    ('feat.meet.enabled', 0, 'Enable v2.1.2 meet module'),
+    ('feat.simplelogin.enabled', 0, 'Enable v2.1.2 SimpleLogin integration'),
+    ('feat.notes.enabled', 0, 'Enable v2.1.2 Standard Notes integration')
+on duplicate key update
+    enabled = values(enabled),
+    description = values(description),
+    updated_at = current_timestamp;

@@ -13,6 +13,7 @@ import org.slf4j.LoggerFactory;
 import org.slf4j.MDC;
 import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
+import org.springframework.web.servlet.HandlerMapping;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
@@ -53,6 +54,7 @@ public class RequestTracingFilter extends OncePerRequestFilter {
     private void prepareContext(HttpServletRequest request, HttpServletResponse response, String requestId) {
         MDC.clear();
         MDC.put(TraceContext.REQUEST_ID_MDC, requestId);
+        MDC.put(TraceContext.TRACE_ID_MDC, requestId);
         String orgId = request.getHeader(TenantScopeHeaders.ORG_ID);
         String scopeId = request.getHeader(TenantScopeHeaders.SCOPE_ID);
         String normalizedOrgId = StringUtils.hasText(orgId) ? orgId.trim() : null;
@@ -74,6 +76,7 @@ public class RequestTracingFilter extends OncePerRequestFilter {
         String module = moduleResolver.resolve(request.getRequestURI());
         requestObservationService.record(new RequestObservationService.RequestObservation(
                 module,
+                endpointPattern(request),
                 request.getMethod(),
                 status,
                 durationMs
@@ -91,5 +94,13 @@ public class RequestTracingFilter extends OncePerRequestFilter {
     private String resolveRequestId(HttpServletRequest request) {
         String header = request.getHeader(TraceContext.REQUEST_ID_HEADER);
         return StringUtils.hasText(header) ? header.trim() : UUID.randomUUID().toString();
+    }
+
+    private String endpointPattern(HttpServletRequest request) {
+        Object pattern = request.getAttribute(HandlerMapping.BEST_MATCHING_PATTERN_ATTRIBUTE);
+        if (pattern instanceof String value && StringUtils.hasText(value)) {
+            return value.trim();
+        }
+        return request.getRequestURI();
     }
 }

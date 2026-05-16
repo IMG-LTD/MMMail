@@ -1,14 +1,15 @@
 <script setup lang="ts">
-import CompactPageHeader from '@/shared/components/CompactPageHeader.vue'
+import { NButton } from "naive-ui";
+import CompactPageHeader from "@/shared/components/CompactPageHeader.vue";
 
-const tabs = ['Overview', 'Plans', 'Billing', 'Operations', 'Boundary']
+const tabs = ["Overview", "Plans", "Billing", "Operations", "Boundary"];
 
 const products = [
-  ['Mail', '1,204', 'Unread'],
-  ['Calendar', '4', 'Today'],
-  ['Drive', '45GB', 'Storage'],
-  ['Pass', '3', 'Audit']
-]
+  ["Mail", "1,204", "Unread"],
+  ["Calendar", "4", "Today"],
+  ["Drive", "45GB", "Storage"],
+  ["Pass", "3", "Audit"],
+];
 </script>
 
 <template>
@@ -20,9 +21,14 @@ const products = [
     />
 
     <div class="suite-tabs">
-      <button v-for="tab in tabs" :key="tab" type="button" :class="{ 'suite-tabs__active': tab === 'Overview' }">
+      <NButton
+        v-for="tab in tabs"
+        :key="tab"
+        native-type="button"
+        :class="{ 'suite-tabs__active': tab === 'Overview' }"
+      >
         {{ tab }}
-      </button>
+      </NButton>
     </div>
 
     <div class="suite-grid">
@@ -44,19 +50,28 @@ const products = [
           <span class="section-label">Global metrics</span>
           <div class="suite-side__row"><span>Storage used</span><strong>45GB / 100GB</strong></div>
           <div class="suite-side__row"><span>Active sessions</span><strong>3</strong></div>
-          <div class="suite-side__row"><span>Security score</span><strong class="suite-side__score">92 / 100</strong></div>
+          <div class="suite-side__row">
+            <span>Security score</span><strong class="suite-side__score">92 / 100</strong>
+          </div>
         </article>
         <article class="surface-card suite-side__card">
           <span class="section-label">Intelligence</span>
           <strong>Storage optimization</strong>
-          <p class="page-subtitle">We noticed 5.0GB of duplicate attachments in your Mail storage. These can be safely reclaimed.</p>
-          <button type="button">Review duplicates</button>
+          <p class="page-subtitle">
+            We noticed 5.0GB of duplicate attachments in your Mail storage. These can be safely
+            reclaimed.
+          </p>
+          <NButton native-type="button">Review duplicates</NButton>
         </article>
       </aside>
     </div>
 
     <div class="suite-products">
-      <article v-for="[name, value, label] in products" :key="name" class="surface-card suite-product">
+      <article
+        v-for="[name, value, label] in products"
+        :key="name"
+        class="surface-card suite-product"
+      >
         <span class="section-label">{{ name }}</span>
         <strong>{{ value }}</strong>
         <p class="page-subtitle">{{ label }}</p>

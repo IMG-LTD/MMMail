@@ -1,0 +1,10 @@
+mmmail:
+  dev:
+    seed:
+      enabled: ${MMMAIL_DEV_SEED_ENABLED:true}
+      wallet: ${MMMAIL_DEV_SEED_WALLET:true}
+      meet: ${MMMAIL_DEV_SEED_MEET:true}
+      community: ${MMMAIL_DEV_SEED_COMMUNITY:true}
+      search-index: ${MMMAIL_DEV_SEED_SEARCH_INDEX:true}
+      domain: ${MMMAIL_DEV_SEED_DOMAIN:true}
+      webpush: ${MMMAIL_DEV_SEED_WEBPUSH:false}

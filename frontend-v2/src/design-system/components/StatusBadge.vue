@@ -1,21 +1,32 @@
 <script setup lang="ts">
-type StatusTone = 'neutral' | 'success' | 'info' | 'warning' | 'danger' | 'premium' | 'hosted' | 'preview'
+type StatusTone =
+  | "neutral"
+  | "success"
+  | "info"
+  | "warning"
+  | "danger"
+  | "premium"
+  | "hosted"
+  | "preview";
 
 withDefaults(
   defineProps<{
-    compact?: boolean
-    label: string
-    tone?: StatusTone
+    compact?: boolean;
+    label: string;
+    tone?: StatusTone;
   }>(),
   {
     compact: false,
-    tone: 'neutral'
-  }
-)
+    tone: "neutral",
+  },
+);
 </script>
 
 <template>
-  <span class="status-badge" :class="[`status-badge--${tone}`, { 'status-badge--compact': compact }]">
+  <span
+    class="status-badge"
+    :class="[`status-badge--${tone}`, { 'status-badge--compact': compact }]"
+  >
     {{ label }}
   </span>
 </template>

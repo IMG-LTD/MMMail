@@ -1,22 +1,45 @@
 <script setup lang="ts">
-import { storeToRefs } from 'pinia'
-import Drawer from '@/design-system/components/Drawer.vue'
-import { lt, useLocaleText } from '@/locales'
-import { densityModes, radiusOptions, themePresets, themeSchemes } from '@/theme/settings'
-import { useThemeStore } from '@/store/modules/theme'
+import { NButton } from "naive-ui";
+import { storeToRefs } from "pinia";
+import Drawer from "@/design-system/components/Drawer.vue";
+import { lt, useLocaleText } from "@/locales";
+import { densityModes, radiusOptions, themePresets, themeSchemes } from "@/theme/settings";
+import { useThemeStore } from "@/store/modules/theme";
 
-const themeStore = useThemeStore()
-const { density, drawerOpen, radius, resolvedScheme, themePreset, themeScheme } = storeToRefs(themeStore)
-const { tr } = useLocaleText()
+const themeStore = useThemeStore();
+const { density, drawerOpen, radius, resolvedScheme, themePreset, themeScheme } =
+  storeToRefs(themeStore);
+const { tr } = useLocaleText();
 
 const previewMetrics = [
-  [lt('壳层', '殼層', 'Shell'), lt('共享顶栏、侧栏和内容区一起变化。', '共享頂欄、側欄和內容區一起變化。', 'Shared header, side nav, and content surfaces')],
-  [lt('密度', '密度', 'Density'), lt('邮件、云盘和密码库工作区即时响应。', '郵件、雲端硬碟和密碼庫工作區即時回應。', 'Mail, Drive, and Pass workspaces respond immediately')],
-  [lt('圆角', '圓角', 'Radius'), lt('卡片、抽屉和控件边界保持同步。', '卡片、抽屜和控制項邊界保持同步。', 'Cards, drawers, and control borders stay synchronized')]
-]
+  [
+    lt("壳层", "殼層", "Shell"),
+    lt(
+      "共享顶栏、侧栏和内容区一起变化。",
+      "共享頂欄、側欄和內容區一起變化。",
+      "Shared header, side nav, and content surfaces",
+    ),
+  ],
+  [
+    lt("密度", "密度", "Density"),
+    lt(
+      "邮件、云盘和密码库工作区即时响应。",
+      "郵件、雲端硬碟和密碼庫工作區即時回應。",
+      "Mail, Drive, and Pass workspaces respond immediately",
+    ),
+  ],
+  [
+    lt("圆角", "圓角", "Radius"),
+    lt(
+      "卡片、抽屉和控件边界保持同步。",
+      "卡片、抽屜和控制項邊界保持同步。",
+      "Cards, drawers, and control borders stay synchronized",
+    ),
+  ],
+];
 
 function handleDrawerVisibility(value: boolean) {
-  themeStore.setDrawerOpen(value)
+  themeStore.setDrawerOpen(value);
 }
 </script>
 
@@ -29,28 +52,28 @@ function handleDrawerVisibility(value: boolean) {
   >
     <div class="theme-drawer">
       <section class="theme-drawer__section">
-        <span class="section-label">{{ tr(lt('模式', '模式', 'Mode')) }}</span>
+        <span class="section-label">{{ tr(lt("模式", "模式", "Mode")) }}</span>
         <div class="theme-drawer__option-grid">
-          <button
+          <NButton
             v-for="option in themeSchemes"
             :key="option.value"
-            type="button"
+            native-type="button"
             class="theme-drawer__option"
             :class="{ 'theme-drawer__option--active': themeScheme === option.value }"
             @click="themeStore.setThemeScheme(option.value)"
           >
             {{ tr(option.label) }}
-          </button>
+          </NButton>
         </div>
       </section>
 
       <section class="theme-drawer__section">
-        <span class="section-label">{{ tr(lt('预设', '預設', 'Preset')) }}</span>
+        <span class="section-label">{{ tr(lt("预设", "預設", "Preset")) }}</span>
         <div class="theme-drawer__preset-grid">
-          <button
+          <NButton
             v-for="preset in themePresets"
             :key="preset.id"
-            type="button"
+            native-type="button"
             class="theme-drawer__preset"
             :class="{ 'theme-drawer__preset--active': themePreset === preset.id }"
             @click="themeStore.setThemePreset(preset.id)"
@@ -58,55 +81,63 @@ function handleDrawerVisibility(value: boolean) {
             <span class="theme-drawer__swatch" :style="{ background: preset.accent }" />
             <strong>{{ tr(preset.label) }}</strong>
             <span>{{ tr(preset.description) }}</span>
-          </button>
+          </NButton>
         </div>
       </section>
 
       <section class="theme-drawer__section">
-        <span class="section-label">{{ tr(lt('密度', '密度', 'Density')) }}</span>
+        <span class="section-label">{{ tr(lt("密度", "密度", "Density")) }}</span>
         <div class="theme-drawer__option-grid">
-          <button
+          <NButton
             v-for="option in densityModes"
             :key="option.value"
-            type="button"
+            native-type="button"
             class="theme-drawer__option"
             :class="{ 'theme-drawer__option--active': density === option.value }"
             @click="themeStore.setDensity(option.value)"
           >
             {{ tr(option.label) }}
-          </button>
+          </NButton>
         </div>
       </section>
 
       <section class="theme-drawer__section">
-        <span class="section-label">{{ tr(lt('圆角', '圓角', 'Corner radius')) }}</span>
+        <span class="section-label">{{ tr(lt("圆角", "圓角", "Corner radius")) }}</span>
         <div class="theme-drawer__option-grid">
-          <button
+          <NButton
             v-for="value in radiusOptions"
             :key="value"
-            type="button"
+            native-type="button"
             class="theme-drawer__option"
             :class="{ 'theme-drawer__option--active': radius === value }"
             @click="themeStore.setRadius(value)"
           >
             {{ value }} px
-          </button>
+          </NButton>
         </div>
       </section>
 
       <article class="theme-drawer__preview surface-card">
         <div class="theme-drawer__preview-head">
           <div>
-            <span class="section-label">{{ tr(lt('预览', '預覽', 'Preview')) }}</span>
-            <strong>{{ resolvedScheme === 'dark' ? tr(lt('深色壳层', '深色殼層', 'Dark shell')) : tr(lt('浅色壳层', '淺色殼層', 'Light shell')) }}</strong>
+            <span class="section-label">{{ tr(lt("预览", "預覽", "Preview")) }}</span>
+            <strong>{{
+              resolvedScheme === "dark"
+                ? tr(lt("深色壳层", "深色殼層", "Dark shell"))
+                : tr(lt("浅色壳层", "淺色殼層", "Light shell"))
+            }}</strong>
           </div>
-          <span class="theme-drawer__preview-badge">{{ tr(densityModes.find(option => option.value === density)?.label ?? density) }}</span>
+          <span class="theme-drawer__preview-badge">{{
+            tr(densityModes.find((option) => option.value === density)?.label ?? density)
+          }}</span>
         </div>
 
         <div class="theme-drawer__preview-strip">
           <span class="theme-drawer__preview-rail" />
           <div class="theme-drawer__preview-card">
-            <span class="theme-drawer__preview-pill">{{ tr(lt('已加密', '已加密', 'Encrypted')) }}</span>
+            <span class="theme-drawer__preview-pill">{{
+              tr(lt("已加密", "已加密", "Encrypted"))
+            }}</span>
             <span class="theme-drawer__preview-line" />
             <span class="theme-drawer__preview-line theme-drawer__preview-line--short" />
           </div>

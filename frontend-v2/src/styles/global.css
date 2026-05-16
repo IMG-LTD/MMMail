@@ -4,7 +4,7 @@
   background: #f4f6f8;
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
-  --mm-app-bg: #f4f6f8;
+  --mm-app-bg: #f5f6fa;
   --mm-surface: #ffffff;
   --mm-surface-soft: #f8fafc;
   --mm-surface-muted: #eef2f6;
@@ -105,7 +105,16 @@ body.mmmail-dark {
   color-scheme: dark;
 }
 
-:where(a, button, input, textarea, select, [tabindex="0"], [role="button"], [role="option"]):focus-visible {
+:where(
+  a,
+  button,
+  input,
+  textarea,
+  select,
+  [tabindex="0"],
+  [role="button"],
+  [role="option"]
+):focus-visible {
   outline: none;
   box-shadow:
     0 0 0 2px var(--mm-primary),
@@ -152,10 +161,12 @@ button {
 }
 
 .surface-card {
-  background: var(--mm-surface);
+  background: color-mix(in srgb, var(--mm-surface) 68%, transparent);
   border: 1px solid var(--mm-border);
   border-radius: var(--mm-radius-md);
   box-shadow: var(--mm-shadow-sm);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
 }
 
 .surface-grid {

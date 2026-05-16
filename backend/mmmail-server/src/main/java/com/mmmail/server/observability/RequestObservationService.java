@@ -8,6 +8,7 @@ import org.springframework.stereotype.Service;
 import java.time.Duration;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Locale;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.atomic.LongAdder;
@@ -26,7 +27,9 @@ public class RequestObservationService {
         ModuleCounters counters = moduleCounters.computeIfAbsent(observation.module(), key -> new ModuleCounters());
         counters.total().increment();
         counter("mmmail.api.requests.total", observation, statusFamily(observation.status())).increment();
+        moduleRequestCounter(observation).increment();
         timer(observation).record(Duration.ofMillis(observation.durationMs()));
+        moduleRequestTimer(observation).record(Duration.ofMillis(observation.durationMs()));
         if (observation.status() >= 400) {
             counters.failed().increment();
             counter("mmmail.api.requests.failed.total", observation, statusFamily(observation.status())).increment();
@@ -58,6 +61,26 @@ public class RequestObservationService {
                 .register(meterRegistry);
     }
 
+    private Counter moduleRequestCounter(RequestObservation observation) {
+        return Counter.builder(metricPrefix(observation.module()) + "_request_total")
+                .tag("endpoint", observation.endpoint())
+                .tag("method", observation.method())
+                .tag("status", String.valueOf(observation.status()))
+                .register(meterRegistry);
+    }
+
+    private Timer moduleRequestTimer(RequestObservation observation) {
+        return Timer.builder(metricPrefix(observation.module()) + "_request_duration_ms")
+                .tag("endpoint", observation.endpoint())
+                .tag("method", observation.method())
+                .publishPercentileHistogram()
+                .register(meterRegistry);
+    }
+
+    private String metricPrefix(String module) {
+        return module.toLowerCase(Locale.ROOT).replaceAll("[^a-z0-9_]", "_");
+    }
+
     private String statusFamily(int status) {
         int family = Math.max(1, status / 100);
         return family + "xx";
@@ -72,6 +95,7 @@ public class RequestObservationService {
 
     public record RequestObservation(
             String module,
+            String endpoint,
             String method,
             int status,
             long durationMs

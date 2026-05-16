@@ -1,75 +1,149 @@
 <script setup lang="ts">
-import CompactPageHeader from '@/shared/components/CompactPageHeader.vue'
-import { lt, type TextLike, useLocaleText } from '@/locales'
+import { NButton } from "naive-ui";
+import { computed } from "vue";
+import CompactPageHeader from "@/shared/components/CompactPageHeader.vue";
+import {
+  V211EntityList,
+  V211MetricCard,
+  V211MiniChart,
+  V211SectionPanel,
+  V211StatusTag,
+  type EntityListItem,
+} from "@/design-system/v211";
+import { lt, type TextLike, useLocaleText } from "@/locales";
 
-const { tr } = useLocaleText()
+const { tr } = useLocaleText();
 
 interface MetricCard {
-  id: string
-  label: TextLike
-  value: string
-  meta: TextLike
-  emphasis: boolean
-  progress: number
+  id: string;
+  label: TextLike;
+  value: string;
+  meta: TextLike;
+  emphasis: boolean;
+  progress: number;
 }
 
 interface QuickAction {
-  id: string
-  label: TextLike
+  id: string;
+  label: TextLike;
 }
 
 interface ReviewRow {
-  owner: TextLike
-  recipient: TextLike
-  severity: 'neutral' | 'critical'
-  severityLabel: TextLike
-  time: string
+  owner: TextLike;
+  recipient: TextLike;
+  severity: "neutral" | "critical";
+  severityLabel: TextLike;
+  time: string;
 }
 
 const metrics: MetricCard[] = [
-  { id: 'mail-exchange', label: lt('邮件往来', '郵件往來', 'Mail exchange'), value: '24', meta: '+2', emphasis: false, progress: 0 },
-  { id: 'member-count', label: lt('成员总数', '成員總數', 'Total members'), value: '1.2k', meta: lt('活跃中', '活躍中', 'Active'), emphasis: false, progress: 0 },
-  { id: 'quality-score', label: lt('平均质量分', '平均品質分', 'Average quality score'), value: '42.2', meta: '/ 100TB', emphasis: false, progress: 0.42 },
-  { id: 'storage-health', label: lt('存储健康分', '儲存健康分', 'Storage health score'), value: '98%', meta: '+9', emphasis: true, progress: 0.98 }
-]
+  {
+    id: "mail-exchange",
+    label: lt("邮件往来", "郵件往來", "Mail exchange"),
+    value: "24",
+    meta: "+2",
+    emphasis: false,
+    progress: 0,
+  },
+  {
+    id: "member-count",
+    label: lt("成员总数", "成員總數", "Total members"),
+    value: "1.2k",
+    meta: lt("活跃中", "活躍中", "Active"),
+    emphasis: false,
+    progress: 0,
+  },
+  {
+    id: "quality-score",
+    label: lt("平均质量分", "平均品質分", "Average quality score"),
+    value: "42.2",
+    meta: "/ 100TB",
+    emphasis: false,
+    progress: 0.42,
+  },
+  {
+    id: "storage-health",
+    label: lt("存储健康分", "儲存健康分", "Storage health score"),
+    value: "98%",
+    meta: "+9",
+    emphasis: true,
+    progress: 0.98,
+  },
+];
 
 const quickActions: QuickAction[] = [
-  { id: 'team-report', label: lt('创建团队汇报', '建立團隊報告', 'Create team report') },
-  { id: 'invite-member', label: lt('邀请成员', '邀請成員', 'Invite member') },
-  { id: 'open-audit', label: lt('打开审计', '開啟稽核', 'Open audit') },
-  { id: 'bulk-backup', label: lt('批量备份', '批次備份', 'Bulk backup') }
-]
+  { id: "team-report", label: lt("创建团队汇报", "建立團隊報告", "Create team report") },
+  { id: "invite-member", label: lt("邀请成员", "邀請成員", "Invite member") },
+  { id: "open-audit", label: lt("打开审计", "開啟稽核", "Open audit") },
+  { id: "bulk-backup", label: lt("批量备份", "批次備份", "Bulk backup") },
+];
 
 const reviews: ReviewRow[] = [
   {
-    owner: lt('多人投票', '多人投票', 'Multi-approver vote'),
-    recipient: lt('已分发给 frida.li@hangzhouenergy.com', '已分發給 frida.li@hangzhouenergy.com', 'Distributed to frida.li@hangzhouenergy.com'),
-    severity: 'neutral',
-    severityLabel: lt('已分发', '已分發', 'Distributed'),
-    time: '2023-10-24 14:32:01'
+    owner: lt("多人投票", "多人投票", "Multi-approver vote"),
+    recipient: lt(
+      "已分发给 frida.li@hangzhouenergy.com",
+      "已分發給 frida.li@hangzhouenergy.com",
+      "Distributed to frida.li@hangzhouenergy.com",
+    ),
+    severity: "neutral",
+    severityLabel: lt("已分发", "已分發", "Distributed"),
+    time: "2023-10-24 14:32:01",
   },
   {
-    owner: lt('多人投票', '多人投票', 'Multi-approver vote'),
-    recipient: lt('已分发给 q4.sales@phoenix-secure.com', '已分發給 q4.sales@phoenix-secure.com', 'Distributed to q4.sales@phoenix-secure.com'),
-    severity: 'neutral',
-    severityLabel: lt('已分发', '已分發', 'Distributed'),
-    time: '2023-10-24 14:15:45'
+    owner: lt("多人投票", "多人投票", "Multi-approver vote"),
+    recipient: lt(
+      "已分发给 q4.sales@phoenix-secure.com",
+      "已分發給 q4.sales@phoenix-secure.com",
+      "Distributed to q4.sales@phoenix-secure.com",
+    ),
+    severity: "neutral",
+    severityLabel: lt("已分发", "已分發", "Distributed"),
+    time: "2023-10-24 14:15:45",
   },
   {
-    owner: lt('多人协作', '多人協作', 'Multi-team collaboration'),
-    recipient: lt('项目主负责人组需要立即签收', '專案主要負責人群組需要立即簽收', 'Primary project owners require immediate acknowledgment'),
-    severity: 'critical',
-    severityLabel: lt('P1 / 紧急', 'P1 / 緊急', 'P1 / Critical'),
-    time: '2023-10-25 09:06:12'
+    owner: lt("多人协作", "多人協作", "Multi-team collaboration"),
+    recipient: lt(
+      "项目主负责人组需要立即签收",
+      "專案主要負責人群組需要立即簽收",
+      "Primary project owners require immediate acknowledgment",
+    ),
+    severity: "critical",
+    severityLabel: lt("P1 / 紧急", "P1 / 緊急", "P1 / Critical"),
+    time: "2023-10-25 09:06:12",
   },
   {
-    owner: lt('多人协作', '多人協作', 'Multi-team collaboration'),
-    recipient: lt('运营侧签收在 6 小时内完成', '營運側簽收需在 6 小時內完成', 'Operations acknowledgment is due within 6 hours'),
-    severity: 'neutral',
-    severityLabel: lt('低风险', '低風險', 'Low risk'),
-    time: '2023-10-22 16:45:08'
-  }
-]
+    owner: lt("多人协作", "多人協作", "Multi-team collaboration"),
+    recipient: lt(
+      "运营侧签收在 6 小时内完成",
+      "營運側簽收需在 6 小時內完成",
+      "Operations acknowledgment is due within 6 hours",
+    ),
+    severity: "neutral",
+    severityLabel: lt("低风险", "低風險", "Low risk"),
+    time: "2023-10-22 16:45:08",
+  },
+];
+
+const quickActionItems = computed<EntityListItem[]>(() => {
+  return quickActions.map((action) => ({
+    id: action.id,
+    title: action.label,
+    meta: lt("快捷入口", "快捷入口", "Quick action"),
+  }));
+});
+
+function getMetricNumber(value: string) {
+  return Number.parseFloat(value.replace(/[^\d.]/g, "")) || value;
+}
+
+function getMetricStatus(metric: MetricCard) {
+  return metric.emphasis ? "brand" : "neutral";
+}
+
+function getReviewTone(review: ReviewRow) {
+  return review.severity === "critical" ? "danger" : "neutral";
+}
 </script>
 
 <template>
@@ -77,72 +151,130 @@ const reviews: ReviewRow[] = [
     <compact-page-header
       :eyebrow="lt('业务', '業務', 'Business')"
       :title="lt('业务概览', '業務概覽', 'Business overview')"
-      :description="lt('2023 年第四季度发展总览与近期运营重点。', '2023 年第四季發展總覽與近期營運重點。', 'Q4 2023 growth overview and near-term operational priorities.')"
+      :description="
+        lt(
+          '2023 年第四季度发展总览与近期运营重点。',
+          '2023 年第四季發展總覽與近期營運重點。',
+          'Q4 2023 growth overview and near-term operational priorities.',
+        )
+      "
     >
-      <button class="business-page__action" type="button">{{ tr(lt('生成报告', '產生報告', 'Generate report')) }}</button>
+      <NButton class="business-page__action" native-type="button">{{
+        tr(lt("生成报告", "產生報告", "Generate report"))
+      }}</NButton>
     </compact-page-header>
 
     <div class="business-layout">
       <div class="business-main">
         <div class="business-metrics">
-          <article
+          <V211MetricCard
             v-for="metric in metrics"
             :key="metric.id"
-            class="surface-card metric-card"
+            class="surface-card metric-card v211-adoption"
             :class="{ 'metric-card--emphasis': metric.emphasis }"
+            :title="metric.label"
+            :value="getMetricNumber(metric.value)"
+            :status="getMetricStatus(metric)"
+            :trend="{
+              direction: metric.emphasis ? 'up' : 'flat',
+              percent: Math.round(metric.progress * 100),
+            }"
           >
-            <span class="section-label">{{ tr(metric.label) }}</span>
-            <div class="metric-card__value">
-              <strong>{{ metric.value }}</strong>
+            <template #chart>
+              <V211MiniChart
+                v-if="metric.progress"
+                type="gauge"
+                :data="[{ name: tr(metric.label), value: Math.round(metric.progress * 100) }]"
+                :height="84"
+              />
+            </template>
+            <template #footer>
               <span>{{ tr(metric.meta) }}</span>
-            </div>
-            <span v-if="metric.progress" class="metric-card__progress">
-              <span :style="{ width: `${metric.progress * 100}%` }" />
-            </span>
-          </article>
+            </template>
+          </V211MetricCard>
         </div>
 
-        <article class="surface-card business-table">
+        <V211SectionPanel
+          class="surface-card business-table"
+          :title="lt('近期代理活动', '近期代理活動', 'Recent agent activity')"
+          :description="
+            lt(
+              '合规上下线引擎正在关注 4 个跨组织协作动作。',
+              '合規上下線引擎正在關注 4 個跨組織協作動作。',
+              'The compliance workflow engine is tracking 4 cross-organization collaboration actions.',
+            )
+          "
+        >
           <div class="business-table__toolbar">
             <div>
-              <span class="section-label">{{ tr(lt('近期代理活动', '近期代理活動', 'Recent agent activity')) }}</span>
-              <p class="page-subtitle">{{ tr(lt('合规上下线引擎正在关注 4 个跨组织协作动作。', '合規上下線引擎正在關注 4 個跨組織協作動作。', 'The compliance workflow engine is tracking 4 cross-organization collaboration actions.')) }}</p>
+              <span class="section-label">{{
+                tr(lt("近期代理活动", "近期代理活動", "Recent agent activity"))
+              }}</span>
+              <p class="page-subtitle">
+                {{
+                  tr(
+                    lt(
+                      "合规上下线引擎正在关注 4 个跨组织协作动作。",
+                      "合規上下線引擎正在關注 4 個跨組織協作動作。",
+                      "The compliance workflow engine is tracking 4 cross-organization collaboration actions.",
+                    ),
+                  )
+                }}
+              </p>
             </div>
-            <span class="business-table__hint">{{ tr(lt('查看全部 11 条', '查看全部 11 筆', 'View all 11 items')) }}</span>
+            <span class="business-table__hint">{{
+              tr(lt("查看全部 11 条", "查看全部 11 筆", "View all 11 items"))
+            }}</span>
           </div>
 
           <div class="business-table__head">
-            <span>{{ tr(lt('时间', '時間', 'Time')) }}</span>
-            <span>{{ tr(lt('操作人', '操作者', 'Actor')) }}</span>
-            <span>{{ tr(lt('引导类型', '引導類型', 'Flow type')) }}</span>
-            <span>{{ tr(lt('目标摘要', '目標摘要', 'Target summary')) }}</span>
+            <span>{{ tr(lt("时间", "時間", "Time")) }}</span>
+            <span>{{ tr(lt("操作人", "操作者", "Actor")) }}</span>
+            <span>{{ tr(lt("引导类型", "引導類型", "Flow type")) }}</span>
+            <span>{{ tr(lt("目标摘要", "目標摘要", "Target summary")) }}</span>
           </div>
 
           <div v-for="review in reviews" :key="review.time" class="business-table__row">
             <span>{{ review.time }}</span>
             <span>{{ tr(review.owner) }}</span>
-            <span class="business-table__pill" :class="`business-table__pill--${review.severity}`">
-              {{ tr(review.severityLabel) }}
-            </span>
+            <V211StatusTag :tone="getReviewTone(review)" :label="review.severityLabel" />
             <strong>{{ tr(review.recipient) }}</strong>
           </div>
-        </article>
+        </V211SectionPanel>
       </div>
 
       <div class="business-side">
-        <article class="surface-card business-actions">
-          <span class="section-label">{{ tr(lt('快速操作', '快速操作', 'Quick actions')) }}</span>
-          <div class="business-actions__grid">
-            <button v-for="action in quickActions" :key="action.id" type="button">
-              {{ tr(action.label) }}
-            </button>
-          </div>
-        </article>
+        <V211SectionPanel
+          class="surface-card business-actions"
+          :title="lt('快速操作', '快速操作', 'Quick actions')"
+        >
+          <V211EntityList :items="quickActionItems" selectable="single" />
+        </V211SectionPanel>
 
         <article class="surface-card business-note">
-          <span class="section-label">{{ tr(lt('高优先级提示', '高優先級提示', 'High-priority note')) }}</span>
-          <strong>{{ tr(lt('系统仍在跟踪 1 个高风险流程。', '系統仍在追蹤 1 個高風險流程。', 'The system is still tracking 1 high-risk flow.')) }}</strong>
-          <p>{{ tr(lt('高风险仍未完全闭环，最近一次告警由系统于 5 分钟前生成。当前升级路径已经过 S3 审批。', '高風險仍未完全閉環，最近一次告警由系統於 5 分鐘前產生。目前升級路徑已通過 S3 批准。', 'The high-risk item is still open. The most recent warning was generated 5 minutes ago, and the current escalation path has already passed S3 approval.')) }}</p>
+          <span class="section-label">{{
+            tr(lt("高优先级提示", "高優先級提示", "High-priority note"))
+          }}</span>
+          <strong>{{
+            tr(
+              lt(
+                "系统仍在跟踪 1 个高风险流程。",
+                "系統仍在追蹤 1 個高風險流程。",
+                "The system is still tracking 1 high-risk flow.",
+              ),
+            )
+          }}</strong>
+          <p>
+            {{
+              tr(
+                lt(
+                  "高风险仍未完全闭环，最近一次告警由系统于 5 分钟前生成。当前升级路径已经过 S3 审批。",
+                  "高風險仍未完全閉環，最近一次告警由系統於 5 分鐘前產生。目前升級路徑已通過 S3 批准。",
+                  "The high-risk item is still open. The most recent warning was generated 5 minutes ago, and the current escalation path has already passed S3 approval.",
+                ),
+              )
+            }}
+          </p>
         </article>
       </div>
     </div>

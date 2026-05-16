@@ -61,6 +61,7 @@ class BackendV21AccessEntitlementGatesTest {
                 "GET /api/v2/ai-platform/capabilities",
                 "GET /api/v2/mcp/registry",
                 "POST /api/v2/auth/refresh",
+                "GET /api/v2/auth/me",
                 "GET /api/v2/auth/sessions",
                 "GET /api/v2/system/health",
                 "GET /api/v2/share/capabilities",

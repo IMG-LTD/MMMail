@@ -1,31 +1,32 @@
 <script setup lang="ts">
-import { useLocaleText } from '@/locales'
-import type { SurfaceOption } from '@/shared/content/route-surfaces'
+import { NButton } from "naive-ui";
+import { useLocaleText } from "@/locales";
+import type { SurfaceOption } from "@/shared/content/route-surfaces";
 
 defineProps<{
-  activeKey: string
-  items: SurfaceOption[]
-}>()
+  activeKey: string;
+  items: SurfaceOption[];
+}>();
 
 defineEmits<{
-  open: [item: SurfaceOption]
-}>()
+  open: [item: SurfaceOption];
+}>();
 
-const { tr } = useLocaleText()
+const { tr } = useLocaleText();
 </script>
 
 <template>
   <aside class="mail-folder-rail">
-    <button
+    <NButton
       v-for="item in items"
       :key="item.key"
-      type="button"
+      native-type="button"
       :class="{ 'mail-folder-rail__item--active': item.key === activeKey }"
       @click="$emit('open', item)"
     >
       <span>{{ tr(item.label) }}</span>
       <small>{{ tr(item.description) }}</small>
-    </button>
+    </NButton>
     <article class="mail-folder-rail__security">
       <span class="section-label">Mail security</span>
       <strong>Encrypted delivery enabled</strong>

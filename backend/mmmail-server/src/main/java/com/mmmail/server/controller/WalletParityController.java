@@ -13,6 +13,7 @@ import com.mmmail.server.model.vo.WalletEmailTransferVo;
 import com.mmmail.server.model.vo.WalletParityWorkspaceVo;
 import com.mmmail.server.model.vo.WalletReceiveAddressVo;
 import com.mmmail.server.model.vo.WalletRecoveryPhraseVo;
+import com.mmmail.server.security.RequireEntitlement;
 import com.mmmail.server.service.WalletParityService;
 import com.mmmail.server.util.SecurityUtils;
 import jakarta.servlet.http.HttpServletRequest;
@@ -27,6 +28,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
+@RequireEntitlement("WALLET")
 @RequestMapping("/api/v1/wallet")
 public class WalletParityController {
 

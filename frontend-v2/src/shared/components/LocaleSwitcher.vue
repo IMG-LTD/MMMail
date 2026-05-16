@@ -1,29 +1,37 @@
 <script setup lang="ts">
-import { computed } from 'vue'
-import { useAppStore } from '@/store/modules/app'
-import { useLocaleText } from '@/locales'
+import { NButton } from "naive-ui";
+import { computed } from "vue";
+import { useAppStore } from "@/store/modules/app";
+import { useLocaleText } from "@/locales";
 
 const props = withDefaults(
   defineProps<{
-    compact?: boolean
+    compact?: boolean;
   }>(),
   {
-    compact: false
-  }
-)
+    compact: false,
+  },
+);
 
-const appStore = useAppStore()
-const { locale, options, tr } = useLocaleText()
+const appStore = useAppStore();
+const { locale, options, tr } = useLocaleText();
 
-const ariaLabel = computed(() => tr({ 'zh-CN': '语言切换', 'zh-TW': '語言切換', en: 'Language switcher' }))
+const ariaLabel = computed(() =>
+  tr({ "zh-CN": "语言切换", "zh-TW": "語言切換", en: "Language switcher" }),
+);
 </script>
 
 <template>
-  <div class="locale-switcher" :class="{ 'locale-switcher--compact': props.compact }" :aria-label="ariaLabel" role="group">
-    <button
+  <div
+    class="locale-switcher"
+    :class="{ 'locale-switcher--compact': props.compact }"
+    :aria-label="ariaLabel"
+    role="group"
+  >
+    <NButton
       v-for="option in options"
       :key="option.value"
-      type="button"
+      native-type="button"
       class="locale-switcher__option"
       :class="{ 'locale-switcher__option--active': option.value === locale }"
       :aria-pressed="option.value === locale"
@@ -31,7 +39,7 @@ const ariaLabel = computed(() => tr({ 'zh-CN': '语言切换', 'zh-TW': '語言�
     >
       <span class="locale-switcher__badge">{{ option.badge }}</span>
       <span v-if="!props.compact" class="locale-switcher__label">{{ option.label }}</span>
-    </button>
+    </NButton>
   </div>
 </template>
 

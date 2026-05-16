@@ -1,9 +1,9 @@
-import test from 'node:test'
-import assert from 'node:assert/strict'
-import { readFile } from 'node:fs/promises'
+import test from "node:test";
+import assert from "node:assert/strict";
+import { readFile } from "node:fs/promises";
 
-const routesFile = new URL('../src/app/router/routes.ts', import.meta.url)
-const registryFile = new URL('../src/app/router/redirect-registry.ts', import.meta.url)
+const routesFile = new URL("../src/app/router/routes.ts", import.meta.url);
+const registryFile = new URL("../src/app/router/redirect-registry.ts", import.meta.url);
 
 const requiredPathSnippets = [
   "path: '/login'",
@@ -27,20 +27,20 @@ const requiredPathSnippets = [
   "path: '/organizations/members'",
   "path: '/security'",
   "path: '/settings'",
-  "path: '/labs/:moduleKey'"
-]
+  "path: '/labs/:moduleKey'",
+];
 
-test('critical handoff routes remain declared', async () => {
+test("critical handoff routes remain declared", async () => {
   const [routesContent, registryContent] = await Promise.all([
-    readFile(routesFile, 'utf8'),
-    readFile(registryFile, 'utf8')
-  ])
+    readFile(routesFile, "utf8"),
+    readFile(registryFile, "utf8"),
+  ]);
 
   for (const snippet of requiredPathSnippets) {
-    assert.match(routesContent, new RegExp(snippet.replaceAll('/', '\\/')))
+    assert.match(routesContent, new RegExp(snippet.replaceAll("/", "\\/")));
   }
 
-  assert.match(registryContent, /from: '\/pass-monitor', to: '\/pass\/monitor'/)
-  assert.doesNotMatch(routesContent, /redirect:\s*'\/share\/mail\/demo-token'/)
-  assert.doesNotMatch(routesContent, /redirect:\s*'\/share\/drive\/demo-token'/)
-})
+  assert.match(registryContent, /from: '\/pass-monitor', to: '\/pass\/monitor'/);
+  assert.doesNotMatch(routesContent, /redirect:\s*'\/share\/mail\/demo-token'/);
+  assert.doesNotMatch(routesContent, /redirect:\s*'\/share\/drive\/demo-token'/);
+});

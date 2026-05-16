@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import LocaleSwitcher from '@/shared/components/LocaleSwitcher.vue'
+import LocaleSwitcher from "@/shared/components/LocaleSwitcher.vue";
 </script>
 
 <template>
@@ -19,7 +19,11 @@ import LocaleSwitcher from '@/shared/components/LocaleSwitcher.vue'
   min-height: 100vh;
   background:
     radial-gradient(circle at top left, var(--mm-accent-soft), transparent 28%),
-    radial-gradient(circle at top right, color-mix(in srgb, var(--mm-side-surface) 82%, transparent), transparent 34%),
+    radial-gradient(
+      circle at top right,
+      color-mix(in srgb, var(--mm-side-surface) 82%, transparent),
+      transparent 34%
+    ),
     linear-gradient(180deg, var(--mm-bg) 0%, var(--mm-card-muted) 100%);
 }
 

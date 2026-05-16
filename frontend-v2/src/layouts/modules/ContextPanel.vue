@@ -1,54 +1,88 @@
 <script setup lang="ts">
-import { computed } from 'vue'
-import { storeToRefs } from 'pinia'
-import { lt, type TextLike, useLocaleText } from '@/locales'
-import { useShellStore } from '@/store/modules/shell'
+import { NButton } from "naive-ui";
+import { computed } from "vue";
+import { storeToRefs } from "pinia";
+import { lt, type TextLike, useLocaleText } from "@/locales";
+import { V211RightInsightPanel, type InsightTab } from "@/design-system/v211";
+import { useShellStore } from "@/store/modules/shell";
 
-const shellStore = useShellStore()
-const { activeContextPanel, contextPanelOpen, mobileMorePanelOpen } = storeToRefs(shellStore)
-const { tr } = useLocaleText()
+type ContextPanelKey = "activity" | "details" | "help" | "notifications" | "risk";
+
+const shellStore = useShellStore();
+const { activeContextPanel, contextPanelOpen, mobileMorePanelOpen } = storeToRefs(shellStore);
+const { tr } = useLocaleText();
 
 interface ContextPanelCopy {
-  body: TextLike
-  meta: TextLike
-  title: TextLike
+  body: TextLike;
+  meta: TextLike;
+  title: TextLike;
 }
 
 const panelCopy: Record<string, ContextPanelCopy> = {
   activity: {
-    title: lt('活动', '活動', 'Activity'),
-    meta: lt('最近动态', '最近動態', 'Recent activity'),
-    body: lt('查看邮件、文件和团队空间的最新协作信号。', '查看郵件、檔案和團隊空間的最新協作信號。', 'Review the latest collaboration signals across mail, files, and team spaces.')
+    title: lt("活动", "活動", "Activity"),
+    meta: lt("最近动态", "最近動態", "Recent activity"),
+    body: lt(
+      "查看邮件、文件和团队空间的最新协作信号。",
+      "查看郵件、檔案和團隊空間的最新協作信號。",
+      "Review the latest collaboration signals across mail, files, and team spaces.",
+    ),
   },
   details: {
-    title: lt('详情', '詳情', 'Details'),
-    meta: lt('当前对象', '目前物件', 'Current object'),
-    body: lt('保留所选邮件、文件或成员的关键属性摘要。', '保留所選郵件、檔案或成員的關鍵屬性摘要。', 'Keep the key properties for the selected mail, file, or member in view.')
+    title: lt("详情", "詳情", "Details"),
+    meta: lt("当前对象", "目前物件", "Current object"),
+    body: lt(
+      "保留所选邮件、文件或成员的关键属性摘要。",
+      "保留所選郵件、檔案或成員的關鍵屬性摘要。",
+      "Keep the key properties for the selected mail, file, or member in view.",
+    ),
   },
   help: {
-    title: lt('帮助', '幫助', 'Help'),
-    meta: lt('上下文指南', '上下文指南', 'Context guide'),
-    body: lt('展示与当前工作区相关的简短操作提示和支持入口。', '展示與目前工作區相關的簡短操作提示和支援入口。', 'Show short workflow tips and support entry points for the current workspace.')
+    title: lt("帮助", "幫助", "Help"),
+    meta: lt("上下文指南", "上下文指南", "Context guide"),
+    body: lt(
+      "展示与当前工作区相关的简短操作提示和支持入口。",
+      "展示與目前工作區相關的簡短操作提示和支援入口。",
+      "Show short workflow tips and support entry points for the current workspace.",
+    ),
   },
   notifications: {
-    title: lt('通知', '通知', 'Notifications'),
-    meta: lt('统一提醒', '統一提醒', 'Unified alerts'),
-    body: lt('汇总邮件、审批、安全和协作提醒，方便快速处理。', '彙總郵件、審批、安全和協作提醒，方便快速處理。', 'Summarize mail, approval, security, and collaboration alerts for quick triage.')
+    title: lt("通知", "通知", "Notifications"),
+    meta: lt("统一提醒", "統一提醒", "Unified alerts"),
+    body: lt(
+      "汇总邮件、审批、安全和协作提醒，方便快速处理。",
+      "彙總郵件、審批、安全和協作提醒，方便快速處理。",
+      "Summarize mail, approval, security, and collaboration alerts for quick triage.",
+    ),
   },
   risk: {
-    title: lt('风控', '風控', 'Risk'),
-    meta: lt('安全态势', '安全態勢', 'Security posture'),
-    body: lt('突出账户、组织和共享内容的风险线索与建议动作。', '突出帳戶、組織和共享內容的風險線索與建議動作。', 'Highlight risk signals and suggested actions for accounts, organizations, and shared content.')
-  }
-}
+    title: lt("风控", "風控", "Risk"),
+    meta: lt("安全态势", "安全態勢", "Security posture"),
+    body: lt(
+      "突出账户、组织和共享内容的风险线索与建议动作。",
+      "突出帳戶、組織和共享內容的風險線索與建議動作。",
+      "Highlight risk signals and suggested actions for accounts, organizations, and shared content.",
+    ),
+  },
+};
 
-const activePanelCopy = computed(() => panelCopy[activeContextPanel.value] ?? panelCopy.activity)
+const activePanelCopy = computed(() => panelCopy[activeContextPanel.value] ?? panelCopy.activity);
+const contextTabs = computed<InsightTab[]>(() => {
+  return Object.entries(panelCopy).map(([id, copy]) => ({
+    id,
+    label: copy.title,
+  }));
+});
 
-const panelVisible = computed(() => contextPanelOpen.value || mobileMorePanelOpen.value)
+const panelVisible = computed(() => contextPanelOpen.value || mobileMorePanelOpen.value);
 
 function closeContextPanel() {
-  shellStore.closeContextPanel()
-  shellStore.closeMobileMorePanel()
+  shellStore.closeContextPanel();
+  shellStore.closeMobileMorePanel();
+}
+
+function openContextPanel(panel: string) {
+  shellStore.openContextPanel(panel as ContextPanelKey);
 }
 </script>
 
@@ -59,20 +93,38 @@ function closeContextPanel() {
     :class="{ 'context-panel--mobile': mobileMorePanelOpen }"
     aria-label="Context panel"
   >
-    <header class="context-panel__header">
-      <div>
-        <p class="context-panel__eyebrow">MMMail v2.1</p>
-        <h2>{{ tr(activePanelCopy.title) }}</h2>
-      </div>
-      <button type="button" class="context-panel__close" :aria-label="tr(lt('关闭', '關閉', 'Close'))" @click="closeContextPanel()">
-        ×
-      </button>
-    </header>
+    <V211RightInsightPanel
+      module="home"
+      :tabs="contextTabs"
+      :active-tab="activeContextPanel"
+      @toggle="closeContextPanel"
+      @update:active-tab="openContextPanel"
+    >
+      <template #[activeContextPanel]>
+        <header class="context-panel__header">
+          <div>
+            <p class="context-panel__eyebrow">MMMail v2.1</p>
+            <h2>{{ tr(activePanelCopy.title) }}</h2>
+          </div>
+          <NButton
+            native-type="button"
+            class="context-panel__close"
+            :aria-label="tr(lt('关闭', '關閉', 'Close'))"
+            @click="closeContextPanel()"
+          >
+            ×
+          </NButton>
+        </header>
 
-    <div class="context-panel__content">
-      <p class="context-panel__meta">{{ tr(activePanelCopy.meta) }}</p>
-      <p>{{ tr(activePanelCopy.body) }}</p>
-    </div>
+        <div class="context-panel__content">
+          <p class="context-panel__meta">{{ tr(activePanelCopy.meta) }}</p>
+          <p>{{ tr(activePanelCopy.body) }}</p>
+        </div>
+      </template>
+      <template #empty>
+        <p>{{ tr(lt("没有上下文内容", "沒有上下文內容", "No context content")) }}</p>
+      </template>
+    </V211RightInsightPanel>
   </aside>
 </template>
 

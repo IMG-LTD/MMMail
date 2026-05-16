@@ -18,6 +18,7 @@ import com.mmmail.server.model.vo.RuleResolutionVo;
 import com.mmmail.server.model.vo.UserPreferenceVo;
 import com.mmmail.server.service.BlockedSenderService;
 import com.mmmail.server.service.BlockedDomainService;
+import com.mmmail.server.service.FeatureFlagService;
 import com.mmmail.server.service.MailE2eeKeyProfileService;
 import com.mmmail.server.service.MailE2eeRecoveryService;
 import com.mmmail.server.service.MailService;
@@ -55,6 +56,7 @@ public class SettingsController {
     private final BlockedDomainService blockedDomainService;
     private final TrustedDomainService trustedDomainService;
     private final MailService mailService;
+    private final FeatureFlagService featureFlagService;
 
     public SettingsController(
             UserPreferenceService userPreferenceService,
@@ -64,7 +66,8 @@ public class SettingsController {
             TrustedSenderService trustedSenderService,
             BlockedDomainService blockedDomainService,
             TrustedDomainService trustedDomainService,
-            MailService mailService
+            MailService mailService,
+            FeatureFlagService featureFlagService
     ) {
         this.userPreferenceService = userPreferenceService;
         this.mailE2eeKeyProfileService = mailE2eeKeyProfileService;
@@ -74,11 +77,17 @@ public class SettingsController {
         this.blockedDomainService = blockedDomainService;
         this.trustedDomainService = trustedDomainService;
         this.mailService = mailService;
+        this.featureFlagService = featureFlagService;
     }
 
     @GetMapping("/profile")
     public Result<UserPreferenceVo> profile() {
         return Result.success(userPreferenceService.getProfile(SecurityUtils.currentUserId()));
+    }
+
+    @GetMapping("/feature-flags")
+    public Result<List<String>> featureFlags() {
+        return Result.success(featureFlagService.enabledFlags());
     }
 
     @PutMapping("/profile")

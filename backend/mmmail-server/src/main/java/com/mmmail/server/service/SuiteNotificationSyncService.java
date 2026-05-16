@@ -8,6 +8,7 @@ import org.springframework.util.StringUtils;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
 import java.io.IOException;
+import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -22,7 +23,9 @@ public class SuiteNotificationSyncService {
 
     private static final int DEFAULT_SYNC_LIMIT = 12;
     private static final int MAX_SYNC_LIMIT = 50;
+    private static final int WS_REPLAY_LIMIT = 1000;
     private static final long STREAM_TIMEOUT_MS = 0L;
+    private static final Duration WS_REPLAY_WINDOW = Duration.ofMinutes(5);
     private static final String KIND_BOOTSTRAP = "BOOTSTRAP";
     private static final String KIND_SYNC = "SYNC";
     private static final String KIND_UPDATE = "UPDATE";
@@ -39,10 +42,15 @@ public class SuiteNotificationSyncService {
     );
 
     private final AuditService auditService;
+    private final NotificationRealtimeService notificationRealtimeService;
     private final ConcurrentHashMap<Long, CopyOnWriteArrayList<SseEmitter>> emitterRegistry = new ConcurrentHashMap<>();
 
-    public SuiteNotificationSyncService(AuditService auditService) {
+    public SuiteNotificationSyncService(
+            AuditService auditService,
+            NotificationRealtimeService notificationRealtimeService
+    ) {
         this.auditService = auditService;
+        this.notificationRealtimeService = notificationRealtimeService;
     }
 
     public SseEmitter openStream(Long userId, Long afterEventId) {
@@ -54,6 +62,11 @@ public class SuiteNotificationSyncService {
 
     public SuiteNotificationSyncVo getNotificationSync(Long userId, Long afterEventId, Integer limit) {
         return buildSyncPayload(KIND_SYNC, userId, afterEventId, normalizeSyncLimit(limit));
+    }
+
+    public SuiteNotificationSyncVo getNotificationWebSocketReplay(Long userId, Long afterEventId) {
+        LocalDateTime cutoff = LocalDateTime.now().minus(WS_REPLAY_WINDOW);
+        return buildWebSocketReplayPayload(userId, afterEventId, cutoff);
     }
 
     public long getCurrentCursor(Long userId) {
@@ -84,6 +97,7 @@ public class SuiteNotificationSyncService {
                 removeEmitter(userId, emitter);
             }
         }
+        notificationRealtimeService.publish(userId, payload);
     }
 
     private SuiteNotificationSyncVo buildSyncPayload(String kind, Long userId, Long afterEventId, int limit) {
@@ -100,6 +114,20 @@ public class SuiteNotificationSyncService {
         );
     }
 
+    private SuiteNotificationSyncVo buildWebSocketReplayPayload(Long userId, Long afterEventId, LocalDateTime cutoff) {
+        List<SuiteNotificationSyncEventVo> items = loadRecentSyncEvents(userId, afterEventId, cutoff);
+        long syncCursor = getCurrentCursor(userId);
+        return new SuiteNotificationSyncVo(
+                KIND_SYNC,
+                LocalDateTime.now(),
+                syncCursor,
+                buildSyncVersion(syncCursor),
+                !items.isEmpty(),
+                items.size(),
+                items
+        );
+    }
+
     private List<SuiteNotificationSyncEventVo> loadSyncEvents(Long userId, Long afterEventId, int limit) {
         boolean incremental = afterEventId != null && afterEventId > 0;
         List<AuditEventVo> events = auditService.listActorEvents(userId, SYNC_EVENT_TYPES, afterEventId, limit, incremental);
@@ -107,6 +135,24 @@ public class SuiteNotificationSyncService {
             Collections.reverse(events);
         }
         return events.stream().map(this::toSyncEvent).toList();
+    }
+
+    private List<SuiteNotificationSyncEventVo> loadRecentSyncEvents(
+            Long userId,
+            Long afterEventId,
+            LocalDateTime cutoff
+    ) {
+        return auditService.listRecentActorEvents(
+                        userId,
+                        SYNC_EVENT_TYPES,
+                        afterEventId,
+                        WS_REPLAY_LIMIT,
+                        cutoff,
+                        true
+                )
+                .stream()
+                .map(this::toSyncEvent)
+                .toList();
     }
 
     private SuiteNotificationSyncEventVo toSyncEvent(AuditEventVo event) {

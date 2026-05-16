@@ -1,0 +1,122 @@
+[
+  {
+    "module": "sheets",
+    "field": "cellComments",
+    "ownerService": "sheets-service",
+    "priority": "P3",
+    "fallback": "show NEmpty for missing cell comment list",
+    "trackingTicket": null
+  },
+  {
+    "module": "sheets",
+    "field": "protectedRanges",
+    "ownerService": "sheets-service",
+    "priority": "P3",
+    "fallback": "show NEmpty when protected range definitions are absent",
+    "trackingTicket": null
+  },
+  {
+    "module": "sheets",
+    "field": "chartConfig",
+    "ownerService": "sheets-service",
+    "priority": "P3",
+    "fallback": "show NEmpty for missing chart configuration details",
+    "trackingTicket": null
+  },
+  {
+    "module": "pass",
+    "field": "rotationSuggestion",
+    "ownerService": "pass-service",
+    "priority": "P4",
+    "fallback": "derive risk score or show empty rotation suggestion state",
+    "trackingTicket": null
+  },
+  {
+    "module": "pass",
+    "field": "sharedMembers",
+    "ownerService": "pass-service",
+    "priority": "P4",
+    "fallback": "derive shared members from vault metadata or show NEmpty",
+    "trackingTicket": null
+  },
+  {
+    "module": "pass",
+    "field": "deviceTrust",
+    "ownerService": "pass-service",
+    "priority": "P4",
+    "fallback": "reuse monitor output or show NEmpty for device trust",
+    "trackingTicket": null
+  },
+  {
+    "module": "settings",
+    "field": "storageUsageByModule",
+    "ownerService": "settings-drive-service",
+    "priority": "P5",
+    "fallback": "reuse drive usage aggregate and show empty module split",
+    "trackingTicket": null
+  },
+  {
+    "module": "settings",
+    "field": "deviceGeoActivity",
+    "ownerService": "settings-service",
+    "priority": "P5",
+    "fallback": "show IP and time without geo detail empty state",
+    "trackingTicket": null
+  },
+  {
+    "module": "settings",
+    "field": "integrationHealth",
+    "ownerService": "settings-service",
+    "priority": "P5",
+    "fallback": "show empty integration health when no live status exists",
+    "trackingTicket": null
+  },
+  {
+    "module": "notifications",
+    "field": "channelDeliveryTrend",
+    "ownerService": "notifications-service",
+    "priority": "P4",
+    "fallback": "reuse analytics daily aggregate for delivery trend",
+    "trackingTicket": null
+  },
+  {
+    "module": "notifications",
+    "field": "ruleHitHistory",
+    "ownerService": "notifications-service",
+    "priority": "P4",
+    "fallback": "reuse analytics daily aggregate for rule history",
+    "trackingTicket": null
+  },
+  {
+    "module": "admin",
+    "field": "governanceQueue",
+    "ownerService": "admin-service",
+    "priority": "P5",
+    "fallback": "derive governance queue from alerts and audit",
+    "trackingTicket": null
+  },
+  {
+    "module": "admin",
+    "field": "tenantCapacityForecast",
+    "ownerService": "admin-service",
+    "priority": "P5",
+    "fallback": "derive 30 day usage trend or show empty forecast",
+    "trackingTicket": null
+  },
+  {
+    "module": "home",
+    "field": "recentFileThumbnail",
+    "ownerService": "workspace-drive-service",
+    "priority": "P2",
+    "fallback": "reuse drive list and show file type icon when thumbnail is empty",
+    "trackingTicket": null
+  },
+  {
+    "module": "home",
+    "field": "recentEditorAvatar",
+    "ownerService": "workspace-drive-service",
+    "priority": "P2",
+    "fallback": "reuse drive list and show empty avatar initials",
+    "trackingTicket": null
+  }
+]

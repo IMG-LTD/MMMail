@@ -1,70 +1,76 @@
-import { computed, ref } from 'vue'
-import { usePreferredDark, useStorage } from '@vueuse/core'
-import { defineStore } from 'pinia'
+import { computed, ref } from "vue";
+import { usePreferredDark, useStorage } from "@vueuse/core";
+import { defineStore } from "pinia";
 import {
   defaultThemeSettings,
   type ResolvedThemeScheme,
   type ThemeDensity,
   type ThemePresetId,
   type ThemeScheme,
-  themeStorageKeys
-} from '@/theme/settings'
-import { buildMmMailTheme } from '@/theme/tokens'
+  themeStorageKeys,
+} from "@/theme/settings";
+import { buildMmMailTheme } from "@/theme/tokens";
 
-export const useThemeStore = defineStore('theme', () => {
-  const prefersDark = usePreferredDark()
-  const drawerOpen = ref(false)
-  const density = useStorage<ThemeDensity>(themeStorageKeys.density, defaultThemeSettings.density)
-  const radius = useStorage<number>(themeStorageKeys.radius, defaultThemeSettings.radius)
-  const themePreset = useStorage<ThemePresetId>(themeStorageKeys.themePreset, defaultThemeSettings.themePreset)
-  const themeScheme = useStorage<ThemeScheme>(themeStorageKeys.themeScheme, defaultThemeSettings.themeScheme)
+export const useThemeStore = defineStore("theme", () => {
+  const prefersDark = usePreferredDark();
+  const drawerOpen = ref(false);
+  const density = useStorage<ThemeDensity>(themeStorageKeys.density, defaultThemeSettings.density);
+  const radius = useStorage<number>(themeStorageKeys.radius, defaultThemeSettings.radius);
+  const themePreset = useStorage<ThemePresetId>(
+    themeStorageKeys.themePreset,
+    defaultThemeSettings.themePreset,
+  );
+  const themeScheme = useStorage<ThemeScheme>(
+    themeStorageKeys.themeScheme,
+    defaultThemeSettings.themeScheme,
+  );
 
   const resolvedScheme = computed<ResolvedThemeScheme>(() => {
-    if (themeScheme.value === 'auto') {
-      return prefersDark.value ? 'dark' : 'light'
+    if (themeScheme.value === "auto") {
+      return prefersDark.value ? "dark" : "light";
     }
 
-    return themeScheme.value
-  })
+    return themeScheme.value;
+  });
 
-  const isDark = computed(() => resolvedScheme.value === 'dark')
+  const isDark = computed(() => resolvedScheme.value === "dark");
   const themeModel = computed(() => {
     return buildMmMailTheme({
       density: density.value,
       preset: themePreset.value,
       radius: radius.value,
-      scheme: resolvedScheme.value
-    })
-  })
+      scheme: resolvedScheme.value,
+    });
+  });
 
-  const naiveThemeOverrides = computed(() => themeModel.value.naiveThemeOverrides)
+  const naiveThemeOverrides = computed(() => themeModel.value.naiveThemeOverrides);
 
   function setDrawerOpen(value: boolean) {
-    drawerOpen.value = value
+    drawerOpen.value = value;
   }
 
   function openDrawer() {
-    setDrawerOpen(true)
+    setDrawerOpen(true);
   }
 
   function closeDrawer() {
-    setDrawerOpen(false)
+    setDrawerOpen(false);
   }
 
   function setThemeScheme(value: ThemeScheme) {
-    themeScheme.value = value
+    themeScheme.value = value;
   }
 
   function setThemePreset(value: ThemePresetId) {
-    themePreset.value = value
+    themePreset.value = value;
   }
 
   function setDensity(value: ThemeDensity) {
-    density.value = value
+    density.value = value;
   }
 
   function setRadius(value: number) {
-    radius.value = value
+    radius.value = value;
   }
 
   return {
@@ -83,6 +89,6 @@ export const useThemeStore = defineStore('theme', () => {
     setThemeScheme,
     themeModel,
     themePreset,
-    themeScheme
-  }
-})
+    themeScheme,
+  };
+});

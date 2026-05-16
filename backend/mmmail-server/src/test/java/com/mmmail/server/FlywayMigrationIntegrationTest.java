@@ -51,6 +51,9 @@ class FlywayMigrationIntegrationTest {
         assertThat(queryForLong("select count(*) from user_account")).isEqualTo(2);
         assertThat(queryForLong("select count(*) from user_preference")).isEqualTo(2);
         assertThat(queryForLong("select count(*) from mail_attachment")).isEqualTo(0);
+        assertMailAttachmentE2eeColumns();
+        assertDriveItemE2eeColumns();
+        assertDriveFileVersionE2eeColumns();
         assertThat(queryForLong("select count(*) from information_schema.columns where table_schema = 'mmmail' and table_name = 'user_preference' and column_name = 'mail_e2ee_recovery_private_key_encrypted'")).isEqualTo(1);
         assertThat(queryForLong("select count(*) from information_schema.columns where table_schema = 'mmmail' and table_name = 'user_preference' and column_name = 'mail_e2ee_recovery_updated_at'")).isEqualTo(1);
         assertThat(queryForLong("select count(*) from system_release_metadata where schema_version = '" + latestProductionVersion + "'")).isEqualTo(1);
@@ -75,12 +78,39 @@ class FlywayMigrationIntegrationTest {
         assertThat(result.migrationsExecuted).isEqualTo(productionAndTestMigrationCount - 1);
         assertThat(queryForLong("select count(*) from migration_upgrade_probe")).isEqualTo(1);
         assertThat(queryForLong("select count(*) from mail_attachment")).isEqualTo(0);
+        assertMailAttachmentE2eeColumns();
+        assertDriveItemE2eeColumns();
+        assertDriveFileVersionE2eeColumns();
         assertThat(queryForLong("select count(*) from information_schema.columns where table_schema = 'mmmail' and table_name = 'user_preference' and column_name = 'mail_e2ee_recovery_private_key_encrypted'")).isEqualTo(1);
         assertThat(queryForLong("select count(*) from information_schema.columns where table_schema = 'mmmail' and table_name = 'user_preference' and column_name = 'mail_e2ee_recovery_updated_at'")).isEqualTo(1);
         assertThat(queryForLong("select count(*) from system_release_metadata where schema_version = '" + latestProductionVersion + "'")).isEqualTo(1);
         assertThat(queryForLong("select count(*) from flyway_schema_history where version = '1' and type = 'BASELINE'")).isEqualTo(1);
         assertThat(queryForLong("select count(*) from flyway_schema_history where version is not null and success = 1")).isEqualTo(productionAndTestMigrationCount);
         assertThat(queryForLong("select count(*) from flyway_schema_history where version = '14' and success = 1")).isEqualTo(1);
+    }
+
+    private void assertMailAttachmentE2eeColumns() throws Exception {
+        assertColumnExists("mail_attachment", "e2ee_enabled");
+        assertColumnExists("mail_attachment", "e2ee_algorithm");
+        assertColumnExists("mail_attachment", "e2ee_fingerprints_json");
+    }
+
+    private void assertDriveItemE2eeColumns() throws Exception {
+        assertColumnExists("drive_item", "e2ee_enabled");
+        assertColumnExists("drive_item", "e2ee_algorithm");
+        assertColumnExists("drive_item", "e2ee_fingerprints_json");
+    }
+
+    private void assertDriveFileVersionE2eeColumns() throws Exception {
+        assertColumnExists("drive_file_version", "e2ee_enabled");
+        assertColumnExists("drive_file_version", "e2ee_algorithm");
+        assertColumnExists("drive_file_version", "e2ee_fingerprints_json");
+    }
+
+    private void assertColumnExists(String tableName, String columnName) throws Exception {
+        String sql = "select count(*) from information_schema.columns where table_schema = 'mmmail'"
+                + " and table_name = '" + tableName + "' and column_name = '" + columnName + "'";
+        assertThat(queryForLong(sql)).isEqualTo(1);
     }
 
     private Flyway defaultFlyway() {

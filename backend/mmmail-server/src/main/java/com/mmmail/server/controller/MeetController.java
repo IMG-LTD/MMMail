@@ -17,6 +17,7 @@ import com.mmmail.server.model.vo.MeetPruneInactiveResultVo;
 import com.mmmail.server.model.vo.MeetQualitySnapshotVo;
 import com.mmmail.server.model.vo.MeetRoomVo;
 import com.mmmail.server.model.vo.MeetSignalEventVo;
+import com.mmmail.server.security.RequireEntitlement;
 import com.mmmail.server.service.MeetAccessService;
 import com.mmmail.server.service.MeetService;
 import com.mmmail.server.util.SecurityUtils;
@@ -33,6 +34,7 @@ import org.springframework.web.bind.annotation.RestController;
 import java.util.List;
 
 @RestController
+@RequireEntitlement("MEET")
 @RequestMapping("/api/v1/meet")
 public class MeetController {
 

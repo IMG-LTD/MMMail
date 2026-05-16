@@ -1,197 +1,211 @@
 <script setup lang="ts">
-import { computed, onMounted, ref, watch } from 'vue'
-import { useRoute } from 'vue-router'
-import { NButton, NInput } from 'naive-ui'
-import { lt, useLocaleText } from '@/locales'
-import { usePublicShareFlow } from '@/shared/composables/usePublicShareFlow'
+import { computed, onMounted, ref, watch } from "vue";
+import { useRoute } from "vue-router";
+import { NButton, NInput } from "naive-ui";
+import { lt, useLocaleText } from "@/locales";
+import { usePublicShareFlow } from "@/shared/composables/usePublicShareFlow";
 import {
   decryptMailPublicAttachmentBlob,
   decryptMailPublicBody,
-  triggerMailPublicDownload
-} from '@/shared/utils/mail-public'
+  triggerMailPublicDownload,
+} from "@/shared/utils/mail-public";
 import {
   downloadPublicMailAttachment,
   readPublicMailShare,
   type PublicMailShare,
-  type PublicMailShareAttachment
-} from '@/service/api/public-share'
+  type PublicMailShareAttachment,
+} from "@/service/api/public-share";
 
-const route = useRoute()
-const { tr } = useLocaleText()
-const shareFlow = usePublicShareFlow()
-const auditedActions = shareFlow.auditedActions
-const passwordHeader = shareFlow.passwordHeader
-const sharePassword = shareFlow.password
+const route = useRoute();
+const { tr } = useLocaleText();
+const shareFlow = usePublicShareFlow();
+const auditedActions = shareFlow.auditedActions;
+const passwordHeader = shareFlow.passwordHeader;
+const sharePassword = shareFlow.password;
 
-const share = ref<PublicMailShare | null>(null)
-const plaintext = ref('')
-const loading = ref(false)
-const decrypting = ref(false)
-const downloadingAttachmentId = ref('')
-const loadError = ref('')
-const decryptError = ref('')
-const token = computed(() => String(route.params.token || ''))
+const share = ref<PublicMailShare | null>(null);
+const plaintext = ref("");
+const loading = ref(false);
+const decrypting = ref(false);
+const downloadingAttachmentId = ref("");
+const loadError = ref("");
+const decryptError = ref("");
+const token = computed(() => String(route.params.token || ""));
 
-let latestLoadRequest = 0
+let latestLoadRequest = 0;
 
 const pageTitle = computed(() => {
   if (share.value?.subject) {
-    return share.value.subject
+    return share.value.subject;
   }
 
-  return tr(lt('打开受保护消息', '開啟受保護訊息', 'Open a protected message'))
-})
+  return tr(lt("打开受保护消息", "開啟受保護訊息", "Open a protected message"));
+});
 
 const pageSubtitle = computed(() => {
   if (share.value) {
-    return `${share.value.senderEmail} → ${share.value.recipientEmail}`
+    return `${share.value.senderEmail} → ${share.value.recipientEmail}`;
   }
 
   if (loadError.value) {
-    return loadError.value
+    return loadError.value;
   }
 
-  return tr(lt('该链接会根据路由令牌加载消息正文与附件元数据。', '此連結會依路由權杖載入訊息正文與附件中繼資料。', 'This link loads message content and attachment metadata from the route token.'))
-})
+  return tr(
+    lt(
+      "该链接会根据路由令牌加载消息正文与附件元数据。",
+      "此連結會依路由權杖載入訊息正文與附件中繼資料。",
+      "This link loads message content and attachment metadata from the route token.",
+    ),
+  );
+});
 
 function formatDateTime(value: string | null) {
   if (!value) {
-    return tr(lt('未设置', '未設定', 'Not set'))
+    return tr(lt("未设置", "未設定", "Not set"));
   }
 
-  const parsed = new Date(value)
+  const parsed = new Date(value);
 
   if (Number.isNaN(parsed.getTime())) {
-    return value
+    return value;
   }
 
-  return parsed.toLocaleString()
+  return parsed.toLocaleString();
 }
 
 function formatBytes(value: number) {
   if (!Number.isFinite(value) || value <= 0) {
-    return '0 B'
+    return "0 B";
   }
 
-  const units = ['B', 'KB', 'MB', 'GB']
-  let size = value
-  let index = 0
+  const units = ["B", "KB", "MB", "GB"];
+  let size = value;
+  let index = 0;
 
   while (size >= 1024 && index < units.length - 1) {
-    size /= 1024
-    index += 1
+    size /= 1024;
+    index += 1;
   }
 
-  return `${size >= 10 || index === 0 ? size.toFixed(0) : size.toFixed(1)} ${units[index]}`
+  return `${size >= 10 || index === 0 ? size.toFixed(0) : size.toFixed(1)} ${units[index]}`;
 }
 
 async function loadShare() {
-  const requestId = ++latestLoadRequest
-  const requestToken = token.value
+  const requestId = ++latestLoadRequest;
+  const requestToken = token.value;
 
-  loading.value = true
-  loadError.value = ''
-  decryptError.value = ''
-  plaintext.value = ''
-  share.value = null
+  loading.value = true;
+  loadError.value = "";
+  decryptError.value = "";
+  plaintext.value = "";
+  share.value = null;
 
-  const capabilityPromise = shareFlow.loadCapabilities()
+  const capabilityPromise = shareFlow.loadCapabilities();
 
   try {
     if (!requestToken) {
       if (requestId !== latestLoadRequest || requestToken !== token.value) {
-        return
+        return;
       }
 
-      loadError.value = tr(lt('缺少共享令牌。', '缺少共享權杖。', 'Missing share token.'))
-      return
+      loadError.value = tr(lt("缺少共享令牌。", "缺少共享權杖。", "Missing share token."));
+      return;
     }
 
-    const response = await readPublicMailShare(requestToken)
-    await capabilityPromise
+    const response = await readPublicMailShare(requestToken);
+    await capabilityPromise;
 
     if (requestId !== latestLoadRequest || requestToken !== token.value) {
-      return
+      return;
     }
 
-    share.value = response.data
+    share.value = response.data;
   } catch (error) {
-    await capabilityPromise
+    await capabilityPromise;
 
     if (requestId !== latestLoadRequest || requestToken !== token.value) {
-      return
+      return;
     }
 
-    loadError.value = error instanceof Error && error.message
-      ? error.message
-      : tr(lt('无法加载共享消息。', '無法載入共享訊息。', 'Unable to load shared message.'))
+    loadError.value =
+      error instanceof Error && error.message
+        ? error.message
+        : tr(lt("无法加载共享消息。", "無法載入共享訊息。", "Unable to load shared message."));
   } finally {
     if (requestId === latestLoadRequest && requestToken === token.value) {
-      loading.value = false
+      loading.value = false;
     }
   }
 }
 
 async function unlockShare() {
   if (!share.value) {
-    return
+    return;
   }
 
-  decrypting.value = true
-  decryptError.value = ''
+  decrypting.value = true;
+  decryptError.value = "";
 
   try {
-    plaintext.value = await decryptMailPublicBody(share.value.bodyCiphertext, shareFlow.password.value)
-    shareFlow.unlock()
+    plaintext.value = await decryptMailPublicBody(
+      share.value.bodyCiphertext,
+      shareFlow.password.value,
+    );
+    shareFlow.unlock();
   } catch (error) {
-    plaintext.value = ''
-    decryptError.value = error instanceof Error && error.message
-      ? error.message
-      : tr(lt('无法解密消息正文。', '無法解密訊息正文。', 'Unable to decrypt the message body.'))
+    plaintext.value = "";
+    decryptError.value =
+      error instanceof Error && error.message
+        ? error.message
+        : tr(lt("无法解密消息正文。", "無法解密訊息正文。", "Unable to decrypt the message body."));
   } finally {
-    decrypting.value = false
+    decrypting.value = false;
   }
 }
 
 async function downloadAttachment(attachment: PublicMailShareAttachment) {
   if (!share.value) {
-    return
+    return;
   }
 
-  downloadingAttachmentId.value = attachment.id
-  decryptError.value = ''
+  downloadingAttachmentId.value = attachment.id;
+  decryptError.value = "";
 
   try {
-    const payload = await downloadPublicMailAttachment(token.value, attachment.id)
+    const payload = await downloadPublicMailAttachment(token.value, attachment.id);
     const blob = await decryptMailPublicAttachmentBlob(
       payload.blob,
       shareFlow.password.value,
-      payload.contentType || attachment.contentType
-    )
-    triggerMailPublicDownload(blob, attachment.fileName)
-    shareFlow.unlock()
+      payload.contentType || attachment.contentType,
+    );
+    triggerMailPublicDownload(blob, attachment.fileName);
+    shareFlow.unlock();
   } catch (error) {
-    decryptError.value = error instanceof Error && error.message
-      ? error.message
-      : tr(lt('无法下载附件。', '無法下載附件。', 'Unable to download the attachment.'))
+    decryptError.value =
+      error instanceof Error && error.message
+        ? error.message
+        : tr(lt("无法下载附件。", "無法下載附件。", "Unable to download the attachment."));
   } finally {
-    downloadingAttachmentId.value = ''
+    downloadingAttachmentId.value = "";
   }
 }
 
 onMounted(() => {
-  void loadShare()
-})
+  void loadShare();
+});
 
 watch(token, () => {
-  void loadShare()
-})
+  void loadShare();
+});
 </script>
 
 <template>
   <section class="public-shell page-shell share-page">
     <article class="surface-card share-page__auth">
-      <span class="section-label">{{ tr(lt('安全邮件投递', '安全郵件投遞', 'Secure mail delivery')) }}</span>
+      <span class="section-label">{{
+        tr(lt("安全邮件投递", "安全郵件投遞", "Secure mail delivery"))
+      }}</span>
       <h1 class="page-title">{{ pageTitle }}</h1>
       <p class="page-subtitle">{{ pageSubtitle }}</p>
 
@@ -201,13 +215,21 @@ watch(token, () => {
       </div>
 
       <div v-if="share" class="share-page__facts">
-        <div class="metric-chip">{{ tr(lt('发件人', '寄件者', 'Sender')) }}: {{ share.senderEmail }}</div>
-        <div class="metric-chip">{{ tr(lt('收件人', '收件者', 'Recipient')) }}: {{ share.recipientEmail }}</div>
-        <div class="metric-chip">{{ tr(lt('附件', '附件', 'Attachments')) }}: {{ share.attachments.length }}</div>
-        <div class="metric-chip">{{ tr(lt('到期', '到期', 'Expires')) }}: {{ formatDateTime(share.expiresAt) }}</div>
+        <div class="metric-chip">
+          {{ tr(lt("发件人", "寄件者", "Sender")) }}: {{ share.senderEmail }}
+        </div>
+        <div class="metric-chip">
+          {{ tr(lt("收件人", "收件者", "Recipient")) }}: {{ share.recipientEmail }}
+        </div>
+        <div class="metric-chip">
+          {{ tr(lt("附件", "附件", "Attachments")) }}: {{ share.attachments.length }}
+        </div>
+        <div class="metric-chip">
+          {{ tr(lt("到期", "到期", "Expires")) }}: {{ formatDateTime(share.expiresAt) }}
+        </div>
       </div>
 
-      <label>{{ tr(lt('密码', '密碼', 'Password')) }}</label>
+      <label>{{ tr(lt("密码", "密碼", "Password")) }}</label>
       <n-input
         v-model:value="sharePassword"
         type="password"
@@ -215,29 +237,48 @@ watch(token, () => {
       />
 
       <p v-if="share?.passwordHint" class="share-page__hint">
-        {{ tr(lt('密码提示', '密碼提示', 'Password hint')) }}: {{ share.passwordHint }}
+        {{ tr(lt("密码提示", "密碼提示", "Password hint")) }}: {{ share.passwordHint }}
       </p>
       <p v-if="decryptError" class="share-page__error">{{ decryptError }}</p>
 
       <div class="share-page__auth-actions">
         <n-button type="primary" :loading="decrypting" :disabled="!share" @click="unlockShare">
-          {{ tr(lt('解密消息', '解密訊息', 'Decrypt message')) }}
+          {{ tr(lt("解密消息", "解密訊息", "Decrypt message")) }}
         </n-button>
         <n-button secondary :loading="loading" @click="loadShare">
-          {{ tr(lt('刷新消息', '重新整理訊息', 'Refresh message')) }}
+          {{ tr(lt("刷新消息", "重新整理訊息", "Refresh message")) }}
         </n-button>
       </div>
     </article>
 
     <article class="surface-card share-page__preview">
-      <span class="section-label">{{ tr(lt('投递预览', '投遞預覽', 'Delivery preview')) }}</span>
+      <span class="section-label">{{ tr(lt("投递预览", "投遞預覽", "Delivery preview")) }}</span>
       <template v-if="share">
         <h2>{{ share.subject }}</h2>
-        <p class="page-subtitle">{{ tr(lt('消息正文会在本地解密后显示。', '訊息正文會在本機解密後顯示。', 'The message body appears after local decryption.')) }}</p>
+        <p class="page-subtitle">
+          {{
+            tr(
+              lt(
+                "消息正文会在本地解密后显示。",
+                "訊息正文會在本機解密後顯示。",
+                "The message body appears after local decryption.",
+              ),
+            )
+          }}
+        </p>
 
         <div class="mail-body-card">
-          <strong>{{ tr(lt('正文', '正文', 'Body')) }}</strong>
-          <pre>{{ plaintext || tr(lt('输入密码后解密邮件正文。', '輸入密碼後解密郵件正文。', 'Enter the password to decrypt the message body.')) }}</pre>
+          <strong>{{ tr(lt("正文", "正文", "Body")) }}</strong>
+          <pre>{{
+            plaintext ||
+            tr(
+              lt(
+                "输入密码后解密邮件正文。",
+                "輸入密碼後解密郵件正文。",
+                "Enter the password to decrypt the message body.",
+              ),
+            )
+          }}</pre>
         </div>
 
         <div class="attachment-list">
@@ -251,16 +292,20 @@ watch(token, () => {
               :loading="downloadingAttachmentId === attachment.id"
               @click="downloadAttachment(attachment)"
             >
-              {{ tr(lt('下载附件', '下載附件', 'Download attachment')) }}
+              {{ tr(lt("下载附件", "下載附件", "Download attachment")) }}
             </n-button>
           </div>
           <p v-if="!share.attachments.length" class="page-subtitle">
-            {{ tr(lt('此消息没有附件。', '此訊息沒有附件。', 'This message has no attachments.')) }}
+            {{ tr(lt("此消息没有附件。", "此訊息沒有附件。", "This message has no attachments.")) }}
           </p>
         </div>
       </template>
       <p v-else class="page-subtitle">
-        {{ loading ? tr(lt('正在加载共享消息。', '正在載入共享訊息。', 'Loading shared message.')) : tr(lt('未找到共享消息。', '找不到共享訊息。', 'Shared message unavailable.')) }}
+        {{
+          loading
+            ? tr(lt("正在加载共享消息。", "正在載入共享訊息。", "Loading shared message."))
+            : tr(lt("未找到共享消息。", "找不到共享訊息。", "Shared message unavailable."))
+        }}
       </p>
     </article>
   </section>

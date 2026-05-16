@@ -1,112 +1,118 @@
 <script setup lang="ts">
-import { computed, onMounted, ref } from 'vue'
-import { useRoute, useRouter } from 'vue-router'
-import Modal from '@/design-system/components/Modal.vue'
-import CompactPageHeader from '@/shared/components/CompactPageHeader.vue'
-import { readSystemHealth } from '@/service/api/system-health'
-import { lt, type TextLike, useLocaleText } from '@/locales'
-import { useScopeGuard } from '@/shared/composables/useScopeGuard'
-import { useMcpRegistry } from '@/shared/composables/useMcpRegistry'
-import type { SystemHealthOverview } from '@/shared/types/system-health'
-import { useAuthStore } from '@/store/modules/auth'
-import { useOnboardingStore } from '@/store/modules/onboarding'
+import { NButton } from "naive-ui";
+import { computed, onMounted, ref } from "vue";
+import { useRoute, useRouter } from "vue-router";
+import Modal from "@/design-system/components/Modal.vue";
+import CompactPageHeader from "@/shared/components/CompactPageHeader.vue";
+import { readSystemHealth } from "@/service/api/system-health";
+import { lt, type TextLike, useLocaleText } from "@/locales";
+import { useScopeGuard } from "@/shared/composables/useScopeGuard";
+import { useMcpRegistry } from "@/shared/composables/useMcpRegistry";
+import type { SystemHealthOverview } from "@/shared/types/system-health";
+import { useAuthStore } from "@/store/modules/auth";
+import { useOnboardingStore } from "@/store/modules/onboarding";
 
 interface SettingsNavItem {
-  key: SettingsPanelKey
-  label: TextLike
+  key: SettingsPanelKey;
+  label: TextLike;
 }
 
 interface RegisteredDevice {
-  id: string
-  name: string
-  location: string
-  activity: TextLike
+  id: string;
+  name: string;
+  location: string;
+  activity: TextLike;
 }
 
-type SettingsPanelKey = 'getting-started' | 'privacy-telemetry' | 'system-health' | 'integrations'
+type SettingsPanelKey = "getting-started" | "privacy-telemetry" | "system-health" | "integrations";
 
-const route = useRoute()
-const router = useRouter()
-const authStore = useAuthStore()
-const onboardingStore = useOnboardingStore()
-const { requestHeaders } = useScopeGuard()
-const { tr } = useLocaleText()
-const mcpRegistry = useMcpRegistry()
-const registryCapabilities = mcpRegistry.capabilities
-const systemHealth = ref<SystemHealthOverview | null>(null)
-const systemHealthFailed = ref(false)
-const deleteAccountConfirmationOpen = ref(false)
+const route = useRoute();
+const router = useRouter();
+const authStore = useAuthStore();
+const onboardingStore = useOnboardingStore();
+const { requestHeaders } = useScopeGuard();
+const { tr } = useLocaleText();
+const mcpRegistry = useMcpRegistry();
+const registryCapabilities = mcpRegistry.capabilities;
+const systemHealth = ref<SystemHealthOverview | null>(null);
+const systemHealthFailed = ref(false);
+const deleteAccountConfirmationOpen = ref(false);
 
-const settingsPanelKeys: SettingsPanelKey[] = ['getting-started', 'privacy-telemetry', 'system-health', 'integrations']
+const settingsPanelKeys: SettingsPanelKey[] = [
+  "getting-started",
+  "privacy-telemetry",
+  "system-health",
+  "integrations",
+];
 const navItems: SettingsNavItem[] = [
-  { key: 'getting-started', label: lt('新手引导', '新手引導', 'Getting Started') },
-  { key: 'privacy-telemetry', label: lt('隐私与遥测', '隱私與遙測', 'Privacy & Telemetry') },
-  { key: 'system-health', label: lt('系统健康', '系統健康', 'System Health') },
-  { key: 'integrations', label: lt('集成', '整合', 'Integrations') }
-]
+  { key: "getting-started", label: lt("新手引导", "新手引導", "Getting Started") },
+  { key: "privacy-telemetry", label: lt("隐私与遥测", "隱私與遙測", "Privacy & Telemetry") },
+  { key: "system-health", label: lt("系统健康", "系統健康", "System Health") },
+  { key: "integrations", label: lt("集成", "整合", "Integrations") },
+];
 
 const devices: RegisteredDevice[] = [
   {
-    id: 'macbook-zurich',
+    id: "macbook-zurich",
     name: 'MacBook Pro 14"',
-    location: 'Zurich, CH',
-    activity: lt('当前会话', '目前工作階段', 'Current session')
+    location: "Zurich, CH",
+    activity: lt("当前会话", "目前工作階段", "Current session"),
   },
   {
-    id: 'iphone-geneva',
-    name: 'iPhone 15 Pro',
-    location: 'Geneva, CH',
-    activity: lt('2 小时前', '2 小時前', '2 hours ago')
+    id: "iphone-geneva",
+    name: "iPhone 15 Pro",
+    location: "Geneva, CH",
+    activity: lt("2 小时前", "2 小時前", "2 hours ago"),
   },
   {
-    id: 'firefox-berlin',
-    name: 'Firefox 132',
-    location: 'Berlin, DE',
-    activity: lt('3 天前', '3 天前', '3 days ago')
-  }
-]
+    id: "firefox-berlin",
+    name: "Firefox 132",
+    location: "Berlin, DE",
+    activity: lt("3 天前", "3 天前", "3 days ago"),
+  },
+];
 
 function isSettingsPanelKey(value: string): value is SettingsPanelKey {
-  return settingsPanelKeys.includes(value as SettingsPanelKey)
+  return settingsPanelKeys.includes(value as SettingsPanelKey);
 }
 
 const activePanelKey = computed<SettingsPanelKey>(() => {
-  const panelQuery = Array.isArray(route.query.panel) ? route.query.panel[0] : route.query.panel
-  const requestedPanel = typeof panelQuery === 'string' ? panelQuery : ''
-  return isSettingsPanelKey(requestedPanel) ? requestedPanel : 'privacy-telemetry'
-})
+  const panelQuery = Array.isArray(route.query.panel) ? route.query.panel[0] : route.query.panel;
+  const requestedPanel = typeof panelQuery === "string" ? panelQuery : "";
+  return isSettingsPanelKey(requestedPanel) ? requestedPanel : "privacy-telemetry";
+});
 
 function openPanel(panelKey: SettingsPanelKey) {
   void router.replace({
     path: route.path,
     query: {
       ...route.query,
-      panel: panelKey
-    }
-  })
+      panel: panelKey,
+    },
+  });
 }
 
 function openDeleteAccountConfirmation() {
-  deleteAccountConfirmationOpen.value = true
+  deleteAccountConfirmationOpen.value = true;
 }
 
 function closeDeleteAccountConfirmation() {
-  deleteAccountConfirmationOpen.value = false
+  deleteAccountConfirmationOpen.value = false;
 }
 
 onMounted(async () => {
   if (!authStore.accessToken) {
-    return
+    return;
   }
 
-  void mcpRegistry.loadCapabilities().catch(() => {})
+  void mcpRegistry.loadCapabilities().catch(() => {});
 
   try {
-    systemHealth.value = await readSystemHealth(authStore.accessToken, requestHeaders.value)
+    systemHealth.value = await readSystemHealth(authStore.accessToken, requestHeaders.value);
   } catch {
-    systemHealthFailed.value = true
+    systemHealthFailed.value = true;
   }
-})
+});
 </script>
 
 <template>
@@ -114,115 +120,269 @@ onMounted(async () => {
     <compact-page-header
       :eyebrow="lt('设置', '設定', 'Settings')"
       :title="lt('设置', '設定', 'Settings')"
-      :description="lt('分层设置面板让高密度控制项保持可读，同时保留平静、感知范围的壳层。', '分層設定面板讓高密度控制項保持可讀，同時保留平靜、感知範圍的殼層。', 'Nested settings panels keep dense controls readable while preserving a calm, scope-aware shell.')"
+      :description="
+        lt(
+          '分层设置面板让高密度控制项保持可读，同时保留平静、感知范围的壳层。',
+          '分層設定面板讓高密度控制項保持可讀，同時保留平靜、感知範圍的殼層。',
+          'Nested settings panels keep dense controls readable while preserving a calm, scope-aware shell.',
+        )
+      "
     />
 
     <article class="surface-card settings-shell">
       <aside class="settings-shell__nav">
-        <button
+        <NButton
           v-for="item in navItems"
           :key="item.key"
-          type="button"
+          native-type="button"
           :class="{ 'settings-shell__nav-active': item.key === activePanelKey }"
           @click="openPanel(item.key)"
         >
           {{ tr(item.label) }}
-        </button>
+        </NButton>
       </aside>
 
       <div class="settings-shell__content">
         <section v-if="activePanelKey === 'getting-started'" class="settings-panel">
-          <span class="section-label">{{ tr(lt('新手引导', '新手引導', 'Getting Started')) }}</span>
-          <strong>{{ tr(lt('重新打开新手引导', '重新開啟新手引導', 'Reopen the onboarding guide')) }}</strong>
-          <p class="page-subtitle">{{ tr(lt('随时回到快速开始流程，复习套件、收件箱、日历和云盘的核心入口。', '隨時回到快速開始流程，複習套件、收件匣、日曆和雲端硬碟的核心入口。', 'Return to the quick-start flow anytime to review the suite, inbox, calendar, and drive essentials.')) }}</p>
+          <span class="section-label">{{ tr(lt("新手引导", "新手引導", "Getting Started")) }}</span>
+          <strong>{{
+            tr(lt("重新打开新手引导", "重新開啟新手引導", "Reopen the onboarding guide"))
+          }}</strong>
+          <p class="page-subtitle">
+            {{
+              tr(
+                lt(
+                  "随时回到快速开始流程，复习套件、收件箱、日历和云盘的核心入口。",
+                  "隨時回到快速開始流程，複習套件、收件匣、日曆和雲端硬碟的核心入口。",
+                  "Return to the quick-start flow anytime to review the suite, inbox, calendar, and drive essentials.",
+                ),
+              )
+            }}
+          </p>
 
           <div class="settings-choice">
             <div class="settings-choice__item settings-choice__item--active">
-              <strong>{{ tr(lt('入门指南', '入門指南', 'Getting Started')) }}</strong>
-              <p>{{ tr(lt('打开欢迎引导，继续浏览 MMMail 的关键工作区。', '開啟歡迎引導，繼續瀏覽 MMMail 的關鍵工作區。', 'Open the welcome guide and continue browsing the key MMMail workspaces.')) }}</p>
-              <button type="button" @click="onboardingStore.openGuide()">{{ tr(lt('打开引导', '開啟引導', 'Open guide')) }}</button>
+              <strong>{{ tr(lt("入门指南", "入門指南", "Getting Started")) }}</strong>
+              <p>
+                {{
+                  tr(
+                    lt(
+                      "打开欢迎引导，继续浏览 MMMail 的关键工作区。",
+                      "開啟歡迎引導，繼續瀏覽 MMMail 的關鍵工作區。",
+                      "Open the welcome guide and continue browsing the key MMMail workspaces.",
+                    ),
+                  )
+                }}
+              </p>
+              <NButton native-type="button" @click="onboardingStore.openGuide()">{{
+                tr(lt("打开引导", "開啟引導", "Open guide"))
+              }}</NButton>
             </div>
           </div>
         </section>
 
         <section v-if="activePanelKey === 'privacy-telemetry'" class="settings-panel">
-          <span class="section-label">{{ tr(lt('隐私与遥测', '隱私與遙測', 'Privacy & Telemetry')) }}</span>
-          <strong>{{ tr(lt('隐私与遥测', '隱私與遙測', 'Privacy & Telemetry')) }}</strong>
-          <p class="page-subtitle">{{ tr(lt('管理 MMMail 如何收集诊断数据，以在多设备上保护并强化你的隐私。', '管理 MMMail 如何收集診斷資料，以在多裝置上保護並強化你的隱私。', 'Manage how MMMail collects diagnostic data to defend and harden your privacy across devices.')) }}</p>
+          <span class="section-label">{{
+            tr(lt("隐私与遥测", "隱私與遙測", "Privacy & Telemetry"))
+          }}</span>
+          <strong>{{ tr(lt("隐私与遥测", "隱私與遙測", "Privacy & Telemetry")) }}</strong>
+          <p class="page-subtitle">
+            {{
+              tr(
+                lt(
+                  "管理 MMMail 如何收集诊断数据，以在多设备上保护并强化你的隐私。",
+                  "管理 MMMail 如何收集診斷資料，以在多裝置上保護並強化你的隱私。",
+                  "Manage how MMMail collects diagnostic data to defend and harden your privacy across devices.",
+                ),
+              )
+            }}
+          </p>
 
           <div class="settings-choice">
             <div class="settings-choice__item settings-choice__item--active">
-              <strong>{{ tr(lt('最小化（推荐）', '最小化（推薦）', 'Minimal (Recommended)')) }}</strong>
-              <p>{{ tr(lt('仅采集关键 MMMail 页面上的匿名诊断数据，不包含文件数据，也不检查内容。', '僅收集關鍵 MMMail 頁面上的匿名診斷資料，不包含檔案資料，也不檢查內容。', 'Anonymous diagnostic data on key MMMail screens, no file data, and no content inspection.')) }}</p>
+              <strong>{{
+                tr(lt("最小化（推荐）", "最小化（推薦）", "Minimal (Recommended)"))
+              }}</strong>
+              <p>
+                {{
+                  tr(
+                    lt(
+                      "仅采集关键 MMMail 页面上的匿名诊断数据，不包含文件数据，也不检查内容。",
+                      "僅收集關鍵 MMMail 頁面上的匿名診斷資料，不包含檔案資料，也不檢查內容。",
+                      "Anonymous diagnostic data on key MMMail screens, no file data, and no content inspection.",
+                    ),
+                  )
+                }}
+              </p>
             </div>
             <div class="settings-choice__item">
-              <strong>{{ tr(lt('标准', '標準', 'Standard')) }}</strong>
-              <p>{{ tr(lt('共享服务事件与健康信号，以提升问题定位效率。', '共享服務事件與健康訊號，以提升問題定位效率。', 'Share service events and health signals to improve issue resolution.')) }}</p>
+              <strong>{{ tr(lt("标准", "標準", "Standard")) }}</strong>
+              <p>
+                {{
+                  tr(
+                    lt(
+                      "共享服务事件与健康信号，以提升问题定位效率。",
+                      "共享服務事件與健康訊號，以提升問題定位效率。",
+                      "Share service events and health signals to improve issue resolution.",
+                    ),
+                  )
+                }}
+              </p>
             </div>
             <div class="settings-choice__item">
-              <strong>{{ tr(lt('完整企业洞察', '完整企業洞察', 'Full enterprise insight')) }}</strong>
-              <p>{{ tr(lt('仅在自托管或企业托管场景中启用更详细的诊断载荷。', '僅在自託管或企業代管場景中啟用更詳細的診斷負載。', 'Detailed diagnostic payloads enabled only in self-host or enterprise-managed contexts.')) }}</p>
+              <strong>{{
+                tr(lt("完整企业洞察", "完整企業洞察", "Full enterprise insight"))
+              }}</strong>
+              <p>
+                {{
+                  tr(
+                    lt(
+                      "仅在自托管或企业托管场景中启用更详细的诊断载荷。",
+                      "僅在自託管或企業代管場景中啟用更詳細的診斷負載。",
+                      "Detailed diagnostic payloads enabled only in self-host or enterprise-managed contexts.",
+                    ),
+                  )
+                }}
+              </p>
             </div>
           </div>
         </section>
 
-        <section v-if="activePanelKey === 'system-health'" class="settings-panel settings-panel--grid">
-          <span class="section-label">{{ tr(lt('系统健康', '系統健康', 'System Health')) }}</span>
-          <strong>{{ tr(lt('系统健康', '系統健康', 'System Health')) }}</strong>
-          <p class="page-subtitle">{{ tr(lt('当前工作区的服务状态、请求指标、错误追踪和作业运行概览。', '目前工作區的服務狀態、請求指標、錯誤追蹤與工作執行總覽。', 'A minimal overview of service status, request metrics, error tracking, and job activity for the current workspace.')) }}</p>
+        <section
+          v-if="activePanelKey === 'system-health'"
+          class="settings-panel settings-panel--grid"
+        >
+          <span class="section-label">{{ tr(lt("系统健康", "系統健康", "System Health")) }}</span>
+          <strong>{{ tr(lt("系统健康", "系統健康", "System Health")) }}</strong>
+          <p class="page-subtitle">
+            {{
+              tr(
+                lt(
+                  "当前工作区的服务状态、请求指标、错误追踪和作业运行概览。",
+                  "目前工作區的服務狀態、請求指標、錯誤追蹤與工作執行總覽。",
+                  "A minimal overview of service status, request metrics, error tracking, and job activity for the current workspace.",
+                ),
+              )
+            }}
+          </p>
 
           <div v-if="systemHealth" class="settings-health-grid">
             <article class="settings-choice__item">
-              <span class="section-label">{{ tr(lt('状态', '狀態', 'Status')) }}</span>
+              <span class="section-label">{{ tr(lt("状态", "狀態", "Status")) }}</span>
               <strong>{{ systemHealth.status }}</strong>
               <p>{{ systemHealth.applicationName }} · {{ systemHealth.applicationVersion }}</p>
             </article>
             <article class="settings-choice__item">
-              <span class="section-label">{{ tr(lt('请求指标', '請求指標', 'Request Metrics')) }}</span>
+              <span class="section-label">{{
+                tr(lt("请求指标", "請求指標", "Request Metrics"))
+              }}</span>
               <strong>{{ systemHealth.metrics.totalRequests }}</strong>
-              <p>{{ tr(lt('失败请求', '失敗請求', 'Failed requests')) }}: {{ systemHealth.metrics.failedRequests }}</p>
+              <p>
+                {{ tr(lt("失败请求", "失敗請求", "Failed requests")) }}:
+                {{ systemHealth.metrics.failedRequests }}
+              </p>
             </article>
             <article class="settings-choice__item">
-              <span class="section-label">{{ tr(lt('错误追踪', '錯誤追蹤', 'Error Tracking')) }}</span>
+              <span class="section-label">{{
+                tr(lt("错误追踪", "錯誤追蹤", "Error Tracking"))
+              }}</span>
               <strong>{{ systemHealth.errorTracking.totalEvents }}</strong>
-              <p>{{ tr(lt('服务端 / 客户端', '服務端 / 用戶端', 'Server / Client')) }}: {{ systemHealth.errorTracking.serverEvents }} / {{ systemHealth.errorTracking.clientEvents }}</p>
+              <p>
+                {{ tr(lt("服务端 / 客户端", "服務端 / 用戶端", "Server / Client")) }}:
+                {{ systemHealth.errorTracking.serverEvents }} /
+                {{ systemHealth.errorTracking.clientEvents }}
+              </p>
             </article>
             <article class="settings-choice__item">
-              <span class="section-label">{{ tr(lt('作业运行', '工作執行', 'Jobs')) }}</span>
+              <span class="section-label">{{ tr(lt("作业运行", "工作執行", "Jobs")) }}</span>
               <strong>{{ systemHealth.jobs.totalRuns }}</strong>
-              <p>{{ tr(lt('活跃 / 失败', '活躍 / 失敗', 'Active / Failed')) }}: {{ systemHealth.jobs.activeRuns }} / {{ systemHealth.jobs.failedRuns }}</p>
+              <p>
+                {{ tr(lt("活跃 / 失败", "活躍 / 失敗", "Active / Failed")) }}:
+                {{ systemHealth.jobs.activeRuns }} / {{ systemHealth.jobs.failedRuns }}
+              </p>
             </article>
             <article class="settings-choice__item settings-health-grid__wide">
-              <span class="section-label">{{ tr(lt('Prometheus', 'Prometheus', 'Prometheus')) }}</span>
+              <span class="section-label">{{
+                tr(lt("Prometheus", "Prometheus", "Prometheus"))
+              }}</span>
               <strong>{{ systemHealth.prometheusPath }}</strong>
             </article>
           </div>
 
-          <p v-else-if="systemHealthFailed" class="page-subtitle">{{ tr(lt('系统健康暂时不可用。', '系統健康暫時無法使用。', 'System health is temporarily unavailable.')) }}</p>
-          <p v-else class="page-subtitle">{{ tr(lt('登录后即可查看系统健康概览。', '登入後即可查看系統健康總覽。', 'Sign in to view the system health overview.')) }}</p>
+          <p v-else-if="systemHealthFailed" class="page-subtitle">
+            {{
+              tr(
+                lt(
+                  "系统健康暂时不可用。",
+                  "系統健康暫時無法使用。",
+                  "System health is temporarily unavailable.",
+                ),
+              )
+            }}
+          </p>
+          <p v-else class="page-subtitle">
+            {{
+              tr(
+                lt(
+                  "登录后即可查看系统健康概览。",
+                  "登入後即可查看系統健康總覽。",
+                  "Sign in to view the system health overview.",
+                ),
+              )
+            }}
+          </p>
         </section>
 
         <section v-if="activePanelKey === 'integrations'" class="settings-panel">
-          <span class="section-label">{{ tr(lt('集成', '整合', 'Integrations')) }}</span>
-          <strong>{{ tr(lt('MCP 能力', 'MCP 能力', 'MCP Capabilities')) }}</strong>
-          <p class="page-subtitle">{{ tr(lt('已接入的 MCP 注册能力会在这里集中呈现。', '已接入的 MCP 註冊能力會在這裡集中呈現。', 'Available MCP registry capabilities are collected here.')) }}</p>
+          <span class="section-label">{{ tr(lt("集成", "整合", "Integrations")) }}</span>
+          <strong>{{ tr(lt("MCP 能力", "MCP 能力", "MCP Capabilities")) }}</strong>
+          <p class="page-subtitle">
+            {{
+              tr(
+                lt(
+                  "已接入的 MCP 注册能力会在这里集中呈现。",
+                  "已接入的 MCP 註冊能力會在這裡集中呈現。",
+                  "Available MCP registry capabilities are collected here.",
+                ),
+              )
+            }}
+          </p>
 
           <div v-if="registryCapabilities.length" class="settings-capabilities">
-            <span v-for="capability in registryCapabilities" :key="capability" class="metric-chip">{{ capability }}</span>
+            <span
+              v-for="capability in registryCapabilities"
+              :key="capability"
+              class="metric-chip"
+              >{{ capability }}</span
+            >
           </div>
-          <p v-else class="page-subtitle">{{ tr(lt('当前没有可展示的集成能力。', '目前沒有可顯示的整合能力。', 'No integration capabilities are currently available.')) }}</p>
+          <p v-else class="page-subtitle">
+            {{
+              tr(
+                lt(
+                  "当前没有可展示的集成能力。",
+                  "目前沒有可顯示的整合能力。",
+                  "No integration capabilities are currently available.",
+                ),
+              )
+            }}
+          </p>
         </section>
 
         <section v-if="activePanelKey === 'privacy-telemetry'" class="settings-panel">
           <div class="settings-panel__head">
-            <span class="section-label">{{ tr(lt('已注册设备', '已註冊裝置', 'Registered Devices')) }}</span>
-            <button type="button">{{ tr(lt('全部撤销', '全部撤銷', 'Revoke all')) }}</button>
+            <span class="section-label">{{
+              tr(lt("已注册设备", "已註冊裝置", "Registered Devices"))
+            }}</span>
+            <NButton native-type="button">{{
+              tr(lt("全部撤销", "全部撤銷", "Revoke all"))
+            }}</NButton>
           </div>
           <div class="settings-table">
             <div class="settings-table__head">
-              <span>{{ tr(lt('设备', '裝置', 'Device')) }}</span>
-              <span>{{ tr(lt('位置 / IP', '位置 / IP', 'Location / IP')) }}</span>
-              <span>{{ tr(lt('最近活跃', '最近活躍', 'Last active')) }}</span>
+              <span>{{ tr(lt("设备", "裝置", "Device")) }}</span>
+              <span>{{ tr(lt("位置 / IP", "位置 / IP", "Location / IP")) }}</span>
+              <span>{{ tr(lt("最近活跃", "最近活躍", "Last active")) }}</span>
             </div>
             <div v-for="device in devices" :key="device.id" class="settings-table__row">
               <strong>{{ device.name }}</strong>
@@ -234,20 +394,50 @@ onMounted(async () => {
 
         <section v-if="activePanelKey === 'privacy-telemetry'" class="settings-actions">
           <article class="settings-panel">
-            <span class="section-label">{{ tr(lt('导出工作区数据', '匯出工作區資料', 'Export Workspace Data')) }}</span>
-            <p class="page-subtitle">{{ tr(lt('以 JSON 格式下载包含 MMMail 设置、遥测日志和偏好历史的账户归档。', '以 JSON 格式下載包含 MMMail 設定、遙測日誌與偏好歷史的帳號封存檔。', 'Download an account archive of your MMMail settings, telemetry logs, and preference history in JSON format.')) }}</p>
-            <button type="button">{{ tr(lt('申请导出', '申請匯出', 'Request export')) }}</button>
+            <span class="section-label">{{
+              tr(lt("导出工作区数据", "匯出工作區資料", "Export Workspace Data"))
+            }}</span>
+            <p class="page-subtitle">
+              {{
+                tr(
+                  lt(
+                    "以 JSON 格式下载包含 MMMail 设置、遥测日志和偏好历史的账户归档。",
+                    "以 JSON 格式下載包含 MMMail 設定、遙測日誌與偏好歷史的帳號封存檔。",
+                    "Download an account archive of your MMMail settings, telemetry logs, and preference history in JSON format.",
+                  ),
+                )
+              }}
+            </p>
+            <NButton native-type="button">{{
+              tr(lt("申请导出", "申請匯出", "Request export"))
+            }}</NButton>
           </article>
 
           <article class="settings-panel settings-panel--danger">
-            <span class="section-label">{{ tr(lt('删除账户', '刪除帳戶', 'Delete Account')) }}</span>
-            <p class="page-subtitle">{{ tr(lt('永久删除你的 MMMail 账户，并清除所有相关遥测数据。', '永久刪除你的 MMMail 帳戶，並清除所有相關遙測資料。', 'Permanently delete your MMMail account and wipe all associated telemetry data.')) }}</p>
-            <button type="button" @click="openDeleteAccountConfirmation()">{{ tr(lt('删除账户', '刪除帳戶', 'Delete account')) }}</button>
+            <span class="section-label">{{
+              tr(lt("删除账户", "刪除帳戶", "Delete Account"))
+            }}</span>
+            <p class="page-subtitle">
+              {{
+                tr(
+                  lt(
+                    "永久删除你的 MMMail 账户，并清除所有相关遥测数据。",
+                    "永久刪除你的 MMMail 帳戶，並清除所有相關遙測資料。",
+                    "Permanently delete your MMMail account and wipe all associated telemetry data.",
+                  ),
+                )
+              }}
+            </p>
+            <NButton native-type="button" @click="openDeleteAccountConfirmation()">{{
+              tr(lt("删除账户", "刪除帳戶", "Delete account"))
+            }}</NButton>
           </article>
         </section>
 
         <div v-if="activePanelKey === 'privacy-telemetry'" class="settings-save">
-          <button type="button">{{ tr(lt('保存更改', '儲存變更', 'Save changes')) }}</button>
+          <NButton native-type="button">{{
+            tr(lt("保存更改", "儲存變更", "Save changes"))
+          }}</NButton>
         </div>
       </div>
     </article>
@@ -255,7 +445,15 @@ onMounted(async () => {
     <Modal
       :show="deleteAccountConfirmationOpen"
       :title="tr(lt('确认删除账户', '確認刪除帳戶', 'Confirm account deletion'))"
-      :description="tr(lt('删除账户是高风险操作，需要明确确认。', '刪除帳戶是高風險操作，需要明確確認。', 'Account deletion is a high-risk action and requires explicit confirmation.'))"
+      :description="
+        tr(
+          lt(
+            '删除账户是高风险操作，需要明确确认。',
+            '刪除帳戶是高風險操作，需要明確確認。',
+            'Account deletion is a high-risk action and requires explicit confirmation.',
+          ),
+        )
+      "
       close-label="Close delete account confirmation"
       size="sm"
       tone="danger"
@@ -263,13 +461,29 @@ onMounted(async () => {
       @update:show="deleteAccountConfirmationOpen = $event"
     >
       <div class="settings-delete-confirmation">
-        <p>{{ tr(lt('此操作会永久移除账户资料、设置和相关遥测记录。当前界面不会直接执行删除；请在完成导出和审计确认后，通过受控管理流程继续。', '此操作會永久移除帳戶資料、設定和相關遙測記錄。目前介面不會直接執行刪除；請在完成匯出和稽核確認後，透過受控管理流程繼續。', 'This action permanently removes account data, settings, and related telemetry. This interface does not execute deletion directly; continue through the controlled administration process after export and audit confirmation.')) }}</p>
+        <p>
+          {{
+            tr(
+              lt(
+                "此操作会永久移除账户资料、设置和相关遥测记录。当前界面不会直接执行删除；请在完成导出和审计确认后，通过受控管理流程继续。",
+                "此操作會永久移除帳戶資料、設定和相關遙測記錄。目前介面不會直接執行刪除；請在完成匯出和稽核確認後，透過受控管理流程繼續。",
+                "This action permanently removes account data, settings, and related telemetry. This interface does not execute deletion directly; continue through the controlled administration process after export and audit confirmation.",
+              ),
+            )
+          }}
+        </p>
       </div>
       <template #actions>
-        <button type="button" @click="closeDeleteAccountConfirmation()">{{ tr(lt('取消', '取消', 'Cancel')) }}</button>
-        <button class="settings-delete-confirmation__danger" type="button" @click="closeDeleteAccountConfirmation()">
-          {{ tr(lt('我已了解风险', '我已了解風險', 'I understand the risk')) }}
-        </button>
+        <NButton native-type="button" @click="closeDeleteAccountConfirmation()">{{
+          tr(lt("取消", "取消", "Cancel"))
+        }}</NButton>
+        <NButton
+          class="settings-delete-confirmation__danger"
+          native-type="button"
+          @click="closeDeleteAccountConfirmation()"
+        >
+          {{ tr(lt("我已了解风险", "我已了解風險", "I understand the risk")) }}
+        </NButton>
       </template>
     </Modal>
   </section>
@@ -291,8 +505,9 @@ onMounted(async () => {
 }
 
 .settings-shell__nav button {
+  position: relative;
   min-height: 32px;
-  padding: 0 10px;
+  padding: 0 10px 0 14px;
   border: 1px solid transparent;
   border-radius: 8px;
   background: transparent;
@@ -302,10 +517,19 @@ onMounted(async () => {
 }
 
 .settings-shell__nav-active {
-  background: #e9edf1 !important;
-  border-color: var(--mm-border) !important;
+  background: color-mix(in srgb, var(--mm-brand-primary) 10%, var(--mm-surface)) !important;
+  border-color: color-mix(in srgb, var(--mm-brand-primary) 18%, var(--mm-border)) !important;
   color: var(--mm-ink) !important;
   font-weight: 600;
+}
+
+.settings-shell__nav-active::before {
+  position: absolute;
+  inset: 6px auto 6px 5px;
+  width: 3px;
+  border-radius: 999px;
+  background: var(--mm-brand-primary);
+  content: "";
 }
 
 .settings-shell__content {

@@ -1,32 +1,33 @@
 <script setup lang="ts">
-type ErrorStateVariant = 'inline' | 'card' | 'full' | 'overlay'
+import { NButton } from "naive-ui";
+type ErrorStateVariant = "inline" | "card" | "full" | "overlay";
 
 withDefaults(
   defineProps<{
-    description: string
-    details?: string
-    errorCode?: string
-    retryLabel?: string
-    secondaryActionLabel?: string
-    supportActionLabel?: string
-    title: string
-    variant?: ErrorStateVariant
+    description: string;
+    details?: string;
+    errorCode?: string;
+    retryLabel?: string;
+    secondaryActionLabel?: string;
+    supportActionLabel?: string;
+    title: string;
+    variant?: ErrorStateVariant;
   }>(),
   {
     details: undefined,
     errorCode: undefined,
-    retryLabel: 'Retry',
+    retryLabel: "Retry",
     secondaryActionLabel: undefined,
     supportActionLabel: undefined,
-    variant: 'card'
-  }
-)
+    variant: "card",
+  },
+);
 
 const emit = defineEmits<{
-  retry: []
-  secondary: []
-  support: []
-}>()
+  retry: [];
+  secondary: [];
+  support: [];
+}>();
 </script>
 
 <template>
@@ -39,15 +40,15 @@ const emit = defineEmits<{
       <pre v-if="details" class="error-state__details">{{ details }}</pre>
     </div>
     <div class="error-state__actions">
-      <button class="error-state__primary" type="button" @click="emit('retry')">
+      <NButton class="error-state__primary" native-type="button" @click="emit('retry')">
         {{ retryLabel }}
-      </button>
-      <button v-if="supportActionLabel" type="button" @click="emit('support')">
+      </NButton>
+      <NButton v-if="supportActionLabel" native-type="button" @click="emit('support')">
         {{ supportActionLabel }}
-      </button>
-      <button v-if="secondaryActionLabel" type="button" @click="emit('secondary')">
+      </NButton>
+      <NButton v-if="secondaryActionLabel" native-type="button" @click="emit('secondary')">
         {{ secondaryActionLabel }}
-      </button>
+      </NButton>
     </div>
   </section>
 </template>

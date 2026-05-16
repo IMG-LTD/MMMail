@@ -9,14 +9,14 @@ MMMail Community Edition is a privacy-first, self-host-friendly collaboration su
 - 面向团队的自托管协作基线，当前主线覆盖 `Mail / Calendar / Drive / Admin / Workspace Shell / Settings`
 - `Pass / Docs / Sheets` 当前作为可见 `Beta` 面保留在主线中
 - `Labs` 与 `Collaboration / Command Center / Notifications` 继续作为 `Preview` 面
-- 当前仓库主线已切到 `frontend-v2`
+- 当前仓库前端由 `frontend-admin`（v2.1.x 管理台 / 工作台）和 `frontend-v2`（公共合约 / 路由 / 工作流契约）共同承载
 
 ## 当前已交付 | What ships today
 - `Mail → Calendar → Drive → Pass` 主线协作链路
 - `Suite / Business / Organizations / Security / Settings` 治理入口
 - `Mail / Drive / Pass` public-share 访问路径
 - Flyway 驱动的数据库升级、备份恢复与回滚脚本
-- `frontend-v2 Web + 单个 Spring Boot 后端进程 + MySQL / Redis` 的 Compose 自托管路径
+- `frontend-admin / frontend-v2 Web + 单个 Spring Boot 后端进程 + MySQL / Redis` 的 Compose 自托管路径
 
 ## 当前不承诺 | What it is not
 - 不承诺完整 `SMTP inbound / IMAP / Bridge`
@@ -45,6 +45,7 @@ MMMail Community Edition is a privacy-first, self-host-friendly collaboration su
 
 ## 验证与贡献 | Validation and contribution
 - 默认校验 | Default validation: `bash scripts/validate-local.sh`
+- 统一发布门禁 | Release gate: `sg docker -c 'bash scripts/release-gate.sh'`
 - 安全校验 | Security validation: `bash scripts/validate-security.sh`
 - 贡献指南 | Contributing: `CONTRIBUTING.md`
 - 安全策略 | Security policy: `SECURITY.md`

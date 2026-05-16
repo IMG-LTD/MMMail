@@ -4,6 +4,10 @@ import java.time.LocalDateTime;
 
 public record CalendarEventItemVo(
         String id,
+        String seriesId,
+        String rrule,
+        LocalDateTime occurrenceStartAt,
+        LocalDateTime recurrenceUntil,
         String title,
         String location,
         LocalDateTime startAt,

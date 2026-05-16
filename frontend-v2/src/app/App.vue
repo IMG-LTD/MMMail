@@ -1,58 +1,70 @@
 <script setup lang="ts">
-import { computed, watchEffect } from 'vue'
-import { storeToRefs } from 'pinia'
-import { NConfigProvider, NDialogProvider, NMessageProvider, NNotificationProvider, darkTheme } from 'naive-ui'
-import { RouterView, useRoute } from 'vue-router'
-import BlankLayout from '@/layouts/blank-layout/BlankLayout.vue'
-import BaseLayout from '@/layouts/base-layout/BaseLayout.vue'
-import WelcomeOnboardingModal from '@/shared/components/WelcomeOnboardingModal.vue'
-import { getNaiveUiDateLocale, getNaiveUiLocale } from '@/locales'
-import { useAppStore } from '@/store/modules/app'
-import { useAuthStore } from '@/store/modules/auth'
-import { useOnboardingStore } from '@/store/modules/onboarding'
-import { useShellStore } from '@/store/modules/shell'
-import { useThemeStore } from '@/store/modules/theme'
-import { applyThemeVariables } from '@/theme/tokens'
+import { computed, watchEffect } from "vue";
+import { storeToRefs } from "pinia";
+import {
+  NConfigProvider,
+  NDialogProvider,
+  NMessageProvider,
+  NNotificationProvider,
+  darkTheme,
+} from "naive-ui";
+import { RouterView, useRoute } from "vue-router";
+import BlankLayout from "@/layouts/blank-layout/BlankLayout.vue";
+import BaseLayout from "@/layouts/base-layout/BaseLayout.vue";
+import WelcomeOnboardingModal from "@/shared/components/WelcomeOnboardingModal.vue";
+import { getNaiveUiDateLocale, getNaiveUiLocale } from "@/locales";
+import { useAppStore } from "@/store/modules/app";
+import { useAuthStore } from "@/store/modules/auth";
+import { useOnboardingStore } from "@/store/modules/onboarding";
+import { useShellStore } from "@/store/modules/shell";
+import { useThemeStore } from "@/store/modules/theme";
+import { resolveV211ThemeOverrides } from "@/design-system/v211/theme";
+import "@/design-system/v211/tokens.css";
+import { applyThemeVariables } from "@/theme/tokens";
 
-const route = useRoute()
-const appStore = useAppStore()
-const authStore = useAuthStore()
-const onboardingStore = useOnboardingStore()
-const shellStore = useShellStore()
-const themeStore = useThemeStore()
-const { locale } = storeToRefs(appStore)
+const route = useRoute();
+const appStore = useAppStore();
+const authStore = useAuthStore();
+const onboardingStore = useOnboardingStore();
+const shellStore = useShellStore();
+const themeStore = useThemeStore();
+const { locale } = storeToRefs(appStore);
 
-const isBaseLayout = computed(() => route.meta.layout === 'base')
+const isBaseLayout = computed(() => route.meta.layout === "base");
 
 const currentLayout = computed(() => {
-  return isBaseLayout.value ? BaseLayout : BlankLayout
-})
+  return isBaseLayout.value ? BaseLayout : BlankLayout;
+});
 
 const currentNaiveTheme = computed(() => {
-  return themeStore.isDark ? darkTheme : undefined
-})
+  return themeStore.isDark ? darkTheme : undefined;
+});
 
-const currentNaiveLocale = computed(() => getNaiveUiLocale(locale.value))
-const currentNaiveDateLocale = computed(() => getNaiveUiDateLocale(locale.value))
+const currentNaiveThemeOverrides = computed(() => {
+  return resolveV211ThemeOverrides(themeStore.naiveThemeOverrides);
+});
+
+const currentNaiveLocale = computed(() => getNaiveUiLocale(locale.value));
+const currentNaiveDateLocale = computed(() => getNaiveUiDateLocale(locale.value));
 
 watchEffect(() => {
-  applyThemeVariables(themeStore.themeModel.cssVars)
-  document.documentElement.dataset.themeScheme = themeStore.resolvedScheme
-  document.documentElement.lang = locale.value
-  document.documentElement.dataset.appLocale = locale.value
-  document.body.classList.toggle('density-compact', themeStore.density === 'compact')
-  document.body.classList.toggle('density-comfortable', themeStore.density === 'comfortable')
-  document.body.classList.toggle('mmmail-dark', themeStore.isDark)
+  applyThemeVariables(themeStore.themeModel.cssVars);
+  document.documentElement.dataset.themeScheme = themeStore.resolvedScheme;
+  document.documentElement.lang = locale.value;
+  document.documentElement.dataset.appLocale = locale.value;
+  document.body.classList.toggle("density-compact", themeStore.density === "compact");
+  document.body.classList.toggle("density-comfortable", themeStore.density === "comfortable");
+  document.body.classList.toggle("mmmail-dark", themeStore.isDark);
   Object.entries(shellStore.shellStateClasses).forEach(([className, enabled]) => {
-    document.body.classList.toggle(className, enabled)
-  })
-})
+    document.body.classList.toggle(className, enabled);
+  });
+});
 
 watchEffect(() => {
   if (onboardingStore.shouldAutoOpen && authStore.isAuthenticated && isBaseLayout.value) {
-    onboardingStore.openGuide()
+    onboardingStore.openGuide();
   }
-})
+});
 </script>
 
 <template>
@@ -60,7 +72,7 @@ watchEffect(() => {
     :date-locale="currentNaiveDateLocale"
     :locale="currentNaiveLocale"
     :theme="currentNaiveTheme"
-    :theme-overrides="themeStore.naiveThemeOverrides"
+    :theme-overrides="currentNaiveThemeOverrides"
   >
     <n-dialog-provider>
       <n-notification-provider>
@@ -69,8 +81,20 @@ watchEffect(() => {
             <router-view />
           </component>
           <welcome-onboarding-modal />
-          <div id="sr-live-polite" class="sr-only" role="status" aria-live="polite" aria-atomic="true" />
-          <div id="sr-live-assertive" class="sr-only" role="alert" aria-live="assertive" aria-atomic="true" />
+          <div
+            id="sr-live-polite"
+            class="sr-only"
+            role="status"
+            aria-live="polite"
+            aria-atomic="true"
+          />
+          <div
+            id="sr-live-assertive"
+            class="sr-only"
+            role="alert"
+            aria-live="assertive"
+            aria-atomic="true"
+          />
         </n-message-provider>
       </n-notification-provider>
     </n-dialog-provider>

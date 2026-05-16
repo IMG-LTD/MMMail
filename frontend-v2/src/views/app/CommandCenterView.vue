@@ -1,11 +1,12 @@
 <script setup lang="ts">
-import { computed, ref, watch } from 'vue'
-import ChartCard from '@/design-system/components/ChartCard.vue'
-import DataTable, { type DataTableColumn } from '@/design-system/components/DataTable.vue'
-import ErrorState from '@/design-system/components/ErrorState.vue'
-import TerminalLog, { type TerminalLogLine } from '@/design-system/components/TerminalLog.vue'
-import CompactPageHeader from '@/shared/components/CompactPageHeader.vue'
-import { lt, useLocaleText } from '@/locales'
+import { NButton } from "naive-ui";
+import { computed, ref, watch } from "vue";
+import ChartCard from "@/design-system/components/ChartCard.vue";
+import DataTable, { type DataTableColumn } from "@/design-system/components/DataTable.vue";
+import ErrorState from "@/design-system/components/ErrorState.vue";
+import TerminalLog, { type TerminalLogLine } from "@/design-system/components/TerminalLog.vue";
+import CompactPageHeader from "@/shared/components/CompactPageHeader.vue";
+import { lt, useLocaleText } from "@/locales";
 import {
   createCommandCenterRun,
   listCommandCenterAudit,
@@ -14,181 +15,188 @@ import {
   type CommandCenterAuditEntry,
   type CommandCenterCommand,
   type CommandCenterRun,
-  type CommandCenterWorkflow
-} from '@/service/api/command-center'
-import { useScopeGuard } from '@/shared/composables/useScopeGuard'
-import { useAutomationRunbook } from '@/shared/composables/useAutomationRunbook'
-import { useAuthStore } from '@/store/modules/auth'
-import { resolveOptionalRuntimeNotice } from '@/shared/utils/premium-runtime'
+  type CommandCenterWorkflow,
+} from "@/service/api/command-center";
+import { useScopeGuard } from "@/shared/composables/useScopeGuard";
+import { useAutomationRunbook } from "@/shared/composables/useAutomationRunbook";
+import { useAuthStore } from "@/store/modules/auth";
+import { resolveOptionalRuntimeNotice } from "@/shared/utils/premium-runtime";
 
-const { tr } = useLocaleText()
-const authStore = useAuthStore()
-const { requestHeaders } = useScopeGuard()
-const { currentView, setView } = useAutomationRunbook()
-const commands = ref<CommandCenterCommand[]>([])
-const workflows = ref<CommandCenterWorkflow[]>([])
-const auditEntries = ref<CommandCenterAuditEntry[]>([])
-const activeRun = ref<CommandCenterRun | null>(null)
-const commandCenterLoading = ref(false)
-const runError = ref('')
-const loadError = ref('')
-const premiumRuntimeNotice = ref('')
-let latestCommandCenterRequest = 0
+const { tr } = useLocaleText();
+const authStore = useAuthStore();
+const { requestHeaders } = useScopeGuard();
+const { currentView, setView } = useAutomationRunbook();
+const commands = ref<CommandCenterCommand[]>([]);
+const workflows = ref<CommandCenterWorkflow[]>([]);
+const auditEntries = ref<CommandCenterAuditEntry[]>([]);
+const activeRun = ref<CommandCenterRun | null>(null);
+const commandCenterLoading = ref(false);
+const runError = ref("");
+const loadError = ref("");
+const premiumRuntimeNotice = ref("");
+let latestCommandCenterRequest = 0;
 
-const enabledCommands = computed(() => commands.value.filter(command => command.enabled))
-const latestAudit = computed(() => auditEntries.value.slice(0, 6))
+const enabledCommands = computed(() => commands.value.filter((command) => command.enabled));
+const latestAudit = computed(() => auditEntries.value.slice(0, 6));
 const auditColumns = computed<DataTableColumn[]>(() => [
-  { key: 'action', label: tr(lt('操作', '操作', 'Action')), sortable: true },
-  { key: 'actor', label: tr(lt('执行人', '執行人', 'Actor')) },
-  { key: 'status', label: tr(lt('状态', '狀態', 'Status')) },
-  { key: 'createdAt', label: tr(lt('时间', '時間', 'Time')) }
-])
+  { key: "action", label: tr(lt("操作", "操作", "Action")), sortable: true },
+  { key: "actor", label: tr(lt("执行人", "執行人", "Actor")) },
+  { key: "status", label: tr(lt("状态", "狀態", "Status")) },
+  { key: "createdAt", label: tr(lt("时间", "時間", "Time")) },
+]);
 const auditRows = computed(() => {
-  return latestAudit.value.map(item => ({
+  return latestAudit.value.map((item) => ({
     id: item.id,
     action: item.action,
     actor: item.actorEmail,
     createdAt: item.createdAt,
-    status: item.status
-  }))
-})
+    status: item.status,
+  }));
+});
 const statusCopy = computed(() => {
   if (!authStore.accessToken) {
-    return tr(lt('登录后即可读取指挥中心。', '登入後即可讀取指揮中心。', 'Sign in to load Command Center.'))
+    return tr(
+      lt("登录后即可读取指挥中心。", "登入後即可讀取指揮中心。", "Sign in to load Command Center."),
+    );
   }
 
   if (loadError.value) {
-    return loadError.value
+    return loadError.value;
   }
 
   return commandCenterLoading.value
-    ? tr(lt('正在读取命令运行时。', '正在讀取命令執行期。', 'Loading command runtime.'))
-    : `${commands.value.length} ${tr(lt('个命令模板已载入', '個命令範本已載入', 'command templates loaded'))}`
-})
-const terminalLogLevel = computed<TerminalLogLine['level']>(() => {
+    ? tr(lt("正在读取命令运行时。", "正在讀取命令執行期。", "Loading command runtime."))
+    : `${commands.value.length} ${tr(lt("个命令模板已载入", "個命令範本已載入", "command templates loaded"))}`;
+});
+const terminalLogLevel = computed<TerminalLogLine["level"]>(() => {
   if (runError.value || loadError.value) {
-    return 'error'
+    return "error";
   }
 
-  return activeRun.value?.status === 'SUCCEEDED' ? 'success' : 'info'
-})
+  return activeRun.value?.status === "SUCCEEDED" ? "success" : "info";
+});
 const terminalLogLines = computed<TerminalLogLine[]>(() => {
-  const activeLogLines = activeRun.value?.logTail || []
-  const lines = activeLogLines.length ? activeLogLines : [statusCopy.value]
+  const activeLogLines = activeRun.value?.logTail || [];
+  const lines = activeLogLines.length ? activeLogLines : [statusCopy.value];
 
   return lines.map<TerminalLogLine>((text, index) => ({
-    id: `${activeRun.value?.id || 'command-center'}-${index}`,
+    id: `${activeRun.value?.id || "command-center"}-${index}`,
     level: terminalLogLevel.value,
-    stream: activeRun.value ? 'stdout' : 'system',
+    stream: activeRun.value ? "stdout" : "system",
     text,
-    timestamp: activeRun.value?.startedAt || '-'
-  }))
-})
+    timestamp: activeRun.value?.startedAt || "-",
+  }));
+});
 const commandSummary = computed(() => {
-  return `${enabledCommands.value.length}/${commands.value.length} ${tr(lt('可用命令', '可用命令', 'enabled commands'))}`
-})
+  return `${enabledCommands.value.length}/${commands.value.length} ${tr(lt("可用命令", "可用命令", "enabled commands"))}`;
+});
 const workflowSummary = computed(() => {
-  return `${workflows.value.length} ${tr(lt('条工作流', '條工作流', 'workflows'))}`
-})
+  return `${workflows.value.length} ${tr(lt("条工作流", "條工作流", "workflows"))}`;
+});
 
 function clearCommandCenterState() {
-  commands.value = []
-  workflows.value = []
-  auditEntries.value = []
-  activeRun.value = null
-  runError.value = ''
-  loadError.value = ''
-  premiumRuntimeNotice.value = ''
-  commandCenterLoading.value = false
+  commands.value = [];
+  workflows.value = [];
+  auditEntries.value = [];
+  activeRun.value = null;
+  runError.value = "";
+  loadError.value = "";
+  premiumRuntimeNotice.value = "";
+  commandCenterLoading.value = false;
 }
 
 function resolveErrorMessage(error: unknown) {
   return error instanceof Error
     ? error.message
-    : tr(lt('读取指挥中心失败。', '讀取指揮中心失敗。', 'Failed to load Command Center.'))
+    : tr(lt("读取指挥中心失败。", "讀取指揮中心失敗。", "Failed to load Command Center."));
 }
 
 async function loadCommandCenter() {
-  const requestId = ++latestCommandCenterRequest
-  const requestToken = authStore.accessToken
-  const scopeHeaders = requestHeaders.value
+  const requestId = ++latestCommandCenterRequest;
+  const requestToken = authStore.accessToken;
+  const scopeHeaders = requestHeaders.value;
   if (!requestToken) {
-    clearCommandCenterState()
-    return
+    clearCommandCenterState();
+    return;
   }
 
-  commandCenterLoading.value = true
-  loadError.value = ''
-  premiumRuntimeNotice.value = ''
+  commandCenterLoading.value = true;
+  loadError.value = "";
+  premiumRuntimeNotice.value = "";
 
   try {
-    const options = { scopeHeaders, token: requestToken }
-    const commandsPromise = listCommandCenterCommands(options)
-    const premiumRuntimePromise = loadOptionalCommandCenterRuntime(options)
-    const nextCommands = await commandsPromise
-    const premiumRuntime = await premiumRuntimePromise
+    const options = { scopeHeaders, token: requestToken };
+    const commandsPromise = listCommandCenterCommands(options);
+    const premiumRuntimePromise = loadOptionalCommandCenterRuntime(options);
+    const nextCommands = await commandsPromise;
+    const premiumRuntime = await premiumRuntimePromise;
     if (requestId !== latestCommandCenterRequest || requestToken !== authStore.accessToken) {
-      return
+      return;
     }
-    commands.value = Array.isArray(nextCommands) ? nextCommands : []
-    workflows.value = premiumRuntime.workflows
-    auditEntries.value = premiumRuntime.auditEntries
-    premiumRuntimeNotice.value = premiumRuntime.notice
+    commands.value = Array.isArray(nextCommands) ? nextCommands : [];
+    workflows.value = premiumRuntime.workflows;
+    auditEntries.value = premiumRuntime.auditEntries;
+    premiumRuntimeNotice.value = premiumRuntime.notice;
   } catch (error) {
     if (requestId !== latestCommandCenterRequest || requestToken !== authStore.accessToken) {
-      return
+      return;
     }
-    clearCommandCenterState()
-    loadError.value = resolveErrorMessage(error)
+    clearCommandCenterState();
+    loadError.value = resolveErrorMessage(error);
   } finally {
     if (requestId === latestCommandCenterRequest && requestToken === authStore.accessToken) {
-      commandCenterLoading.value = false
+      commandCenterLoading.value = false;
     }
   }
 }
 
-async function loadOptionalCommandCenterRuntime(options: Parameters<typeof listCommandCenterWorkflows>[0]) {
+async function loadOptionalCommandCenterRuntime(
+  options: Parameters<typeof listCommandCenterWorkflows>[0],
+) {
   const [workflowResult, auditResult] = await Promise.allSettled([
     listCommandCenterWorkflows(options),
-    listCommandCenterAudit(options)
-  ])
+    listCommandCenterAudit(options),
+  ]);
 
   return {
     auditEntries: optionalList(auditResult),
-    notice: resolveOptionalRuntimeNotice([workflowResult, auditResult], 'Command Center automation requires premium access.'),
-    workflows: optionalList(workflowResult)
-  }
+    notice: resolveOptionalRuntimeNotice(
+      [workflowResult, auditResult],
+      "Command Center automation requires premium access.",
+    ),
+    workflows: optionalList(workflowResult),
+  };
 }
 
 function optionalList<T>(result: PromiseSettledResult<T[]>) {
-  return result.status === 'fulfilled' && Array.isArray(result.value) ? result.value : []
+  return result.status === "fulfilled" && Array.isArray(result.value) ? result.value : [];
 }
 
 async function runCommand(command: CommandCenterCommand) {
-  const requestToken = authStore.accessToken
+  const requestToken = authStore.accessToken;
   if (!requestToken) {
-    return
+    return;
   }
 
-  runError.value = ''
+  runError.value = "";
   try {
     activeRun.value = await createCommandCenterRun(
       { commandId: command.id, parameters: {} },
-      { scopeHeaders: requestHeaders.value, token: requestToken }
-    )
-    setView('runs')
+      { scopeHeaders: requestHeaders.value, token: requestToken },
+    );
+    setView("runs");
   } catch (error) {
-    runError.value = resolveErrorMessage(error)
+    runError.value = resolveErrorMessage(error);
   }
 }
 
 watch(
   () => [authStore.accessToken, JSON.stringify(requestHeaders.value)],
   () => {
-    void loadCommandCenter()
+    void loadCommandCenter();
   },
-  { immediate: true }
-)
+  { immediate: true },
+);
 </script>
 
 <template>
@@ -196,7 +204,13 @@ watch(
     <compact-page-header
       :eyebrow="lt('聚合', '聚合', 'Aggregation')"
       :title="lt('指挥中心', '指揮中心', 'Command Center')"
-      :description="lt('快速入口、固定搜索、最近关键词与聚合动态都集中在一个键盘优先的界面中。', '快速入口、固定搜尋、最近關鍵字與聚合動態都集中在一個鍵盤優先的介面中。', 'Quick routes, pinned search, recent keywords, and aggregated activity in one keyboard-first surface.')"
+      :description="
+        lt(
+          '快速入口、固定搜索、最近关键词与聚合动态都集中在一个键盘优先的界面中。',
+          '快速入口、固定搜尋、最近關鍵字與聚合動態都集中在一個鍵盤優先的介面中。',
+          'Quick routes, pinned search, recent keywords, and aggregated activity in one keyboard-first surface.',
+        )
+      "
       :badge="lt('预览', '預覽', 'Preview')"
       badge-tone="preview"
     />
@@ -212,71 +226,103 @@ watch(
 
     <div class="command-grid">
       <ChartCard
-        :description="tr(lt('常用跨模块指令与自动化入口集中呈现。', '常用跨模組指令與自動化入口集中呈現。', 'Frequently used cross-module commands and automation entries.'))"
+        :description="
+          tr(
+            lt(
+              '常用跨模块指令与自动化入口集中呈现。',
+              '常用跨模組指令與自動化入口集中呈現。',
+              'Frequently used cross-module commands and automation entries.',
+            ),
+          )
+        "
         :loading="commandCenterLoading"
         :status="currentView === 'overview' ? 'info' : 'neutral'"
         :summary="commandSummary"
         :title="tr(lt('命令模板', '命令範本', 'Command templates'))"
         :value="`${enabledCommands.length}`"
       >
-        <button
-          type="button"
+        <NButton
+          native-type="button"
           class="section-label command-card__label"
           :class="{ 'command-card__label--active': currentView === 'overview' }"
           :aria-pressed="currentView === 'overview'"
           @click="setView('overview')"
         >
-          {{ tr(lt('命令模板', '命令範本', 'Command templates')) }}
-        </button>
+          {{ tr(lt("命令模板", "命令範本", "Command templates")) }}
+        </NButton>
         <p v-if="!enabledCommands.length" class="page-subtitle">{{ statusCopy }}</p>
         <div class="command-card__chips">
-          <button v-for="command in enabledCommands" :key="command.id" type="button" class="metric-chip command-chip" @click="runCommand(command)">
+          <NButton
+            v-for="command in enabledCommands"
+            :key="command.id"
+            native-type="button"
+            class="metric-chip command-chip"
+            @click="runCommand(command)"
+          >
             {{ command.name }}
-          </button>
+          </NButton>
         </div>
       </ChartCard>
 
       <ChartCard
-        :description="tr(lt('跟踪跨产品自动化链路的最新状态。', '追蹤跨產品自動化鏈路的最新狀態。', 'Latest status across product automation workflows.'))"
+        :description="
+          tr(
+            lt(
+              '跟踪跨产品自动化链路的最新状态。',
+              '追蹤跨產品自動化鏈路的最新狀態。',
+              'Latest status across product automation workflows.',
+            ),
+          )
+        "
         :loading="commandCenterLoading"
         :status="currentView === 'automation' ? 'success' : 'neutral'"
         :summary="workflowSummary"
         :title="tr(lt('工作流', '工作流', 'Workflows'))"
         :value="`${workflows.length}`"
       >
-        <button
-          type="button"
+        <NButton
+          native-type="button"
           class="section-label command-card__label"
           :class="{ 'command-card__label--active': currentView === 'automation' }"
           :aria-pressed="currentView === 'automation'"
           @click="setView('automation')"
         >
-          {{ tr(lt('工作流', '工作流', 'Workflows')) }}
-        </button>
+          {{ tr(lt("工作流", "工作流", "Workflows")) }}
+        </NButton>
         <div class="command-card__stack">
-          <strong v-for="workflow in workflows" :key="workflow.id">{{ workflow.name }} · {{ workflow.status }}</strong>
+          <strong v-for="workflow in workflows" :key="workflow.id"
+            >{{ workflow.name }} · {{ workflow.status }}</strong
+          >
           <p v-if="premiumRuntimeNotice" class="page-subtitle">{{ premiumRuntimeNotice }}</p>
           <p v-if="!workflows.length" class="page-subtitle">{{ statusCopy }}</p>
         </div>
       </ChartCard>
 
       <ChartCard
-        :description="tr(lt('审计最近的命令执行、执行人和状态。', '稽核最近的命令執行、執行人和狀態。', 'Recent command runs, actors, and outcomes.'))"
+        :description="
+          tr(
+            lt(
+              '审计最近的命令执行、执行人和状态。',
+              '稽核最近的命令執行、執行人和狀態。',
+              'Recent command runs, actors, and outcomes.',
+            ),
+          )
+        "
         :loading="commandCenterLoading"
         :status="currentView === 'runs' ? 'warning' : 'neutral'"
         :summary="`${auditRows.length} ${tr(lt('条审计记录', '條稽核記錄', 'audit records'))}`"
         :title="tr(lt('运行与审计', '執行與稽核', 'Runs and audit'))"
         :value="`${auditRows.length}`"
       >
-        <button
-          type="button"
+        <NButton
+          native-type="button"
           class="section-label command-card__label"
           :class="{ 'command-card__label--active': currentView === 'runs' }"
           :aria-pressed="currentView === 'runs'"
           @click="setView('runs')"
         >
-          {{ tr(lt('运行与审计', '執行與稽核', 'Runs and audit')) }}
-        </button>
+          {{ tr(lt("运行与审计", "執行與稽核", "Runs and audit")) }}
+        </NButton>
         <ErrorState
           v-if="runError"
           :description="runError"

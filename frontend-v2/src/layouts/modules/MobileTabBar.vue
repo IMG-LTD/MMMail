@@ -1,37 +1,41 @@
 <script setup lang="ts">
-import { useRoute, useRouter } from 'vue-router'
-import { lt, useLocaleText } from '@/locales'
-import { useShellStore } from '@/store/modules/shell'
-import { isRouteMatch, mobilePrimaryTabs } from './shell-nav'
+import { NButton } from "naive-ui";
+import { useRoute, useRouter } from "vue-router";
+import { lt, useLocaleText } from "@/locales";
+import { useShellStore } from "@/store/modules/shell";
+import { isRouteMatch, mobilePrimaryTabs } from "./shell-nav";
 
-const route = useRoute()
-const router = useRouter()
-const shellStore = useShellStore()
-const { tr } = useLocaleText()
+const route = useRoute();
+const router = useRouter();
+const shellStore = useShellStore();
+const { tr } = useLocaleText();
 
 function openTab(path: string, key: string) {
-  if (key === 'more') {
-    shellStore.openMobileMorePanel()
-    return
+  if (key === "more") {
+    shellStore.openMobileMorePanel();
+    return;
   }
 
-  router.push(path)
+  router.push(path);
 }
 </script>
 
 <template>
-  <nav class="mobile-tab-bar" :aria-label="tr(lt('移动主导航', '行動主導覽', 'Primary mobile navigation'))">
-    <button
+  <nav
+    class="mobile-tab-bar"
+    :aria-label="tr(lt('移动主导航', '行動主導覽', 'Primary mobile navigation'))"
+  >
+    <NButton
       v-for="tab in mobilePrimaryTabs"
       :key="tab.key"
       class="mobile-tab-bar__item"
       :class="{ 'mobile-tab-bar__item--active': isRouteMatch(route.path, tab) }"
-      type="button"
+      native-type="button"
       @click="openTab(tab.path, tab.key)"
     >
       <span class="mobile-tab-bar__label">{{ tr(tab.label) }}</span>
       <span class="mobile-tab-bar__hint">{{ tr(tab.hint) }}</span>
-    </button>
+    </NButton>
   </nav>
 </template>
 

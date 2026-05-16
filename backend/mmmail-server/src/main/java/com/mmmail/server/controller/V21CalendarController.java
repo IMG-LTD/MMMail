@@ -3,6 +3,7 @@ package com.mmmail.server.controller;
 import com.mmmail.common.exception.BizException;
 import com.mmmail.common.exception.ErrorCode;
 import com.mmmail.common.model.Result;
+import com.mmmail.server.model.dto.CreateCalendarSubscriptionRequest;
 import com.mmmail.server.model.dto.CreateCalendarEventRequest;
 import com.mmmail.server.model.dto.QueryCalendarAvailabilityRequest;
 import com.mmmail.server.model.dto.UpdateCalendarEventRequest;
@@ -10,12 +11,19 @@ import com.mmmail.server.model.dto.UpdateCalendarSettingsRequest;
 import com.mmmail.server.model.vo.CalendarAvailabilityVo;
 import com.mmmail.server.model.vo.CalendarEventDetailVo;
 import com.mmmail.server.model.vo.CalendarSettingsVo;
+import com.mmmail.server.model.vo.CalendarSubscriptionSyncVo;
+import com.mmmail.server.model.vo.CalendarSubscriptionVo;
 import com.mmmail.server.service.CalendarAvailabilityService;
+import com.mmmail.server.service.CalendarIcsExportService;
 import com.mmmail.server.service.CalendarService;
 import com.mmmail.server.service.CalendarSettingsService;
+import com.mmmail.server.service.CalendarSubscriptionService;
 import com.mmmail.server.util.SecurityUtils;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
+import org.springframework.http.CacheControl;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.util.StringUtils;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -33,18 +41,26 @@ import org.springframework.web.bind.annotation.RestController;
 @RequestMapping("/api/v2/calendar")
 public class V21CalendarController {
 
+    private static final MediaType TEXT_CALENDAR = MediaType.parseMediaType("text/calendar; charset=UTF-8");
+
     private final CalendarService calendarService;
     private final CalendarAvailabilityService calendarAvailabilityService;
     private final CalendarSettingsService calendarSettingsService;
+    private final CalendarSubscriptionService calendarSubscriptionService;
+    private final CalendarIcsExportService calendarIcsExportService;
 
     public V21CalendarController(
             CalendarService calendarService,
             CalendarAvailabilityService calendarAvailabilityService,
-            CalendarSettingsService calendarSettingsService
+            CalendarSettingsService calendarSettingsService,
+            CalendarSubscriptionService calendarSubscriptionService,
+            CalendarIcsExportService calendarIcsExportService
     ) {
         this.calendarService = calendarService;
         this.calendarAvailabilityService = calendarAvailabilityService;
         this.calendarSettingsService = calendarSettingsService;
+        this.calendarSubscriptionService = calendarSubscriptionService;
+        this.calendarIcsExportService = calendarIcsExportService;
     }
 
     @GetMapping("/events")
@@ -75,10 +91,17 @@ public class V21CalendarController {
     @PatchMapping("/events/{eventId}")
     public Result<CalendarEventDetailVo> updateEvent(
             @PathVariable Long eventId,
+            @RequestParam(required = false) String scope,
             @Valid @RequestBody UpdateCalendarEventRequest request,
             HttpServletRequest httpRequest
     ) {
-        return Result.success(calendarService.updateEvent(SecurityUtils.currentUserId(), eventId, request, httpRequest.getRemoteAddr()));
+        return Result.success(calendarService.updateEvent(
+                SecurityUtils.currentUserId(),
+                eventId,
+                request,
+                scope,
+                httpRequest.getRemoteAddr()
+        ));
     }
 
     @DeleteMapping("/events/{eventId}")
@@ -106,5 +129,46 @@ public class V21CalendarController {
             HttpServletRequest httpRequest
     ) {
         return Result.success(calendarSettingsService.updateSettings(SecurityUtils.currentUserId(), request, httpRequest.getRemoteAddr()));
+    }
+
+    @PostMapping("/subscriptions")
+    public Result<CalendarSubscriptionVo> createSubscription(
+            @Valid @RequestBody CreateCalendarSubscriptionRequest request,
+            HttpServletRequest httpRequest
+    ) {
+        return Result.success(calendarSubscriptionService.create(SecurityUtils.currentUserId(), request, httpRequest.getRemoteAddr()));
+    }
+
+    @GetMapping("/subscriptions")
+    public Result<java.util.List<CalendarSubscriptionVo>> listSubscriptions() {
+        return Result.success(calendarSubscriptionService.list(SecurityUtils.currentUserId()));
+    }
+
+    @PostMapping("/subscriptions/{subscriptionId}/sync")
+    public Result<CalendarSubscriptionSyncVo> syncSubscription(
+            @PathVariable Long subscriptionId,
+            HttpServletRequest httpRequest
+    ) {
+        return Result.success(calendarSubscriptionService.sync(SecurityUtils.currentUserId(), subscriptionId, httpRequest.getRemoteAddr()));
+    }
+
+    @DeleteMapping("/subscriptions/{subscriptionId}")
+    public Result<Void> deleteSubscription(@PathVariable Long subscriptionId, HttpServletRequest httpRequest) {
+        calendarSubscriptionService.delete(SecurityUtils.currentUserId(), subscriptionId, httpRequest.getRemoteAddr());
+        return Result.success(null);
+    }
+
+    @GetMapping("/{calendarId}/ics")
+    public ResponseEntity<String> exportIcs(@PathVariable String calendarId, HttpServletRequest httpRequest) {
+        CalendarIcsExportService.NativeIcsExport export = calendarIcsExportService.export(
+                SecurityUtils.currentUserId(),
+                calendarId,
+                httpRequest.getRemoteAddr()
+        );
+        return ResponseEntity.ok()
+                .contentType(TEXT_CALENDAR)
+                .cacheControl(CacheControl.noCache())
+                .eTag(export.etag())
+                .body(export.content());
     }
 }

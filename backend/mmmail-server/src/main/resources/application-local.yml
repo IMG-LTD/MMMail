@@ -54,6 +54,19 @@ mmmail:
       client-errors:
         window-seconds: ${MMMAIL_SECURITY_CLIENT_ERROR_RATE_LIMIT_WINDOW_SECONDS:60}
         max-events: ${MMMAIL_SECURITY_CLIENT_ERROR_RATE_LIMIT_MAX_EVENTS:30}
+      mail-send:
+        window-seconds: ${MMMAIL_SECURITY_MAIL_SEND_RATE_LIMIT_WINDOW_SECONDS:60}
+        max-events: ${MMMAIL_SECURITY_MAIL_SEND_RATE_LIMIT_MAX_EVENTS:30}
+      web-push-test:
+        window-seconds: ${MMMAIL_SECURITY_WEB_PUSH_TEST_RATE_LIMIT_WINDOW_SECONDS:60}
+        max-events: ${MMMAIL_SECURITY_WEB_PUSH_TEST_RATE_LIMIT_MAX_EVENTS:5}
+      command-run:
+        window-seconds: ${MMMAIL_SECURITY_COMMAND_RUN_RATE_LIMIT_WINDOW_SECONDS:60}
+        max-events: ${MMMAIL_SECURITY_COMMAND_RUN_RATE_LIMIT_MAX_EVENTS:10}
+  websocket:
+    affinity:
+      node-id: ${MMMAIL_WEBSOCKET_AFFINITY_NODE_ID:mmmail-local}
+      cookie-secure: ${MMMAIL_WEBSOCKET_AFFINITY_COOKIE_SECURE:false}
   drive:
     storage-root: ${MMMAIL_DRIVE_STORAGE_ROOT:${java.io.tmpdir}/mmmail-drive-local}
     recycle-bin:

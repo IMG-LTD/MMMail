@@ -1,106 +1,114 @@
 <script setup lang="ts">
-import { computed, nextTick, onBeforeUnmount, ref, watch } from 'vue'
-import { NDrawer, NDrawerContent } from 'naive-ui'
-import { useDialogStack } from '@/shared/composables/useDialogStack'
+import { NButton } from "naive-ui";
+import { computed, nextTick, onBeforeUnmount, ref, watch } from "vue";
+import { NDrawer, NDrawerContent } from "naive-ui";
+import { useDialogStack } from "@/shared/composables/useDialogStack";
 
-let drawerIdSeed = 0
+let drawerIdSeed = 0;
 
 const props = withDefaults(
   defineProps<{
-    closeLabel?: string
-    description?: string
-    show: boolean
-    size?: number | string
-    title: string
-    tone?: 'neutral' | 'danger'
+    closeLabel?: string;
+    description?: string;
+    show: boolean;
+    size?: number | string;
+    title: string;
+    tone?: "neutral" | "danger";
   }>(),
   {
-    closeLabel: 'Close drawer',
+    closeLabel: "Close drawer",
     description: undefined,
     size: 420,
-    tone: 'neutral'
-  }
-)
+    tone: "neutral",
+  },
+);
 
 const emit = defineEmits<{
-  afterLeave: []
-  close: []
-  escape: []
-  'update:show': [value: boolean]
-}>()
+  afterLeave: [];
+  close: [];
+  escape: [];
+  "update:show": [value: boolean];
+}>();
 
-const dialogStack = useDialogStack()
-const drawerId = `mm-drawer-${++drawerIdSeed}`
-const panelRef = ref<HTMLElement | null>(null)
-const restoreTarget = ref<HTMLElement | null>(null)
-const registered = ref(false)
-const titleId = computed(() => `${drawerId}-title`)
-const descriptionId = computed(() => `${drawerId}-description`)
+const dialogStack = useDialogStack();
+const drawerId = `mm-drawer-${++drawerIdSeed}`;
+const panelRef = ref<HTMLElement | null>(null);
+const restoreTarget = ref<HTMLElement | null>(null);
+const registered = ref(false);
+const titleId = computed(() => `${drawerId}-title`);
+const descriptionId = computed(() => `${drawerId}-description`);
 
 function registerStack() {
   if (registered.value) {
-    return
+    return;
   }
-  dialogStack.push({ id: drawerId, kind: 'drawer' })
-  registered.value = true
+  dialogStack.push({ id: drawerId, kind: "drawer" });
+  registered.value = true;
 }
 
 function releaseStack() {
   if (!registered.value) {
-    return
+    return;
   }
   if (dialogStack.top.value?.id === drawerId) {
-    dialogStack.pop()
+    dialogStack.pop();
   }
-  registered.value = false
+  registered.value = false;
 }
 
 function focusPanel() {
-  if (typeof document !== 'undefined') {
-    restoreTarget.value = document.activeElement instanceof HTMLElement ? document.activeElement : null
+  if (typeof document !== "undefined") {
+    restoreTarget.value =
+      document.activeElement instanceof HTMLElement ? document.activeElement : null;
   }
-  nextTick(() => panelRef.value?.focus())
+  nextTick(() => panelRef.value?.focus());
 }
 
 function restoreFocus() {
-  restoreTarget.value?.focus()
-  restoreTarget.value = null
+  restoreTarget.value?.focus();
+  restoreTarget.value = null;
 }
 
 function handleAfterLeave() {
-  releaseStack()
-  restoreFocus()
-  emit('afterLeave')
+  releaseStack();
+  restoreFocus();
+  emit("afterLeave");
 }
 
 function handleClose() {
-  emit('update:show', false)
-  emit('close')
+  emit("update:show", false);
+  emit("close");
 }
 
 function handleEscape() {
-  emit('escape')
-  handleClose()
+  emit("escape");
+  handleClose();
 }
 
 watch(
   () => props.show,
-  value => {
+  (value) => {
     if (value) {
-      registerStack()
-      focusPanel()
-      return
+      registerStack();
+      focusPanel();
+      return;
     }
-    releaseStack()
+    releaseStack();
   },
-  { immediate: true }
-)
+  { immediate: true },
+);
 
-onBeforeUnmount(releaseStack)
+onBeforeUnmount(releaseStack);
 </script>
 
 <template>
-  <NDrawer :show="show" :width="size" placement="right" @after-leave="handleAfterLeave" @update:show="emit('update:show', $event)">
+  <NDrawer
+    :show="show"
+    :width="size"
+    placement="right"
+    @after-leave="handleAfterLeave"
+    @update:show="emit('update:show', $event)"
+  >
     <NDrawerContent>
       <section
         ref="panelRef"
@@ -118,7 +126,13 @@ onBeforeUnmount(releaseStack)
             <h2 :id="titleId">{{ title }}</h2>
             <p v-if="description" :id="descriptionId">{{ description }}</p>
           </div>
-          <button class="mm-drawer__close" type="button" :aria-label="closeLabel" @click="handleClose">×</button>
+          <NButton
+            class="mm-drawer__close"
+            native-type="button"
+            :aria-label="closeLabel"
+            @click="handleClose"
+            >×</NButton
+          >
         </header>
         <div class="mm-drawer__body">
           <slot />

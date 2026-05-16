@@ -21,6 +21,7 @@ import com.mmmail.server.model.vo.WalletExecutionPlanVo;
 import com.mmmail.server.model.vo.WalletExecutionTraceVo;
 import com.mmmail.server.model.vo.WalletReconciliationOverviewVo;
 import com.mmmail.server.model.vo.WalletTransactionVo;
+import com.mmmail.server.security.RequireEntitlement;
 import com.mmmail.server.service.WalletService;
 import com.mmmail.server.util.SecurityUtils;
 import jakarta.servlet.http.HttpServletRequest;
@@ -36,6 +37,7 @@ import org.springframework.web.bind.annotation.RestController;
 import java.util.List;
 
 @RestController
+@RequireEntitlement("WALLET")
 @RequestMapping("/api/v1/wallet")
 public class WalletController {
 

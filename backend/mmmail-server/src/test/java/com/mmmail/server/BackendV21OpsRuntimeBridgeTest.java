@@ -95,6 +95,86 @@ class BackendV21OpsRuntimeBridgeTest {
     }
 
     @Test
+    void v21CommandPanelShouldExposeCatalogPinsRecentsAndQuickSearch() throws Exception {
+        String token = register("v21-command-panel-" + System.nanoTime() + "@mmmail.local");
+        createPassItem(token, "Command Panel Search Seed");
+
+        JsonNode catalog = v21Get(token, "/api/v2/command-center/catalog", "context", "/mail/inbox");
+        JsonNode composeCommand = findById(catalog, "mail.compose");
+
+        assertThat(composeCommand.path("title").asText()).isEqualTo("Compose new mail");
+        assertThat(composeCommand.at("/action/kind").asText()).isEqualTo("navigate");
+        assertThat(composeCommand.at("/action/payload/routePath").asText()).isEqualTo("/mail");
+
+        mockMvc.perform(post("/api/v2/command-center/pin")
+                        .header("Authorization", "Bearer " + token)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {
+                                  "commandId": "mail.compose",
+                                  "pinned": true
+                                }
+                                """))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.commandId").value("mail.compose"))
+                .andExpect(jsonPath("$.data.pinned").value(true));
+
+        JsonNode recents = v21Get(token, "/api/v2/command-center/recents", "limit", "5");
+        assertThat(recents.path(0).path("commandId").asText()).isEqualTo("mail.compose");
+
+        JsonNode pinnedCatalog = v21Get(token, "/api/v2/command-center/catalog", "context", "/mail/inbox");
+        assertThat(findById(pinnedCatalog, "mail.compose").path("pinned").asBoolean()).isTrue();
+
+        JsonNode quickSearch = v21Get(token, "/api/v2/command-center/quick-search", "q", "Command Panel", "limit", "5");
+        assertThat(quickSearch).isNotEmpty();
+        assertThat(collectFieldValues(quickSearch, "sourceType")).contains("content");
+    }
+
+    @Test
+    void v21CollaborationBoardShouldPersistDragOrdering() throws Exception {
+        String token = register("v21-board-" + System.nanoTime() + "@mmmail.local");
+        String projectId = createProject(token, "Release Board " + System.nanoTime());
+        String firstTaskId = createTask(token, projectId, "First card", "OPEN");
+        String secondTaskId = createTask(token, projectId, "Second card", "OPEN");
+        String thirdTaskId = createTask(token, projectId, "Third card", "OPEN");
+
+        mockMvc.perform(patch("/api/v2/collaboration/tasks/" + thirdTaskId + "/move")
+                        .header("Authorization", "Bearer " + token)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {
+                                  "columnId": "OPEN",
+                                  "beforeTaskId": "%s"
+                                }
+                                """.formatted(firstTaskId)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.taskId").value(thirdTaskId))
+                .andExpect(jsonPath("$.data.columnId").value("OPEN"))
+                .andExpect(jsonPath("$.data.position").isNotEmpty());
+
+        mockMvc.perform(patch("/api/v2/collaboration/tasks/" + secondTaskId + "/move")
+                        .header("Authorization", "Bearer " + token)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {
+                                  "columnId": "IN_PROGRESS"
+                                }
+                                """))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.taskId").value(secondTaskId))
+                .andExpect(jsonPath("$.data.columnId").value("IN_PROGRESS"));
+
+        JsonNode board = v21Get(token, "/api/v2/collaboration/projects/" + projectId + "/board");
+        JsonNode openColumn = findColumn(board, "OPEN");
+        JsonNode inProgressColumn = findColumn(board, "IN_PROGRESS");
+
+        assertThat(openColumn.path("tasks").path(0).path("id").asText()).isEqualTo(thirdTaskId);
+        assertThat(openColumn.path("tasks").path(1).path("id").asText()).isEqualTo(firstTaskId);
+        assertThat(inProgressColumn.path("tasks").path(0).path("id").asText()).isEqualTo(secondTaskId);
+        assertThat(inProgressColumn.path("tasks").path(0).path("position").asText()).isNotBlank();
+    }
+
+    @Test
     void v21OpsShouldRejectUnsupportedSubscriptionWritesAndGatePremiumRoutes() throws Exception {
         String token = register("v21-ops-gate-" + System.nanoTime() + "@mmmail.local");
 
@@ -171,6 +251,39 @@ class BackendV21OpsRuntimeBridgeTest {
                 .andExpect(status().isOk());
     }
 
+    private String createProject(String token, String name) throws Exception {
+        MvcResult result = mockMvc.perform(post("/api/v2/collaboration/projects")
+                        .header("Authorization", "Bearer " + token)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {
+                                  "name": "%s",
+                                  "product": "MAIL",
+                                  "status": "ACTIVE"
+                                }
+                                """.formatted(name)))
+                .andExpect(status().isOk())
+                .andReturn();
+        return readJson(result).at("/data/id").asText();
+    }
+
+    private String createTask(String token, String projectId, String title, String status) throws Exception {
+        MvcResult result = mockMvc.perform(post("/api/v2/collaboration/tasks")
+                        .header("Authorization", "Bearer " + token)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {
+                                  "projectId": "%s",
+                                  "title": "%s",
+                                  "status": "%s",
+                                  "assigneeEmail": "ops@example.com"
+                                }
+                                """.formatted(projectId, title, status)))
+                .andExpect(status().isOk())
+                .andReturn();
+        return readJson(result).at("/data/id").asText();
+    }
+
     private String register(String email) throws Exception {
         MvcResult result = mockMvc.perform(post("/api/v1/auth/register")
                         .contentType(MediaType.APPLICATION_JSON)
@@ -195,6 +308,24 @@ class BackendV21OpsRuntimeBridgeTest {
             }
         }
         return values;
+    }
+
+    private JsonNode findById(JsonNode nodes, String id) {
+        for (JsonNode node : nodes) {
+            if (id.equals(node.path("id").asText())) {
+                return node;
+            }
+        }
+        throw new AssertionError("Expected item id not found: " + id);
+    }
+
+    private JsonNode findColumn(JsonNode board, String columnId) {
+        for (JsonNode column : board.path("columns")) {
+            if (columnId.equals(column.path("columnId").asText())) {
+                return column;
+            }
+        }
+        throw new AssertionError("Expected board column not found: " + columnId);
     }
 
     private JsonNode readJson(MvcResult result) throws Exception {

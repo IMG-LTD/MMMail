@@ -1,25 +1,31 @@
 <script setup lang="ts">
-import type { CalendarDayCell, CalendarTimeSlot, CalendarViewMode, PositionedCalendarEvent } from './calendar-types'
+import { NButton } from "naive-ui";
+import type {
+  CalendarDayCell,
+  CalendarTimeSlot,
+  CalendarViewMode,
+  PositionedCalendarEvent,
+} from "./calendar-types";
 
 defineProps<{
-  activeViewMode: CalendarViewMode
-  agendaItems: Array<{ id: string; meta: string; title: string }>
-  emptyCopy: string
-  loading: boolean
-  monthLabel: string
-  positionedEvents: PositionedCalendarEvent[]
-  rangeLabel: string
-  scheduleDays: CalendarDayCell[]
-  timeSlots: CalendarTimeSlot[]
-  viewModes: Array<{ key: CalendarViewMode; label: string }>
-}>()
+  activeViewMode: CalendarViewMode;
+  agendaItems: Array<{ id: string; meta: string; title: string }>;
+  emptyCopy: string;
+  loading: boolean;
+  monthLabel: string;
+  positionedEvents: PositionedCalendarEvent[];
+  rangeLabel: string;
+  scheduleDays: CalendarDayCell[];
+  timeSlots: CalendarTimeSlot[];
+  viewModes: Array<{ key: CalendarViewMode; label: string }>;
+}>();
 
 defineEmits<{
-  openEvent: [eventId: string]
-  selectEvent: [eventId: string]
-  setMode: [mode: CalendarViewMode]
-  today: []
-}>()
+  openEvent: [eventId: string];
+  selectEvent: [eventId: string];
+  setMode: [mode: CalendarViewMode];
+  today: [];
+}>();
 </script>
 
 <template>
@@ -30,20 +36,37 @@ defineEmits<{
         <h1>{{ rangeLabel }}</h1>
       </div>
       <div class="calendar-board__actions">
-        <button type="button" @click="$emit('today')">Today</button>
-        <button class="calendar-event-trigger" type="button" @click="$emit('openEvent', positionedEvents[0]?.id || '')">New event</button>
+        <NButton native-type="button" @click="$emit('today')">Today</NButton>
+        <NButton
+          class="calendar-event-trigger"
+          native-type="button"
+          @click="$emit('openEvent', positionedEvents[0]?.id || '')"
+          >New event</NButton
+        >
         <div class="calendar-board__switcher">
-          <button v-for="mode in viewModes" :key="mode.key" :class="{ 'calendar-board__switcher--active': mode.key === activeViewMode }" type="button" @click="$emit('setMode', mode.key)">
+          <NButton
+            v-for="mode in viewModes"
+            :key="mode.key"
+            :class="{ 'calendar-board__switcher--active': mode.key === activeViewMode }"
+            native-type="button"
+            @click="$emit('setMode', mode.key)"
+          >
             {{ mode.label }}
-          </button>
+          </NButton>
         </div>
       </div>
     </header>
     <div v-if="activeViewMode === 'agenda'" class="calendar-board__agenda">
-      <button v-for="item in agendaItems" :key="item.id" class="calendar-board__agenda-item" type="button" @click="$emit('openEvent', item.id)">
+      <NButton
+        v-for="item in agendaItems"
+        :key="item.id"
+        class="calendar-board__agenda-item"
+        native-type="button"
+        @click="$emit('openEvent', item.id)"
+      >
         <strong>{{ item.title }}</strong>
         <span>{{ item.meta }}</span>
-      </button>
+      </NButton>
       <p v-if="!agendaItems.length">{{ emptyCopy }}</p>
     </div>
     <div v-else class="calendar-board__schedule">
@@ -53,21 +76,30 @@ defineEmits<{
       </div>
       <div v-for="slot in timeSlots" :key="slot.key" class="calendar-board__row">
         <span class="calendar-board__time">{{ slot.label }}</span>
-        <span v-for="day in scheduleDays" :key="`${day.key}-${slot.key}`" class="calendar-board__cell" />
+        <span
+          v-for="day in scheduleDays"
+          :key="`${day.key}-${slot.key}`"
+          class="calendar-board__cell"
+        />
       </div>
-      <button
+      <NButton
         v-for="event in positionedEvents"
         :key="event.key"
         class="calendar-board__event calendar-event-trigger"
-        :class="{ 'calendar-board__event--selected': event.selected, 'calendar-board__event--shared': event.shared }"
+        :class="{
+          'calendar-board__event--selected': event.selected,
+          'calendar-board__event--shared': event.shared,
+        }"
         :style="event.style"
-        type="button"
+        native-type="button"
         @click="$emit('openEvent', event.id)"
       >
         <strong>{{ event.title }}</strong>
         <span>{{ event.meta }}</span>
-      </button>
-      <p v-if="!positionedEvents.length && !loading" class="calendar-board__empty">{{ emptyCopy }}</p>
+      </NButton>
+      <p v-if="!positionedEvents.length && !loading" class="calendar-board__empty">
+        {{ emptyCopy }}
+      </p>
     </div>
   </section>
 </template>

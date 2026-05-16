@@ -8,6 +8,8 @@ public record V21CollaborationTaskVo(
         String title,
         String product,
         String status,
+        String columnId,
+        String position,
         String assigneeEmail,
         LocalDateTime dueAt
 ) {

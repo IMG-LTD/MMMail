@@ -11,6 +11,7 @@ import com.mmmail.server.model.dto.RegisterSuiteWebPushSubscriptionRequest;
 import com.mmmail.server.model.entity.WebPushSubscription;
 import com.mmmail.server.model.vo.SuiteWebPushStatusVo;
 import com.mmmail.server.model.vo.SuiteWebPushSubscriptionVo;
+import com.mmmail.server.model.vo.WebPushTestDeliveryVo;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
@@ -22,6 +23,7 @@ import java.security.NoSuchAlgorithmException;
 import java.time.LocalDateTime;
 import java.util.HexFormat;
 import java.util.List;
+import java.util.UUID;
 
 @Service
 public class WebPushService {
@@ -64,6 +66,15 @@ public class WebPushService {
             RegisterSuiteWebPushSubscriptionRequest request,
             String ipAddress
     ) {
+        return registerSubscription(userId, request, null, ipAddress);
+    }
+
+    public SuiteWebPushSubscriptionVo registerSubscription(
+            Long userId,
+            RegisterSuiteWebPushSubscriptionRequest request,
+            String label,
+            String ipAddress
+    ) {
         requireConfigured();
         String endpoint = request.endpoint().trim();
         String endpointHash = hashEndpoint(endpoint);
@@ -81,6 +92,7 @@ public class WebPushService {
         subscription.setAuthKey(request.auth().trim());
         subscription.setContentEncoding(request.contentEncoding().trim());
         subscription.setUserAgent(normalizeOptional(request.userAgent()));
+        subscription.setLabel(normalizeOptional(label));
         subscription.setUpdatedAt(now);
         if (subscription.getId() == null) {
             webPushSubscriptionMapper.insert(subscription);
@@ -89,6 +101,11 @@ public class WebPushService {
         }
         auditService.record(userId, "SUITE_WEB_PUSH_SUBSCRIPTION_REGISTER", endpointHash, ipAddress);
         return toVo(subscription);
+    }
+
+    public List<SuiteWebPushSubscriptionVo> listSubscriptions(Long userId, String ipAddress) {
+        auditService.record(userId, "SUITE_WEB_PUSH_SUBSCRIPTION_LIST", "count=" + countActiveSubscriptions(userId), ipAddress);
+        return listActiveSubscriptions(userId).stream().map(this::toVo).toList();
     }
 
     public boolean deleteSubscription(
@@ -101,8 +118,42 @@ public class WebPushService {
         if (subscription == null) {
             return false;
         }
-        auditService.record(userId, "SUITE_WEB_PUSH_SUBSCRIPTION_DELETE", endpointHash, ipAddress);
+        recordSubscriptionDeleteAudit(userId, subscription, ipAddress);
         return webPushSubscriptionMapper.deleteById(subscription.getId()) > 0;
+    }
+
+    public boolean deleteSubscriptionById(Long userId, Long subscriptionId, String ipAddress) {
+        WebPushSubscription subscription = findOwnedSubscription(userId, subscriptionId);
+        recordSubscriptionDeleteAudit(userId, subscription, ipAddress);
+        return webPushSubscriptionMapper.deleteById(subscription.getId()) > 0;
+    }
+
+    private void recordSubscriptionDeleteAudit(
+            Long userId,
+            WebPushSubscription subscription,
+            String ipAddress
+    ) {
+        auditService.recordRegisteredEvent(
+                userId,
+                "webpush.subscription.delete",
+                String.valueOf(subscription.getId()),
+                "subscriptionId=" + subscription.getId() + ",endpointHash=" + subscription.getEndpointHash(),
+                ipAddress
+        );
+    }
+
+    public WebPushTestDeliveryVo testDelivery(Long userId, Long subscriptionId, String ipAddress) {
+        requireConfigured();
+        List<WebPushSubscription> subscriptions = resolveTestSubscriptions(userId, subscriptionId);
+        String deliveryId = "wd_" + UUID.randomUUID().toString().replace("-", "");
+        int delivered = 0;
+        for (WebPushSubscription subscription : subscriptions) {
+            if (sendTestNotification(subscription, deliveryId)) {
+                delivered++;
+            }
+        }
+        auditService.record(userId, "SUITE_WEB_PUSH_TEST", "deliveryId=" + deliveryId + ",attempted=" + subscriptions.size(), ipAddress);
+        return new WebPushTestDeliveryVo(deliveryId, subscriptions.size(), delivered);
     }
 
     public void dispatchInboxMail(Long userId, Long mailId, String senderEmail, String subject) {
@@ -154,9 +205,43 @@ public class WebPushService {
                 .eq(WebPushSubscription::getEndpointHash, endpointHash));
     }
 
+    private WebPushSubscription findOwnedSubscription(Long userId, Long subscriptionId) {
+        WebPushSubscription subscription = webPushSubscriptionMapper.selectOne(new LambdaQueryWrapper<WebPushSubscription>()
+                .eq(WebPushSubscription::getOwnerId, userId)
+                .eq(WebPushSubscription::getId, subscriptionId));
+        if (subscription == null) {
+            throw new BizException(ErrorCode.INVALID_ARGUMENT, "Web Push subscription is not found");
+        }
+        return subscription;
+    }
+
     private List<WebPushSubscription> listActiveSubscriptions(Long userId) {
         return webPushSubscriptionMapper.selectList(new LambdaQueryWrapper<WebPushSubscription>()
                 .eq(WebPushSubscription::getOwnerId, userId));
+    }
+
+    private List<WebPushSubscription> resolveTestSubscriptions(Long userId, Long subscriptionId) {
+        if (subscriptionId != null) {
+            return List.of(findOwnedSubscription(userId, subscriptionId));
+        }
+        return listActiveSubscriptions(userId);
+    }
+
+    private boolean sendTestNotification(WebPushSubscription subscription, String deliveryId) {
+        WebPushDeliveryGateway.WebPushDeliveryResult result = webPushDeliveryGateway.send(
+                new WebPushDeliveryGateway.WebPushDispatchRequest(
+                        subscription.getEndpoint(),
+                        subscription.getP256dhKey(),
+                        subscription.getAuthKey(),
+                        buildTestPayload(deliveryId)
+                )
+        );
+        if (result.success()) {
+            markSuccess(subscription);
+            return true;
+        }
+        markFailure(subscription, result.message());
+        return false;
     }
 
     private void markBatchFailure(List<WebPushSubscription> subscriptions, String message) {
@@ -191,6 +276,21 @@ public class WebPushService {
                     "mail-" + mailId,
                     mailId == null ? "/inbox" : "/mail/" + mailId,
                     mailId
+            ));
+        } catch (JsonProcessingException exception) {
+            throw new BizException(ErrorCode.INTERNAL_ERROR, "Failed to serialize Web Push payload");
+        }
+    }
+
+    private String buildTestPayload(String deliveryId) {
+        try {
+            return objectMapper.writeValueAsString(new MailPushPayload(
+                    "web-push-test",
+                    "MMMail test notification",
+                    "Web Push subscription test",
+                    deliveryId,
+                    "/settings",
+                    null
             ));
         } catch (JsonProcessingException exception) {
             throw new BizException(ErrorCode.INTERNAL_ERROR, "Failed to serialize Web Push payload");
@@ -233,6 +333,7 @@ public class WebPushService {
         return new SuiteWebPushSubscriptionVo(
                 subscription.getId(),
                 subscription.getEndpointHash(),
+                subscription.getLabel(),
                 subscription.getLastSuccessAt(),
                 subscription.getLastFailureAt(),
                 subscription.getLastErrorMessage(),

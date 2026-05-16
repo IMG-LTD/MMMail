@@ -9,9 +9,11 @@ import com.mmmail.server.mapper.UserAccountMapper;
 import com.mmmail.server.mapper.UserSessionMapper;
 import com.mmmail.server.model.dto.LoginRequest;
 import com.mmmail.server.model.dto.RegisterRequest;
+import com.mmmail.server.model.entity.OrgMember;
 import com.mmmail.server.model.entity.UserAccount;
 import com.mmmail.server.model.entity.UserSession;
 import com.mmmail.server.model.vo.AuthResponse;
+import com.mmmail.server.model.vo.AuthUserInfoVo;
 import com.mmmail.server.model.vo.UserSessionVo;
 import com.mmmail.server.model.vo.UserProfileVo;
 import com.mmmail.server.security.JwtPrincipal;
@@ -24,7 +26,10 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.UUID;
 
 @Service
@@ -38,6 +43,10 @@ public class AuthService {
     private final UserPreferenceService userPreferenceService;
     private final SecurityRateLimitService securityRateLimitService;
     private final RefreshTokenHasher refreshTokenHasher;
+    private final LoginRiskService loginRiskService;
+    private final FeatureFlagService featureFlagService;
+    private final OrgAccessService orgAccessService;
+    private final OrgProductAccessService orgProductAccessService;
     private final long refreshExpireHours;
 
     public AuthService(
@@ -49,6 +58,10 @@ public class AuthService {
             UserPreferenceService userPreferenceService,
             SecurityRateLimitService securityRateLimitService,
             RefreshTokenHasher refreshTokenHasher,
+            LoginRiskService loginRiskService,
+            FeatureFlagService featureFlagService,
+            OrgAccessService orgAccessService,
+            OrgProductAccessService orgProductAccessService,
             @Value("${mmmail.refresh-token-expire-hours:168}") long refreshExpireHours
     ) {
         this.userAccountMapper = userAccountMapper;
@@ -59,6 +72,10 @@ public class AuthService {
         this.userPreferenceService = userPreferenceService;
         this.securityRateLimitService = securityRateLimitService;
         this.refreshTokenHasher = refreshTokenHasher;
+        this.loginRiskService = loginRiskService;
+        this.featureFlagService = featureFlagService;
+        this.orgAccessService = orgAccessService;
+        this.orgProductAccessService = orgProductAccessService;
         this.refreshExpireHours = refreshExpireHours;
     }
 
@@ -91,12 +108,14 @@ public class AuthService {
     public AuthResponse login(LoginRequest request, String ipAddress) {
         String normalizedEmail = normalizeEmail(request.email());
         String normalizedIpAddress = normalizeIpAddress(ipAddress);
+        loginRiskService.ensureLoginAllowed(normalizedEmail, normalizedIpAddress);
         securityRateLimitService.ensureLoginAllowed(normalizedEmail, normalizedIpAddress);
         UserAccount user = userAccountMapper.selectOne(
                 new LambdaQueryWrapper<UserAccount>().eq(UserAccount::getEmail, normalizedEmail)
         );
         if (user == null || !passwordEncoder.matches(request.password(), user.getPasswordHash())) {
             securityRateLimitService.recordLoginFailure(normalizedEmail, normalizedIpAddress);
+            loginRiskService.recordFailure(normalizedEmail, user == null ? null : user.getId(), normalizedIpAddress);
             auditService.record(user == null ? null : user.getId(), "LOGIN_FAILURE", "Invalid credentials email=" + normalizedEmail, normalizedIpAddress);
             throw new BizException(ErrorCode.INVALID_CREDENTIALS);
         }
@@ -108,7 +127,8 @@ public class AuthService {
 
         securityRateLimitService.resetLoginFailures(normalizedEmail, normalizedIpAddress);
         auditService.record(user.getId(), "LOGIN_SUCCESS", "User login success", normalizedIpAddress);
-        return buildAuthResponse(user);
+        LoginRiskAssessment risk = loginRiskService.recordSuccess(user.getId(), normalizedEmail, normalizedIpAddress);
+        return buildAuthResponse(user, risk, normalizedIpAddress);
     }
 
     @Transactional
@@ -174,6 +194,17 @@ public class AuthService {
                 .toList();
     }
 
+    public AuthUserInfoVo currentUserInfo(Long userId) {
+        UserAccount user = userAccountMapper.selectById(userId);
+        if (user == null) {
+            throw new BizException(ErrorCode.USER_NOT_FOUND);
+        }
+        if (user.getStatus() == null || user.getStatus() != 1) {
+            throw new BizException(ErrorCode.FORBIDDEN, "User is disabled");
+        }
+        return toAuthUserInfo(user);
+    }
+
     @Transactional
     public void revokeSession(Long userId, Long currentSessionId, Long sessionId, String ipAddress) {
         UserSession target = userSessionMapper.selectOne(new LambdaQueryWrapper<UserSession>()
@@ -205,7 +236,12 @@ public class AuthService {
     }
 
     private AuthResponse buildAuthResponse(UserAccount user) {
+        return buildAuthResponse(user, LoginRiskAssessment.low(), null);
+    }
+
+    private AuthResponse buildAuthResponse(UserAccount user, LoginRiskAssessment risk, String ipAddress) {
         SessionToken sessionToken = createRefreshSession(user.getId());
+        recordHighRiskAuditIfNeeded(user.getId(), sessionToken.sessionId(), risk, ipAddress);
         JwtPrincipal principal = new JwtPrincipal(
                 user.getId(),
                 user.getEmail(),
@@ -221,7 +257,101 @@ public class AuthService {
                 user.getRole(),
                 userPreferenceService.resolveMailAddressMode(user.getId())
         );
-        return new AuthResponse(accessToken, sessionToken.refreshToken(), profile);
+        OrgAccessSnapshot orgAccess = resolveOrgAccess(user.getId());
+        return new AuthResponse(
+                accessToken,
+                sessionToken.refreshToken(),
+                profile,
+                risk.risk(),
+                risk.reasons(),
+                risk.secondFactorRequired(),
+                risk.securityEventId() == null ? null : String.valueOf(risk.securityEventId()),
+                orgAccess.entitlements(),
+                featureFlagsFor(orgAccess),
+                orgAccess.currentOrgId()
+        );
+    }
+
+    private AuthUserInfoVo toAuthUserInfo(UserAccount user) {
+        String userId = String.valueOf(user.getId());
+        String role = StringUtils.hasText(user.getRole()) ? user.getRole() : "USER";
+        String userName = resolveUserName(user);
+        OrgAccessSnapshot orgAccess = resolveOrgAccess(user.getId());
+        return new AuthUserInfoVo(
+                userId,
+                userId,
+                userName,
+                List.of(role),
+                List.of(),
+                user.getEmail(),
+                user.getDisplayName(),
+                role,
+                userPreferenceService.resolveMailAddressMode(user.getId()),
+                orgAccess.entitlements(),
+                featureFlagsFor(orgAccess),
+                orgAccess.currentOrgId()
+        );
+    }
+
+    private static String resolveUserName(UserAccount user) {
+        if (StringUtils.hasText(user.getDisplayName())) {
+            return user.getDisplayName();
+        }
+        return user.getEmail();
+    }
+
+    private List<String> featureFlagsFor(OrgAccessSnapshot orgAccess) {
+        Set<String> flags = new LinkedHashSet<>(featureFlagService.enabledFlags());
+        if (orgAccess.currentOrgId() == null) {
+            return List.copyOf(flags);
+        }
+        if (orgAccess.entitlements().contains("WALLET")) flags.add("feat.wallet.enabled");
+        if (orgAccess.entitlements().contains("VPN")) flags.add("feat.vpn.enabled");
+        if (orgAccess.entitlements().contains("MEET")) flags.add("feat.meet.enabled");
+        if (orgAccess.entitlements().contains("SIMPLELOGIN")) flags.add("feat.simplelogin.enabled");
+        if (orgAccess.entitlements().contains("STANDARD_NOTES")) flags.add("feat.notes.enabled");
+        return List.copyOf(flags);
+    }
+
+    private OrgAccessSnapshot resolveOrgAccess(Long userId) {
+        List<OrgMember> memberships = orgAccessService.listActiveMemberships(userId);
+        if (memberships.isEmpty()) {
+            return new OrgAccessSnapshot(null, List.of("community"));
+        }
+        OrgMember current = memberships.getFirst();
+        Set<String> entitlements = new LinkedHashSet<>(orgProductAccessService.listEnabledProductKeys(userId, current.getOrgId()));
+        entitlements.add("BUSINESS");
+        entitlements.addAll(readEntitlements(entitlements));
+        return new OrgAccessSnapshot(String.valueOf(current.getOrgId()), List.copyOf(entitlements));
+    }
+
+    private List<String> readEntitlements(Set<String> productKeys) {
+        List<String> result = new ArrayList<>();
+        for (String productKey : productKeys) {
+            result.add(productKey.toLowerCase() + ".read");
+        }
+        return result;
+    }
+
+    private record OrgAccessSnapshot(String currentOrgId, List<String> entitlements) {
+    }
+
+    private void recordHighRiskAuditIfNeeded(
+            Long userId,
+            Long sessionId,
+            LoginRiskAssessment risk,
+            String ipAddress
+    ) {
+        if (!"high".equals(risk.risk())) {
+            return;
+        }
+        auditService.recordRegisteredEvent(
+                userId,
+                "auth.login.high_risk",
+                String.valueOf(sessionId),
+                "sessionId=" + sessionId + ",riskReasons=" + String.join("|", risk.reasons()),
+                ipAddress
+        );
     }
 
     private SessionToken createRefreshSession(Long userId) {

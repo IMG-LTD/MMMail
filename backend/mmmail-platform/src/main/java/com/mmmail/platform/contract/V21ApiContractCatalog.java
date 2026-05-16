@@ -81,7 +81,12 @@ public record V21ApiContractCatalog(String version, List<V21ApiContract> contrac
                 {"GET", "/api/v2/calendar/resources", "CalendarResource[]", PREMIUM, "calendar:resources:read"},
                 {"POST", "/api/v2/calendar/bookings", "CalendarEvent", PREMIUM, "calendar:resources:book"},
                 {"GET", "/api/v2/calendar/settings", "CalendarSettings", COMMUNITY, "calendar:read"},
-                {"PATCH", "/api/v2/calendar/settings", "CalendarSettings", COMMUNITY, "calendar:write"}
+                {"PATCH", "/api/v2/calendar/settings", "CalendarSettings", COMMUNITY, "calendar:write"},
+                {"POST", "/api/v2/calendar/subscriptions", "CalendarSubscription", COMMUNITY, "calendar:write"},
+                {"GET", "/api/v2/calendar/subscriptions", "CalendarSubscription[]", COMMUNITY, "calendar:read"},
+                {"POST", "/api/v2/calendar/subscriptions/:id/sync", "CalendarSubscriptionSync", COMMUNITY, "calendar:write"},
+                {"DELETE", "/api/v2/calendar/subscriptions/:id", "Void", COMMUNITY, "calendar:write"},
+                {"GET", "/api/v2/calendar/:id/ics", "CalendarIcs", COMMUNITY, "calendar:read"}
         });
     }
 
@@ -154,9 +159,11 @@ public record V21ApiContractCatalog(String version, List<V21ApiContract> contrac
                 {"GET", "/api/v2/collaboration/projects", "CollaborationProject[]", COMMUNITY, "collaboration:read"},
                 {"POST", "/api/v2/collaboration/projects", "CollaborationProject", COMMUNITY, "collaboration:write"},
                 {"GET", "/api/v2/collaboration/projects/:id", "CollaborationProject", COMMUNITY, "collaboration:read"},
+                {"GET", "/api/v2/collaboration/projects/:id/board", "CollaborationBoard", COMMUNITY, "collaboration:read"},
                 {"GET", "/api/v2/collaboration/tasks", "CollaborationTask[]", COMMUNITY, "collaboration:read"},
                 {"POST", "/api/v2/collaboration/tasks", "CollaborationTask", COMMUNITY, "collaboration:write"},
                 {"PATCH", "/api/v2/collaboration/tasks/:id", "CollaborationTask", COMMUNITY, "collaboration:write"},
+                {"PATCH", "/api/v2/collaboration/tasks/:id/move", "CollaborationTaskMove", COMMUNITY, "collaboration:write"},
                 {"POST", "/api/v2/collaboration/tasks/:id/comments", "CollaborationTask", COMMUNITY, "collaboration:write"},
                 {"GET", "/api/v2/collaboration/activity", "CollaborationActivity[]", COMMUNITY, "collaboration:read"}
         });
@@ -166,6 +173,10 @@ public record V21ApiContractCatalog(String version, List<V21ApiContract> contrac
         return module("command-center", "docs/MMMail/UI/CommandCenter", new String[][]{
                 {"GET", "/api/v2/command-center/commands", "CommandCenterCommand[]", COMMUNITY, "command:center:read"},
                 {"GET", "/api/v2/command-center/commands/:id", "CommandCenterCommand", COMMUNITY, "command:center:read"},
+                {"GET", "/api/v2/command-center/catalog", "CommandCatalogItem[]", COMMUNITY, "command:center:read"},
+                {"GET", "/api/v2/command-center/recents", "CommandRecent[]", COMMUNITY, "command:center:read"},
+                {"POST", "/api/v2/command-center/pin", "CommandPreference", COMMUNITY, "command:center:write"},
+                {"GET", "/api/v2/command-center/quick-search", "CommandQuickSearchItem[]", COMMUNITY, "command:center:read"},
                 {"POST", "/api/v2/command-center/runs", "CommandCenterRun", PREMIUM, "command:center:run"},
                 {"GET", "/api/v2/command-center/runs/:id", "CommandCenterRun", PREMIUM, "command:center:read"},
                 {"POST", "/api/v2/command-center/runs/:id/cancel", "CommandCenterRun", PREMIUM, "command:center:run"},
@@ -179,6 +190,7 @@ public record V21ApiContractCatalog(String version, List<V21ApiContract> contrac
     private static List<V21ApiContract> notificationContracts() {
         return module("notifications", "docs/MMMail/UI/Notifications", new String[][]{
                 {"GET", "/api/v2/notifications", "NotificationItem[]", COMMUNITY, "notifications:read"},
+                {"GET", "/api/v2/notifications/since", "NotificationRealtimeReplay", COMMUNITY, "notifications:read"},
                 {"PATCH", "/api/v2/notifications/:id", "NotificationItem", COMMUNITY, "notifications:write"},
                 {"GET", "/api/v2/notifications/rules", "NotificationRule[]", PREMIUM, "notifications:rules:read"},
                 {"POST", "/api/v2/notifications/rules", "NotificationRule", PREMIUM, "notifications:rules:write"},
@@ -266,6 +278,7 @@ public record V21ApiContractCatalog(String version, List<V21ApiContract> contrac
                         {"POST", "/api/v2/auth/register", "AuthPayload", COMMUNITY, "auth:public"},
                         {"POST", "/api/v2/auth/refresh", "AuthPayload", COMMUNITY, "auth:public"},
                         {"POST", "/api/v2/auth/logout-all", "Void", COMMUNITY, "auth:sessions:write"},
+                        {"GET", "/api/v2/auth/me", "AuthUserInfo", COMMUNITY, "auth:me:read"},
                         {"GET", "/api/v2/auth/sessions", "UserSession[]", COMMUNITY, "auth:sessions:read"},
                         {"POST", "/api/v2/auth/sessions/:id/revoke", "Void", COMMUNITY, "auth:sessions:write"}
                 }),

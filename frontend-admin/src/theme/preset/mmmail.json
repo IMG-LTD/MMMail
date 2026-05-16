@@ -1,0 +1,25 @@
+{
+  "themeScheme": "light",
+  "themeColor": "#2D9D8F",
+  "layout": {
+    "mode": "vertical-mix",
+    "scrollMode": "content"
+  },
+  "tab": {
+    "visible": true,
+    "cache": true,
+    "height": 44,
+    "mode": "chrome",
+    "closeTabByMiddleClick": false
+  },
+  "sider": {
+    "inverted": true
+  },
+  "footer": {
+    "visible": false
+  },
+  "watermark": {
+    "visible": false,
+    "text": "MMMail"
+  }
+}

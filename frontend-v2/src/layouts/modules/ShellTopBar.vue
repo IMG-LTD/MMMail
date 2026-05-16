@@ -1,81 +1,82 @@
 <script setup lang="ts">
-import { computed } from 'vue'
-import { useRoute } from 'vue-router'
-import { storeToRefs } from 'pinia'
-import AppLogo from '@/shared/components/AppLogo.vue'
-import { lt, useLocaleText } from '@/locales'
-import MaturityBadge from '@/shared/components/MaturityBadge.vue'
-import LocaleSwitcher from '@/shared/components/LocaleSwitcher.vue'
-import { useAppStore } from '@/store/modules/app'
-import { useShellStore } from '@/store/modules/shell'
-import { useThemeStore } from '@/store/modules/theme'
-import { findShellSurface, getToneColorVar } from './shell-nav'
+import { NButton, NInput } from "naive-ui";
+import { computed } from "vue";
+import { useRoute } from "vue-router";
+import { storeToRefs } from "pinia";
+import AppLogo from "@/shared/components/AppLogo.vue";
+import { lt, useLocaleText } from "@/locales";
+import MaturityBadge from "@/shared/components/MaturityBadge.vue";
+import LocaleSwitcher from "@/shared/components/LocaleSwitcher.vue";
+import { useAppStore } from "@/store/modules/app";
+import { useShellStore } from "@/store/modules/shell";
+import { useThemeStore } from "@/store/modules/theme";
+import { findShellSurface, getToneColorVar } from "./shell-nav";
 
 interface UtilityAction {
-  badge?: string
-  icon: string
-  key: 'command' | 'notifications' | 'theme'
-  label: ReturnType<typeof lt>
+  badge?: string;
+  icon: string;
+  key: "command" | "notifications" | "theme";
+  label: ReturnType<typeof lt>;
 }
 
-const route = useRoute()
-const appStore = useAppStore()
-const shellStore = useShellStore()
-const themeStore = useThemeStore()
-const { activeScope } = storeToRefs(appStore)
-const { drawerOpen } = storeToRefs(themeStore)
-const { tr } = useLocaleText()
+const route = useRoute();
+const appStore = useAppStore();
+const shellStore = useShellStore();
+const themeStore = useThemeStore();
+const { activeScope } = storeToRefs(appStore);
+const { drawerOpen } = storeToRefs(themeStore);
+const { tr } = useLocaleText();
 
-const currentSurface = computed(() => findShellSurface(route.path))
+const currentSurface = computed(() => findShellSurface(route.path));
 
 const activeScopeLabel = computed(() => {
-  if (activeScope.value === 'Enterprise') {
-    return tr(lt('企业范围', '企業範圍', 'Enterprise scope'))
+  if (activeScope.value === "Enterprise") {
+    return tr(lt("企业范围", "企業範圍", "Enterprise scope"));
   }
 
-  return activeScope.value
-})
+  return activeScope.value;
+});
 
 const utilityActions: UtilityAction[] = [
-  { key: 'command', icon: '⌘', label: lt('命令面板', '命令面板', 'Command palette') },
-  { key: 'notifications', icon: '◉', label: lt('通知', '通知', 'Notifications'), badge: '2' },
-  { key: 'theme', icon: '⚙', label: lt('主题设置', '主題設定', 'Theme settings') }
-]
+  { key: "command", icon: "⌘", label: lt("命令面板", "命令面板", "Command palette") },
+  { key: "notifications", icon: "◉", label: lt("通知", "通知", "Notifications"), badge: "2" },
+  { key: "theme", icon: "⚙", label: lt("主题设置", "主題設定", "Theme settings") },
+];
 
 function handleUtilityAction(key: string) {
-  if (key === 'command') {
-    shellStore.openCommandPalette()
-    return
+  if (key === "command") {
+    shellStore.openCommandPalette();
+    return;
   }
 
-  if (key === 'notifications') {
-    shellStore.toggleNotificationDrawer()
-    return
+  if (key === "notifications") {
+    shellStore.toggleNotificationDrawer();
+    return;
   }
 
-  if (key === 'theme') {
-    themeStore.openDrawer()
+  if (key === "theme") {
+    themeStore.openDrawer();
   }
 }
 
 function isUtilityActionActive(key: string) {
-  if (key === 'command') {
-    return shellStore.commandPaletteOpen
+  if (key === "command") {
+    return shellStore.commandPaletteOpen;
   }
 
-  if (key === 'notifications') {
-    return shellStore.notificationDrawerOpen
+  if (key === "notifications") {
+    return shellStore.notificationDrawerOpen;
   }
 
-  if (key === 'theme') {
-    return drawerOpen.value
+  if (key === "theme") {
+    return drawerOpen.value;
   }
 
-  return false
+  return false;
 }
 
 function openQuickCreate() {
-  shellStore.openQuickCreate()
+  shellStore.openQuickCreate();
 }
 </script>
 
@@ -84,7 +85,10 @@ function openQuickCreate() {
     <div class="top-bar__left">
       <app-logo />
       <div v-if="currentSurface" class="top-bar__surface">
-        <span class="top-bar__surface-dot" :style="{ background: getToneColorVar(currentSurface.tone) }" />
+        <span
+          class="top-bar__surface-dot"
+          :style="{ background: getToneColorVar(currentSurface.tone) }"
+        />
         <span class="top-bar__surface-copy">{{ tr(currentSurface.label) }}</span>
         <maturity-badge v-if="currentSurface.maturity" compact :level="currentSurface.maturity" />
       </div>
@@ -92,29 +96,44 @@ function openQuickCreate() {
     <div class="top-bar__center">
       <label class="top-bar__search">
         <span>⌕</span>
-        <input type="text" :placeholder="tr(lt('搜索邮件、联系人、文件…', '搜尋郵件、聯絡人、檔案…', 'Search mail, people, and files…'))" />
+        <NInput
+          :placeholder="
+            tr(
+              lt(
+                '搜索邮件、联系人、文件…',
+                '搜尋郵件、聯絡人、檔案…',
+                'Search mail, people, and files…',
+              ),
+            )
+          "
+        />
         <kbd>⌘K</kbd>
       </label>
     </div>
     <div class="top-bar__right">
-      <button class="quick-create-button" type="button" @click="openQuickCreate">
-        {{ tr(lt('新建', '新增', 'Create')) }}
-      </button>
-      <button class="scope-pill" type="button">{{ activeScopeLabel }} ▾</button>
+      <NButton class="quick-create-button" native-type="button" @click="openQuickCreate">
+        {{ tr(lt("新建", "新增", "Create")) }}
+      </NButton>
+      <NButton class="scope-pill" native-type="button">{{ activeScopeLabel }} ▾</NButton>
       <locale-switcher class="top-bar__locale" compact />
-      <button
+      <NButton
         v-for="action in utilityActions"
         :key="action.key"
         class="icon-button"
         :class="{ 'icon-button--active': isUtilityActionActive(action.key) }"
-        type="button"
+        native-type="button"
         :aria-label="tr(action.label)"
         @click="handleUtilityAction(action.key)"
       >
         {{ action.icon }}
         <span v-if="action.badge" class="icon-button__count">{{ action.badge }}</span>
-      </button>
-      <button class="avatar-chip" type="button" :aria-label="tr(lt('账户', '帳戶', 'Account'))">NE</button>
+      </NButton>
+      <NButton
+        class="avatar-chip"
+        native-type="button"
+        :aria-label="tr(lt('账户', '帳戶', 'Account'))"
+        >NE</NButton
+      >
     </div>
   </header>
 </template>

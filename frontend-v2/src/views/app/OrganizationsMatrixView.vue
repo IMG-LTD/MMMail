@@ -1,15 +1,16 @@
 <script setup lang="ts">
-import CompactPageHeader from '@/shared/components/CompactPageHeader.vue'
+import { NButton } from "naive-ui";
+import CompactPageHeader from "@/shared/components/CompactPageHeader.vue";
 
-const tabs = ['Overview', 'Member Management', 'Product Access Matrix']
-const products = ['Mail', 'Calendar', 'Drive', 'Pass', 'Docs', 'Sheets']
+const tabs = ["Overview", "Member Management", "Product Access Matrix"];
+const products = ["Mail", "Calendar", "Drive", "Pass", "Docs", "Sheets"];
 
 const units = [
-  { name: 'Executive Board', access: [true, true, true, false, true, true] },
-  { name: 'Core Management', access: [true, true, true, false, true, true] },
-  { name: 'R&D / EMEA', access: [true, true, true, false, true, false] },
-  { name: 'External Contractors', access: [true, false, false, false, false, false] }
-]
+  { name: "Executive Board", access: [true, true, true, false, true, true] },
+  { name: "Core Management", access: [true, true, true, false, true, true] },
+  { name: "R&D / EMEA", access: [true, true, true, false, true, false] },
+  { name: "External Contractors", access: [true, false, false, false, false, false] },
+];
 </script>
 
 <template>
@@ -20,18 +21,18 @@ const units = [
       description="Global strategic product access priorities and product visibility controls across EMEA and APAC regions."
       badge="Global Scope"
     >
-      <button class="organizations-page__action" type="button">Edit Organization</button>
+      <NButton class="organizations-page__action" native-type="button">Edit Organization</NButton>
     </compact-page-header>
 
     <div class="organizations-tabs">
-      <button
+      <NButton
         v-for="tab in tabs"
         :key="tab"
-        type="button"
+        native-type="button"
         :class="{ 'organizations-tabs__active': tab === 'Product Access Matrix' }"
       >
         {{ tab }}
-      </button>
+      </NButton>
     </div>
 
     <article class="surface-card organizations-alert">
@@ -39,7 +40,8 @@ const units = [
       <div>
         <strong>Global Product Visibility</strong>
         <p class="page-subtitle">
-          Disabled products will be hidden organization-wide, and direct access attempts will be blocked. This setting overrides individual user preferences.
+          Disabled products will be hidden organization-wide, and direct access attempts will be
+          blocked. This setting overrides individual user preferences.
         </p>
       </div>
     </article>
@@ -61,14 +63,14 @@ const units = [
             class="organizations-matrix__toggle"
             :class="{ 'organizations-matrix__toggle--active': enabled }"
           >
-            {{ enabled ? '✓' : '' }}
+            {{ enabled ? "✓" : "" }}
           </span>
         </span>
       </div>
     </article>
 
     <div class="organizations-page__footer">
-      <button class="organizations-page__save" type="button">Save Changes</button>
+      <NButton class="organizations-page__save" native-type="button">Save Changes</NButton>
     </div>
   </section>
 </template>

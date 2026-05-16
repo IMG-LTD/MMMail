@@ -15,6 +15,9 @@ public class AuditEvent {
     private Long orgId;
     private Long actorId;
     private String eventType;
+    private String targetType;
+    private String targetId;
+    private String severity;
     private String ipAddress;
     private String detail;
     private LocalDateTime createdAt;
@@ -52,6 +55,30 @@ public class AuditEvent {
 
     public void setEventType(String eventType) {
         this.eventType = eventType;
+    }
+
+    public String getTargetType() {
+        return targetType;
+    }
+
+    public void setTargetType(String targetType) {
+        this.targetType = targetType;
+    }
+
+    public String getTargetId() {
+        return targetId;
+    }
+
+    public void setTargetId(String targetId) {
+        this.targetId = targetId;
+    }
+
+    public String getSeverity() {
+        return severity;
+    }
+
+    public void setSeverity(String severity) {
+        this.severity = severity;
     }
 
     public String getIpAddress() {

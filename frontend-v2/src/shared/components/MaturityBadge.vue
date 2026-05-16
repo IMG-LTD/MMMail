@@ -1,34 +1,37 @@
 <script setup lang="ts">
-import { computed } from 'vue'
-import { lt, type TextLike, useLocaleText } from '@/locales'
+import { computed } from "vue";
+import { lt, type TextLike, useLocaleText } from "@/locales";
 
-type MaturityLevel = 'ga' | 'beta' | 'preview'
+type MaturityLevel = "ga" | "beta" | "preview";
 
 const props = withDefaults(
   defineProps<{
-    compact?: boolean
-    level: MaturityLevel
-    text?: TextLike
+    compact?: boolean;
+    level: MaturityLevel;
+    text?: TextLike;
   }>(),
   {
     compact: false,
-    text: undefined
-  }
-)
+    text: undefined,
+  },
+);
 
-const { tr } = useLocaleText()
+const { tr } = useLocaleText();
 
 const defaultLabels: Record<MaturityLevel, TextLike> = {
-  ga: lt('正式', '正式', 'GA'),
-  beta: lt('Beta', 'Beta', 'Beta'),
-  preview: lt('预览', '預覽', 'Preview')
-}
+  ga: lt("正式", "正式", "GA"),
+  beta: lt("Beta", "Beta", "Beta"),
+  preview: lt("预览", "預覽", "Preview"),
+};
 
-const label = computed(() => props.text ?? defaultLabels[props.level])
+const label = computed(() => props.text ?? defaultLabels[props.level]);
 </script>
 
 <template>
-  <span class="maturity-badge" :class="[`maturity-badge--${level}`, { 'maturity-badge--compact': compact }]">
+  <span
+    class="maturity-badge"
+    :class="[`maturity-badge--${level}`, { 'maturity-badge--compact': compact }]"
+  >
     {{ tr(label) }}
   </span>
 </template>

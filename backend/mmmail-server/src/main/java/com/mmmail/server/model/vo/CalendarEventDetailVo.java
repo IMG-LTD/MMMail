@@ -5,6 +5,11 @@ import java.util.List;
 
 public record CalendarEventDetailVo(
         String id,
+        String seriesId,
+        String truncatedSeriesId,
+        String rrule,
+        LocalDateTime occurrenceStartAt,
+        LocalDateTime recurrenceUntil,
         String title,
         String description,
         String location,

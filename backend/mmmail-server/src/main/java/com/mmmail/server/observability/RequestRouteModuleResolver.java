@@ -16,6 +16,9 @@ public class RequestRouteModuleResolver {
         if (path.startsWith("/api/v2/platform")) {
             return "platform";
         }
+        if (path.startsWith("/api/v2/")) {
+            return apiModule(path, "/api/v2/");
+        }
         if (path.startsWith("/api/v1/mails")
                 || path.startsWith("/api/v1/mail-")
                 || path.startsWith("/api/v1/conversations")
@@ -37,7 +40,11 @@ public class RequestRouteModuleResolver {
         if (!path.startsWith("/api/v1/")) {
             return "public";
         }
-        String[] segments = path.substring("/api/v1/".length()).split("/");
+        return apiModule(path, "/api/v1/");
+    }
+
+    private String apiModule(String path, String prefix) {
+        String[] segments = path.substring(prefix.length()).split("/");
         return segments.length == 0 || !StringUtils.hasText(segments[0]) ? "unknown" : segments[0];
     }
 }

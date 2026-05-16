@@ -1,20 +1,21 @@
 <script setup lang="ts">
+import { NButton } from "naive-ui";
 withDefaults(
   defineProps<{
-    actionLabel?: string
-    description: string
-    title: string
-    variant?: 'empty' | 'error' | 'permission' | 'premium'
+    actionLabel?: string;
+    description: string;
+    title: string;
+    variant?: "empty" | "error" | "permission" | "premium";
   }>(),
   {
     actionLabel: undefined,
-    variant: 'empty'
-  }
-)
+    variant: "empty",
+  },
+);
 
 const emit = defineEmits<{
-  action: []
-}>()
+  action: [];
+}>();
 </script>
 
 <template>
@@ -29,9 +30,14 @@ const emit = defineEmits<{
       <h2>{{ title }}</h2>
       <p>{{ description }}</p>
     </div>
-    <button v-if="actionLabel" class="empty-state__action" type="button" @click="emit('action')">
+    <NButton
+      v-if="actionLabel"
+      class="empty-state__action"
+      native-type="button"
+      @click="emit('action')"
+    >
       {{ actionLabel }}
-    </button>
+    </NButton>
   </section>
 </template>
 

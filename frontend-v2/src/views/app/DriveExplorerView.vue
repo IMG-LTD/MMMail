@@ -1,35 +1,36 @@
 <script setup lang="ts">
-const leftNav = ['My Drive', 'Shared with me', 'Recent', 'Starred', 'Trash']
+import { NButton } from "naive-ui";
+const leftNav = ["My Drive", "Shared with me", "Recent", "Starred", "Trash"];
 
 const files = [
-  ['Q3_Strategy_Deck.pdf', '2.4 MB', 'Oct 24'],
-  ['handoff-spec.doc', '1.6 MB', 'Oct 20'],
-  ['crew-k.xlsx', '450 KB', 'Oct 15'],
-  ['mi', '12 KB', 'Oct 12']
-]
+  ["Q3_Strategy_Deck.pdf", "2.4 MB", "Oct 24"],
+  ["handoff-spec.doc", "1.6 MB", "Oct 20"],
+  ["crew-k.xlsx", "450 KB", "Oct 15"],
+  ["mi", "12 KB", "Oct 12"],
+];
 
 const properties = [
-  ['Type', 'PDF Document'],
-  ['Size', '2.4 MB'],
-  ['Location', 'My Drive / Q3 Planning'],
-  ['Owner', 'Sarah Jenkins']
-]
+  ["Type", "PDF Document"],
+  ["Size", "2.4 MB"],
+  ["Location", "My Drive / Q3 Planning"],
+  ["Owner", "Sarah Jenkins"],
+];
 </script>
 
 <template>
   <section class="drive-page">
     <div class="drive-page__layout">
       <aside class="drive-nav">
-        <button class="drive-nav__primary" type="button">+ New</button>
+        <NButton class="drive-nav__primary" native-type="button">+ New</NButton>
         <div class="drive-nav__group">
-          <button
+          <NButton
             v-for="item in leftNav"
             :key="item"
-            type="button"
+            native-type="button"
             :class="{ 'drive-nav__item--active': item === 'My Drive' }"
           >
             {{ item }}
-          </button>
+          </NButton>
         </div>
 
         <div class="drive-nav__storage">
@@ -47,8 +48,8 @@ const properties = [
             <span class="metric-chip">End-to-end Encrypted</span>
           </div>
           <div class="drive-main__actions">
-            <button type="button">Grid</button>
-            <button type="button">Sort</button>
+            <NButton native-type="button">Grid</NButton>
+            <NButton native-type="button">Sort</NButton>
           </div>
         </header>
 
@@ -85,8 +86,8 @@ const properties = [
         </div>
 
         <div class="drive-detail__tabs">
-          <button class="drive-detail__tabs--active" type="button">Details</button>
-          <button type="button">Activity</button>
+          <NButton class="drive-detail__tabs--active" native-type="button">Details</NButton>
+          <NButton native-type="button">Activity</NButton>
         </div>
 
         <div class="drive-detail__properties">
@@ -100,7 +101,7 @@ const properties = [
           <span class="section-label">Shared With</span>
           <strong>Sarah Jenkins</strong>
           <span>Editor</span>
-          <button type="button">Manage Access</button>
+          <NButton native-type="button">Manage Access</NButton>
         </article>
 
         <article class="drive-detail__card">

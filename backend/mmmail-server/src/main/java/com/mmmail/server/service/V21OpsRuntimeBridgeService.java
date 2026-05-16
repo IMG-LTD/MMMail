@@ -307,6 +307,8 @@ public class V21OpsRuntimeBridgeService {
                 event.title(),
                 product,
                 taskStatus(event.eventType()),
+                taskStatus(event.eventType()),
+                null,
                 event.actorEmail(),
                 null
         );

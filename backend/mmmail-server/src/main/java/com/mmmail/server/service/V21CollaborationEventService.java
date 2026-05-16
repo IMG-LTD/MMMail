@@ -139,7 +139,9 @@ public class V21CollaborationEventService {
                 "projectId", task.getProjectId(),
                 "ownerId", task.getOwnerId(),
                 "product", task.getProduct(),
-                "status", task.getStatus()
+                "status", task.getStatus(),
+                "boardColumn", task.getBoardColumn(),
+                "position", task.getPosition()
         );
     }
 

@@ -1,16 +1,16 @@
 <script setup lang="ts">
-import StatusBadge from './StatusBadge.vue'
+import StatusBadge from "./StatusBadge.vue";
 
 withDefaults(
   defineProps<{
-    compact?: boolean
-    label?: string
+    compact?: boolean;
+    label?: string;
   }>(),
   {
     compact: false,
-    label: 'Premium'
-  }
-)
+    label: "Premium",
+  },
+);
 </script>
 
 <template>

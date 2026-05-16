@@ -1,8 +1,8 @@
-import type { GlobalThemeOverrides } from 'naive-ui'
-import type { MmDesignTokens } from './tokens'
+import type { GlobalThemeOverrides } from "naive-ui";
+import type { MmDesignTokens } from "./tokens";
 
 export function buildNaiveThemeOverrides(tokens: MmDesignTokens): GlobalThemeOverrides {
-  const isCompact = Number(tokens.densityFactor) < 1
+  const isCompact = Number(tokens.densityFactor) < 1;
 
   return {
     common: {
@@ -24,34 +24,38 @@ export function buildNaiveThemeOverrides(tokens: MmDesignTokens): GlobalThemeOve
       textColor2: tokens.textSecondary,
       textColor3: tokens.textMuted,
       textColorBase: tokens.textPrimary,
-      warningColor: tokens.warning
+      warningColor: tokens.warning,
     },
     Button: {
       borderRadiusLarge: tokens.radiusMd,
       borderRadiusMedium: tokens.radiusSm,
       borderRadiusSmall: tokens.radiusXs,
-      heightLarge: isCompact ? '38px' : '42px',
-      heightMedium: isCompact ? '32px' : '36px'
+      heightLarge: isCompact ? "38px" : "42px",
+      heightMedium: isCompact ? "32px" : "36px",
     },
     Card: {
       borderRadius: tokens.radiusLg,
-      color: tokens.surface
+      color: tokens.surface,
     },
     Drawer: {
-      color: tokens.surface
+      color: tokens.surface,
     },
     Input: {
-      borderFocus: tokens.brandPrimary,
-      borderHover: tokens.brandPrimary,
-      color: tokens.surfaceSoft
+      border: `1px solid ${tokens.border}`,
+      borderFocus: `1px solid ${tokens.brandPrimary}`,
+      borderHover: `1px solid ${tokens.brandPrimary}`,
+      borderRadius: tokens.radiusMd,
+      color: tokens.surfaceSoft,
+      colorFocus: tokens.surface,
+      placeholderColor: tokens.textMuted,
     },
     Modal: {
       borderRadius: tokens.radiusLg,
-      color: tokens.surface
+      color: tokens.surface,
     },
     Tabs: {
       tabTextColorActiveLine: tokens.brandPrimary,
-      barColor: tokens.brandPrimary
-    }
-  }
+      barColor: tokens.brandPrimary,
+    },
+  };
 }

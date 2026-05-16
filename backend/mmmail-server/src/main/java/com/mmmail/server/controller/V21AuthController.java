@@ -5,6 +5,7 @@ import com.mmmail.server.model.dto.LoginRequest;
 import com.mmmail.server.model.dto.RefreshRequest;
 import com.mmmail.server.model.dto.RegisterRequest;
 import com.mmmail.server.model.vo.AuthResponse;
+import com.mmmail.server.model.vo.AuthUserInfoVo;
 import com.mmmail.server.model.vo.UserSessionVo;
 import com.mmmail.server.security.AuthCookieService;
 import com.mmmail.server.service.AuthService;
@@ -58,6 +59,11 @@ public class V21AuthController extends AuthControllerSupport {
     @PostMapping("/logout-all")
     public Result<Void> logoutAll(HttpServletRequest httpRequest, HttpServletResponse httpResponse) {
         return logoutAllSessions(httpRequest, httpResponse);
+    }
+
+    @GetMapping("/me")
+    public Result<AuthUserInfoVo> me() {
+        return currentUserInfo();
     }
 
     @GetMapping("/sessions")

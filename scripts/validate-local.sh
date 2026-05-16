@@ -13,11 +13,15 @@ BACKEND_DOCS_TESTS="DocsCollaborationIntegrationTest,DocsSuggestionWorkflowInteg
 BACKEND_MAIL_GA_TESTS="MailGaIntegrationTest,MailAttachmentIntegrationTest,MailReleaseBlockingIntegrationTest"
 BACKEND_CALENDAR_GA_TESTS="CalendarSharingAvailabilityIntegrationTest,CalendarReleaseBlockingIntegrationTest,CalendarIcsImportIntegrationTest"
 BACKEND_DRIVE_GA_TESTS="DriveReleaseBlockingIntegrationTest,DriveCollaboratorShareIntegrationTest,DriveSharedWithMeIntegrationTest,DriveSecureShareIntegrationTest,DrivePublicFolderShareIntegrationTest"
-BACKEND_OBSERVABILITY_TESTS="JobRunMonitorServiceTest,GlobalExceptionHandlerUnitTest"
+BACKEND_OBSERVABILITY_TESTS="JobRunMonitorServiceTest,GlobalExceptionHandlerUnitTest,RequestRouteModuleResolverTest,RequestObservationServiceTest"
 BACKEND_SHEETS_TESTS="SheetsWorkbookIntegrationTest,SheetsWorkbookDataManagementIntegrationTest,SheetsSharingVersionIntegrationTest,SheetsWorkbookMultiSheetIntegrationTest"
 FRONTEND_V2_CONTRACT_TESTS="tests/foundation-route-contract.test.mjs tests/redirect-contract.test.mjs tests/auth-scope-contract.test.mjs tests/public-share-contract.test.mjs tests/public-share-runtime-contract.test.mjs tests/public-share-view-contract.test.mjs tests/mail-workspace-contract.test.mjs tests/calendar-workspace-contract.test.mjs tests/drive-workspace-contract.test.mjs tests/pass-workspace-contract.test.mjs tests/docs-sheets-runtime-contract.test.mjs tests/workspace-aggregation-contract.test.mjs tests/settings-panel-contract.test.mjs tests/system-health-contract.test.mjs tests/command-center-query-contract.test.mjs"
-BACKEND_V2_CONTRACT_TESTS="PlatformCapabilityIntegrationTest,PublicShareCapabilityIntegrationTest,WorkspaceAggregationIntegrationTest,AiMcpCapabilityIntegrationTest,RequestHeaderContractIntegrationTest,ObservabilityIntegrationTest,BillingReadinessIntegrationTest,ContractCatalogRegressionTest,TenantScopeFoundationContractTest,BackendModuleExtractionContractTest,PublicShareTokenHashMigrationIntegrationTest,MailPublicShareTokenHashContractTest,PassPublicShareTokenHashContractTest,DrivePublicShareTokenHashContractTest"
+BACKEND_V2_CONTRACT_TESTS="PlatformCapabilityIntegrationTest,PublicShareCapabilityIntegrationTest,WorkspaceAggregationIntegrationTest,AiMcpCapabilityIntegrationTest,RequestHeaderContractIntegrationTest,ObservabilityIntegrationTest,PrometheusEndpointRuntimeTest,BillingReadinessIntegrationTest,ContractCatalogRegressionTest,TenantScopeFoundationContractTest,BackendModuleExtractionContractTest,PublicShareTokenHashMigrationIntegrationTest,MailPublicShareTokenHashContractTest,PassPublicShareTokenHashContractTest,DrivePublicShareTokenHashContractTest"
 BACKEND_V21_RUNTIME_TESTS="BackendV21AccessEntitlementGatesTest,BackendV21ApiContractCatalogTest,BackendV21BackgroundJobFoundationTest,BackendV21CalendarRuntimeBridgeTest,BackendV21CollaborationWriteRuntimeTest,BackendV21CommunityRuntimeClosureTest,BackendV21DocsSheetsRuntimeBridgeTest,BackendV21DriveRuntimeBridgeTest,BackendV21EventOutboxFoundationTest,BackendV21MailRuntimeBridgeTest,BackendV21OpsRuntimeBridgeTest,BackendV21PassRuntimeBridgeTest,BackendV21RuntimeContractGapClosureTest"
+BACKEND_V212_COVERAGE_TESTS="WebSocketMetricsServiceTest,WebSocketChannelLimitServiceTest,WebSocketConnectionLimitServiceTest,WebSocketThrottleServiceTest"
+
+echo "[validate-local] root v2.1.2 contract gates"
+node --test tests/*.test.mjs >/tmp/mmmail-root-v212-contract.log 2>&1
 
 echo "[validate-local] frontend-v2 tests"
 env -u http_proxy -u https_proxy -u HTTP_PROXY -u HTTPS_PROXY -u ALL_PROXY -u all_proxy \
@@ -27,6 +31,10 @@ echo "[validate-local] frontend-v2 contract regression"
 env -u http_proxy -u https_proxy -u HTTP_PROXY -u HTTPS_PROXY -u ALL_PROXY -u all_proxy \
   pnpm --dir frontend-v2 exec node --test $FRONTEND_V2_CONTRACT_TESTS >/tmp/mmmail-frontend-v2-contract.log 2>&1
 
+echo "[validate-local] frontend-v2 coverage gates"
+env -u http_proxy -u https_proxy -u HTTP_PROXY -u HTTPS_PROXY -u ALL_PROXY -u all_proxy \
+  pnpm --dir frontend-v2 test:coverage >/tmp/mmmail-frontend-v2-coverage.log 2>&1
+
 echo "[validate-local] frontend-v2 typecheck"
 env -u http_proxy -u https_proxy -u HTTP_PROXY -u HTTPS_PROXY -u ALL_PROXY -u all_proxy \
   pnpm --dir frontend-v2 typecheck >/tmp/mmmail-frontend-v2-typecheck.log 2>&1
@@ -34,6 +42,30 @@ env -u http_proxy -u https_proxy -u HTTP_PROXY -u HTTPS_PROXY -u ALL_PROXY -u al
 echo "[validate-local] frontend-v2 dependency audit (high)"
 env -u http_proxy -u https_proxy -u HTTP_PROXY -u HTTPS_PROXY -u ALL_PROXY -u all_proxy \
   pnpm --dir frontend-v2 audit --prod --audit-level=high --ignore-registry-errors >/tmp/mmmail-frontend-v2-audit.log 2>&1
+
+echo "[validate-local] soybean v2.1.2 contract regression"
+env -u http_proxy -u https_proxy -u HTTP_PROXY -u HTTPS_PROXY -u ALL_PROXY -u all_proxy \
+  pnpm --dir frontend-admin test:v212 >/tmp/mmmail-soybean-v212.log 2>&1
+
+echo "[validate-local] soybean v2.1.2 coverage gates"
+env -u http_proxy -u https_proxy -u HTTP_PROXY -u HTTPS_PROXY -u ALL_PROXY -u all_proxy \
+  pnpm --dir frontend-admin test:coverage >/tmp/mmmail-soybean-coverage.log 2>&1
+
+echo "[validate-local] soybean v2.1.2 browser e2e"
+env -u http_proxy -u https_proxy -u HTTP_PROXY -u HTTPS_PROXY -u ALL_PROXY -u all_proxy \
+  pnpm --dir frontend-admin test:e2e >/tmp/mmmail-soybean-e2e.log 2>&1
+
+echo "[validate-local] soybean v2.1.2 style/i18n/bundle gates"
+env -u http_proxy -u https_proxy -u HTTP_PROXY -u HTTPS_PROXY -u ALL_PROXY -u all_proxy \
+  pnpm --dir frontend-admin check:style-discipline >/tmp/mmmail-soybean-style-discipline.log 2>&1
+env -u http_proxy -u https_proxy -u HTTP_PROXY -u HTTPS_PROXY -u ALL_PROXY -u all_proxy \
+  pnpm --dir frontend-admin check:i18n >/tmp/mmmail-soybean-i18n.log 2>&1
+env -u http_proxy -u https_proxy -u HTTP_PROXY -u HTTPS_PROXY -u ALL_PROXY -u all_proxy \
+  pnpm --dir frontend-admin check:bundle-budget >/tmp/mmmail-soybean-bundle-budget.log 2>&1
+
+echo "[validate-local] soybean v2.1.2 lighthouse"
+env -u http_proxy -u https_proxy -u HTTP_PROXY -u HTTPS_PROXY -u ALL_PROXY -u all_proxy \
+  MMMAIL_LIGHTHOUSE_SKIP_BUILD=1 pnpm --dir frontend-admin test:lighthouse >/tmp/mmmail-soybean-lighthouse.log 2>&1
 
 echo "[validate-local] security gates"
 bash scripts/validate-security.sh >/tmp/mmmail-security.log 2>&1
@@ -243,6 +275,17 @@ echo "[validate-local] backend sheets regression"
 SPRING_PROFILES_ACTIVE=test timeout 60s "$MVN_BIN" -f backend/pom.xml -pl mmmail-server -am \
   -Dtest="$BACKEND_SHEETS_TESTS" -Dsurefire.failIfNoSpecifiedTests=false test \
   >/tmp/mmmail-backend-sheets.log 2>&1
+
+echo "[validate-local] backend coverage seed tests"
+rm -f backend/mmmail-server/target/jacoco.exec
+timeout 60s "$MVN_BIN" -f backend/pom.xml -pl mmmail-server -am \
+  -Dtest="$BACKEND_V212_COVERAGE_TESTS" -Dsurefire.failIfNoSpecifiedTests=false test \
+  >/tmp/mmmail-backend-coverage-seed.log 2>&1
+
+echo "[validate-local] backend coverage gate"
+timeout 60s "$MVN_BIN" -f backend/pom.xml -pl mmmail-server -am \
+  -DskipTests verify \
+  >/tmp/mmmail-backend-coverage.log 2>&1
 
 echo "[validate-local] Batch 3 migration gates"
 env -u http_proxy -u https_proxy -u HTTP_PROXY -u HTTPS_PROXY -u ALL_PROXY -u all_proxy \

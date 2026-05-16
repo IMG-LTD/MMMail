@@ -5,14 +5,28 @@ import com.mmmail.server.model.dto.CreateV21CollaborationCommentRequest;
 import com.mmmail.server.model.dto.CreateV21CollaborationProjectRequest;
 import com.mmmail.server.model.dto.CreateV21CollaborationTaskRequest;
 import com.mmmail.server.model.dto.UpdateV21CollaborationTaskRequest;
+import com.mmmail.server.model.dto.V21CollaborationTaskMoveRequest;
+import com.mmmail.server.model.dto.V21CommandPinRequest;
 import com.mmmail.server.model.dto.V21NotificationPatchRequest;
 import com.mmmail.server.model.dto.V21NotificationQuery;
+import com.mmmail.server.model.vo.V21CollaborationBoardVo;
+import com.mmmail.server.model.vo.V21CommandCatalogItemVo;
 import com.mmmail.server.model.vo.V21CollaborationActivityVo;
 import com.mmmail.server.model.vo.V21CollaborationProjectVo;
+import com.mmmail.server.model.vo.V21CollaborationTaskMoveVo;
 import com.mmmail.server.model.vo.V21CollaborationTaskVo;
 import com.mmmail.server.model.vo.V21CommandCenterCommandVo;
+import com.mmmail.server.model.vo.V21CommandPreferenceVo;
+import com.mmmail.server.model.vo.V21CommandQuickSearchItemVo;
+import com.mmmail.server.model.vo.V21CommandRecentVo;
 import com.mmmail.server.model.vo.V21NotificationSubscriptionVo;
 import com.mmmail.server.model.vo.V21NotificationVo;
+import com.mmmail.server.service.V21CollaborationBoardService;
+import com.mmmail.server.service.V21CollaborationBoardService.BoardRequestContext;
+import com.mmmail.server.service.V21CollaborationBoardService.V21BoardMoveCommand;
+import com.mmmail.server.service.V21CommandPanelService;
+import com.mmmail.server.service.V21CommandPanelService.CommandPanelUserContext;
+import com.mmmail.server.service.V21CommandPanelService.QuickSearchOptions;
 import com.mmmail.server.service.V21OpsRuntimeBridgeService;
 import com.mmmail.server.util.SecurityUtils;
 import jakarta.servlet.http.HttpServletRequest;
@@ -39,9 +53,17 @@ public class V21OpsController {
     private static final String UNSUPPORTED_PREMIUM = "v2 premium ops execution is not supported by current runtime bridge";
 
     private final V21OpsRuntimeBridgeService opsRuntimeBridgeService;
+    private final V21CommandPanelService commandPanelService;
+    private final V21CollaborationBoardService collaborationBoardService;
 
-    public V21OpsController(V21OpsRuntimeBridgeService opsRuntimeBridgeService) {
+    public V21OpsController(
+            V21OpsRuntimeBridgeService opsRuntimeBridgeService,
+            V21CommandPanelService commandPanelService,
+            V21CollaborationBoardService collaborationBoardService
+    ) {
         this.opsRuntimeBridgeService = opsRuntimeBridgeService;
+        this.commandPanelService = commandPanelService;
+        this.collaborationBoardService = collaborationBoardService;
     }
 
     @GetMapping("/collaboration/projects")
@@ -63,6 +85,11 @@ public class V21OpsController {
     @GetMapping("/collaboration/projects/{id}")
     public Result<V21CollaborationProjectVo> project(@PathVariable String id, HttpServletRequest request) {
         return Result.success(opsRuntimeBridgeService.readProject(SecurityUtils.currentUserId(), id, request));
+    }
+
+    @GetMapping("/collaboration/projects/{id}/board")
+    public Result<V21CollaborationBoardVo> collaborationBoard(@PathVariable String id) {
+        return Result.success(collaborationBoardService.readBoard(SecurityUtils.currentUserId(), id));
     }
 
     @GetMapping("/collaboration/tasks")
@@ -88,6 +115,21 @@ public class V21OpsController {
             HttpServletRequest httpRequest
     ) {
         return Result.success(opsRuntimeBridgeService.updateTask(SecurityUtils.currentUserId(), id, request, httpRequest));
+    }
+
+    @PatchMapping("/collaboration/tasks/{id}/move")
+    public Result<V21CollaborationTaskMoveVo> moveTask(
+            @PathVariable String id,
+            @Valid @RequestBody V21CollaborationTaskMoveRequest request,
+            HttpServletRequest httpRequest
+    ) {
+        BoardRequestContext context = new BoardRequestContext(SecurityUtils.currentUserId(), httpRequest.getRemoteAddr());
+        V21BoardMoveCommand command = new V21BoardMoveCommand(
+                context,
+                id,
+                request
+        );
+        return Result.success(collaborationBoardService.moveTask(command));
     }
 
     @PostMapping("/collaboration/tasks/{id}/comments")
@@ -155,6 +197,42 @@ public class V21OpsController {
     @GetMapping("/command-center/commands/{id}")
     public Result<V21CommandCenterCommandVo> command(@PathVariable String id, HttpServletRequest request) {
         return Result.success(opsRuntimeBridgeService.readCommand(SecurityUtils.currentUserId(), id, request));
+    }
+
+    @GetMapping("/command-center/catalog")
+    public Result<List<V21CommandCatalogItemVo>> commandCatalog(
+            @RequestParam(required = false) String context,
+            HttpServletRequest request
+    ) {
+        return Result.success(commandPanelService.listCatalog(SecurityUtils.currentUserId(), context, request));
+    }
+
+    @GetMapping("/command-center/recents")
+    public Result<List<V21CommandRecentVo>> commandRecents(
+            @RequestParam(required = false) Integer limit,
+            HttpServletRequest request
+    ) {
+        return Result.success(commandPanelService.listRecents(SecurityUtils.currentUserId(), limit, request));
+    }
+
+    @PostMapping("/command-center/pin")
+    public Result<V21CommandPreferenceVo> pinCommand(
+            @Valid @RequestBody V21CommandPinRequest pinRequest,
+            HttpServletRequest request
+    ) {
+        return Result.success(commandPanelService.pinCommand(SecurityUtils.currentUserId(), pinRequest, request));
+    }
+
+    @GetMapping("/command-center/quick-search")
+    public Result<List<V21CommandQuickSearchItemVo>> commandQuickSearch(
+            @RequestParam(name = "q", defaultValue = "") String query,
+            @RequestParam(required = false) Integer limit,
+            HttpServletRequest request
+    ) {
+        return Result.success(commandPanelService.quickSearch(
+                new CommandPanelUserContext(SecurityUtils.currentUserId(), request),
+                new QuickSearchOptions(query, limit)
+        ));
     }
 
     @PostMapping("/command-center/runs")

@@ -1,17 +1,18 @@
 <script setup lang="ts">
-import type { PassSurfaceEntry } from './pass-types'
+import { NButton } from "naive-ui";
+import type { PassSurfaceEntry } from "./pass-types";
 
 defineProps<{
-  emptyCopy: string
-  entries: PassSurfaceEntry[]
-  selectedKey: string
-  statusCopy: string
-  title: string
-}>()
+  emptyCopy: string;
+  entries: PassSurfaceEntry[];
+  selectedKey: string;
+  statusCopy: string;
+  title: string;
+}>();
 
 defineEmits<{
-  select: [entryKey: string]
-}>()
+  select: [entryKey: string];
+}>();
 </script>
 
 <template>
@@ -21,12 +22,12 @@ defineEmits<{
       <h1>{{ title }}</h1>
       <p>{{ statusCopy }}</p>
     </header>
-    <button
+    <NButton
       v-for="entry in entries"
       :key="entry.key"
       class="pass-item-list__row"
       :class="{ 'pass-item-list__row--active': entry.key === selectedKey }"
-      type="button"
+      native-type="button"
       @click="$emit('select', entry.key)"
     >
       <span class="pass-item-list__avatar">{{ entry.avatar }}</span>
@@ -35,7 +36,7 @@ defineEmits<{
         <small>{{ entry.subtitle }} · {{ entry.meta }}</small>
       </span>
       <em>{{ entry.badge }}</em>
-    </button>
+    </NButton>
     <article v-if="!entries.length" class="pass-item-list__empty">
       <strong>No data</strong>
       <p>{{ emptyCopy }}</p>

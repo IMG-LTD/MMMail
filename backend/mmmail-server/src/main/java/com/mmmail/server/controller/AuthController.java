@@ -5,6 +5,7 @@ import com.mmmail.server.model.dto.LoginRequest;
 import com.mmmail.server.model.dto.RefreshRequest;
 import com.mmmail.server.model.dto.RegisterRequest;
 import com.mmmail.server.model.vo.AuthResponse;
+import com.mmmail.server.model.vo.AuthUserInfoVo;
 import com.mmmail.server.model.vo.UserSessionVo;
 import com.mmmail.server.security.AuthCookieService;
 import com.mmmail.server.service.AuthService;
@@ -63,6 +64,11 @@ public class AuthController extends AuthControllerSupport {
     @PostMapping("/logout")
     public Result<Void> logout(HttpServletRequest httpRequest, HttpServletResponse httpResponse) {
         return logoutCurrentSession(httpRequest, httpResponse);
+    }
+
+    @GetMapping("/me")
+    public Result<AuthUserInfoVo> me() {
+        return currentUserInfo();
     }
 
     @GetMapping("/sessions")

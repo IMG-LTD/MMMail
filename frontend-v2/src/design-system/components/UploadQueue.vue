@@ -1,91 +1,126 @@
 <script setup lang="ts">
-import { watch } from 'vue'
-import { useSrLive } from '@/shared/composables/useSrLive'
+import { NButton } from "naive-ui";
+import { watch } from "vue";
+import { useSrLive } from "@/shared/composables/useSrLive";
 
-type UploadStatus = 'queued' | 'uploading' | 'paused' | 'completed' | 'failed' | 'canceled'
+type UploadStatus = "queued" | "uploading" | "paused" | "completed" | "failed" | "canceled";
 
 export interface UploadQueueItem {
-  destination?: string
-  error?: string
-  id: string
-  name: string
-  progress: number
-  size: string
-  status: UploadStatus
+  destination?: string;
+  error?: string;
+  id: string;
+  name: string;
+  progress: number;
+  size: string;
+  status: UploadStatus;
 }
 
 const props = withDefaults(
   defineProps<{
-    ariaLabel?: string
-    compact?: boolean
-    items: readonly UploadQueueItem[]
-    position?: 'inline' | 'floating'
+    ariaLabel?: string;
+    compact?: boolean;
+    items: readonly UploadQueueItem[];
+    position?: "inline" | "floating";
   }>(),
   {
-    ariaLabel: 'Upload queue',
+    ariaLabel: "Upload queue",
     compact: false,
-    position: 'inline'
-  }
-)
+    position: "inline",
+  },
+);
 
 const emit = defineEmits<{
-  cancel: [item: UploadQueueItem]
-  openDestination: [item: UploadQueueItem]
-  pause: [item: UploadQueueItem]
-  remove: [item: UploadQueueItem]
-  resume: [item: UploadQueueItem]
-  retry: [item: UploadQueueItem]
-}>()
+  cancel: [item: UploadQueueItem];
+  openDestination: [item: UploadQueueItem];
+  pause: [item: UploadQueueItem];
+  remove: [item: UploadQueueItem];
+  resume: [item: UploadQueueItem];
+  retry: [item: UploadQueueItem];
+}>();
 
-const srLive = useSrLive()
+const srLive = useSrLive();
 
 function announce(message: string, urgent = false) {
   if (urgent) {
-    srLive.assertive(message)
-    return
+    srLive.assertive(message);
+    return;
   }
-  srLive.polite(message)
+  srLive.polite(message);
 }
 
 function itemStatusText(item: UploadQueueItem) {
-  if (item.status === 'failed') {
-    return `Failed: ${item.error || 'Upload error'}`
+  if (item.status === "failed") {
+    return `Failed: ${item.error || "Upload error"}`;
   }
-  return `${item.status} ${Math.round(item.progress)}%`
+  return `${item.status} ${Math.round(item.progress)}%`;
 }
 
 watch(
-  () => props.items.map(item => `${item.id}:${item.status}:${item.progress}`).join('|'),
+  () => props.items.map((item) => `${item.id}:${item.status}:${item.progress}`).join("|"),
   () => {
-    const activeItem = props.items.find(item => item.status === 'failed' || item.status === 'completed' || item.status === 'uploading')
+    const activeItem = props.items.find(
+      (item) =>
+        item.status === "failed" || item.status === "completed" || item.status === "uploading",
+    );
     if (activeItem) {
-      announce(`${activeItem.name} ${itemStatusText(activeItem)}`, activeItem.status === 'failed')
+      announce(`${activeItem.name} ${itemStatusText(activeItem)}`, activeItem.status === "failed");
     }
-  }
-)
+  },
+);
 </script>
 
 <template>
-  <section class="upload-queue" :class="[`upload-queue--${position}`, { 'upload-queue--compact': compact }]" :aria-label="ariaLabel">
+  <section
+    class="upload-queue"
+    :class="[`upload-queue--${position}`, { 'upload-queue--compact': compact }]"
+    :aria-label="ariaLabel"
+  >
     <header class="upload-queue__header">
       <h3>Uploads</h3>
       <span>{{ items.length }}</span>
     </header>
     <ol class="upload-queue__items">
-      <li v-for="item in items" :key="item.id" class="upload-queue__item" :class="`upload-queue__item--${item.status}`">
+      <li
+        v-for="item in items"
+        :key="item.id"
+        class="upload-queue__item"
+        :class="`upload-queue__item--${item.status}`"
+      >
         <div class="upload-queue__copy">
           <strong>{{ item.name }}</strong>
-          <span>{{ item.size }} · {{ item.destination || 'Current workspace' }}</span>
+          <span>{{ item.size }} · {{ item.destination || "Current workspace" }}</span>
           <em>{{ itemStatusText(item) }}</em>
         </div>
         <progress :value="item.progress" max="100">{{ item.progress }}%</progress>
         <div class="upload-queue__actions">
-          <button v-if="item.status === 'failed'" type="button" @click="emit('retry', item)">Retry</button>
-          <button v-if="item.status === 'uploading'" type="button" @click="emit('pause', item)">Pause</button>
-          <button v-if="item.status === 'paused'" type="button" @click="emit('resume', item)">Resume</button>
-          <button v-if="item.status === 'completed'" type="button" @click="emit('openDestination', item)">Open</button>
-          <button v-if="item.status !== 'completed'" type="button" @click="emit('cancel', item)">Cancel</button>
-          <button type="button" @click="emit('remove', item)">Remove</button>
+          <NButton v-if="item.status === 'failed'" native-type="button" @click="emit('retry', item)"
+            >Retry</NButton
+          >
+          <NButton
+            v-if="item.status === 'uploading'"
+            native-type="button"
+            @click="emit('pause', item)"
+            >Pause</NButton
+          >
+          <NButton
+            v-if="item.status === 'paused'"
+            native-type="button"
+            @click="emit('resume', item)"
+            >Resume</NButton
+          >
+          <NButton
+            v-if="item.status === 'completed'"
+            native-type="button"
+            @click="emit('openDestination', item)"
+            >Open</NButton
+          >
+          <NButton
+            v-if="item.status !== 'completed'"
+            native-type="button"
+            @click="emit('cancel', item)"
+            >Cancel</NButton
+          >
+          <NButton native-type="button" @click="emit('remove', item)">Remove</NButton>
         </div>
       </li>
     </ol>

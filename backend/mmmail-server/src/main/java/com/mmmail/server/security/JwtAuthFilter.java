@@ -1,9 +1,5 @@
 package com.mmmail.server.security;
 
-import com.mmmail.server.mapper.UserAccountMapper;
-import com.mmmail.server.mapper.UserSessionMapper;
-import com.mmmail.server.model.entity.UserAccount;
-import com.mmmail.server.model.entity.UserSession;
 import com.mmmail.common.observability.TraceContext;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
@@ -17,20 +13,17 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
-import java.time.LocalDateTime;
 import java.util.List;
 
 @Component
 public class JwtAuthFilter extends OncePerRequestFilter {
 
     private final JwtService jwtService;
-    private final UserAccountMapper userAccountMapper;
-    private final UserSessionMapper userSessionMapper;
+    private final JwtPrincipalValidator jwtPrincipalValidator;
 
-    public JwtAuthFilter(JwtService jwtService, UserAccountMapper userAccountMapper, UserSessionMapper userSessionMapper) {
+    public JwtAuthFilter(JwtService jwtService, JwtPrincipalValidator jwtPrincipalValidator) {
         this.jwtService = jwtService;
-        this.userAccountMapper = userAccountMapper;
-        this.userSessionMapper = userSessionMapper;
+        this.jwtPrincipalValidator = jwtPrincipalValidator;
     }
 
     @Override
@@ -42,11 +35,7 @@ public class JwtAuthFilter extends OncePerRequestFilter {
             String token = authHeader.substring(7);
             try {
                 JwtPrincipal principal = jwtService.parseToken(token);
-                UserAccount user = userAccountMapper.selectById(principal.userId());
-                if (user == null
-                        || principal.tokenVersion() == null
-                        || !principal.tokenVersion().equals(user.getTokenVersion())
-                        || !isSessionActive(principal)) {
+                if (!jwtPrincipalValidator.isActive(principal)) {
                     SecurityContextHolder.clearContext();
                     filterChain.doFilter(request, response);
                     return;
@@ -67,19 +56,5 @@ public class JwtAuthFilter extends OncePerRequestFilter {
         }
 
         filterChain.doFilter(request, response);
-    }
-
-    private boolean isSessionActive(JwtPrincipal principal) {
-        if (principal.sessionId() == null) {
-            return false;
-        }
-        UserSession session = userSessionMapper.selectById(principal.sessionId());
-        if (session == null || !principal.userId().equals(session.getOwnerId())) {
-            return false;
-        }
-        if (session.getRevoked() != null && session.getRevoked() == 1) {
-            return false;
-        }
-        return session.getExpiresAt() != null && session.getExpiresAt().isAfter(LocalDateTime.now());
     }
 }

@@ -1,73 +1,79 @@
 <script setup lang="ts">
-import { computed, ref, watch } from 'vue'
-import Modal from '@/design-system/components/Modal.vue'
-import StatusBadge from '@/design-system/components/StatusBadge.vue'
-import type { DriveItem, DriveShareLink } from '@/service/api/drive'
+import { NButton } from "naive-ui";
+import { computed, ref, watch } from "vue";
+import Modal from "@/design-system/components/Modal.vue";
+import StatusBadge from "@/design-system/components/StatusBadge.vue";
+import type { DriveItem, DriveShareLink } from "@/service/api/drive";
 
 const props = defineProps<{
-  item: DriveItem | null
-  shares: DriveShareLink[]
-  show: boolean
-}>()
+  item: DriveItem | null;
+  shares: DriveShareLink[];
+  show: boolean;
+}>();
 
 const emit = defineEmits<{
-  'update:show': [value: boolean]
-}>()
+  "update:show": [value: boolean];
+}>();
 
-const copied = ref(false)
-const confirmingRevoke = ref(false)
-const retryCount = ref(0)
-const revoked = ref(false)
+const copied = ref(false);
+const confirmingRevoke = ref(false);
+const retryCount = ref(0);
+const revoked = ref(false);
 
-const shareTitle = computed(() => props.item?.name || 'No file selected')
-const publicShare = computed(() => props.shares.find(share => share.status !== 'REVOKED') || null)
+const shareTitle = computed(() => props.item?.name || "No file selected");
+const publicShare = computed(
+  () => props.shares.find((share) => share.status !== "REVOKED") || null,
+);
 const policyStatus = computed(() => {
   if (!props.item) {
-    return 'Select a file to load its share policy from the Drive API.'
+    return "Select a file to load its share policy from the Drive API.";
   }
   if (!props.shares.length) {
-    return 'No active share link is loaded for this file.'
+    return "No active share link is loaded for this file.";
   }
   if (revoked.value) {
-    return 'Local revoke confirmation is pending backend sync.'
+    return "Local revoke confirmation is pending backend sync.";
   }
-  return 'Share policy loaded from the current Drive runtime state.'
-})
+  return "Share policy loaded from the current Drive runtime state.";
+});
 const retryCopy = computed(() => {
-  return retryCount.value ? `Retry requested ${retryCount.value} time(s).` : 'Retry share sync'
-})
+  return retryCount.value ? `Retry requested ${retryCount.value} time(s).` : "Retry share sync";
+});
 const publicLinkCopy = computed(() => {
   if (!publicShare.value) {
-    return 'No public link loaded'
+    return "No public link loaded";
   }
-  return `Token ${publicShare.value.token.slice(0, 8)}...`
-})
+  return `Token ${publicShare.value.token.slice(0, 8)}...`;
+});
 
 function copyLink() {
-  copied.value = Boolean(publicShare.value)
+  copied.value = Boolean(publicShare.value);
 }
 
 function retrySync() {
-  retryCount.value += 1
-  copied.value = false
+  retryCount.value += 1;
+  copied.value = false;
 }
 
 function requestRevoke() {
-  confirmingRevoke.value = true
+  confirmingRevoke.value = true;
 }
 
 function confirmRevoke() {
-  revoked.value = true
-  confirmingRevoke.value = false
+  revoked.value = true;
+  confirmingRevoke.value = false;
 }
 
-watch(() => props.show, value => {
-  if (!value) {
-    copied.value = false
-    confirmingRevoke.value = false
-    revoked.value = false
-  }
-})
+watch(
+  () => props.show,
+  (value) => {
+    if (!value) {
+      copied.value = false;
+      confirmingRevoke.value = false;
+      revoked.value = false;
+    }
+  },
+);
 </script>
 
 <template>
@@ -108,28 +114,36 @@ watch(() => props.show, value => {
         <div>
           <span class="section-label">Public link</span>
           <strong>{{ publicLinkCopy }}</strong>
-          <p>{{ publicShare?.expiresAt ? `Expires ${publicShare.expiresAt}` : 'No expiration loaded' }}</p>
+          <p>
+            {{
+              publicShare?.expiresAt ? `Expires ${publicShare.expiresAt}` : "No expiration loaded"
+            }}
+          </p>
         </div>
-        <button type="button" @click="copyLink">Copy link</button>
+        <NButton native-type="button" @click="copyLink">Copy link</NButton>
       </section>
 
       <p class="drive-share-panel__error" role="alert">
-        {{ copied ? 'Link copied locally. Backend share state is unchanged.' : 'Share changes are not persisted until the Drive API confirms them.' }}
+        {{
+          copied
+            ? "Link copied locally. Backend share state is unchanged."
+            : "Share changes are not persisted until the Drive API confirms them."
+        }}
       </p>
 
       <div class="drive-share-panel__actions">
-        <button class="drive-share-panel__retry" type="button" @click="retrySync">
+        <NButton class="drive-share-panel__retry" native-type="button" @click="retrySync">
           {{ retryCopy }}
-        </button>
-        <button class="drive-share-panel__revoke" type="button" @click="requestRevoke">
+        </NButton>
+        <NButton class="drive-share-panel__revoke" native-type="button" @click="requestRevoke">
           Revoke public link
-        </button>
+        </NButton>
       </div>
 
       <section v-if="confirmingRevoke" class="drive-share-panel__confirm">
         <strong>Confirm revoke</strong>
         <p>This only marks the local UI state until a backend revoke endpoint is wired.</p>
-        <button type="button" @click="confirmRevoke">Confirm local revoke state</button>
+        <NButton native-type="button" @click="confirmRevoke">Confirm local revoke state</NButton>
       </section>
     </section>
   </Modal>

@@ -67,6 +67,8 @@ management:
   endpoint:
     metrics:
       enabled: true
+    prometheus:
+      enabled: false
   endpoints:
     web:
       exposure:
@@ -82,6 +84,8 @@ mmmail:
     nacos-enabled: ${MMMAIL_NACOS_ENABLED:true}
   observability:
     app-version: ${MMMAIL_APP_VERSION:0.1.0-SNAPSHOT}
+  feature-flags:
+    watch-interval-ms: ${MMMAIL_FEATURE_FLAGS_WATCH_INTERVAL_MS:5000}
   jwt-secret: ${MMMAIL_JWT_SECRET:}
   jwt-secret-file: ${MMMAIL_JWT_SECRET_FILE:}
   cors-allowed-origins: ${MMMAIL_CORS_ALLOWED_ORIGINS}
@@ -100,6 +104,33 @@ mmmail:
       client-errors:
         window-seconds: ${MMMAIL_SECURITY_CLIENT_ERROR_RATE_LIMIT_WINDOW_SECONDS:60}
         max-events: ${MMMAIL_SECURITY_CLIENT_ERROR_RATE_LIMIT_MAX_EVENTS:30}
+      mail-send:
+        window-seconds: ${MMMAIL_SECURITY_MAIL_SEND_RATE_LIMIT_WINDOW_SECONDS:60}
+        max-events: ${MMMAIL_SECURITY_MAIL_SEND_RATE_LIMIT_MAX_EVENTS:30}
+      web-push-test:
+        window-seconds: ${MMMAIL_SECURITY_WEB_PUSH_TEST_RATE_LIMIT_WINDOW_SECONDS:60}
+        max-events: ${MMMAIL_SECURITY_WEB_PUSH_TEST_RATE_LIMIT_MAX_EVENTS:5}
+      command-run:
+        window-seconds: ${MMMAIL_SECURITY_COMMAND_RUN_RATE_LIMIT_WINDOW_SECONDS:60}
+        max-events: ${MMMAIL_SECURITY_COMMAND_RUN_RATE_LIMIT_MAX_EVENTS:10}
+  websocket:
+    affinity:
+      cookie-name: ${MMMAIL_WEBSOCKET_AFFINITY_COOKIE_NAME:WS_AFFINITY}
+      node-id: ${MMMAIL_WEBSOCKET_AFFINITY_NODE_ID:mmmail-server}
+      cookie-secure: ${MMMAIL_WEBSOCKET_AFFINITY_COOKIE_SECURE:true}
+      cookie-max-age-seconds: ${MMMAIL_WEBSOCKET_AFFINITY_COOKIE_MAX_AGE_SECONDS:604800}
+    session:
+      max-idle-ms: ${MMMAIL_WEBSOCKET_SESSION_MAX_IDLE_MS:300000}
+    connection:
+      max-active: ${MMMAIL_WEBSOCKET_CONNECTION_MAX_ACTIVE:10000}
+      retry-after-ms: ${MMMAIL_WEBSOCKET_CONNECTION_RETRY_AFTER_MS:1000}
+    subscription:
+      max-channels-per-session: ${MMMAIL_WEBSOCKET_SUBSCRIPTION_MAX_CHANNELS_PER_SESSION:32}
+      retry-after-ms: ${MMMAIL_WEBSOCKET_SUBSCRIPTION_RETRY_AFTER_MS:1000}
+    rate-limit:
+      window-seconds: ${MMMAIL_WEBSOCKET_RATE_LIMIT_WINDOW_SECONDS:1}
+      max-messages-per-window: ${MMMAIL_WEBSOCKET_RATE_LIMIT_MAX_MESSAGES_PER_WINDOW:100}
+      retry-after-ms: ${MMMAIL_WEBSOCKET_RATE_LIMIT_RETRY_AFTER_MS:1000}
   drive:
     storage-root: ${MMMAIL_DRIVE_STORAGE_ROOT:${java.io.tmpdir}/mmmail-drive}
     recycle-bin:
@@ -112,6 +143,7 @@ mmmail:
   mail:
     attachment:
       storage-root: ${MMMAIL_MAIL_ATTACHMENT_STORAGE_ROOT:${java.io.tmpdir}/mmmail-mail-attachments}
+    external-account-secret: ${MMMAIL_MAIL_EXTERNAL_ACCOUNT_SECRET:}
   web-push:
     vapid-subject: ${MMMAIL_WEB_PUSH_VAPID_SUBJECT:}
     vapid-public-key: ${MMMAIL_WEB_PUSH_VAPID_PUBLIC_KEY:}

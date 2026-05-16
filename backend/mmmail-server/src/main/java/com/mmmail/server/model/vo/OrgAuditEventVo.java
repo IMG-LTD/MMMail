@@ -8,6 +8,9 @@ public record OrgAuditEventVo(
         String actorId,
         String actorEmail,
         String eventType,
+        String targetType,
+        String targetId,
+        String severity,
         String ipAddress,
         String detail,
         LocalDateTime createdAt

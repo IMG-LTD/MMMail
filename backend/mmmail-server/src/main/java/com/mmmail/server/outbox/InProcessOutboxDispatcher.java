@@ -87,9 +87,16 @@ public class InProcessOutboxDispatcher implements OutboxDispatcher {
             entity.setNextAttemptAt(null);
         } else {
             entity.setStatus(OutboxEventStatus.FAILED.name());
-            entity.setNextAttemptAt(now.plus(options.retryDelay()));
+            entity.setNextAttemptAt(nextAttemptAt(now));
         }
         mapper.updateById(entity);
+    }
+
+    private LocalDateTime nextAttemptAt(LocalDateTime now) {
+        if (options.retryDelay().isZero()) {
+            return null;
+        }
+        return now.plus(options.retryDelay());
     }
 
     private static OutboxEventRecord toRecord(PlatformOutboxEvent entity) {

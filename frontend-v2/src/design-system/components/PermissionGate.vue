@@ -1,23 +1,23 @@
 <script setup lang="ts">
-import EmptyState from './EmptyState.vue'
+import EmptyState from "./EmptyState.vue";
 
 withDefaults(
   defineProps<{
-    actionLabel?: string
-    allowed: boolean
-    description?: string
-    title?: string
+    actionLabel?: string;
+    allowed: boolean;
+    description?: string;
+    title?: string;
   }>(),
   {
-    actionLabel: 'Request access',
-    description: 'Your current role does not include permission for this surface.',
-    title: 'Permission required'
-  }
-)
+    actionLabel: "Request access",
+    description: "Your current role does not include permission for this surface.",
+    title: "Permission required",
+  },
+);
 
 const emit = defineEmits<{
-  requestAccess: []
-}>()
+  requestAccess: [];
+}>();
 </script>
 
 <template>

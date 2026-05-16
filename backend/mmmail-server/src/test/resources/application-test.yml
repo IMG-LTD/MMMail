@@ -34,6 +34,33 @@ mmmail:
       client-errors:
         window-seconds: 60
         max-events: 30
+      mail-send:
+        window-seconds: 60
+        max-events: 30
+      web-push-test:
+        window-seconds: 60
+        max-events: 5
+      command-run:
+        window-seconds: 60
+        max-events: 10
+  websocket:
+    affinity:
+      cookie-name: WS_AFFINITY
+      node-id: mmmail-test
+      cookie-secure: false
+      cookie-max-age-seconds: 604800
+    session:
+      max-idle-ms: 300000
+    connection:
+      max-active: 10000
+      retry-after-ms: 1000
+    subscription:
+      max-channels-per-session: 32
+      retry-after-ms: 1000
+    rate-limit:
+      window-seconds: 1
+      max-messages-per-window: 100
+      retry-after-ms: 1000
   drive:
     storage-root: ${java.io.tmpdir}/mmmail-drive-test
     upload:
@@ -48,6 +75,7 @@ mmmail:
   mail:
     attachment:
       storage-root: ${java.io.tmpdir}/mmmail-mail-attachments-test
+    external-account-secret: 0123456789abcdef0123456789abcdef
   web-push:
     vapid-subject: mailto:test@mmmail.local
     vapid-public-key: BG6kxmQZCeU6xxlW4THvdTZLKmnxMR9GFzLEkNrk5-dkwl28YnBMDaqM3zNYnkcqojxB_z1ZUEZNk-y7qrsC5Ug

@@ -1,0 +1,28 @@
+package com.mmmail.server.model.entity;
+
+import com.baomidou.mybatisplus.annotation.IdType;
+import com.baomidou.mybatisplus.annotation.TableId;
+import com.baomidou.mybatisplus.annotation.TableName;
+
+import java.time.LocalDateTime;
+
+@TableName("community_post_like")
+public class CommunityPostLike {
+    @TableId(type = IdType.ASSIGN_ID)
+    private Long id;
+    private String postId;
+    private Long userId;
+    private LocalDateTime createdAt;
+    private Integer deleted;
+
+    public Long getId() { return id; }
+    public void setId(Long id) { this.id = id; }
+    public String getPostId() { return postId; }
+    public void setPostId(String postId) { this.postId = postId; }
+    public Long getUserId() { return userId; }
+    public void setUserId(Long userId) { this.userId = userId; }
+    public LocalDateTime getCreatedAt() { return createdAt; }
+    public void setCreatedAt(LocalDateTime createdAt) { this.createdAt = createdAt; }
+    public Integer getDeleted() { return deleted; }
+    public void setDeleted(Integer deleted) { this.deleted = deleted; }
+}

@@ -18,6 +18,11 @@ public class CalendarEvent {
     private String location;
     private LocalDateTime startAt;
     private LocalDateTime endAt;
+    private Long seriesId;
+    private String rrule;
+    private LocalDateTime recurrenceUntil;
+    private String recurrenceRdatesJson;
+    private String recurrenceExdatesJson;
     private Integer allDay;
     private String timezone;
     private Integer reminderMinutes;
@@ -80,6 +85,46 @@ public class CalendarEvent {
 
     public void setEndAt(LocalDateTime endAt) {
         this.endAt = endAt;
+    }
+
+    public Long getSeriesId() {
+        return seriesId;
+    }
+
+    public void setSeriesId(Long seriesId) {
+        this.seriesId = seriesId;
+    }
+
+    public String getRrule() {
+        return rrule;
+    }
+
+    public void setRrule(String rrule) {
+        this.rrule = rrule;
+    }
+
+    public LocalDateTime getRecurrenceUntil() {
+        return recurrenceUntil;
+    }
+
+    public void setRecurrenceUntil(LocalDateTime recurrenceUntil) {
+        this.recurrenceUntil = recurrenceUntil;
+    }
+
+    public String getRecurrenceRdatesJson() {
+        return recurrenceRdatesJson;
+    }
+
+    public void setRecurrenceRdatesJson(String recurrenceRdatesJson) {
+        this.recurrenceRdatesJson = recurrenceRdatesJson;
+    }
+
+    public String getRecurrenceExdatesJson() {
+        return recurrenceExdatesJson;
+    }
+
+    public void setRecurrenceExdatesJson(String recurrenceExdatesJson) {
+        this.recurrenceExdatesJson = recurrenceExdatesJson;
     }
 
     public Integer getAllDay() {

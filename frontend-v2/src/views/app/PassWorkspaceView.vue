@@ -1,18 +1,19 @@
 <script setup lang="ts">
-const vaults = ['Personal', 'Acme Corp', 'Family']
-const categories = ['Logins', 'Cards', 'Secure Notes']
+import { NButton } from "naive-ui";
+const vaults = ["Personal", "Acme Corp", "Family"];
+const categories = ["Logins", "Cards", "Secure Notes"];
 
 const entries = [
-  ['Google', 'user@example.com'],
-  ['GitHub', 'dev_ninja'],
-  ['Chase Bank', 'Personal Checking']
-]
+  ["Google", "user@example.com"],
+  ["GitHub", "dev_ninja"],
+  ["Chase Bank", "Personal Checking"],
+];
 
 const fields = [
-  ['Username', 'dev_ninja'],
-  ['Password', '••••••••••••'],
-  ['One-time Password', '284 491']
-]
+  ["Username", "dev_ninja"],
+  ["Password", "••••••••••••"],
+  ["One-time Password", "284 491"],
+];
 </script>
 
 <template>
@@ -26,29 +27,29 @@ const fields = [
 
         <div class="pass-rail__group">
           <span class="section-label">Vaults</span>
-          <button
+          <NButton
             v-for="vault in vaults"
             :key="vault"
-            type="button"
+            native-type="button"
             :class="{ 'pass-rail__item--active': vault === 'Personal' }"
           >
             {{ vault }}
-          </button>
+          </NButton>
         </div>
 
         <div class="pass-rail__group">
           <span class="section-label">Categories</span>
-          <button
+          <NButton
             v-for="category in categories"
             :key="category"
-            type="button"
+            native-type="button"
             :class="{ 'pass-rail__item--active': category === 'Logins' }"
           >
             {{ category }}
-          </button>
+          </NButton>
         </div>
 
-        <button class="pass-rail__primary" type="button">+ New Item</button>
+        <NButton class="pass-rail__primary" native-type="button">+ New Item</NButton>
       </aside>
 
       <section class="pass-vault-list">
@@ -90,7 +91,8 @@ const fields = [
         <article class="pass-records__card">
           <span class="section-label">Notes</span>
           <p>
-            Used for the main production repository. Contact Justin if credentials need rotation. Last rotated Oct 12, 2023.
+            Used for the main production repository. Contact Justin if credentials need rotation.
+            Last rotated Oct 12, 2023.
           </p>
         </article>
       </section>
@@ -112,7 +114,8 @@ const fields = [
         <article class="pass-detail__note">
           <span class="section-label">Secure Notes</span>
           <p>
-            Used for the main production repository. Contact Justin if credentials need rotation. Last rotated Oct 12, 2023.
+            Used for the main production repository. Contact Justin if credentials need rotation.
+            Last rotated Oct 12, 2023.
           </p>
         </article>
       </aside>

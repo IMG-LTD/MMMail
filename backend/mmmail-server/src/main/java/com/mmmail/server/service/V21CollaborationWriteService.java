@@ -187,6 +187,8 @@ public class V21CollaborationWriteService {
         task.setTitle(title);
         task.setProduct(project.getProduct());
         task.setStatus(status);
+        task.setBoardColumn(status);
+        task.setPosition(nextTaskPosition(userId, project.getId(), status));
         task.setAssigneeEmail(normalizeNullable(request.assigneeEmail()));
         task.setDueAt(request.dueAt());
         task.setCreatedAt(now);
@@ -217,12 +219,18 @@ public class V21CollaborationWriteService {
             V21CollaborationProject project = requireProject(userId, parseId(request.projectId(), "project id is invalid"));
             task.setProjectId(project.getId());
             task.setProduct(project.getProduct());
+            task.setPosition(nextTaskPosition(userId, project.getId(), task.getBoardColumn()));
         }
         if (request.title() != null) {
             task.setTitle(requireText(request.title(), "task title is required"));
         }
         if (request.status() != null) {
-            task.setStatus(normalizeStatus(request.status(), task.getStatus(), TASK_STATUSES));
+            String status = normalizeStatus(request.status(), task.getStatus(), TASK_STATUSES);
+            if (!status.equals(task.getBoardColumn())) {
+                task.setBoardColumn(status);
+                task.setPosition(nextTaskPosition(userId, task.getProjectId(), status));
+            }
+            task.setStatus(status);
         }
         if (request.assigneeEmail() != null) {
             task.setAssigneeEmail(normalizeNullable(request.assigneeEmail()));
@@ -342,9 +350,24 @@ public class V21CollaborationWriteService {
                 task.getTitle(),
                 task.getProduct(),
                 task.getStatus(),
+                task.getBoardColumn(),
+                task.getPosition(),
                 task.getAssigneeEmail(),
                 task.getDueAt()
         );
+    }
+
+    private String nextTaskPosition(Long userId, Long projectId, String columnId) {
+        V21CollaborationTask lastTask = taskMapper.selectOne(new LambdaQueryWrapper<V21CollaborationTask>()
+                .eq(V21CollaborationTask::getOwnerId, userId)
+                .eq(V21CollaborationTask::getProjectId, projectId)
+                .eq(V21CollaborationTask::getBoardColumn, columnId)
+                .orderByDesc(V21CollaborationTask::getPosition)
+                .last("limit 1"));
+        if (lastTask == null) {
+            return V21CollaborationBoardRanks.atIndex(0);
+        }
+        return V21CollaborationBoardRanks.after(lastTask.getPosition());
     }
 
     private String normalizeStatus(String value, String defaultValue, Set<String> allowedValues) {

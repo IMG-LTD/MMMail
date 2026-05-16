@@ -1,19 +1,20 @@
 <script setup lang="ts">
-import type { PassDetailCard, PassSurfaceEntry } from './pass-types'
+import { NButton } from "naive-ui";
+import type { PassDetailCard, PassSurfaceEntry } from "./pass-types";
 
 defineProps<{
-  primaryCard: PassDetailCard
-  revealed: boolean
-  secondaryCard: PassDetailCard
-  selectedEntry: PassSurfaceEntry | null
-}>()
+  primaryCard: PassDetailCard;
+  revealed: boolean;
+  secondaryCard: PassDetailCard;
+  selectedEntry: PassSurfaceEntry | null;
+}>();
 
 defineEmits<{
-  confirmRevoke: []
-  confirmRotate: []
-  openShare: []
-  toggleSecret: []
-}>()
+  confirmRevoke: [];
+  confirmRotate: [];
+  openShare: [];
+  toggleSecret: [];
+}>();
 </script>
 
 <template>
@@ -41,13 +42,21 @@ defineEmits<{
       </dl>
     </article>
     <div class="pass-item-detail__actions">
-      <button class="pass-secret-reveal" type="button" @click="$emit('toggleSecret')">
-        {{ revealed ? 'Hide secret' : 'Show secret' }}
-      </button>
-      <button class="pass-secure-link-trigger" type="button" @click="$emit('openShare')">Share link</button>
-      <button class="pass-rotate-trigger" type="button" @click="$emit('confirmRotate')">Rotate</button>
-      <button class="pass-revoke-trigger" type="button" @click="$emit('confirmRevoke')">Revoke</button>
+      <NButton class="pass-secret-reveal" native-type="button" @click="$emit('toggleSecret')">
+        {{ revealed ? "Hide secret" : "Show secret" }}
+      </NButton>
+      <NButton class="pass-secure-link-trigger" native-type="button" @click="$emit('openShare')"
+        >Share link</NButton
+      >
+      <NButton class="pass-rotate-trigger" native-type="button" @click="$emit('confirmRotate')"
+        >Rotate</NButton
+      >
+      <NButton class="pass-revoke-trigger" native-type="button" @click="$emit('confirmRevoke')"
+        >Revoke</NButton
+      >
     </div>
-    <p class="pass-item-detail__secret">{{ revealed ? 'sk_live_masked_for_local_ui' : '••••••••••••••••' }}</p>
+    <p class="pass-item-detail__secret">
+      {{ revealed ? "sk_live_masked_for_local_ui" : "••••••••••••••••" }}
+    </p>
   </section>
 </template>

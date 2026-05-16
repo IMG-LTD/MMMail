@@ -1,23 +1,23 @@
 <script setup lang="ts">
-import MaturityBadge from '@/shared/components/MaturityBadge.vue'
-import { useLocaleText, type TextLike } from '@/locales'
+import MaturityBadge from "@/shared/components/MaturityBadge.vue";
+import { useLocaleText, type TextLike } from "@/locales";
 
-const { tr } = useLocaleText()
+const { tr } = useLocaleText();
 
 withDefaults(
   defineProps<{
-    eyebrow: TextLike
-    title: TextLike
-    description?: TextLike
-    badge?: TextLike
-    badgeTone?: 'neutral' | 'beta' | 'preview' | 'ga'
+    eyebrow: TextLike;
+    title: TextLike;
+    description?: TextLike;
+    badge?: TextLike;
+    badgeTone?: "neutral" | "beta" | "preview" | "ga";
   }>(),
   {
     badge: undefined,
-    badgeTone: 'neutral',
-    description: undefined
-  }
-)
+    badgeTone: "neutral",
+    description: undefined,
+  },
+);
 </script>
 
 <template>

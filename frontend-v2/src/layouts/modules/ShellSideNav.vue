@@ -1,57 +1,71 @@
 <script setup lang="ts">
-import { computed } from 'vue'
-import { useRoute, useRouter } from 'vue-router'
-import { lt, useLocaleText } from '@/locales'
-import { useShellStore } from '@/store/modules/shell'
-import MaturityBadge from '@/shared/components/MaturityBadge.vue'
-import { getToneColorVar, isMailRoute, isRouteMatch, mailNavSections, shellNavGroups, type NavItem } from './shell-nav'
+import { NButton } from "naive-ui";
+import { computed } from "vue";
+import { useRoute, useRouter } from "vue-router";
+import { lt, useLocaleText } from "@/locales";
+import { useShellStore } from "@/store/modules/shell";
+import MaturityBadge from "@/shared/components/MaturityBadge.vue";
+import {
+  getToneColorVar,
+  isMailRoute,
+  isRouteMatch,
+  mailNavSections,
+  shellNavGroups,
+  type NavItem,
+} from "./shell-nav";
 
-const route = useRoute()
-const router = useRouter()
-const { tr } = useLocaleText()
-const shellStore = useShellStore()
+const route = useRoute();
+const router = useRouter();
+const { tr } = useLocaleText();
+const shellStore = useShellStore();
 
-const activePath = computed(() => route.path)
-const isInboxNav = computed(() => isMailRoute(route.path))
+const activePath = computed(() => route.path);
+const isInboxNav = computed(() => isMailRoute(route.path));
 
 function isMailItemActive(path: string) {
-  return route.path.startsWith(path)
+  return route.path.startsWith(path);
 }
 
 function isShellItemActive(item: NavItem) {
-  return isRouteMatch(route.path, item)
+  return isRouteMatch(route.path, item);
 }
 
 function openPath(path: string) {
   if (activePath.value !== path) {
-    router.push(path)
+    router.push(path);
   }
 }
 
 function getCollapseLabel() {
   return shellStore.sideNavCollapsed
-    ? tr(lt('展开导航', '展開導覽', 'Expand navigation'))
-    : tr(lt('收起导航', '收合導覽', 'Collapse navigation'))
+    ? tr(lt("展开导航", "展開導覽", "Expand navigation"))
+    : tr(lt("收起导航", "收合導覽", "Collapse navigation"));
 }
 </script>
 
 <template>
-  <aside class="side-nav" :class="{ 'side-nav--mail': isInboxNav, 'side-nav--collapsed': !isInboxNav && shellStore.sideNavCollapsed }">
+  <aside
+    class="side-nav"
+    :class="{
+      'side-nav--mail': isInboxNav,
+      'side-nav--collapsed': !isInboxNav && shellStore.sideNavCollapsed,
+    }"
+  >
     <template v-if="isInboxNav">
-      <button class="compose-button" type="button" @click="openPath('/compose')">
-        {{ tr(lt('写邮件', '寫郵件', 'Compose')) }}
-      </button>
+      <NButton class="compose-button" native-type="button" @click="openPath('/compose')">
+        {{ tr(lt("写邮件", "寫郵件", "Compose")) }}
+      </NButton>
 
       <div
         v-for="group in mailNavSections"
-        :key="group.items.map(item => item.key).join('-')"
+        :key="group.items.map((item) => item.key).join('-')"
         class="side-nav__group"
       >
         <p class="side-nav__title">{{ tr(group.title) }}</p>
-        <button
+        <NButton
           v-for="item in group.items"
           :key="item.key"
-          type="button"
+          native-type="button"
           class="side-nav__item"
           :class="{ 'side-nav__item--active': isMailItemActive(item.path) }"
           @click="openPath(item.path)"
@@ -59,7 +73,7 @@ function getCollapseLabel() {
           <span class="side-nav__glyph">{{ item.icon }}</span>
           <span>{{ tr(item.label) }}</span>
           <span v-if="item.badge" class="side-nav__badge">{{ tr(item.badge) }}</span>
-        </button>
+        </NButton>
       </div>
 
       <div class="side-nav__footer side-nav__footer--stacked">
@@ -67,37 +81,41 @@ function getCollapseLabel() {
           <span class="side-nav__meter" />
           <span>4.2 GB / 16 GB</span>
         </div>
-        <button type="button" @click="openPath('/security')">{{ tr(lt('安全', '安全', 'Security')) }}</button>
-        <button type="button" @click="openPath('/notifications')">{{ tr(lt('活动', '活動', 'Activity')) }}</button>
+        <NButton native-type="button" @click="openPath('/security')">{{
+          tr(lt("安全", "安全", "Security"))
+        }}</NButton>
+        <NButton native-type="button" @click="openPath('/notifications')">{{
+          tr(lt("活动", "活動", "Activity"))
+        }}</NButton>
       </div>
     </template>
 
     <template v-else>
-      <button
+      <NButton
         class="side-nav__collapse"
-        type="button"
+        native-type="button"
         :aria-expanded="!shellStore.sideNavCollapsed"
         :aria-label="getCollapseLabel()"
         @click="shellStore.toggleSideNav()"
       >
-        {{ shellStore.sideNavCollapsed ? '›' : '‹' }}
-      </button>
+        {{ shellStore.sideNavCollapsed ? "›" : "‹" }}
+      </NButton>
       <div class="side-nav__identity">
-        <span class="side-nav__title">{{ tr(lt('工作区', '工作區', 'Workspace')) }}</span>
-        <strong>{{ tr(lt('已认证', '已驗證', 'Authenticated')) }}</strong>
+        <span class="side-nav__title">{{ tr(lt("工作区", "工作區", "Workspace")) }}</span>
+        <strong>{{ tr(lt("已认证", "已驗證", "Authenticated")) }}</strong>
       </div>
 
       <div
         v-for="group in shellNavGroups"
-        :key="group.items.map(item => item.key).join('-')"
+        :key="group.items.map((item) => item.key).join('-')"
         class="side-nav__group"
       >
         <p class="side-nav__title">{{ tr(group.title) }}</p>
         <p v-if="group.caption" class="side-nav__caption">{{ tr(group.caption) }}</p>
-        <button
+        <NButton
           v-for="item in group.items"
           :key="item.key"
-          type="button"
+          native-type="button"
           class="side-nav__item"
           :class="{ 'side-nav__item--active': isShellItemActive(item) }"
           :aria-label="tr(item.label)"
@@ -110,11 +128,11 @@ function getCollapseLabel() {
             <maturity-badge v-if="item.maturity" compact :level="item.maturity" />
           </span>
           <span v-if="item.badge" class="side-nav__badge">{{ tr(item.badge) }}</span>
-        </button>
+        </NButton>
       </div>
       <div class="side-nav__footer">
         <span class="side-nav__meter" />
-        <span>{{ tr(lt('存储', '儲存空間', 'Storage')) }}</span>
+        <span>{{ tr(lt("存储", "儲存空間", "Storage")) }}</span>
       </div>
     </template>
   </aside>
@@ -149,7 +167,8 @@ function getCollapseLabel() {
 }
 
 .side-nav--collapsed {
-  width: 76px;
+  width: 64px;
+  padding-inline: 8px;
 }
 
 .side-nav--collapsed .side-nav__identity,
@@ -164,6 +183,12 @@ function getCollapseLabel() {
 .side-nav--collapsed .side-nav__item {
   justify-content: center;
   padding: 0;
+}
+
+.side-nav--collapsed .side-nav__dot {
+  width: 20px;
+  min-width: 20px;
+  height: 20px;
 }
 
 .side-nav__group {
@@ -227,6 +252,14 @@ function getCollapseLabel() {
   border-color: var(--mm-accent-border);
   color: var(--mm-primary);
   font-weight: 600;
+}
+
+.side-nav__item--active::before {
+  width: 3px;
+  height: 20px;
+  border-radius: 999px;
+  background: var(--mm-brand-primary);
+  content: "";
 }
 
 .side-nav__dot {
@@ -297,7 +330,13 @@ function getCollapseLabel() {
   flex: 1;
   height: 6px;
   border-radius: 999px;
-  background: linear-gradient(90deg, var(--mm-governance) 0%, var(--mm-governance) 24%, color-mix(in srgb, var(--mm-border) 92%, white) 24%, color-mix(in srgb, var(--mm-border) 92%, white) 100%);
+  background: linear-gradient(
+    90deg,
+    var(--mm-governance) 0%,
+    var(--mm-governance) 24%,
+    color-mix(in srgb, var(--mm-border) 92%, white) 24%,
+    color-mix(in srgb, var(--mm-border) 92%, white) 100%
+  );
 }
 
 @media (max-width: 820px) {

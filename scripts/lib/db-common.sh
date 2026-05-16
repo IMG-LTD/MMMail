@@ -74,7 +74,7 @@ mysql_cli() {
     return
   fi
   if docker_client_available; then
-    docker run --rm --network host \
+    docker run --rm -i --network host \
       -e MYSQL_PWD="$SPRING_DATASOURCE_PASSWORD" \
       "$CONTAINER_MYSQL_IMAGE" \
       mysql -h "$DB_HOST" -P "$DB_PORT" --protocol tcp -u "$SPRING_DATASOURCE_USERNAME" "$DB_NAME" "$@"

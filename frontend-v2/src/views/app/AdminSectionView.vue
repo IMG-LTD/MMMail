@@ -1,10 +1,12 @@
 <script setup lang="ts">
-import { computed, ref, watch } from 'vue'
-import { useRoute, useRouter } from 'vue-router'
-import CompactPageHeader from '@/shared/components/CompactPageHeader.vue'
-import HostedBadge from '@/design-system/components/HostedBadge.vue'
-import PremiumBadge from '@/design-system/components/PremiumBadge.vue'
-import { lt, useLocaleText } from '@/locales'
+import { NButton } from "naive-ui";
+import { computed, ref, watch } from "vue";
+import { useRoute, useRouter } from "vue-router";
+import CompactPageHeader from "@/shared/components/CompactPageHeader.vue";
+import { V211MetricCard } from "@/design-system/v211";
+import HostedBadge from "@/design-system/components/HostedBadge.vue";
+import PremiumBadge from "@/design-system/components/PremiumBadge.vue";
+import { lt, type TextLike, useLocaleText } from "@/locales";
 import {
   listAdminAlerts,
   listAdminAudit,
@@ -23,134 +25,144 @@ import {
   type AdminRole,
   type AdminSummary,
   type AdminSystemStatus,
-  type AdminUser
-} from '@/service/api/admin'
-import { readBillingSummary, type BillingSummary } from '@/service/api/billing'
-import { listEntitlements, type EntitlementState } from '@/service/api/entitlements'
-import { useScopeGuard } from '@/shared/composables/useScopeGuard'
-import { useAuthStore } from '@/store/modules/auth'
+  type AdminUser,
+} from "@/service/api/admin";
+import { readBillingSummary, type BillingSummary } from "@/service/api/billing";
+import { listEntitlements, type EntitlementState } from "@/service/api/entitlements";
+import { useScopeGuard } from "@/shared/composables/useScopeGuard";
+import { useAuthStore } from "@/store/modules/auth";
 
 interface AdminSection {
-  key: string
-  label: string
-  path: string
+  key: string;
+  label: string;
+  path: string;
 }
 
 const adminSections: AdminSection[] = [
-  { key: 'overview', label: 'Overview', path: '/admin' },
-  { key: 'users', label: 'Users', path: '/admin/users' },
-  { key: 'roles', label: 'Roles', path: '/admin/roles' },
-  { key: 'organizations', label: 'Organizations', path: '/admin/organizations' },
-  { key: 'domains', label: 'Domains', path: '/admin/domains' },
-  { key: 'policies', label: 'Policies', path: '/admin/policies' },
-  { key: 'audit', label: 'Audit', path: '/admin/audit' },
-  { key: 'alerts', label: 'Alerts', path: '/admin/alerts' },
-  { key: 'integrations', label: 'Integrations', path: '/admin/integrations' },
-  { key: 'billing', label: 'Billing', path: '/admin/billing' },
-  { key: 'system', label: 'System', path: '/admin/system' },
-  { key: 'risk', label: 'Risk', path: '/admin/risk' }
-]
+  { key: "overview", label: "Overview", path: "/admin" },
+  { key: "users", label: "Users", path: "/admin/users" },
+  { key: "roles", label: "Roles", path: "/admin/roles" },
+  { key: "organizations", label: "Organizations", path: "/admin/organizations" },
+  { key: "domains", label: "Domains", path: "/admin/domains" },
+  { key: "policies", label: "Policies", path: "/admin/policies" },
+  { key: "audit", label: "Audit", path: "/admin/audit" },
+  { key: "alerts", label: "Alerts", path: "/admin/alerts" },
+  { key: "integrations", label: "Integrations", path: "/admin/integrations" },
+  { key: "billing", label: "Billing", path: "/admin/billing" },
+  { key: "system", label: "System", path: "/admin/system" },
+  { key: "risk", label: "Risk", path: "/admin/risk" },
+];
 
-const { tr } = useLocaleText()
-const route = useRoute()
-const router = useRouter()
-const authStore = useAuthStore()
-const { requestHeaders } = useScopeGuard()
+const { tr } = useLocaleText();
+const route = useRoute();
+const router = useRouter();
+const authStore = useAuthStore();
+const { requestHeaders } = useScopeGuard();
 
-const summary = ref<AdminSummary | null>(null)
-const users = ref<AdminUser[]>([])
-const roles = ref<AdminRole[]>([])
-const domains = ref<AdminDomain[]>([])
-const policies = ref<AdminPolicy[]>([])
-const audit = ref<AdminAuditEntry[]>([])
-const alerts = ref<AdminAlert[]>([])
-const system = ref<AdminSystemStatus | null>(null)
-const risk = ref<AdminRiskOverview | null>(null)
-const billing = ref<BillingSummary | null>(null)
-const entitlements = ref<EntitlementState[]>([])
-const adminLoading = ref(false)
-const loadError = ref('')
-let latestAdminRequest = 0
+const summary = ref<AdminSummary | null>(null);
+const users = ref<AdminUser[]>([]);
+const roles = ref<AdminRole[]>([]);
+const domains = ref<AdminDomain[]>([]);
+const policies = ref<AdminPolicy[]>([]);
+const audit = ref<AdminAuditEntry[]>([]);
+const alerts = ref<AdminAlert[]>([]);
+const system = ref<AdminSystemStatus | null>(null);
+const risk = ref<AdminRiskOverview | null>(null);
+const billing = ref<BillingSummary | null>(null);
+const entitlements = ref<EntitlementState[]>([]);
+const adminLoading = ref(false);
+const loadError = ref("");
+let latestAdminRequest = 0;
 
 const currentSection = computed(() => {
-  const surfaceKey = String(route.meta.surfaceKey || 'overview')
-  return adminSections.find(item => item.key === surfaceKey) || adminSections[0]
-})
+  const surfaceKey = String(route.meta.surfaceKey || "overview");
+  return adminSections.find((item) => item.key === surfaceKey) || adminSections[0];
+});
 
 const statusCopy = computed(() => {
   if (!authStore.accessToken) {
-    return tr(lt('登录后即可读取管理后台。', '登入後即可讀取管理後台。', 'Sign in to load Admin.'))
+    return tr(lt("登录后即可读取管理后台。", "登入後即可讀取管理後台。", "Sign in to load Admin."));
   }
   if (loadError.value) {
-    return loadError.value
+    return loadError.value;
   }
   return adminLoading.value
-    ? tr(lt('正在读取治理运行时。', '正在讀取治理執行期。', 'Loading governance runtime.'))
-    : tr(lt('管理后台已连接 v2.1 运行时。', '管理後台已連接 v2.1 執行期。', 'Admin is connected to the v2.1 runtime.'))
-})
+    ? tr(lt("正在读取治理运行时。", "正在讀取治理執行期。", "Loading governance runtime."))
+    : tr(
+        lt(
+          "管理后台已连接 v2.1 运行时。",
+          "管理後台已連接 v2.1 執行期。",
+          "Admin is connected to the v2.1 runtime.",
+        ),
+      );
+});
 
-const adminKpiCards = computed(() => [
-  [lt('用户总数', '使用者總數', 'Total users'), `${summary.value?.userCount || users.value.length}`],
-  [lt('活跃用户', '活躍使用者', 'Active users'), `${summary.value?.activeUserCount || 0}`],
-  [lt('今日邮件', '今日郵件', 'Mail today'), `${summary.value?.dailyMailCount || 0}`],
-  [lt('安全评分', '安全評分', 'Security score'), `${summary.value?.securityScore ?? risk.value?.riskScore ?? 0}`]
-])
+const adminKpiCards = computed<readonly [TextLike, string][]>(() => [
+  [
+    lt("用户总数", "使用者總數", "Total users"),
+    `${summary.value?.userCount || users.value.length}`,
+  ],
+  [lt("活跃用户", "活躍使用者", "Active users"), `${summary.value?.activeUserCount || 0}`],
+  [lt("今日邮件", "今日郵件", "Mail today"), `${summary.value?.dailyMailCount || 0}`],
+  [
+    lt("安全评分", "安全評分", "Security score"),
+    `${summary.value?.securityScore ?? risk.value?.riskScore ?? 0}`,
+  ],
+]);
 
 const serviceStatusCards = computed(() => {
   if (system.value?.services?.length) {
-    return system.value.services
+    return system.value.services;
   }
-  return [
-    { name: tr(lt('系统', '系統', 'System')), status: statusCopy.value }
-  ]
-})
+  return [{ name: tr(lt("系统", "系統", "System")), status: statusCopy.value }];
+});
 
-const alertRows = computed(() => alerts.value.slice(0, 5))
-const auditRows = computed(() => audit.value.slice(0, 5))
-const entitlementRows = computed(() => entitlements.value.slice(0, 6))
-const policyRows = computed(() => policies.value.slice(0, 4))
+const alertRows = computed(() => alerts.value.slice(0, 5));
+const auditRows = computed(() => audit.value.slice(0, 5));
+const entitlementRows = computed(() => entitlements.value.slice(0, 6));
+const policyRows = computed(() => policies.value.slice(0, 4));
 
 function openSection(section: AdminSection) {
-  void router.push(section.path)
+  void router.push(section.path);
 }
 
 function clearAdminState() {
-  summary.value = null
-  users.value = []
-  roles.value = []
-  domains.value = []
-  policies.value = []
-  audit.value = []
-  alerts.value = []
-  system.value = null
-  risk.value = null
-  billing.value = null
-  entitlements.value = []
-  loadError.value = ''
-  adminLoading.value = false
+  summary.value = null;
+  users.value = [];
+  roles.value = [];
+  domains.value = [];
+  policies.value = [];
+  audit.value = [];
+  alerts.value = [];
+  system.value = null;
+  risk.value = null;
+  billing.value = null;
+  entitlements.value = [];
+  loadError.value = "";
+  adminLoading.value = false;
 }
 
 function resolveErrorMessage(error: unknown) {
   return error instanceof Error
     ? error.message
-    : tr(lt('读取管理后台失败。', '讀取管理後台失敗。', 'Failed to load Admin.'))
+    : tr(lt("读取管理后台失败。", "讀取管理後台失敗。", "Failed to load Admin."));
 }
 
 async function loadAdmin() {
-  const requestId = ++latestAdminRequest
-  const requestToken = authStore.accessToken
-  const requestPath = route.fullPath
-  const scopeHeaders = requestHeaders.value
+  const requestId = ++latestAdminRequest;
+  const requestToken = authStore.accessToken;
+  const requestPath = route.fullPath;
+  const scopeHeaders = requestHeaders.value;
   if (!requestToken) {
-    clearAdminState()
-    return
+    clearAdminState();
+    return;
   }
 
-  adminLoading.value = true
-  loadError.value = ''
+  adminLoading.value = true;
+  loadError.value = "";
 
   try {
-    const options = { scopeHeaders, token: requestToken }
+    const options = { scopeHeaders, token: requestToken };
     const nextState = await Promise.all([
       readAdminSummary(options),
       listAdminUsers(options),
@@ -162,47 +174,73 @@ async function loadAdmin() {
       readAdminSystem(options),
       readAdminRisk(options),
       readBillingSummary(options),
-      listEntitlements(options)
-    ])
-    if (requestId !== latestAdminRequest || requestToken !== authStore.accessToken || requestPath !== route.fullPath) {
-      return
+      listEntitlements(options),
+    ]);
+    if (
+      requestId !== latestAdminRequest ||
+      requestToken !== authStore.accessToken ||
+      requestPath !== route.fullPath
+    ) {
+      return;
     }
-    applyAdminState(nextState)
+    applyAdminState(nextState);
   } catch (error) {
-    if (requestId !== latestAdminRequest || requestToken !== authStore.accessToken || requestPath !== route.fullPath) {
-      return
+    if (
+      requestId !== latestAdminRequest ||
+      requestToken !== authStore.accessToken ||
+      requestPath !== route.fullPath
+    ) {
+      return;
     }
-    clearAdminState()
-    loadError.value = resolveErrorMessage(error)
+    clearAdminState();
+    loadError.value = resolveErrorMessage(error);
   } finally {
-    if (requestId === latestAdminRequest && requestToken === authStore.accessToken && requestPath === route.fullPath) {
-      adminLoading.value = false
+    if (
+      requestId === latestAdminRequest &&
+      requestToken === authStore.accessToken &&
+      requestPath === route.fullPath
+    ) {
+      adminLoading.value = false;
     }
   }
 }
 
 function applyAdminState(nextState: Awaited<ReturnType<typeof Promise.all>>) {
-  const [nextSummary, nextUsers, nextRoles, nextDomains, nextPolicies, nextAudit, nextAlerts, nextSystem, nextRisk, nextBilling, nextEntitlements] = nextState
-  summary.value = nextSummary as AdminSummary
-  users.value = Array.isArray(nextUsers) ? nextUsers as AdminUser[] : []
-  roles.value = Array.isArray(nextRoles) ? nextRoles as AdminRole[] : []
-  domains.value = Array.isArray(nextDomains) ? nextDomains as AdminDomain[] : []
-  policies.value = Array.isArray(nextPolicies) ? nextPolicies as AdminPolicy[] : []
-  audit.value = Array.isArray(nextAudit) ? nextAudit as AdminAuditEntry[] : []
-  alerts.value = Array.isArray(nextAlerts) ? nextAlerts as AdminAlert[] : []
-  system.value = nextSystem as AdminSystemStatus
-  risk.value = nextRisk as AdminRiskOverview
-  billing.value = nextBilling as BillingSummary
-  entitlements.value = Array.isArray(nextEntitlements) ? nextEntitlements as EntitlementState[] : []
+  const [
+    nextSummary,
+    nextUsers,
+    nextRoles,
+    nextDomains,
+    nextPolicies,
+    nextAudit,
+    nextAlerts,
+    nextSystem,
+    nextRisk,
+    nextBilling,
+    nextEntitlements,
+  ] = nextState;
+  summary.value = nextSummary as AdminSummary;
+  users.value = Array.isArray(nextUsers) ? (nextUsers as AdminUser[]) : [];
+  roles.value = Array.isArray(nextRoles) ? (nextRoles as AdminRole[]) : [];
+  domains.value = Array.isArray(nextDomains) ? (nextDomains as AdminDomain[]) : [];
+  policies.value = Array.isArray(nextPolicies) ? (nextPolicies as AdminPolicy[]) : [];
+  audit.value = Array.isArray(nextAudit) ? (nextAudit as AdminAuditEntry[]) : [];
+  alerts.value = Array.isArray(nextAlerts) ? (nextAlerts as AdminAlert[]) : [];
+  system.value = nextSystem as AdminSystemStatus;
+  risk.value = nextRisk as AdminRiskOverview;
+  billing.value = nextBilling as BillingSummary;
+  entitlements.value = Array.isArray(nextEntitlements)
+    ? (nextEntitlements as EntitlementState[])
+    : [];
 }
 
 watch(
   () => [route.fullPath, authStore.accessToken, JSON.stringify(requestHeaders.value)],
   () => {
-    void loadAdmin()
+    void loadAdmin();
   },
-  { immediate: true }
-)
+  { immediate: true },
+);
 </script>
 
 <template>
@@ -210,38 +248,66 @@ watch(
     <compact-page-header
       :eyebrow="lt('管理后台', '管理後台', 'Admin')"
       :title="currentSection.label"
-      :description="lt('组织、用户、权限、安全、系统配置与商业边界都集中在一个可扫描的治理控制台。', '組織、使用者、權限、安全、系統設定與商業邊界都集中在一個可掃描的治理控制台。', 'Organization, user, permission, security, system, and commercial boundaries in one scannable governance console.')"
+      :description="
+        lt(
+          '组织、用户、权限、安全、系统配置与商业边界都集中在一个可扫描的治理控制台。',
+          '組織、使用者、權限、安全、系統設定與商業邊界都集中在一個可掃描的治理控制台。',
+          'Organization, user, permission, security, system, and commercial boundaries in one scannable governance console.',
+        )
+      "
       :badge="lt('v2.1', 'v2.1', 'v2.1')"
     >
-      <button class="admin-page__action" type="button">{{ tr(lt('导出报告', '匯出報告', 'Export report')) }}</button>
+      <NButton class="admin-page__action" native-type="button">{{
+        tr(lt("导出报告", "匯出報告", "Export report"))
+      }}</NButton>
     </compact-page-header>
 
     <nav class="admin-nav">
-      <button v-for="section in adminSections" :key="section.key" type="button" :class="{ 'admin-nav__active': section.key === currentSection.key }" @click="openSection(section)">
+      <NButton
+        v-for="section in adminSections"
+        :key="section.key"
+        native-type="button"
+        :class="{ 'admin-nav__active': section.key === currentSection.key }"
+        @click="openSection(section)"
+      >
         {{ section.label }}
-      </button>
+      </NButton>
     </nav>
 
     <div class="admin-kpis">
-      <article v-for="([label, value], index) in adminKpiCards" :key="index" class="surface-card admin-kpi">
-        <span class="section-label">{{ tr(label) }}</span>
-        <strong>{{ value }}</strong>
-      </article>
+      <V211MetricCard
+        v-for="([label, value], index) in adminKpiCards"
+        :key="index"
+        class="surface-card admin-kpi"
+        :title="label"
+        :value="value"
+        :status="index === 0 ? 'brand' : 'neutral'"
+      />
     </div>
 
     <div class="admin-grid">
       <article class="surface-card admin-panel admin-panel--wide">
-        <span class="section-label">{{ tr(lt('系统资源使用情况', '系統資源使用情況', 'System resource usage')) }}</span>
+        <span class="section-label">{{
+          tr(lt("系统资源使用情况", "系統資源使用情況", "System resource usage"))
+        }}</span>
         <div class="admin-resource">
-          <span>{{ tr(lt('CPU', 'CPU', 'CPU')) }} <strong>{{ system?.cpuPercent || 0 }}%</strong></span>
-          <span>{{ tr(lt('内存', '記憶體', 'Memory')) }} <strong>{{ system?.memoryPercent || 0 }}%</strong></span>
-          <span>{{ tr(lt('存储', '儲存', 'Storage')) }} <strong>{{ system?.storagePercent || billing?.quotaUsedPercent || 0 }}%</strong></span>
+          <span
+            >{{ tr(lt("CPU", "CPU", "CPU")) }} <strong>{{ system?.cpuPercent || 0 }}%</strong></span
+          >
+          <span
+            >{{ tr(lt("内存", "記憶體", "Memory")) }}
+            <strong>{{ system?.memoryPercent || 0 }}%</strong></span
+          >
+          <span
+            >{{ tr(lt("存储", "儲存", "Storage")) }}
+            <strong>{{ system?.storagePercent || billing?.quotaUsedPercent || 0 }}%</strong></span
+          >
         </div>
         <p class="page-subtitle">{{ statusCopy }}</p>
       </article>
 
       <article class="surface-card admin-panel">
-        <span class="section-label">{{ tr(lt('服务状态', '服務狀態', 'Service status')) }}</span>
+        <span class="section-label">{{ tr(lt("服务状态", "服務狀態", "Service status")) }}</span>
         <div v-for="service in serviceStatusCards" :key="service.name" class="admin-row">
           <strong>{{ service.name }}</strong>
           <span>{{ service.status }}</span>
@@ -249,7 +315,9 @@ watch(
       </article>
 
       <article class="surface-card admin-panel">
-        <span class="section-label">{{ tr(lt('安全与告警', '安全與告警', 'Security alerts')) }}</span>
+        <span class="section-label">{{
+          tr(lt("安全与告警", "安全與告警", "Security alerts"))
+        }}</span>
         <p v-if="!alertRows.length" class="page-subtitle">{{ statusCopy }}</p>
         <div v-for="item in alertRows" :key="item.id" class="admin-row">
           <strong>{{ item.title }}</strong>
@@ -258,7 +326,7 @@ watch(
       </article>
 
       <article class="surface-card admin-panel">
-        <span class="section-label">{{ tr(lt('审计', '稽核', 'Audit')) }}</span>
+        <span class="section-label">{{ tr(lt("审计", "稽核", "Audit")) }}</span>
         <p v-if="!auditRows.length" class="page-subtitle">{{ statusCopy }}</p>
         <div v-for="item in auditRows" :key="item.id" class="admin-row">
           <strong>{{ item.action }}</strong>
@@ -267,25 +335,32 @@ watch(
       </article>
 
       <article class="surface-card admin-panel">
-        <span class="section-label">{{ tr(lt('计费与权益', '計費與權益', 'Billing and entitlements')) }}</span>
+        <span class="section-label">{{
+          tr(lt("计费与权益", "計費與權益", "Billing and entitlements"))
+        }}</span>
         <div class="admin-billing">
           <strong>{{ billing?.planName || statusCopy }}</strong>
-          <span>{{ billing?.status || tr(lt('未载入', '未載入', 'Not loaded')) }}</span>
+          <span>{{ billing?.status || tr(lt("未载入", "未載入", "Not loaded")) }}</span>
           <PremiumBadge compact />
           <HostedBadge compact />
         </div>
         <div v-for="item in entitlementRows" :key="item.key" class="admin-row">
           <strong>{{ item.label }}</strong>
-          <span>{{ item.state }}<template v-if="item.requiredPlan"> · {{ item.requiredPlan }}</template></span>
+          <span
+            >{{ item.state
+            }}<template v-if="item.requiredPlan"> · {{ item.requiredPlan }}</template></span
+          >
         </div>
       </article>
 
       <article class="surface-card admin-panel">
-        <span class="section-label">{{ tr(lt('策略', '政策', 'Policies')) }}</span>
-        <p class="page-subtitle">{{ domains.length }} domains · {{ roles.length }} roles · {{ users.length }} users</p>
+        <span class="section-label">{{ tr(lt("策略", "政策", "Policies")) }}</span>
+        <p class="page-subtitle">
+          {{ domains.length }} domains · {{ roles.length }} roles · {{ users.length }} users
+        </p>
         <div v-for="item in policyRows" :key="item.id" class="admin-row">
           <strong>{{ item.name }}</strong>
-          <span>{{ item.enabled ? 'enabled' : 'disabled' }} · {{ item.updatedAt }}</span>
+          <span>{{ item.enabled ? "enabled" : "disabled" }} · {{ item.updatedAt }}</span>
         </div>
       </article>
     </div>

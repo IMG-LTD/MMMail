@@ -5,6 +5,7 @@ import java.time.LocalDateTime;
 public record SuiteWebPushSubscriptionVo(
         Long subscriptionId,
         String endpointHash,
+        String label,
         LocalDateTime lastSuccessAt,
         LocalDateTime lastFailureAt,
         String lastErrorMessage,

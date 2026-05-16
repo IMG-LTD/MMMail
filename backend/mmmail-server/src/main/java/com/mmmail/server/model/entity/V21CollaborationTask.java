@@ -19,6 +19,8 @@ public class V21CollaborationTask {
     private String title;
     private String product;
     private String status;
+    private String boardColumn;
+    private String position;
     @TableField(updateStrategy = FieldStrategy.ALWAYS)
     private String assigneeEmail;
     @TableField(updateStrategy = FieldStrategy.ALWAYS)
@@ -74,6 +76,22 @@ public class V21CollaborationTask {
 
     public void setStatus(String status) {
         this.status = status;
+    }
+
+    public String getBoardColumn() {
+        return boardColumn;
+    }
+
+    public void setBoardColumn(String boardColumn) {
+        this.boardColumn = boardColumn;
+    }
+
+    public String getPosition() {
+        return position;
+    }
+
+    public void setPosition(String position) {
+        this.position = position;
     }
 
     public String getAssigneeEmail() {

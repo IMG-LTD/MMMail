@@ -1,22 +1,22 @@
-import { ref } from 'vue'
-import { useStorage } from '@vueuse/core'
-import { defineStore } from 'pinia'
-import { detectAppLocale, getNextLocale, type AppLocale } from '@/locales'
+import { ref } from "vue";
+import { useStorage } from "@vueuse/core";
+import { defineStore } from "pinia";
+import { detectAppLocale, getNextLocale, type AppLocale } from "@/locales";
 
-export const useAppStore = defineStore('app', () => {
-  const activeScope = ref('Enterprise')
-  const locale = useStorage<AppLocale>('mmmail-app-locale', detectAppLocale())
+export const useAppStore = defineStore("app", () => {
+  const activeScope = ref("Enterprise");
+  const locale = useStorage<AppLocale>("mmmail-app-locale", detectAppLocale());
 
   function setScope(scope: string) {
-    activeScope.value = scope
+    activeScope.value = scope;
   }
 
   function setLocale(value: AppLocale) {
-    locale.value = value
+    locale.value = value;
   }
 
   function cycleLocale() {
-    locale.value = getNextLocale(locale.value)
+    locale.value = getNextLocale(locale.value);
   }
 
   return {
@@ -24,6 +24,6 @@ export const useAppStore = defineStore('app', () => {
     cycleLocale,
     locale,
     setLocale,
-    setScope
-  }
-})
+    setScope,
+  };
+});

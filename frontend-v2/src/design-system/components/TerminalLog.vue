@@ -1,108 +1,120 @@
 <script setup lang="ts">
-import { computed, watch } from 'vue'
-import { useSrLive } from '@/shared/composables/useSrLive'
+import { NButton, NInput } from "naive-ui";
+import { computed, watch } from "vue";
+import { useSrLive } from "@/shared/composables/useSrLive";
 
-type TerminalLogLevel = 'info' | 'success' | 'warning' | 'error'
-type TerminalLogStream = 'stdout' | 'stderr' | 'system'
+type TerminalLogLevel = "info" | "success" | "warning" | "error";
+type TerminalLogStream = "stdout" | "stderr" | "system";
 
 export interface TerminalLogLine {
-  commandId?: string
-  id: string
-  level: TerminalLogLevel
-  stream: TerminalLogStream
-  text: string
-  timestamp: string
+  commandId?: string;
+  id: string;
+  level: TerminalLogLevel;
+  stream: TerminalLogStream;
+  text: string;
+  timestamp: string;
 }
 
 const props = withDefaults(
   defineProps<{
-    autoFollow?: boolean
-    copyable?: boolean
-    filter?: string
-    lines: readonly TerminalLogLine[]
-    running?: boolean
+    autoFollow?: boolean;
+    copyable?: boolean;
+    filter?: string;
+    lines: readonly TerminalLogLine[];
+    running?: boolean;
   }>(),
   {
     autoFollow: true,
     copyable: true,
-    filter: '',
-    running: false
-  }
-)
+    filter: "",
+    running: false,
+  },
+);
 
 const emit = defineEmits<{
-  clear: []
-  copy: [text: string]
-  pauseFollow: []
-  resumeFollow: []
-  'update:filter': [filter: string]
-}>()
+  clear: [];
+  copy: [text: string];
+  pauseFollow: [];
+  resumeFollow: [];
+  "update:filter": [filter: string];
+}>();
 
-const srLive = useSrLive()
+const srLive = useSrLive();
 
 const visibleLines = computed(() => {
-  const filter = props.filter.trim().toLowerCase()
-  return filter ? props.lines.filter(line => line.text.toLowerCase().includes(filter)) : props.lines
-})
+  const filter = props.filter.trim().toLowerCase();
+  return filter
+    ? props.lines.filter((line) => line.text.toLowerCase().includes(filter))
+    : props.lines;
+});
 
 function announce(message: string, urgent = false) {
   if (urgent) {
-    srLive.assertive(message)
-    return
+    srLive.assertive(message);
+    return;
   }
-  srLive.polite(message)
+  srLive.polite(message);
 }
 
 function copyLog() {
-  const text = visibleLines.value.map(line => line.text).join('\n')
-  emit('copy', text)
-  if (typeof navigator !== 'undefined' && navigator.clipboard) {
-    void navigator.clipboard.writeText(text)
+  const text = visibleLines.value.map((line) => line.text).join("\n");
+  emit("copy", text);
+  if (typeof navigator !== "undefined" && navigator.clipboard) {
+    void navigator.clipboard.writeText(text);
   }
 }
 
 function toggleFollow() {
   if (props.autoFollow) {
-    emit('pauseFollow')
-    return
+    emit("pauseFollow");
+    return;
   }
-  emit('resumeFollow')
+  emit("resumeFollow");
 }
 
 watch(
   () => props.lines.at(-1)?.id,
   () => {
-    const line = props.lines.at(-1)
+    const line = props.lines.at(-1);
     if (!line) {
-      return
+      return;
     }
-    if (line.level === 'error') {
-      announce(`Command failed: ${line.text}`, true)
-      return
+    if (line.level === "error") {
+      announce(`Command failed: ${line.text}`, true);
+      return;
     }
-    if (line.level === 'success') {
-      announce(`Command completed: ${line.text}`)
+    if (line.level === "success") {
+      announce(`Command completed: ${line.text}`);
     }
-  }
-)
+  },
+);
 
 watch(
   () => props.running,
-  value => {
-    announce(value ? 'Command running' : 'Command stopped')
-  }
-)
+  (value) => {
+    announce(value ? "Command running" : "Command stopped");
+  },
+);
 </script>
 
 <template>
-  <section class="terminal-log" :class="{ 'terminal-log--running': running, 'terminal-log--follow': autoFollow }" aria-label="Terminal log">
+  <section
+    class="terminal-log"
+    :class="{ 'terminal-log--running': running, 'terminal-log--follow': autoFollow }"
+    aria-label="Terminal log"
+  >
     <header class="terminal-log__toolbar">
-      <input :value="filter" placeholder="Filter logs" type="search" @input="emit('update:filter', ($event.target as HTMLInputElement).value)" />
-      <button v-if="copyable" type="button" @click="copyLog">Copy</button>
-      <button type="button" @click="toggleFollow">
-        {{ autoFollow ? 'Pause follow' : 'Resume follow' }}
-      </button>
-      <button type="button" @click="emit('clear')">Clear</button>
+      <NInput
+        :value="filter"
+        placeholder="Filter logs"
+        type="text"
+        @update:value="(value) => emit('update:filter', value)"
+      />
+      <NButton v-if="copyable" native-type="button" @click="copyLog">Copy</NButton>
+      <NButton native-type="button" @click="toggleFollow">
+        {{ autoFollow ? "Pause follow" : "Resume follow" }}
+      </NButton>
+      <NButton native-type="button" @click="emit('clear')">Clear</NButton>
     </header>
     <ol class="terminal-log__lines" role="log" aria-live="polite">
       <li
@@ -137,7 +149,7 @@ watch(
   background: #0b1120;
 }
 
-.terminal-log__toolbar input {
+.terminal-log__toolbar :deep(.n-input) {
   flex: 1 1 180px;
   min-height: 34px;
   border: 1px solid rgba(255, 255, 255, 0.16);
@@ -147,7 +159,7 @@ watch(
   color: white;
 }
 
-.terminal-log__toolbar button {
+.terminal-log__toolbar :deep(.n-button) {
   min-height: 34px;
   border: 1px solid rgba(255, 255, 255, 0.16);
   border-radius: var(--mm-radius-sm);

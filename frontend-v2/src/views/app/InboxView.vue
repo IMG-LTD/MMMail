@@ -1,59 +1,64 @@
 <script setup lang="ts">
-const filters = ['All', 'Unread']
+import { NButton, NInput } from "naive-ui";
+const filters = ["All", "Unread"];
 
 const messages = [
   {
-    sender: 'Secure Operations',
-    subject: 'Project Phoenix: Final Asset Transfer',
-    preview: 'The encrypted payload has been verified. Please review the attached schematics before final sync at 14:00.',
-    time: '10:42 AM',
-    active: true
+    sender: "Secure Operations",
+    subject: "Project Phoenix: Final Asset Transfer",
+    preview:
+      "The encrypted payload has been verified. Please review the attached schematics before final sync at 14:00.",
+    time: "10:42 AM",
+    active: true,
   },
   {
-    sender: 'Dr. Amir Horne',
-    subject: 'Q3 Audit Reports - Action Required',
-    preview: 'Fix completed in staging. There are a few discrepancies in the secondary ledger we need to resolve.',
-    time: '09:41 AM'
+    sender: "Dr. Amir Horne",
+    subject: "Q3 Audit Reports - Action Required",
+    preview:
+      "Fix completed in staging. There are a few discrepancies in the secondary ledger we need to resolve.",
+    time: "09:41 AM",
   },
   {
-    sender: 'System Alerts',
-    subject: 'Weekly Security Digest',
-    preview: 'No unauthorized access attempts detected. Three devices registered to your workspace.',
-    time: 'Yesterday'
+    sender: "System Alerts",
+    subject: "Weekly Security Digest",
+    preview:
+      "No unauthorized access attempts detected. Three devices registered to your workspace.",
+    time: "Yesterday",
   },
   {
-    sender: 'Elena Rostova',
-    subject: 'Design System v2',
-    preview: 'The token lock model is live. I have attached the latest Figma component library for review.',
-    time: 'Oct 14'
-  }
-]
+    sender: "Elena Rostova",
+    subject: "Design System v2",
+    preview:
+      "The token lock model is live. I have attached the latest Figma component library for review.",
+    time: "Oct 14",
+  },
+];
 
 const attachments = [
-  ['Phoenix_Schematics_v4.pdf', '2.4 MB', '#e96666'],
-  ['Node_Topology_Map.png', '1.1 MB', '#cfe1ff']
-]
+  ["Phoenix_Schematics_v4.pdf", "2.4 MB", "#e96666"],
+  ["Node_Topology_Map.png", "1.1 MB", "#cfe1ff"],
+];
 </script>
 
 <template>
   <section class="mail-page">
     <div class="mail-page__toolbar">
       <div class="mail-page__toolbar-left">
-        <button
+        <NButton
           v-for="filter in filters"
           :key="filter"
-          type="button"
+          native-type="button"
           class="filter-chip"
           :class="{ 'filter-chip--active': filter === 'All' }"
         >
           {{ filter }}
-        </button>
-        <button type="button" class="filter-chip">Sort ▾</button>
+        </NButton>
+        <NButton native-type="button" class="filter-chip">Sort ▾</NButton>
       </div>
       <div class="mail-page__toolbar-right">
-        <button type="button">⇄</button>
-        <button type="button">↻</button>
-        <button type="button">⋯</button>
+        <NButton native-type="button">⇄</NButton>
+        <NButton native-type="button">↻</NButton>
+        <NButton native-type="button">⋯</NButton>
       </div>
     </div>
 
@@ -80,13 +85,13 @@ const attachments = [
       <section class="mail-detail">
         <div class="mail-detail__tools">
           <div class="mail-detail__tool-group">
-            <button type="button">⌂</button>
-            <button type="button">⟲</button>
-            <button type="button">↶</button>
+            <NButton native-type="button">⌂</NButton>
+            <NButton native-type="button">⟲</NButton>
+            <NButton native-type="button">↶</NButton>
           </div>
           <div class="mail-detail__tool-group">
-            <button type="button">🏷</button>
-            <button type="button">⋯</button>
+            <NButton native-type="button">🏷</NButton>
+            <NButton native-type="button">⋯</NButton>
           </div>
         </div>
 
@@ -136,14 +141,14 @@ const attachments = [
         </section>
 
         <section class="mail-reply">
-          <textarea placeholder="Reply..." />
+          <NInput placeholder="Reply..." type="textarea" />
           <div class="mail-reply__footer">
             <div class="mail-reply__tools">
-              <button type="button">B</button>
-              <button type="button">Z</button>
-              <button type="button">∞</button>
+              <NButton native-type="button">B</NButton>
+              <NButton native-type="button">Z</NButton>
+              <NButton native-type="button">∞</NButton>
             </div>
-            <button type="button" class="mail-reply__send">Send ▷</button>
+            <NButton native-type="button" class="mail-reply__send">Send ▷</NButton>
           </div>
         </section>
       </section>

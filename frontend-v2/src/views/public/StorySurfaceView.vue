@@ -1,30 +1,33 @@
 <script setup lang="ts">
-import { computed } from 'vue'
-import { useRoute } from 'vue-router'
-import { lt, useLocaleText } from '@/locales'
-import { failureModes, findSurface, onboardingStories } from '@/shared/content/route-surfaces'
+import { NButton } from "naive-ui";
+import { computed } from "vue";
+import { useRoute } from "vue-router";
+import { lt, useLocaleText } from "@/locales";
+import { failureModes, findSurface, onboardingStories } from "@/shared/content/route-surfaces";
 
-type StoryGroup = 'onboarding' | 'failure'
+type StoryGroup = "onboarding" | "failure";
 
-const route = useRoute()
-const { tr } = useLocaleText()
+const route = useRoute();
+const { tr } = useLocaleText();
 
 const storyGroup = computed<StoryGroup>(() => {
-  return route.meta.storyGroup === 'failure' ? 'failure' : 'onboarding'
-})
-const storyKey = computed(() => String(route.params.storyKey ?? route.meta.storyKey ?? 'invitation-landing'))
+  return route.meta.storyGroup === "failure" ? "failure" : "onboarding";
+});
+const storyKey = computed(() =>
+  String(route.params.storyKey ?? route.meta.storyKey ?? "invitation-landing"),
+);
 
 const story = computed(() => {
-  if (storyGroup.value === 'failure') {
-    return findSurface(failureModes, storyKey.value, 'f01')
+  if (storyGroup.value === "failure") {
+    return findSurface(failureModes, storyKey.value, "f01");
   }
 
-  return findSurface(onboardingStories, storyKey.value, 'invitation-landing')
-})
+  return findSurface(onboardingStories, storyKey.value, "invitation-landing");
+});
 
 const storyCards = computed(() => {
-  return storyGroup.value === 'failure' ? failureModes : onboardingStories
-})
+  return storyGroup.value === "failure" ? failureModes : onboardingStories;
+});
 </script>
 
 <template>
@@ -34,26 +37,37 @@ const storyCards = computed(() => {
       <h1>{{ tr(story.title) }}</h1>
       <p class="page-subtitle">{{ tr(story.description) }}</p>
       <div class="story-surface__actions">
-        <button v-for="(action, index) in story.actions" :key="`${story.key}-action-${index}`" type="button">{{ tr(action) }}</button>
+        <NButton
+          v-for="(action, index) in story.actions"
+          :key="`${story.key}-action-${index}`"
+          native-type="button"
+          >{{ tr(action) }}</NButton
+        >
       </div>
     </article>
 
     <div class="story-surface__layout">
       <article class="story-surface__body surface-card">
-        <p v-for="(paragraph, index) in story.body" :key="`${story.key}-body-${index}`">{{ tr(paragraph) }}</p>
+        <p v-for="(paragraph, index) in story.body" :key="`${story.key}-body-${index}`">
+          {{ tr(paragraph) }}
+        </p>
       </article>
       <aside class="story-surface__index surface-card">
         <span class="section-label">
-          {{ storyGroup === 'failure' ? tr(lt('失败清单', '失敗清單', 'Failure board')) : tr(lt('引导包', '引導包', 'Onboarding pack')) }}
+          {{
+            storyGroup === "failure"
+              ? tr(lt("失败清单", "失敗清單", "Failure board"))
+              : tr(lt("引导包", "引導包", "Onboarding pack"))
+          }}
         </span>
-        <button
+        <NButton
           v-for="item in storyCards"
           :key="item.key"
-          type="button"
+          native-type="button"
           :class="{ 'story-surface__index--active': item.key === story.key }"
         >
           {{ tr(item.title) }}
-        </button>
+        </NButton>
       </aside>
     </div>
   </section>

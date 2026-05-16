@@ -1,32 +1,36 @@
 <script setup lang="ts">
-type ChartCardStatus = 'neutral' | 'success' | 'info' | 'warning' | 'danger'
+type ChartCardStatus = "neutral" | "success" | "info" | "warning" | "danger";
 
 withDefaults(
   defineProps<{
-    description?: string
-    error?: string
-    loading?: boolean
-    status?: ChartCardStatus
-    summary: string
-    title: string
-    trend?: string
-    value?: string
+    description?: string;
+    error?: string;
+    loading?: boolean;
+    status?: ChartCardStatus;
+    summary: string;
+    title: string;
+    trend?: string;
+    value?: string;
   }>(),
   {
     description: undefined,
     error: undefined,
     loading: false,
-    status: 'neutral',
+    status: "neutral",
     trend: undefined,
-    value: undefined
-  }
-)
+    value: undefined,
+  },
+);
 
 // vue-data-ui remains the preferred chart renderer for module-specific slots.
 </script>
 
 <template>
-  <section class="chart-card" :class="[`chart-card--${status}`, { 'chart-card--loading': loading }]" :aria-label="summary">
+  <section
+    class="chart-card"
+    :class="[`chart-card--${status}`, { 'chart-card--loading': loading }]"
+    :aria-label="summary"
+  >
     <header class="chart-card__header">
       <div>
         <p v-if="description" class="chart-card__description">{{ description }}</p>

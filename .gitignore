@@ -3,16 +3,29 @@
 .idea/
 .vscode/
 .worktrees/
+.claude/worktrees/
 
 # Env files
 .env
 .env.local
 .env.*.local
+.env.test
 config/*.local
 
 # Frontend
 frontend-v2/node_modules
 frontend-v2/dist
+frontend-admin/node_modules/
+frontend-admin/dist/
+frontend-admin/coverage/
+frontend-admin/test-results/
+frontend-admin/playwright-report/
+soybean-admin-main/node_modules/
+soybean-admin-main/dist/
+soybean-admin-main/coverage/
+soybean-admin-main/test-results/
+soybean-admin-main/playwright-report/
+frontend/
 
 # Backend
 backend/**/target/
@@ -23,4 +36,11 @@ backend/**/target/
 # Validation artifacts
 artifacts/
 .tools/dependency-check-data/
+.tmp/
+.superpowers/
+.codex-tasks/
 .gstack/
+
+# Historical snapshots
+docs/MMMail.zip
+docs/MMMail/

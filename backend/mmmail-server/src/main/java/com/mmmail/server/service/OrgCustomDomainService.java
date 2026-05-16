@@ -7,6 +7,10 @@ import com.mmmail.server.mapper.OrgCustomDomainMapper;
 import com.mmmail.server.model.dto.CreateOrgCustomDomainRequest;
 import com.mmmail.server.model.entity.OrgCustomDomain;
 import com.mmmail.server.model.entity.OrgMember;
+import com.mmmail.server.model.vo.DomainDnsDiagnosticRecordVo;
+import com.mmmail.server.model.vo.DomainDnsDiagnosticsVo;
+import com.mmmail.server.model.vo.DomainDnsRecordVo;
+import com.mmmail.server.model.vo.DomainDnsRecordsVo;
 import com.mmmail.server.model.vo.OrgCustomDomainVo;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -26,21 +30,26 @@ public class OrgCustomDomainService {
     private static final int DEFAULT_FALSE = 0;
     private static final int DEFAULT_TRUE = 1;
     private static final int TOKEN_LENGTH = 12;
+    private static final String DIAGNOSTICS_READY = "READY";
+    private static final String DIAGNOSTICS_ACTION_REQUIRED = "ACTION_REQUIRED";
 
     private final OrgAccessService orgAccessService;
     private final OrgCustomDomainMapper orgCustomDomainMapper;
     private final OrgMailIdentityService orgMailIdentityService;
+    private final DomainDnsLookupService domainDnsLookupService;
     private final AuditService auditService;
 
     public OrgCustomDomainService(
             OrgAccessService orgAccessService,
             OrgCustomDomainMapper orgCustomDomainMapper,
             OrgMailIdentityService orgMailIdentityService,
+            DomainDnsLookupService domainDnsLookupService,
             AuditService auditService
     ) {
         this.orgAccessService = orgAccessService;
         this.orgCustomDomainMapper = orgCustomDomainMapper;
         this.orgMailIdentityService = orgMailIdentityService;
+        this.domainDnsLookupService = domainDnsLookupService;
         this.auditService = auditService;
     }
 
@@ -54,6 +63,13 @@ public class OrgCustomDomainService {
                         .thenComparing(OrgCustomDomain::getUpdatedAt, Comparator.reverseOrder()))
                 .map(this::toVo)
                 .toList();
+    }
+
+    public OrgCustomDomainVo getDomain(Long userId, Long orgId, Long domainId, String ipAddress) {
+        orgAccessService.requireActiveMember(userId, orgId);
+        OrgCustomDomain domain = loadDomain(orgId, domainId);
+        auditService.record(userId, "ORG_DOMAIN_READ", "orgId=" + orgId + ",domainId=" + domainId, ipAddress, orgId);
+        return toVo(domain);
     }
 
     @Transactional
@@ -90,6 +106,36 @@ public class OrgCustomDomainService {
         orgCustomDomainMapper.updateById(domain);
         auditService.record(userId, "ORG_DOMAIN_VERIFY", "orgId=" + orgId + ",domain=" + domain.getDomain(), ipAddress, orgId);
         return toVo(domain);
+    }
+
+    public DomainDnsRecordsVo getExpectedDnsRecords(Long userId, Long orgId, Long domainId, String ipAddress) {
+        orgAccessService.requireActiveMember(userId, orgId);
+        OrgCustomDomain domain = loadDomain(orgId, domainId);
+        auditService.record(userId, "ORG_DOMAIN_DNS_RECORDS", "orgId=" + orgId + ",domainId=" + domainId, ipAddress, orgId);
+        return new DomainDnsRecordsVo(expectedRecords(domain));
+    }
+
+    public DomainDnsDiagnosticsVo diagnoseDomain(Long userId, Long orgId, Long domainId, String ipAddress) {
+        orgAccessService.requireActiveMember(userId, orgId);
+        OrgCustomDomain domain = loadDomain(orgId, domainId);
+        List<DomainDnsDiagnosticRecordVo> records = expectedRecords(domain).stream()
+                .map(record -> diagnoseRecord(domain.getDomain(), record))
+                .toList();
+        String status = records.stream().allMatch(DomainDnsDiagnosticRecordVo::matched)
+                ? DIAGNOSTICS_READY
+                : DIAGNOSTICS_ACTION_REQUIRED;
+        auditService.record(userId, "ORG_DOMAIN_DIAGNOSTICS", "orgId=" + orgId + ",domainId=" + domainId + ",status=" + status, ipAddress, orgId);
+        return new DomainDnsDiagnosticsVo(String.valueOf(domain.getId()), domain.getDomain(), status, records);
+    }
+
+    @Transactional
+    public OrgCustomDomainVo verifyDomainWithDns(Long userId, Long orgId, Long domainId, String ipAddress) {
+        DomainDnsDiagnosticsVo diagnostics = diagnoseDomain(userId, orgId, domainId, ipAddress);
+        if (!DIAGNOSTICS_READY.equals(diagnostics.status())) {
+            throw new BizException(ErrorCode.INVALID_ARGUMENT, "Custom domain DNS records are incomplete");
+        }
+
+        return verifyDomain(userId, orgId, domainId, ipAddress);
     }
 
     @Transactional
@@ -166,6 +212,45 @@ public class OrgCustomDomainService {
 
     private String generateVerificationToken() {
         return UUID.randomUUID().toString().replace("-", "").substring(0, TOKEN_LENGTH).toUpperCase(Locale.ROOT);
+    }
+
+    private List<DomainDnsRecordVo> expectedRecords(OrgCustomDomain domain) {
+        String name = domain.getDomain();
+
+        return List.of(
+                new DomainDnsRecordVo("TXT", "_mmmail-verify", "mmmail-verify=" + domain.getVerificationToken()),
+                new DomainDnsRecordVo("TXT", "@", "v=spf1 include:_spf.mmmail.com ~all"),
+                new DomainDnsRecordVo("TXT", "_dmarc", "v=DMARC1; p=quarantine; rua=mailto:dmarc@" + name),
+                new DomainDnsRecordVo("CNAME", "mm._domainkey", "mm.dkim.mmmail.com"),
+                new DomainDnsRecordVo("MX", "@", "10 inbound.mmmail.com")
+        );
+    }
+
+    private DomainDnsDiagnosticRecordVo diagnoseRecord(String domain, DomainDnsRecordVo record) {
+        List<String> actual = resolveRecord(domain, record);
+        boolean matched = actual.stream().map(this::normalizeDnsValue)
+                .anyMatch(value -> value.equals(normalizeDnsValue(record.expected())));
+
+        return new DomainDnsDiagnosticRecordVo(record.type(), record.host(), record.expected(), actual, matched);
+    }
+
+    private List<String> resolveRecord(String domain, DomainDnsRecordVo record) {
+        String host = resolveHost(domain, record.host());
+        return switch (record.type()) {
+            case "TXT" -> domainDnsLookupService.resolveTxt(host);
+            case "CNAME" -> domainDnsLookupService.resolveCname(host);
+            case "MX" -> domainDnsLookupService.resolveMx(host);
+            default -> throw new BizException(ErrorCode.INVALID_ARGUMENT, "Unsupported DNS record type");
+        };
+    }
+
+    private String resolveHost(String domain, String host) {
+        return "@".equals(host) ? domain : host + "." + domain;
+    }
+
+    private String normalizeDnsValue(String value) {
+        String normalized = value == null ? "" : value.trim().toLowerCase(Locale.ROOT);
+        return normalized.endsWith(".") ? normalized.substring(0, normalized.length() - 1) : normalized;
     }
 
     private OrgCustomDomainVo toVo(OrgCustomDomain domain) {

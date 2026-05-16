@@ -1,0 +1,18 @@
+:root {
+  --v211-shell-sider-width: 64px;
+  --v211-shell-header-height: 54px;
+  --v211-right-panel-width: 340px;
+  --v211-page-gap: 16px;
+  --v211-card-padding: 16px;
+  --v211-grid-min: 220px;
+  --v211-brand-primary: var(--mm-brand-primary);
+  --v211-surface: var(--mm-surface);
+  --v211-text-primary: var(--mm-text-primary);
+  --v211-focus-ring: var(--mm-focus-ring);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --v211-motion-duration: 0ms;
+  }
+}

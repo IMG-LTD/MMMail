@@ -17,6 +17,7 @@ import com.mmmail.server.model.vo.AuthenticatorImportResultVo;
 import com.mmmail.server.model.vo.AuthenticatorEntrySummaryVo;
 import com.mmmail.server.model.vo.AuthenticatorSecurityPinVerificationVo;
 import com.mmmail.server.model.vo.AuthenticatorSecurityPreferenceVo;
+import com.mmmail.server.security.RequireEntitlement;
 import com.mmmail.server.service.AuthenticatorQrImageDecoder;
 import com.mmmail.server.service.AuthenticatorSecurityPreferenceService;
 import com.mmmail.server.service.AuthenticatorPortabilityService;
@@ -37,6 +38,7 @@ import org.springframework.web.bind.annotation.RestController;
 import java.util.List;
 
 @RestController
+@RequireEntitlement("AUTHENTICATOR")
 @RequestMapping("/api/v1/authenticator")
 public class AuthenticatorController {
 

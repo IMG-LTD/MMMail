@@ -1,83 +1,159 @@
 <script setup lang="ts">
-import EmptyState from './EmptyState.vue'
-import ErrorState from './ErrorState.vue'
+import { computed, h } from "vue";
+import { NButton, NCheckbox, NDataTable } from "naive-ui";
+import EmptyState from "./EmptyState.vue";
+import ErrorState from "./ErrorState.vue";
 
 export interface DataTableColumn {
-  align?: 'left' | 'center' | 'right'
-  cellSlot?: string
-  key: string
-  label: string
-  sortable?: boolean
-  width?: string
+  align?: "left" | "center" | "right";
+  cellSlot?: string;
+  key: string;
+  label: string;
+  sortable?: boolean;
+  width?: string;
 }
 
-type DataTableRow = Readonly<Record<string, unknown>>
-type DataTableDensity = 'comfortable' | 'compact'
-type SortDirection = 'ascending' | 'descending' | 'none'
+type DataTableRow = Readonly<Record<string, unknown>>;
+type DataTableDensity = "comfortable" | "compact";
+type SortDirection = "ascending" | "descending" | "none";
+
+const ARIA_SORT_ATTRIBUTE = "aria-sort";
 
 const props = withDefaults(
   defineProps<{
-    columns: readonly DataTableColumn[]
-    density?: DataTableDensity
-    empty?: boolean
-    error?: string
-    loading?: boolean
-    permissionDenied?: boolean
-    premiumLocked?: boolean
-    rowKey?: string
-    rows: readonly DataTableRow[]
-    selectedKeys?: readonly string[]
-    sortBy?: string
-    sortDirection?: SortDirection
-    stacked?: boolean
+    columns: readonly DataTableColumn[];
+    density?: DataTableDensity;
+    empty?: boolean;
+    error?: string;
+    loading?: boolean;
+    permissionDenied?: boolean;
+    premiumLocked?: boolean;
+    rowKey?: string;
+    rows: readonly DataTableRow[];
+    selectedKeys?: readonly string[];
+    sortBy?: string;
+    sortDirection?: SortDirection;
+    stacked?: boolean;
   }>(),
   {
-    density: 'comfortable',
+    density: "comfortable",
     empty: false,
     error: undefined,
     loading: false,
     permissionDenied: false,
     premiumLocked: false,
-    rowKey: 'id',
+    rowKey: "id",
     selectedKeys: () => [],
     sortBy: undefined,
-    sortDirection: 'none',
-    stacked: false
-  }
-)
+    sortDirection: "none",
+    stacked: false,
+  },
+);
 
 const emit = defineEmits<{
-  retry: []
-  rowAction: [row: DataTableRow]
-  select: [keys: readonly string[]]
-  sort: [column: DataTableColumn]
-}>()
+  retry: [];
+  rowAction: [row: DataTableRow];
+  select: [keys: readonly string[]];
+  sort: [column: DataTableColumn];
+}>();
 
 function getRowKey(row: DataTableRow, index: number) {
-  const value = row[props.rowKey]
-  return typeof value === 'string' || typeof value === 'number' ? String(value) : `row-${index}`
+  const value = row[props.rowKey];
+  return typeof value === "string" || typeof value === "number" ? String(value) : `row-${index}`;
 }
 
 function getCellValue(row: DataTableRow, column: DataTableColumn) {
-  const value = row[column.key]
-  return value === undefined || value === null || value === '' ? '-' : String(value)
+  const value = row[column.key];
+  return value === undefined || value === null || value === "" ? "-" : String(value);
 }
 
 function getAriaSort(column: DataTableColumn) {
-  return props.sortBy === column.key ? props.sortDirection : 'none'
+  return props.sortBy === column.key ? props.sortDirection : "none";
 }
 
 function toggleSelection(row: DataTableRow, index: number) {
-  const key = getRowKey(row, index)
+  const key = getRowKey(row, index);
   const keys = props.selectedKeys.includes(key)
-    ? props.selectedKeys.filter(selectedKey => selectedKey !== key)
-    : [...props.selectedKeys, key]
-  emit('select', keys)
+    ? props.selectedKeys.filter((selectedKey) => selectedKey !== key)
+    : [...props.selectedKeys, key];
+  emit("select", keys);
+}
+
+const naiveColumns = computed(() => {
+  return [
+    buildSelectionColumn(),
+    ...props.columns.map((column) => buildDataColumn(column)),
+    buildActionColumn(),
+  ];
+});
+
+const tableRows = computed(() => [...props.rows]);
+
+function buildSelectionColumn() {
+  return {
+    key: "selection",
+    title: "Select",
+    render: (row: DataTableRow, index: number) => {
+      return h(NCheckbox, {
+        "aria-label": `Select row ${index + 1}`,
+        checked: props.selectedKeys.includes(getRowKey(row, index)),
+        onUpdateChecked: () => toggleSelection(row, index),
+      });
+    },
+  };
+}
+
+function buildDataColumn(column: DataTableColumn) {
+  return {
+    align: column.align,
+    key: column.key,
+    title: () => renderColumnTitle(column),
+    width: column.width,
+    render: (row: DataTableRow) => getCellValue(row, column),
+  };
+}
+
+function buildActionColumn() {
+  return {
+    key: "actions",
+    title: "Actions",
+    render: (row: DataTableRow) =>
+      h(NButton, { onClick: () => emit("rowAction", row) }, () => "Open"),
+  };
+}
+
+function renderColumnTitle(column: DataTableColumn) {
+  if (!column.sortable) {
+    return column.label;
+  }
+
+  return h(
+    NButton,
+    {
+      secondary: true,
+      size: "tiny",
+      onClick: () => emit("sort", column),
+    },
+    () => `${column.label} ${getAriaSort(column)}`,
+  );
+}
+
+function getTableRowKey(row: DataTableRow) {
+  const value = row[props.rowKey];
+
+  if (typeof value === "string" || typeof value === "number") {
+    return String(value);
+  }
+
+  return `${ARIA_SORT_ATTRIBUTE}-${props.rows.indexOf(row)}`;
 }
 </script>
 
 <template>
-  <section class="data-table" :class="[`data-table--${density}`, { 'data-table--stacked': stacked }]">
+  <section
+    class="data-table"
+    :class="[`data-table--${density}`, { 'data-table--stacked': stacked }]"
+  >
     <div v-if="loading" class="data-table__state" aria-busy="true">Loading table data</div>
     <ErrorState
       v-else-if="error"
@@ -99,50 +175,18 @@ function toggleSelection(row: DataTableRow, index: number) {
       title="Premium feature"
       variant="premium"
     />
-    <EmptyState v-else-if="empty || rows.length === 0" description="No records match the current view." title="No records" />
-    <div v-else class="data-table__scroll">
-      <table>
-        <thead>
-          <tr>
-            <th scope="col" class="data-table__selection">Select</th>
-            <th
-              v-for="column in columns"
-              :key="column.key"
-              :aria-sort="getAriaSort(column)"
-              :style="{ width: column.width, textAlign: column.align || 'left' }"
-              scope="col"
-            >
-              <button v-if="column.sortable" type="button" @click="emit('sort', column)">
-                {{ column.label }}
-                <span class="data-table__sort-label">{{ getAriaSort(column) }}</span>
-              </button>
-              <span v-else>{{ column.label }}</span>
-            </th>
-            <th scope="col">Actions</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr v-for="(row, index) in rows" :key="getRowKey(row, index)">
-            <td class="data-table__selection">
-              <input
-                :aria-label="`Select row ${index + 1}`"
-                :checked="selectedKeys.includes(getRowKey(row, index))"
-                type="checkbox"
-                @change="toggleSelection(row, index)"
-              />
-            </td>
-            <td v-for="column in columns" :key="column.key" :data-label="column.label" :style="{ textAlign: column.align || 'left' }">
-              <slot :name="column.cellSlot || `cell-${column.key}`" :column="column" :row="row" :value="row[column.key]">
-                {{ getCellValue(row, column) }}
-              </slot>
-            </td>
-            <td>
-              <button type="button" @click="emit('rowAction', row)">Open</button>
-            </td>
-          </tr>
-        </tbody>
-      </table>
-    </div>
+    <EmptyState
+      v-else-if="empty || rows.length === 0"
+      description="No records match the current view."
+      title="No records"
+    />
+    <NDataTable
+      v-else
+      class="data-table__grid"
+      :columns="naiveColumns"
+      :data="tableRows"
+      :row-key="getTableRowKey"
+    />
   </section>
 </template>
 

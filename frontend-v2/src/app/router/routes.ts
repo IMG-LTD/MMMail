@@ -1,475 +1,597 @@
-import type { RouteRecordRaw } from 'vue-router'
-import { redirectRegistry } from './redirect-registry'
-import { buildRouteMeta } from './v21-route-meta'
+import type { RouteRecordRaw } from "vue-router";
+import { redirectRegistry } from "./redirect-registry";
+import { buildRouteMeta } from "./v21-route-meta";
 
-const BaseLayoutMeta = { layout: 'base' as const }
-const BlankLayoutMeta = { layout: 'blank' as const }
-const FlushWorkspaceMeta = { ...BaseLayoutMeta, contentMode: 'flush' as const, section: 'workspace' }
+const BaseLayoutMeta = { layout: "base" as const };
+const BlankLayoutMeta = { layout: "blank" as const };
+const FlushWorkspaceMeta = {
+  ...BaseLayoutMeta,
+  contentMode: "flush" as const,
+  section: "workspace",
+};
 
-const MailSurfaceView = () => import('@/views/app/MailSurfaceView.vue')
-const DriveSectionView = () => import('@/views/app/DriveSectionView.vue')
-const PassSectionView = () => import('@/views/app/PassSectionView.vue')
-const SuiteSectionView = () => import('@/views/app/SuiteSectionView.vue')
-const OrganizationsSectionView = () => import('@/views/app/OrganizationsSectionView.vue')
-const AdminSectionView = () => import('@/views/app/AdminSectionView.vue')
-const DocsEditorView = () => import('@/views/app/DocsEditorView.vue')
-const SheetsEditorView = () => import('@/views/app/SheetsEditorView.vue')
-const LabsModuleView = () => import('@/views/app/LabsModuleView.vue')
-const PublicPassShareView = () => import('@/views/public/PublicPassShareView.vue')
-const StorySurfaceView = () => import('@/views/public/StorySurfaceView.vue')
+const MailSurfaceView = () => import("@/views/app/MailSurfaceView.vue");
+const DriveSectionView = () => import("@/views/app/DriveSectionView.vue");
+const PassSectionView = () => import("@/views/app/PassSectionView.vue");
+const SuiteSectionView = () => import("@/views/app/SuiteSectionView.vue");
+const OrganizationsSectionView = () => import("@/views/app/OrganizationsSectionView.vue");
+const AdminSectionView = () => import("@/views/app/AdminSectionView.vue");
+const DocsEditorView = () => import("@/views/app/DocsEditorView.vue");
+const SheetsEditorView = () => import("@/views/app/SheetsEditorView.vue");
+const LabsModuleView = () => import("@/views/app/LabsModuleView.vue");
+const PublicPassShareView = () => import("@/views/public/PublicPassShareView.vue");
+const StorySurfaceView = () => import("@/views/public/StorySurfaceView.vue");
 
 const publicRoutes: RouteRecordRaw[] = [
   {
-    path: '/',
-    redirect: '/workspace',
-    meta: buildRouteMeta('/', BlankLayoutMeta)
+    path: "/",
+    redirect: "/workspace",
+    meta: buildRouteMeta("/", BlankLayoutMeta),
   },
   {
-    path: '/login',
-    component: () => import('@/views/public/LoginView.vue'),
-    meta: BlankLayoutMeta
+    path: "/login",
+    component: () => import("@/views/public/LoginView.vue"),
+    meta: BlankLayoutMeta,
   },
   {
-    path: '/register',
-    component: () => import('@/views/public/RegisterView.vue'),
-    meta: BlankLayoutMeta
+    path: "/register",
+    component: () => import("@/views/public/RegisterView.vue"),
+    meta: BlankLayoutMeta,
   },
   {
-    path: '/boundary',
-    component: () => import('@/views/public/BoundaryView.vue'),
-    meta: BlankLayoutMeta
+    path: "/boundary",
+    component: () => import("@/views/public/BoundaryView.vue"),
+    meta: BlankLayoutMeta,
   },
   {
-    path: '/product-access-blocked',
-    component: () => import('@/views/public/ProductAccessBlockedView.vue'),
-    meta: BlankLayoutMeta
+    path: "/product-access-blocked",
+    component: () => import("@/views/public/ProductAccessBlockedView.vue"),
+    meta: BlankLayoutMeta,
   },
   {
-    path: '/share/mail/:token',
-    component: () => import('@/views/public/PublicMailShareView.vue'),
-    meta: BlankLayoutMeta
+    path: "/share/mail/:token",
+    component: () => import("@/views/public/PublicMailShareView.vue"),
+    meta: BlankLayoutMeta,
   },
   {
-    path: '/share/drive/:token',
-    component: () => import('@/views/public/PublicDriveShareView.vue'),
-    meta: BlankLayoutMeta
+    path: "/share/drive/:token",
+    component: () => import("@/views/public/PublicDriveShareView.vue"),
+    meta: BlankLayoutMeta,
   },
   {
-    path: '/public/drive/shares/:token',
-    redirect: to => `/share/drive/${String(to.params.token || '')}`
+    path: "/public/drive/shares/:token",
+    redirect: (to) => `/share/drive/${String(to.params.token || "")}`,
   },
   {
-    path: '/share/pass/:token',
+    path: "/share/pass/:token",
     component: PublicPassShareView,
-    meta: BlankLayoutMeta
+    meta: BlankLayoutMeta,
   },
   {
-    path: '/onboarding/:storyKey',
+    path: "/onboarding/:storyKey",
     component: StorySurfaceView,
-    meta: { ...BlankLayoutMeta, storyGroup: 'onboarding' }
+    meta: { ...BlankLayoutMeta, storyGroup: "onboarding" },
   },
   {
-    path: '/failure-modes',
+    path: "/failure-modes",
     component: StorySurfaceView,
-    meta: { ...BlankLayoutMeta, storyGroup: 'failure', storyKey: 'f01' }
+    meta: { ...BlankLayoutMeta, storyGroup: "failure", storyKey: "f01" },
   },
   {
-    path: '/failure-modes/:storyKey',
+    path: "/failure-modes/:storyKey",
     component: StorySurfaceView,
-    meta: { ...BlankLayoutMeta, storyGroup: 'failure' }
+    meta: { ...BlankLayoutMeta, storyGroup: "failure" },
   },
   {
-    path: '/404',
-    component: () => import('@/views/public/System404View.vue'),
-    meta: BlankLayoutMeta
+    path: "/404",
+    component: () => import("@/views/public/System404View.vue"),
+    meta: BlankLayoutMeta,
   },
   {
-    path: '/500',
-    component: () => import('@/views/public/System500View.vue'),
-    meta: BlankLayoutMeta
+    path: "/500",
+    component: () => import("@/views/public/System500View.vue"),
+    meta: BlankLayoutMeta,
   },
   {
-    path: '/offline',
-    component: () => import('@/views/public/SystemOfflineView.vue'),
-    meta: BlankLayoutMeta
+    path: "/offline",
+    component: () => import("@/views/public/SystemOfflineView.vue"),
+    meta: BlankLayoutMeta,
   },
   {
-    path: '/maintenance',
-    component: () => import('@/views/public/SystemMaintenanceView.vue'),
-    meta: BlankLayoutMeta
-  }
-]
+    path: "/maintenance",
+    component: () => import("@/views/public/SystemMaintenanceView.vue"),
+    meta: BlankLayoutMeta,
+  },
+];
 
 const mailRoutes: RouteRecordRaw[] = [
   {
-    path: '/mail',
-    redirect: '/mail/inbox',
-    meta: buildRouteMeta('/mail', FlushWorkspaceMeta)
+    path: "/mail",
+    redirect: "/mail/inbox",
+    meta: buildRouteMeta("/mail", FlushWorkspaceMeta),
   },
   {
-    path: '/mail/inbox',
+    path: "/mail/inbox",
     component: MailSurfaceView,
-    meta: buildRouteMeta('/mail/inbox', {
+    meta: buildRouteMeta("/mail/inbox", {
       ...FlushWorkspaceMeta,
-      label: 'Mail',
-      surfaceKey: 'inbox'
-    })
+      label: "Mail",
+      surfaceKey: "inbox",
+    }),
   },
   ...[
-    { path: '/mail/starred', surfaceKey: 'starred', label: 'Mail' },
-    { path: '/mail/snoozed', surfaceKey: 'snoozed', label: 'Mail' },
-    { path: '/mail/drafts', surfaceKey: 'drafts', label: 'Mail' },
-    { path: '/mail/scheduled', surfaceKey: 'scheduled', label: 'Mail' },
-    { path: '/mail/outbox', surfaceKey: 'outbox', label: 'Mail' },
-    { path: '/mail/sent', surfaceKey: 'sent', label: 'Mail' },
-    { path: '/mail/archive', surfaceKey: 'archive', label: 'Mail' },
-    { path: '/mail/spam', surfaceKey: 'spam', label: 'Mail' },
-    { path: '/mail/trash', surfaceKey: 'trash', label: 'Mail' },
-    { path: '/mail/unread', surfaceKey: 'unread', label: 'Mail' },
-    { path: '/mail/contacts', surfaceKey: 'contacts', label: 'Mail' },
-    { path: '/mail/search', surfaceKey: 'search', label: 'Mail' },
-    { path: '/mail/compose', surfaceKey: 'compose', label: 'Mail' },
-    { path: '/mail/settings', surfaceKey: 'settings', label: 'Mail' },
-    { path: '/mail/conversations/:threadId', surfaceKey: 'conversation', label: 'Mail' },
-    { path: '/mail/folders/:folderId', surfaceKey: 'archive', label: 'Mail' },
-    { path: '/mail/labels/:labelId', surfaceKey: 'starred', label: 'Mail' }
-  ].map(item => ({
+    { path: "/mail/starred", surfaceKey: "starred", label: "Mail" },
+    { path: "/mail/snoozed", surfaceKey: "snoozed", label: "Mail" },
+    { path: "/mail/drafts", surfaceKey: "drafts", label: "Mail" },
+    { path: "/mail/scheduled", surfaceKey: "scheduled", label: "Mail" },
+    { path: "/mail/outbox", surfaceKey: "outbox", label: "Mail" },
+    { path: "/mail/sent", surfaceKey: "sent", label: "Mail" },
+    { path: "/mail/archive", surfaceKey: "archive", label: "Mail" },
+    { path: "/mail/spam", surfaceKey: "spam", label: "Mail" },
+    { path: "/mail/trash", surfaceKey: "trash", label: "Mail" },
+    { path: "/mail/unread", surfaceKey: "unread", label: "Mail" },
+    { path: "/mail/contacts", surfaceKey: "contacts", label: "Mail" },
+    { path: "/mail/search", surfaceKey: "search", label: "Mail" },
+    { path: "/mail/compose", surfaceKey: "compose", label: "Mail" },
+    { path: "/mail/settings", surfaceKey: "settings", label: "Mail" },
+    { path: "/mail/conversations/:threadId", surfaceKey: "conversation", label: "Mail" },
+    { path: "/mail/folders/:folderId", surfaceKey: "archive", label: "Mail" },
+    { path: "/mail/labels/:labelId", surfaceKey: "starred", label: "Mail" },
+  ].map((item) => ({
     path: item.path,
     component: MailSurfaceView,
     meta: buildRouteMeta(item.path, {
       ...FlushWorkspaceMeta,
       label: item.label,
-      surfaceKey: item.surfaceKey
-    })
+      surfaceKey: item.surfaceKey,
+    }),
   })),
   ...[
-    { path: '/inbox', surfaceKey: 'inbox', label: 'Mail' },
-    { path: '/starred', surfaceKey: 'starred', label: 'Mail' },
-    { path: '/snoozed', surfaceKey: 'snoozed', label: 'Mail' },
-    { path: '/drafts', surfaceKey: 'drafts', label: 'Mail' },
-    { path: '/scheduled', surfaceKey: 'scheduled', label: 'Mail' },
-    { path: '/outbox', surfaceKey: 'outbox', label: 'Mail' },
-    { path: '/sent', surfaceKey: 'sent', label: 'Mail' },
-    { path: '/archive', surfaceKey: 'archive', label: 'Mail' },
-    { path: '/spam', surfaceKey: 'spam', label: 'Mail' },
-    { path: '/trash', surfaceKey: 'trash', label: 'Mail' },
-    { path: '/unread', surfaceKey: 'unread', label: 'Mail' },
-    { path: '/contacts', surfaceKey: 'contacts', label: 'Mail' },
-    { path: '/search', surfaceKey: 'search', label: 'Mail' },
-    { path: '/compose', surfaceKey: 'compose', label: 'Mail' },
-    { path: '/conversations/:id', surfaceKey: 'conversation', label: 'Mail' },
-    { path: '/folders/:id', surfaceKey: 'archive', label: 'Mail' },
-    { path: '/labels/:id', surfaceKey: 'starred', label: 'Mail' }
-  ].map(item => ({
+    { path: "/inbox", surfaceKey: "inbox", label: "Mail" },
+    { path: "/starred", surfaceKey: "starred", label: "Mail" },
+    { path: "/snoozed", surfaceKey: "snoozed", label: "Mail" },
+    { path: "/drafts", surfaceKey: "drafts", label: "Mail" },
+    { path: "/scheduled", surfaceKey: "scheduled", label: "Mail" },
+    { path: "/outbox", surfaceKey: "outbox", label: "Mail" },
+    { path: "/sent", surfaceKey: "sent", label: "Mail" },
+    { path: "/archive", surfaceKey: "archive", label: "Mail" },
+    { path: "/spam", surfaceKey: "spam", label: "Mail" },
+    { path: "/trash", surfaceKey: "trash", label: "Mail" },
+    { path: "/unread", surfaceKey: "unread", label: "Mail" },
+    { path: "/contacts", surfaceKey: "contacts", label: "Mail" },
+    { path: "/search", surfaceKey: "search", label: "Mail" },
+    { path: "/compose", surfaceKey: "compose", label: "Mail" },
+    { path: "/conversations/:id", surfaceKey: "conversation", label: "Mail" },
+    { path: "/folders/:id", surfaceKey: "archive", label: "Mail" },
+    { path: "/labels/:id", surfaceKey: "starred", label: "Mail" },
+  ].map((item) => ({
     path: item.path,
     component: MailSurfaceView,
     meta: {
       ...FlushWorkspaceMeta,
       label: item.label,
-      surfaceKey: item.surfaceKey
-    }
+      surfaceKey: item.surfaceKey,
+    },
   })),
+  // Unknown one-segment /mail/* paths are explicit 404s. Canonical thread URLs
+  // use /mail/conversations/:threadId; legacy /conversations/:id remains above.
   {
-    path: '/mail/:id',
-    redirect: to => `/conversations/${String(to.params.id || '')}`
-  }
-]
+    path: "/mail/:id",
+    redirect: "/404",
+  },
+];
 
 // Folder detail compatibility is tracked in sameShapeCompatibilityRoutes because
 // legacy and canonical URLs share the same Vue Router path shape.
 
 const workspaceRoutes: RouteRecordRaw[] = [
   {
-    path: '/workspace',
+    path: "/workspace",
     component: SuiteSectionView,
-    meta: buildRouteMeta('/workspace', { ...FlushWorkspaceMeta, label: 'Workspace', surfaceKey: 'overview' })
+    meta: buildRouteMeta("/workspace", {
+      ...FlushWorkspaceMeta,
+      label: "Workspace",
+      surfaceKey: "overview",
+    }),
   },
   {
-    path: '/workspace/today',
+    path: "/workspace/today",
     component: SuiteSectionView,
-    meta: buildRouteMeta('/workspace/today', { ...FlushWorkspaceMeta, label: 'Workspace', surfaceKey: 'overview' })
+    meta: buildRouteMeta("/workspace/today", {
+      ...FlushWorkspaceMeta,
+      label: "Workspace",
+      surfaceKey: "overview",
+    }),
   },
   {
-    path: '/workspace/activity',
+    path: "/workspace/activity",
     component: SuiteSectionView,
-    meta: buildRouteMeta('/workspace/activity', { ...FlushWorkspaceMeta, label: 'Workspace', surfaceKey: 'operations' })
+    meta: buildRouteMeta("/workspace/activity", {
+      ...FlushWorkspaceMeta,
+      label: "Workspace",
+      surfaceKey: "operations",
+    }),
   },
   {
-    path: '/workspace/tasks',
+    path: "/workspace/tasks",
     component: SuiteSectionView,
-    meta: buildRouteMeta('/workspace/tasks', { ...FlushWorkspaceMeta, label: 'Workspace', surfaceKey: 'operations' })
+    meta: buildRouteMeta("/workspace/tasks", {
+      ...FlushWorkspaceMeta,
+      label: "Workspace",
+      surfaceKey: "operations",
+    }),
   },
   {
-    path: '/calendar',
-    component: () => import('@/views/app/CalendarView.vue'),
-    meta: { ...FlushWorkspaceMeta, label: 'Calendar' }
+    path: "/calendar",
+    component: () => import("@/views/app/CalendarView.vue"),
+    meta: { ...FlushWorkspaceMeta, label: "Calendar" },
   },
   {
-    path: '/drive',
+    path: "/drive",
     component: DriveSectionView,
-    meta: buildRouteMeta('/drive', { ...FlushWorkspaceMeta, label: 'Drive', surfaceKey: 'drive' })
+    meta: buildRouteMeta("/drive", { ...FlushWorkspaceMeta, label: "Drive", surfaceKey: "drive" }),
   },
   {
-    path: '/drive/shared',
+    path: "/drive/shared",
     component: DriveSectionView,
-    meta: { ...FlushWorkspaceMeta, label: 'Drive', surfaceKey: 'drive-shared' }
+    meta: { ...FlushWorkspaceMeta, label: "Drive", surfaceKey: "drive-shared" },
   },
   {
-    path: '/drive/recent',
+    path: "/drive/recent",
     component: DriveSectionView,
-    meta: { ...FlushWorkspaceMeta, label: 'Drive', surfaceKey: 'drive-recent' }
+    meta: { ...FlushWorkspaceMeta, label: "Drive", surfaceKey: "drive-recent" },
   },
   {
-    path: '/drive/starred',
+    path: "/drive/starred",
     component: DriveSectionView,
-    meta: { ...FlushWorkspaceMeta, label: 'Drive', surfaceKey: 'drive-starred' }
+    meta: { ...FlushWorkspaceMeta, label: "Drive", surfaceKey: "drive-starred" },
   },
   {
-    path: '/drive/trash',
+    path: "/drive/trash",
     component: DriveSectionView,
-    meta: { ...FlushWorkspaceMeta, label: 'Drive', surfaceKey: 'drive-trash' }
+    meta: { ...FlushWorkspaceMeta, label: "Drive", surfaceKey: "drive-trash" },
   },
   {
-    path: '/pass',
+    path: "/pass",
     component: PassSectionView,
-    meta: { ...FlushWorkspaceMeta, label: 'Pass', surfaceKey: 'pass' }
+    meta: { ...FlushWorkspaceMeta, label: "Pass", surfaceKey: "pass" },
   },
   {
-    path: '/pass/shared-library',
+    path: "/pass/shared-library",
     component: PassSectionView,
-    meta: { ...FlushWorkspaceMeta, label: 'Pass', surfaceKey: 'pass-shared-library' }
+    meta: { ...FlushWorkspaceMeta, label: "Pass", surfaceKey: "pass-shared-library" },
   },
   {
-    path: '/pass/secure-links',
+    path: "/pass/secure-links",
     component: PassSectionView,
-    meta: { ...FlushWorkspaceMeta, label: 'Pass', surfaceKey: 'pass-secure-links' }
+    meta: { ...FlushWorkspaceMeta, label: "Pass", surfaceKey: "pass-secure-links" },
   },
   {
-    path: '/pass/alias-center',
+    path: "/pass/alias-center",
     component: PassSectionView,
-    meta: { ...FlushWorkspaceMeta, label: 'Pass', surfaceKey: 'pass-alias-center' }
+    meta: { ...FlushWorkspaceMeta, label: "Pass", surfaceKey: "pass-alias-center" },
   },
   {
-    path: '/pass/mailbox',
+    path: "/pass/mailbox",
     component: PassSectionView,
-    meta: { ...FlushWorkspaceMeta, label: 'Pass', surfaceKey: 'pass-mailbox' }
+    meta: { ...FlushWorkspaceMeta, label: "Pass", surfaceKey: "pass-mailbox" },
   },
   {
-    path: '/pass/business-policy',
+    path: "/pass/business-policy",
     component: PassSectionView,
-    meta: { ...FlushWorkspaceMeta, label: 'Pass', surfaceKey: 'pass-business-policy' }
+    meta: { ...FlushWorkspaceMeta, label: "Pass", surfaceKey: "pass-business-policy" },
   },
   {
-    path: '/pass/monitor',
+    path: "/pass/monitor",
     component: PassSectionView,
-    meta: { ...FlushWorkspaceMeta, label: 'Pass', surfaceKey: 'pass-monitor' }
+    meta: { ...FlushWorkspaceMeta, label: "Pass", surfaceKey: "pass-monitor" },
   },
   {
-    path: '/docs',
-    component: () => import('@/views/app/DocsWorkspaceView.vue'),
-    meta: { ...BaseLayoutMeta, section: 'workspace', label: 'Docs' }
+    path: "/docs",
+    component: () => import("@/views/app/DocsWorkspaceView.vue"),
+    meta: { ...BaseLayoutMeta, section: "workspace", label: "Docs" },
   },
   {
-    path: '/docs/:id',
+    path: "/docs/:id",
     component: DocsEditorView,
-    meta: { ...BaseLayoutMeta, section: 'workspace', label: 'Docs' }
+    meta: { ...BaseLayoutMeta, section: "workspace", label: "Docs" },
   },
   {
-    path: '/sheets',
-    component: () => import('@/views/app/SheetsWorkspaceView.vue'),
-    meta: { ...BaseLayoutMeta, section: 'workspace', label: 'Sheets' }
+    path: "/sheets",
+    component: () => import("@/views/app/SheetsWorkspaceView.vue"),
+    meta: { ...BaseLayoutMeta, section: "workspace", label: "Sheets" },
   },
   {
-    path: '/sheets/:id',
+    path: "/sheets/:id",
     component: SheetsEditorView,
-    meta: { ...BaseLayoutMeta, section: 'workspace', label: 'Sheets' }
-  }
-]
+    meta: { ...BaseLayoutMeta, section: "workspace", label: "Sheets" },
+  },
+];
 
 const aggregationRoutes: RouteRecordRaw[] = [
   {
-    path: '/collaboration',
-    component: () => import('@/views/app/CollaborationView.vue'),
-    meta: { ...BaseLayoutMeta, section: 'aggregation', label: 'Collaboration' }
+    path: "/collaboration",
+    component: () => import("@/views/app/CollaborationView.vue"),
+    meta: { ...BaseLayoutMeta, section: "aggregation", label: "Collaboration" },
   },
   {
-    path: '/command-center',
-    component: () => import('@/views/app/CommandCenterView.vue'),
-    meta: { ...BaseLayoutMeta, section: 'aggregation', label: 'Command Center' }
+    path: "/command-center",
+    component: () => import("@/views/app/CommandCenterView.vue"),
+    meta: { ...BaseLayoutMeta, section: "aggregation", label: "Command Center" },
   },
   {
-    path: '/notifications',
-    component: () => import('@/views/app/NotificationsView.vue'),
-    meta: { ...BaseLayoutMeta, section: 'aggregation', label: 'Notifications' }
-  }
-]
+    path: "/notifications",
+    component: () => import("@/views/app/NotificationsView.vue"),
+    meta: { ...BaseLayoutMeta, section: "aggregation", label: "Notifications" },
+  },
+];
 
 const governanceRoutes: RouteRecordRaw[] = [
   {
-    path: '/admin',
+    path: "/admin",
     component: AdminSectionView,
-    meta: buildRouteMeta('/admin', { ...BaseLayoutMeta, section: 'governance', label: 'Admin', surfaceKey: 'overview' })
+    meta: buildRouteMeta("/admin", {
+      ...BaseLayoutMeta,
+      section: "governance",
+      label: "Admin",
+      surfaceKey: "overview",
+    }),
   },
   {
-    path: '/admin/users',
+    path: "/admin/users",
     component: AdminSectionView,
-    meta: buildRouteMeta('/admin/users', { ...BaseLayoutMeta, section: 'governance', label: 'Admin', surfaceKey: 'users' })
+    meta: buildRouteMeta("/admin/users", {
+      ...BaseLayoutMeta,
+      section: "governance",
+      label: "Admin",
+      surfaceKey: "users",
+    }),
   },
   {
-    path: '/admin/roles',
+    path: "/admin/roles",
     component: AdminSectionView,
-    meta: buildRouteMeta('/admin/roles', { ...BaseLayoutMeta, section: 'governance', label: 'Admin', surfaceKey: 'roles' })
+    meta: buildRouteMeta("/admin/roles", {
+      ...BaseLayoutMeta,
+      section: "governance",
+      label: "Admin",
+      surfaceKey: "roles",
+    }),
   },
   {
-    path: '/admin/organizations',
+    path: "/admin/organizations",
     component: AdminSectionView,
-    meta: buildRouteMeta('/admin/organizations', { ...BaseLayoutMeta, section: 'governance', label: 'Admin', surfaceKey: 'organizations' })
+    meta: buildRouteMeta("/admin/organizations", {
+      ...BaseLayoutMeta,
+      section: "governance",
+      label: "Admin",
+      surfaceKey: "organizations",
+    }),
   },
   {
-    path: '/admin/domains',
+    path: "/admin/domains",
     component: AdminSectionView,
-    meta: buildRouteMeta('/admin/domains', { ...BaseLayoutMeta, section: 'governance', label: 'Admin', surfaceKey: 'domains' })
+    meta: buildRouteMeta("/admin/domains", {
+      ...BaseLayoutMeta,
+      section: "governance",
+      label: "Admin",
+      surfaceKey: "domains",
+    }),
   },
   {
-    path: '/admin/policies',
+    path: "/admin/policies",
     component: AdminSectionView,
-    meta: buildRouteMeta('/admin/policies', { ...BaseLayoutMeta, section: 'governance', label: 'Admin', surfaceKey: 'policies' })
+    meta: buildRouteMeta("/admin/policies", {
+      ...BaseLayoutMeta,
+      section: "governance",
+      label: "Admin",
+      surfaceKey: "policies",
+    }),
   },
   {
-    path: '/admin/audit',
+    path: "/admin/audit",
     component: AdminSectionView,
-    meta: buildRouteMeta('/admin/audit', { ...BaseLayoutMeta, section: 'governance', label: 'Admin', surfaceKey: 'audit' })
+    meta: buildRouteMeta("/admin/audit", {
+      ...BaseLayoutMeta,
+      section: "governance",
+      label: "Admin",
+      surfaceKey: "audit",
+    }),
   },
   {
-    path: '/admin/alerts',
+    path: "/admin/alerts",
     component: AdminSectionView,
-    meta: buildRouteMeta('/admin/alerts', { ...BaseLayoutMeta, section: 'governance', label: 'Admin', surfaceKey: 'alerts' })
+    meta: buildRouteMeta("/admin/alerts", {
+      ...BaseLayoutMeta,
+      section: "governance",
+      label: "Admin",
+      surfaceKey: "alerts",
+    }),
   },
   {
-    path: '/admin/integrations',
+    path: "/admin/integrations",
     component: AdminSectionView,
-    meta: buildRouteMeta('/admin/integrations', { ...BaseLayoutMeta, section: 'governance', label: 'Admin', surfaceKey: 'integrations' })
+    meta: buildRouteMeta("/admin/integrations", {
+      ...BaseLayoutMeta,
+      section: "governance",
+      label: "Admin",
+      surfaceKey: "integrations",
+    }),
   },
   {
-    path: '/admin/billing',
+    path: "/admin/billing",
     component: AdminSectionView,
-    meta: buildRouteMeta('/admin/billing', { ...BaseLayoutMeta, section: 'governance', label: 'Admin', surfaceKey: 'billing' })
+    meta: buildRouteMeta("/admin/billing", {
+      ...BaseLayoutMeta,
+      section: "governance",
+      label: "Admin",
+      surfaceKey: "billing",
+    }),
   },
   {
-    path: '/admin/system',
+    path: "/admin/system",
     component: AdminSectionView,
-    meta: buildRouteMeta('/admin/system', { ...BaseLayoutMeta, section: 'governance', label: 'Admin', surfaceKey: 'system' })
+    meta: buildRouteMeta("/admin/system", {
+      ...BaseLayoutMeta,
+      section: "governance",
+      label: "Admin",
+      surfaceKey: "system",
+    }),
   },
   {
-    path: '/admin/risk',
+    path: "/admin/risk",
     component: AdminSectionView,
-    meta: buildRouteMeta('/admin/risk', { ...BaseLayoutMeta, section: 'governance', label: 'Admin', surfaceKey: 'risk' })
+    meta: buildRouteMeta("/admin/risk", {
+      ...BaseLayoutMeta,
+      section: "governance",
+      label: "Admin",
+      surfaceKey: "risk",
+    }),
   },
   {
-    path: '/suite',
+    path: "/suite",
     component: SuiteSectionView,
-    meta: { ...BaseLayoutMeta, section: 'governance', label: 'Suite', surfaceKey: 'overview' }
+    meta: { ...BaseLayoutMeta, section: "governance", label: "Suite", surfaceKey: "overview" },
   },
   {
-    path: '/suite/plans',
+    path: "/suite/plans",
     component: SuiteSectionView,
-    meta: { ...BaseLayoutMeta, section: 'governance', label: 'Suite', surfaceKey: 'plans' }
+    meta: { ...BaseLayoutMeta, section: "governance", label: "Suite", surfaceKey: "plans" },
   },
   {
-    path: '/suite/billing',
+    path: "/suite/billing",
     component: SuiteSectionView,
-    meta: { ...BaseLayoutMeta, section: 'governance', label: 'Suite', surfaceKey: 'billing' }
+    meta: { ...BaseLayoutMeta, section: "governance", label: "Suite", surfaceKey: "billing" },
   },
   {
-    path: '/suite/operations',
+    path: "/suite/operations",
     component: SuiteSectionView,
-    meta: { ...BaseLayoutMeta, section: 'governance', label: 'Suite', surfaceKey: 'operations' }
+    meta: { ...BaseLayoutMeta, section: "governance", label: "Suite", surfaceKey: "operations" },
   },
   {
-    path: '/suite/boundary',
+    path: "/suite/boundary",
     component: SuiteSectionView,
-    meta: { ...BaseLayoutMeta, section: 'governance', label: 'Suite', surfaceKey: 'boundary' }
+    meta: { ...BaseLayoutMeta, section: "governance", label: "Suite", surfaceKey: "boundary" },
   },
   {
-    path: '/business',
-    component: () => import('@/views/app/BusinessOverviewView.vue'),
-    meta: { ...BaseLayoutMeta, section: 'governance', label: 'Business' }
+    path: "/business",
+    component: () => import("@/views/app/BusinessOverviewView.vue"),
+    meta: { ...BaseLayoutMeta, section: "governance", label: "Business" },
   },
   {
-    path: '/organizations',
+    path: "/organizations",
     component: OrganizationsSectionView,
-    meta: { ...BaseLayoutMeta, section: 'governance', label: 'Organizations', surfaceKey: 'summary' }
+    meta: {
+      ...BaseLayoutMeta,
+      section: "governance",
+      label: "Organizations",
+      surfaceKey: "summary",
+    },
   },
   {
-    path: '/organizations/members',
+    path: "/organizations/members",
     component: OrganizationsSectionView,
-    meta: { ...BaseLayoutMeta, section: 'governance', label: 'Organizations', surfaceKey: 'members' }
+    meta: {
+      ...BaseLayoutMeta,
+      section: "governance",
+      label: "Organizations",
+      surfaceKey: "members",
+    },
   },
   {
-    path: '/organizations/product-access',
+    path: "/organizations/product-access",
     component: OrganizationsSectionView,
-    meta: { ...BaseLayoutMeta, section: 'governance', label: 'Organizations', surfaceKey: 'product-access' }
+    meta: {
+      ...BaseLayoutMeta,
+      section: "governance",
+      label: "Organizations",
+      surfaceKey: "product-access",
+    },
   },
   {
-    path: '/organizations/domains',
+    path: "/organizations/domains",
     component: OrganizationsSectionView,
-    meta: { ...BaseLayoutMeta, section: 'governance', label: 'Organizations', surfaceKey: 'domains' }
+    meta: {
+      ...BaseLayoutMeta,
+      section: "governance",
+      label: "Organizations",
+      surfaceKey: "domains",
+    },
   },
   {
-    path: '/organizations/mail-identities',
+    path: "/organizations/mail-identities",
     component: OrganizationsSectionView,
-    meta: { ...BaseLayoutMeta, section: 'governance', label: 'Organizations', surfaceKey: 'mail-identities' }
+    meta: {
+      ...BaseLayoutMeta,
+      section: "governance",
+      label: "Organizations",
+      surfaceKey: "mail-identities",
+    },
   },
   {
-    path: '/organizations/policy',
+    path: "/organizations/policy",
     component: OrganizationsSectionView,
-    meta: { ...BaseLayoutMeta, section: 'governance', label: 'Organizations', surfaceKey: 'policy' }
+    meta: {
+      ...BaseLayoutMeta,
+      section: "governance",
+      label: "Organizations",
+      surfaceKey: "policy",
+    },
   },
   {
-    path: '/organizations/monitor',
+    path: "/organizations/monitor",
     component: OrganizationsSectionView,
-    meta: { ...BaseLayoutMeta, section: 'governance', label: 'Organizations', surfaceKey: 'monitor' }
+    meta: {
+      ...BaseLayoutMeta,
+      section: "governance",
+      label: "Organizations",
+      surfaceKey: "monitor",
+    },
   },
   {
-    path: '/organizations/session-monitor',
+    path: "/organizations/session-monitor",
     component: OrganizationsSectionView,
-    meta: { ...BaseLayoutMeta, section: 'governance', label: 'Organizations', surfaceKey: 'session-monitor' }
+    meta: {
+      ...BaseLayoutMeta,
+      section: "governance",
+      label: "Organizations",
+      surfaceKey: "session-monitor",
+    },
   },
   {
-    path: '/organizations/audit',
+    path: "/organizations/audit",
     component: OrganizationsSectionView,
-    meta: { ...BaseLayoutMeta, section: 'governance', label: 'Organizations', surfaceKey: 'audit' }
+    meta: { ...BaseLayoutMeta, section: "governance", label: "Organizations", surfaceKey: "audit" },
   },
   {
-    path: '/security',
-    component: () => import('@/views/app/SecurityCenterView.vue'),
-    meta: { ...BaseLayoutMeta, section: 'governance', label: 'Security' }
+    path: "/security",
+    component: () => import("@/views/app/SecurityCenterView.vue"),
+    meta: { ...BaseLayoutMeta, section: "governance", label: "Security" },
   },
   {
-    path: '/settings',
-    component: () => import('@/views/app/SettingsWorkspaceView.vue'),
-    meta: { ...BaseLayoutMeta, section: 'governance', label: 'Settings' }
-  }
-]
+    path: "/settings",
+    component: () => import("@/views/app/SettingsWorkspaceView.vue"),
+    meta: { ...BaseLayoutMeta, section: "governance", label: "Settings" },
+  },
+];
 
 const researchRoutes: RouteRecordRaw[] = [
   {
-    path: '/labs',
-    component: () => import('@/views/app/LabsOverviewView.vue'),
-    meta: { ...BaseLayoutMeta, section: 'research', label: 'Labs' }
+    path: "/labs",
+    component: () => import("@/views/app/LabsOverviewView.vue"),
+    meta: { ...BaseLayoutMeta, section: "research", label: "Labs" },
   },
   {
-    path: '/labs/:moduleKey',
+    path: "/labs/:moduleKey",
     component: LabsModuleView,
-    meta: { ...BaseLayoutMeta, section: 'research', label: 'Labs' }
-  }
-]
+    meta: { ...BaseLayoutMeta, section: "research", label: "Labs" },
+  },
+];
 
 // Redirect compatibility routes are generated from redirectRegistry.
-const redirectRoutes: RouteRecordRaw[] = redirectRegistry.map(rule => ({
+const redirectRoutes: RouteRecordRaw[] = redirectRegistry.map((rule) => ({
   path: rule.from,
-  redirect: rule.to
-}))
+  redirect: rule.to,
+}));
 
 export const routes: RouteRecordRaw[] = [
   ...publicRoutes,
@@ -480,7 +602,7 @@ export const routes: RouteRecordRaw[] = [
   ...researchRoutes,
   ...redirectRoutes,
   {
-    path: '/:pathMatch(.*)*',
-    redirect: '/404'
-  }
-]
+    path: "/:pathMatch(.*)*",
+    redirect: "/404",
+  },
+];

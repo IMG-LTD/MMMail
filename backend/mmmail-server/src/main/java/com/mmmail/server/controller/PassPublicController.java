@@ -1,5 +1,7 @@
 package com.mmmail.server.controller;
 
+import com.mmmail.common.exception.BizException;
+import com.mmmail.common.exception.ErrorCode;
 import com.mmmail.common.model.Result;
 import com.mmmail.server.model.vo.PassPublicSecureLinkVo;
 import com.mmmail.server.service.PassBusinessService;
@@ -21,6 +23,13 @@ public class PassPublicController {
 
     @GetMapping("/{token}")
     public Result<PassPublicSecureLinkVo> getSecureLink(@PathVariable String token, HttpServletRequest httpRequest) {
-        return Result.success(passBusinessService.getPublicSecureLink(token, httpRequest.getRemoteAddr()));
+        try {
+            return Result.success(passBusinessService.getPublicSecureLink(token, httpRequest.getRemoteAddr()));
+        } catch (BizException exception) {
+            if (exception.getCode() == ErrorCode.PUBLIC_SHARE_NOT_FOUND.getCode()) {
+                throw new BizException(ErrorCode.INVALID_ARGUMENT, exception.getMessage());
+            }
+            throw exception;
+        }
     }
 }

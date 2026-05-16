@@ -7,6 +7,7 @@ import com.mmmail.server.model.dto.LoginRequest;
 import com.mmmail.server.model.dto.RefreshRequest;
 import com.mmmail.server.model.dto.RegisterRequest;
 import com.mmmail.server.model.vo.AuthResponse;
+import com.mmmail.server.model.vo.AuthUserInfoVo;
 import com.mmmail.server.model.vo.UserSessionVo;
 import com.mmmail.server.security.AuthCookieService;
 import com.mmmail.server.service.AuthService;
@@ -81,6 +82,10 @@ class AuthControllerSupport {
                 SecurityUtils.currentUserId(),
                 SecurityUtils.currentPrincipal().sessionId()
         ));
+    }
+
+    protected Result<AuthUserInfoVo> currentUserInfo() {
+        return Result.success(authService.currentUserInfo(SecurityUtils.currentUserId()));
     }
 
     protected Result<Void> revokeUserSession(Long sessionId, HttpServletRequest httpRequest) {

@@ -1,19 +1,19 @@
-import { computed, ref } from 'vue'
+import { computed, ref } from "vue";
 
 export interface DialogStackEntry {
-  id: string
-  kind: 'dialog' | 'drawer' | 'sheet'
+  id: string;
+  kind: "dialog" | "drawer" | "sheet";
 }
 
-const stack = ref<DialogStackEntry[]>([])
+const stack = ref<DialogStackEntry[]>([]);
 
 export function useDialogStack() {
   function push(entry: DialogStackEntry) {
-    stack.value = [...stack.value, entry]
+    stack.value = [...stack.value, entry];
   }
 
   function pop() {
-    stack.value = stack.value.slice(0, -1)
+    stack.value = stack.value.slice(0, -1);
   }
 
   return {
@@ -21,6 +21,6 @@ export function useDialogStack() {
     top: computed(() => stack.value.at(-1) || null),
     pop,
     push,
-    stack: computed(() => stack.value)
-  }
+    stack: computed(() => stack.value),
+  };
 }

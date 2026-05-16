@@ -1,67 +1,82 @@
 <script setup lang="ts">
-import { computed, ref, watch } from 'vue'
-import Modal from '@/design-system/components/Modal.vue'
-import type { DocsNoteDetail, DocsPermission } from '@/service/api/docs'
+import { NButton, NInput, NSelect } from "naive-ui";
+import { computed, ref, watch } from "vue";
+import Modal from "@/design-system/components/Modal.vue";
+import type { DocsNoteDetail, DocsPermission } from "@/service/api/docs";
 
-type LinkAccess = 'restricted' | 'workspace' | 'public-read'
+type LinkAccess = "restricted" | "workspace" | "public-read";
 
 const props = defineProps<{
-  note: DocsNoteDetail | null
-  show: boolean
-}>()
+  note: DocsNoteDetail | null;
+  show: boolean;
+}>();
 
 const emit = defineEmits<{
-  'update:show': [value: boolean]
-}>()
+  "update:show": [value: boolean];
+}>();
 
-const inviteEmail = ref('')
-const inviteRole = ref<DocsPermission>('VIEW')
-const linkAccess = ref<LinkAccess>('restricted')
-const validationError = ref('')
-const retryCount = ref(0)
+const inviteEmail = ref("");
+const inviteRole = ref<DocsPermission>("VIEW");
+const linkAccess = ref<LinkAccess>("restricted");
+const validationError = ref("");
+const retryCount = ref(0);
 
-const noteTitle = computed(() => props.note?.title || 'Unavailable document')
+const inviteRoleOptions = [
+  { label: "Viewer", value: "VIEW" },
+  { label: "Editor", value: "EDIT" },
+];
+
+const linkAccessOptions = [
+  { label: "Restricted", value: "restricted" },
+  { label: "Workspace request", value: "workspace" },
+  { label: "Public read", value: "public-read" },
+];
+
+const noteTitle = computed(() => props.note?.title || "Unavailable document");
 const accessSummary = computed(() => {
   if (!props.note) {
-    return 'Document runtime detail has not loaded yet.'
+    return "Document runtime detail has not loaded yet.";
   }
-  return props.note.shared ? 'Shared with workspace collaborators.' : 'Restricted to the owner.'
-})
+  return props.note.shared ? "Shared with workspace collaborators." : "Restricted to the owner.";
+});
 const linkAccessCopy = computed(() => {
-  if (linkAccess.value === 'workspace') {
-    return 'Workspace members can request access. Pending backend confirmation.'
+  if (linkAccess.value === "workspace") {
+    return "Workspace members can request access. Pending backend confirmation.";
   }
-  if (linkAccess.value === 'public-read') {
-    return 'Public read is staged locally and requires backend confirmation.'
+  if (linkAccess.value === "public-read") {
+    return "Public read is staged locally and requires backend confirmation.";
   }
-  return 'Only invited collaborators can access this document.'
-})
+  return "Only invited collaborators can access this document.";
+});
 const retryCopy = computed(() => {
-  return retryCount.value ? `Retry queued ${retryCount.value} time(s)` : 'Retry invite'
-})
+  return retryCount.value ? `Retry queued ${retryCount.value} time(s)` : "Retry invite";
+});
 
 function sendInvite() {
-  if (!inviteEmail.value.trim() || !inviteEmail.value.includes('@')) {
-    validationError.value = 'Enter a valid email before sending an invite.'
-    return
+  if (!inviteEmail.value.trim() || !inviteEmail.value.includes("@")) {
+    validationError.value = "Enter a valid email before sending an invite.";
+    return;
   }
-  validationError.value = 'Invite send is pending backend confirmation.'
+  validationError.value = "Invite send is pending backend confirmation.";
 }
 
 function retryInvite() {
-  retryCount.value += 1
-  validationError.value = 'Retry requested; invite remains unsent until backend confirmation.'
+  retryCount.value += 1;
+  validationError.value = "Retry requested; invite remains unsent until backend confirmation.";
 }
 
-watch(() => props.show, value => {
-  if (!value) {
-    inviteEmail.value = ''
-    inviteRole.value = 'VIEW'
-    linkAccess.value = 'restricted'
-    validationError.value = ''
-    retryCount.value = 0
-  }
-})
+watch(
+  () => props.show,
+  (value) => {
+    if (!value) {
+      inviteEmail.value = "";
+      inviteRole.value = "VIEW";
+      linkAccess.value = "restricted";
+      validationError.value = "";
+      retryCount.value = 0;
+    }
+  },
+);
 </script>
 
 <template>
@@ -82,29 +97,29 @@ watch(() => props.show, value => {
 
       <label class="docs-share-panel__field">
         <span class="section-label">Invite</span>
-        <input
-          v-model="inviteEmail"
+        <NInput
+          v-model:value="inviteEmail"
           class="docs-share-panel__invite-input"
-          type="email"
           placeholder="name@company.com"
-        >
+        />
       </label>
 
       <div class="docs-share-panel__controls">
         <label class="docs-share-panel__field">
           <span class="section-label">Role</span>
-          <select v-model="inviteRole" class="docs-share-panel__role-select">
-            <option value="VIEW">Viewer</option>
-            <option value="EDIT">Editor</option>
-          </select>
+          <NSelect
+            v-model:value="inviteRole"
+            class="docs-share-panel__role-select"
+            :options="inviteRoleOptions"
+          />
         </label>
         <label class="docs-share-panel__field">
           <span class="section-label">Link access</span>
-          <select v-model="linkAccess" class="docs-share-panel__link-access">
-            <option value="restricted">Restricted</option>
-            <option value="workspace">Workspace request</option>
-            <option value="public-read">Public read</option>
-          </select>
+          <NSelect
+            v-model:value="linkAccess"
+            class="docs-share-panel__link-access"
+            :options="linkAccessOptions"
+          />
         </label>
       </div>
 
@@ -112,7 +127,7 @@ watch(() => props.show, value => {
 
       <div class="docs-share-panel__collaborators">
         <div>
-          <strong>{{ note?.ownerDisplayName || 'Document owner' }}</strong>
+          <strong>{{ note?.ownerDisplayName || "Document owner" }}</strong>
           <span>Owner</span>
         </div>
         <div>
@@ -130,12 +145,12 @@ watch(() => props.show, value => {
       </p>
 
       <div class="docs-share-panel__actions">
-        <button class="docs-share-panel__send" type="button" @click="sendInvite">
+        <NButton class="docs-share-panel__send" native-type="button" @click="sendInvite">
           Send invite
-        </button>
-        <button class="docs-share-panel__retry" type="button" @click="retryInvite">
+        </NButton>
+        <NButton class="docs-share-panel__retry" native-type="button" @click="retryInvite">
           {{ retryCopy }}
-        </button>
+        </NButton>
       </div>
     </section>
   </Modal>

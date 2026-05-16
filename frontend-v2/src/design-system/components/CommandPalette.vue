@@ -1,111 +1,148 @@
 <script setup lang="ts">
-import { computed } from 'vue'
-import HostedBadge from './HostedBadge.vue'
-import PremiumBadge from './PremiumBadge.vue'
-import StatusBadge from './StatusBadge.vue'
-import { useShellStore } from '@/store/modules/shell'
+import { NButton, NInput } from "naive-ui";
+import { computed } from "vue";
+import HostedBadge from "./HostedBadge.vue";
+import PremiumBadge from "./PremiumBadge.vue";
+import StatusBadge from "./StatusBadge.vue";
+import { useShellStore } from "@/store/modules/shell";
 
-type CommandRestriction = 'premium' | 'hosted' | 'permission' | 'preview'
+type CommandRestriction = "premium" | "hosted" | "permission" | "preview";
 
 export interface CommandPaletteItem {
-  description?: string
-  id: string
-  label: string
-  path?: string
-  restriction?: CommandRestriction
-  shortcut?: string
+  description?: string;
+  id: string;
+  label: string;
+  path?: string;
+  restriction?: CommandRestriction;
+  shortcut?: string;
 }
 
 export interface CommandPaletteGroup {
-  id: string
-  items: readonly CommandPaletteItem[]
-  label: string
+  id: string;
+  items: readonly CommandPaletteItem[];
+  label: string;
 }
 
 const props = withDefaults(
   defineProps<{
-    groups: readonly CommandPaletteGroup[]
-    placeholder?: string
-    query: string
-    recentItems?: readonly CommandPaletteItem[]
-    show: boolean
+    groups: readonly CommandPaletteGroup[];
+    placeholder?: string;
+    query: string;
+    recentItems?: readonly CommandPaletteItem[];
+    show: boolean;
   }>(),
   {
-    placeholder: 'Search commands',
-    recentItems: () => []
-  }
-)
+    placeholder: "Search commands",
+    recentItems: () => [],
+  },
+);
 
 const emit = defineEmits<{
-  close: []
-  execute: [item: CommandPaletteItem]
-  search: [query: string]
-  select: [item: CommandPaletteItem]
-  'update:query': [query: string]
-  'update:show': [value: boolean]
-}>()
+  close: [];
+  execute: [item: CommandPaletteItem];
+  search: [query: string];
+  select: [item: CommandPaletteItem];
+  "update:query": [query: string];
+  "update:show": [value: boolean];
+}>();
 
-const shellStore = useShellStore()
+const shellStore = useShellStore();
 
 const visibleGroups = computed(() => {
-  const query = props.query.trim().toLowerCase()
+  const query = props.query.trim().toLowerCase();
   if (!query) {
-    return props.groups
+    return props.groups;
   }
   return props.groups
-    .map(group => ({ ...group, items: group.items.filter(item => item.label.toLowerCase().includes(query)) }))
-    .filter(group => group.items.length > 0)
-})
+    .map((group) => ({
+      ...group,
+      items: group.items.filter((item) => item.label.toLowerCase().includes(query)),
+    }))
+    .filter((group) => group.items.length > 0);
+});
 
 function updateQuery(value: string) {
-  emit('update:query', value)
-  emit('search', value)
+  emit("update:query", value);
+  emit("search", value);
 }
 
 function closePalette() {
-  shellStore.closeCommandPalette()
-  emit('update:show', false)
-  emit('close')
+  shellStore.closeCommandPalette();
+  emit("update:show", false);
+  emit("close");
 }
 
 function selectItem(item: CommandPaletteItem) {
-  emit('select', item)
-  emit('execute', item)
+  emit("select", item);
+  emit("execute", item);
 }
 </script>
 
 <template>
-  <div v-if="show" class="command-palette" role="dialog" aria-modal="true" aria-label="Command palette">
+  <div
+    v-if="show"
+    class="command-palette"
+    role="dialog"
+    aria-modal="true"
+    aria-label="Command palette"
+  >
     <div class="command-palette__panel">
-      <label class="command-palette__search" role="combobox" aria-expanded="true" aria-controls="command-palette-results">
+      <label
+        class="command-palette__search"
+        role="combobox"
+        aria-expanded="true"
+        aria-controls="command-palette-results"
+      >
         <span class="sr-only">{{ placeholder }}</span>
-        <input :placeholder="placeholder" :value="query" type="search" @input="updateQuery(($event.target as HTMLInputElement).value)" />
+        <NInput :placeholder="placeholder" :value="query" type="text" @update:value="updateQuery" />
       </label>
       <div id="command-palette-results" class="command-palette__results" role="listbox">
         <section v-if="recentItems.length && !query" class="command-palette__group">
           <h3>Recent</h3>
-          <button v-for="item in recentItems" :key="item.id" role="option" type="button" @click="selectItem(item)">
+          <NButton
+            v-for="item in recentItems"
+            :key="item.id"
+            role="option"
+            native-type="button"
+            @click="selectItem(item)"
+          >
             <span>{{ item.label }}</span>
             <small v-if="item.shortcut">{{ item.shortcut }}</small>
-          </button>
+          </NButton>
         </section>
         <section v-for="group in visibleGroups" :key="group.id" class="command-palette__group">
           <h3>{{ group.label }}</h3>
-          <button v-for="item in group.items" :key="item.id" role="option" type="button" @click="selectItem(item)">
+          <NButton
+            v-for="item in group.items"
+            :key="item.id"
+            role="option"
+            native-type="button"
+            @click="selectItem(item)"
+          >
             <span>
               {{ item.label }}
               <em v-if="item.description">{{ item.description }}</em>
             </span>
             <PremiumBadge v-if="item.restriction === 'premium'" compact />
             <HostedBadge v-else-if="item.restriction === 'hosted'" compact />
-            <StatusBadge v-else-if="item.restriction === 'permission'" compact label="Permission" tone="warning" />
-            <StatusBadge v-else-if="item.restriction === 'preview'" compact label="Preview" tone="preview" />
+            <StatusBadge
+              v-else-if="item.restriction === 'permission'"
+              compact
+              label="Permission"
+              tone="warning"
+            />
+            <StatusBadge
+              v-else-if="item.restriction === 'preview'"
+              compact
+              label="Preview"
+              tone="preview"
+            />
             <small v-if="item.shortcut">{{ item.shortcut }}</small>
-          </button>
+          </NButton>
         </section>
       </div>
       <footer class="command-palette__footer">
-        <button type="button" @click="closePalette">Close</button>
+        <NButton native-type="button" @click="closePalette">Close</NButton>
       </footer>
     </div>
   </div>
@@ -137,7 +174,7 @@ function selectItem(item: CommandPaletteItem) {
   border-bottom: 1px solid var(--mm-border);
 }
 
-.command-palette__search input {
+.command-palette__search :deep(.n-input) {
   width: 100%;
   min-height: 42px;
   border: 1px solid var(--mm-border);
@@ -164,7 +201,7 @@ function selectItem(item: CommandPaletteItem) {
   text-transform: uppercase;
 }
 
-.command-palette__group button {
+.command-palette__group :deep(.n-button) {
   display: flex;
   align-items: center;
   justify-content: space-between;

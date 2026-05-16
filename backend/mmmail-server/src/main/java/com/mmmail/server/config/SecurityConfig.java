@@ -6,6 +6,7 @@ import com.mmmail.common.model.Result;
 import com.mmmail.foundation.tenant.TenantScopeHeaders;
 import com.mmmail.server.observability.RequestTracingFilter;
 import com.mmmail.server.security.JwtAuthFilter;
+import com.mmmail.server.security.RequestActionRateLimitFilter;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -69,7 +70,10 @@ public class SecurityConfig {
     }
 
     @Bean
-    public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
+    public SecurityFilterChain securityFilterChain(
+            HttpSecurity http,
+            RequestActionRateLimitFilter requestActionRateLimitFilter
+    ) throws Exception {
         http
                 .cors(Customizer.withDefaults())
                 .csrf(csrf -> csrf.disable())
@@ -109,6 +113,8 @@ public class SecurityConfig {
                                 "/api/v2/public-share/**",
                                 "/api/v2/system/status",
                                 "/api/v2/system/health",
+                                "/ws/notifications",
+                                "/ws/collab/**",
                                 "/v3/api-docs/**",
                                 "/swagger-ui/**",
                                 "/swagger-ui.html",
@@ -118,7 +124,8 @@ public class SecurityConfig {
                         .anyRequest()
                         .authenticated()
                 )
-                .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class);
+                .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class)
+                .addFilterAfter(requestActionRateLimitFilter, JwtAuthFilter.class);
         return http.build();
     }
 
@@ -132,6 +139,16 @@ public class SecurityConfig {
     @Bean
     public FilterRegistrationBean<JwtAuthFilter> jwtAuthFilterRegistration() {
         FilterRegistrationBean<JwtAuthFilter> registration = new FilterRegistrationBean<>(jwtAuthFilter);
+        registration.setEnabled(false);
+        return registration;
+    }
+
+    @Bean
+    public FilterRegistrationBean<RequestActionRateLimitFilter> requestActionRateLimitFilterRegistration(
+            RequestActionRateLimitFilter requestActionRateLimitFilter
+    ) {
+        FilterRegistrationBean<RequestActionRateLimitFilter> registration =
+                new FilterRegistrationBean<>(requestActionRateLimitFilter);
         registration.setEnabled(false);
         return registration;
     }

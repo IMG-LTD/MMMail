@@ -1,64 +1,64 @@
-export const REPORT_PATH_SUFFIX = 'docs/superpowers/progress/v21-browser-visual-qa-report.md'
-const PARITY_REGISTER_PATH = 'docs/superpowers/progress/v21-visual-parity-risk-register.md'
+export const REPORT_PATH_SUFFIX = "docs/superpowers/progress/v21-browser-visual-qa-report.md";
+const PARITY_REGISTER_PATH = "docs/superpowers/progress/v21-visual-parity-risk-register.md";
 
 export async function writeVisualQaReport({ generatedAt, reportPath, results, writeFile }) {
-  const groups = groupResults(results)
+  const groups = groupResults(results);
   const report = [
-    '# v2.1 Browser Visual QA Report',
-    '',
+    "# v2.1 Browser Visual QA Report",
+    "",
     `Generated at: ${generatedAt}`,
-    '',
+    "",
     `Total screenshots: ${results.length}`,
-    '',
-    '## UI group coverage',
-    '',
-    '| UI group | Scenario count | Screenshot count |',
-    '| --- | ---: | ---: |',
+    "",
+    "## UI group coverage",
+    "",
+    "| UI group | Scenario count | Screenshot count |",
+    "| --- | ---: | ---: |",
     ...formatGroupRows(groups),
-    '',
-    '## Scenario evidence',
-    '',
-    '| UI group | Scenario | Viewport | Route | Required visible selectors | Screenshot evidence |',
-    '| --- | --- | --- | --- | --- | --- |',
+    "",
+    "## Scenario evidence",
+    "",
+    "| UI group | Scenario | Viewport | Route | Required visible selectors | Screenshot evidence |",
+    "| --- | --- | --- | --- | --- | --- |",
     ...results.map(formatEvidenceRow),
-    '',
-    '## Covered overlay and panel evidence',
-    '',
+    "",
+    "## Covered overlay and panel evidence",
+    "",
     ...formatOverlayList(results),
-    '',
-    '## Visual parity risk register',
-    '',
+    "",
+    "## Visual parity risk register",
+    "",
     `Design-image parity findings are tracked in \`${PARITY_REGISTER_PATH}\`. Screenshot capture proves rendered evidence, not final manual design approval.`,
-    '',
-    'Screenshots are evidence artifacts under `.tmp/` and are intentionally not committed.'
-  ].join('\n')
+    "",
+    "Screenshots are evidence artifacts under `.tmp/` and are intentionally not committed.",
+  ].join("\n");
 
-  await writeFile(reportPath, `${report}\n`)
+  await writeFile(reportPath, `${report}\n`);
 }
 
 function groupResults(results) {
-  const groups = new Map()
+  const groups = new Map();
   for (const result of results) {
-    groups.set(result.uiGroup, [...(groups.get(result.uiGroup) || []), result])
+    groups.set(result.uiGroup, [...(groups.get(result.uiGroup) || []), result]);
   }
-  return groups
+  return groups;
 }
 
 function formatGroupRows(groups) {
   return Array.from(groups.entries()).map(([group, items]) => {
-    const scenarioCount = new Set(items.map(item => item.id)).size
-    return `| ${group} | ${scenarioCount} | ${items.length} |`
-  })
+    const scenarioCount = new Set(items.map((item) => item.id)).size;
+    return `| ${group} | ${scenarioCount} | ${items.length} |`;
+  });
 }
 
 function formatEvidenceRow(item) {
-  return `| ${item.uiGroup} | ${item.id} | ${item.viewport} | \`${item.route}\` | \`${item.checks.join('`, `')}\` | \`${item.screenshot}\` |`
+  return `| ${item.uiGroup} | ${item.id} | ${item.viewport} | \`${item.route}\` | \`${item.checks.join("`, `")}\` | \`${item.screenshot}\` |`;
 }
 
 function formatOverlayList(results) {
-  const overlays = results.filter(item => item.kind === 'overlay')
+  const overlays = results.filter((item) => item.kind === "overlay");
   if (!overlays.length) {
-    return ['- No overlay or panel evidence captured.']
+    return ["- No overlay or panel evidence captured."];
   }
-  return overlays.map(item => `- ${item.uiGroup}: \`${item.id}\` on \`${item.route}\``)
+  return overlays.map((item) => `- ${item.uiGroup}: \`${item.id}\` on \`${item.route}\``);
 }

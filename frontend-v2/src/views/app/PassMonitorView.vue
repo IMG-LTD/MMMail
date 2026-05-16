@@ -1,123 +1,162 @@
 <script setup lang="ts">
-import { computed, ref, watch } from 'vue'
-import CompactPageHeader from '@/shared/components/CompactPageHeader.vue'
-import { lt, useLocaleText } from '@/locales'
-import { readPassMonitor, type PassMonitorItem, type PassMonitorOverview } from '@/service/api/pass'
-import { useAuthStore } from '@/store/modules/auth'
+import { computed, ref, watch } from "vue";
+import CompactPageHeader from "@/shared/components/CompactPageHeader.vue";
+import { lt, useLocaleText } from "@/locales";
+import {
+  readPassMonitor,
+  type PassMonitorItem,
+  type PassMonitorOverview,
+} from "@/service/api/pass";
+import { useAuthStore } from "@/store/modules/auth";
 
-const MAX_SECURITY_SCORE = 100
-const ISSUE_PREVIEW_LIMIT = 3
+const MAX_SECURITY_SCORE = 100;
+const ISSUE_PREVIEW_LIMIT = 3;
 
-const { tr } = useLocaleText()
-const authStore = useAuthStore()
-const passMonitor = ref<PassMonitorOverview | null>(null)
-const passMonitorLoading = ref(false)
-const loadError = ref('')
-let latestPassMonitorRequest = 0
+const { tr } = useLocaleText();
+const authStore = useAuthStore();
+const passMonitor = ref<PassMonitorOverview | null>(null);
+const passMonitorLoading = ref(false);
+const loadError = ref("");
+let latestPassMonitorRequest = 0;
 
 const totalSignals = computed(() => {
   if (!passMonitor.value) {
-    return 0
+    return 0;
   }
 
-  return passMonitor.value.weakPasswordCount
-    + passMonitor.value.reusedPasswordCount
-    + passMonitor.value.inactiveTwoFactorCount
-})
+  return (
+    passMonitor.value.weakPasswordCount +
+    passMonitor.value.reusedPasswordCount +
+    passMonitor.value.inactiveTwoFactorCount
+  );
+});
 
 const securityScore = computed(() => {
-  const totalItems = passMonitor.value?.totalItemCount || 0
+  const totalItems = passMonitor.value?.totalItemCount || 0;
   if (!totalItems) {
-    return 0
+    return 0;
   }
 
-  const cleanItems = Math.max(totalItems - totalSignals.value, 0)
-  return Math.round((cleanItems / totalItems) * MAX_SECURITY_SCORE)
-})
+  const cleanItems = Math.max(totalItems - totalSignals.value, 0);
+  return Math.round((cleanItems / totalItems) * MAX_SECURITY_SCORE);
+});
 
 const trackedCoverage = computed(() => {
-  const totalItems = passMonitor.value?.totalItemCount || 0
+  const totalItems = passMonitor.value?.totalItemCount || 0;
   if (!totalItems) {
-    return 0
+    return 0;
   }
 
-  return Math.min(MAX_SECURITY_SCORE, Math.round((passMonitor.value!.trackedItemCount / totalItems) * MAX_SECURITY_SCORE))
-})
+  return Math.min(
+    MAX_SECURITY_SCORE,
+    Math.round((passMonitor.value!.trackedItemCount / totalItems) * MAX_SECURITY_SCORE),
+  );
+});
 
 const statusCopy = computed(() => {
   if (!authStore.accessToken) {
-    return tr(lt('登录后即可读取安全监控。', '登入後即可讀取安全監控。', 'Sign in to load security monitoring.'))
+    return tr(
+      lt(
+        "登录后即可读取安全监控。",
+        "登入後即可讀取安全監控。",
+        "Sign in to load security monitoring.",
+      ),
+    );
   }
 
   if (loadError.value) {
-    return loadError.value
+    return loadError.value;
   }
 
   return passMonitorLoading.value
-    ? tr(lt('正在读取密码安全监控。', '正在讀取密碼安全監控。', 'Loading pass security monitor.'))
-    : `${passMonitor.value?.trackedItemCount || 0} ${tr(lt('个项目已纳入监控', '個項目已納入監控', 'items tracked'))}`
-})
+    ? tr(lt("正在读取密码安全监控。", "正在讀取密碼安全監控。", "Loading pass security monitor."))
+    : `${passMonitor.value?.trackedItemCount || 0} ${tr(lt("个项目已纳入监控", "個項目已納入監控", "items tracked"))}`;
+});
 
 const issueColumns = computed(() => [
-  createIssueColumn('weak-passwords', lt('弱密码', '弱密碼', 'Weak passwords'), passMonitor.value?.weakPasswordCount || 0, passMonitor.value?.weakPasswords || []),
-  createIssueColumn('reused-passwords', lt('重复使用的密码', '重複使用的密碼', 'Reused passwords'), passMonitor.value?.reusedPasswordCount || 0, passMonitor.value?.reusedPasswords || []),
-  createIssueColumn('missing-2fa', lt('缺少 2FA', '缺少 2FA', 'Missing 2FA'), passMonitor.value?.inactiveTwoFactorCount || 0, passMonitor.value?.inactiveTwoFactorItems || [])
-])
+  createIssueColumn(
+    "weak-passwords",
+    lt("弱密码", "弱密碼", "Weak passwords"),
+    passMonitor.value?.weakPasswordCount || 0,
+    passMonitor.value?.weakPasswords || [],
+  ),
+  createIssueColumn(
+    "reused-passwords",
+    lt("重复使用的密码", "重複使用的密碼", "Reused passwords"),
+    passMonitor.value?.reusedPasswordCount || 0,
+    passMonitor.value?.reusedPasswords || [],
+  ),
+  createIssueColumn(
+    "missing-2fa",
+    lt("缺少 2FA", "缺少 2FA", "Missing 2FA"),
+    passMonitor.value?.inactiveTwoFactorCount || 0,
+    passMonitor.value?.inactiveTwoFactorItems || [],
+  ),
+]);
 
-function createIssueColumn(id: string, title: ReturnType<typeof lt>, count: number, items: PassMonitorItem[]) {
+function createIssueColumn(
+  id: string,
+  title: ReturnType<typeof lt>,
+  count: number,
+  items: PassMonitorItem[],
+) {
   return {
     count,
     id,
     items: items.slice(0, ISSUE_PREVIEW_LIMIT),
-    title
-  }
+    title,
+  };
 }
 
 function clearPassMonitorState() {
-  passMonitor.value = null
-  loadError.value = ''
-  passMonitorLoading.value = false
+  passMonitor.value = null;
+  loadError.value = "";
+  passMonitorLoading.value = false;
 }
 
 function resolveErrorMessage(error: unknown) {
   return error instanceof Error
     ? error.message
-    : tr(lt('读取安全监控失败。', '讀取安全監控失敗。', 'Failed to load security monitor.'))
+    : tr(lt("读取安全监控失败。", "讀取安全監控失敗。", "Failed to load security monitor."));
 }
 
 async function loadPassMonitor() {
-  const requestId = ++latestPassMonitorRequest
-  const requestToken = authStore.accessToken
+  const requestId = ++latestPassMonitorRequest;
+  const requestToken = authStore.accessToken;
   if (!requestToken) {
-    clearPassMonitorState()
-    return
+    clearPassMonitorState();
+    return;
   }
 
-  passMonitorLoading.value = true
-  loadError.value = ''
+  passMonitorLoading.value = true;
+  loadError.value = "";
 
   try {
-    const response = await readPassMonitor(requestToken)
+    const response = await readPassMonitor(requestToken);
     if (requestId !== latestPassMonitorRequest || requestToken !== authStore.accessToken) {
-      return
+      return;
     }
-    passMonitor.value = response.data || null
+    passMonitor.value = response.data || null;
   } catch (error) {
     if (requestId !== latestPassMonitorRequest || requestToken !== authStore.accessToken) {
-      return
+      return;
     }
-    passMonitor.value = null
-    loadError.value = resolveErrorMessage(error)
+    passMonitor.value = null;
+    loadError.value = resolveErrorMessage(error);
   } finally {
     if (requestId === latestPassMonitorRequest && requestToken === authStore.accessToken) {
-      passMonitorLoading.value = false
+      passMonitorLoading.value = false;
     }
   }
 }
 
-watch(() => authStore.accessToken, () => {
-  void loadPassMonitor()
-}, { immediate: true })
+watch(
+  () => authStore.accessToken,
+  () => {
+    void loadPassMonitor();
+  },
+  { immediate: true },
+);
 </script>
 
 <template>
@@ -125,33 +164,52 @@ watch(() => authStore.accessToken, () => {
     <compact-page-header
       :eyebrow="lt('密码库', '密碼庫', 'Pass')"
       :title="lt('安全监控', '安全監控', 'Security Monitor')"
-      :description="lt('优先处理弱密码、重复密码和缺少二次验证的凭据。', '優先處理弱密碼、重複密碼和缺少第二因素驗證的憑證。', 'Weak, reused, and missing-factor credentials prioritized for immediate remediation.')"
+      :description="
+        lt(
+          '优先处理弱密码、重复密码和缺少二次验证的凭据。',
+          '優先處理弱密碼、重複密碼和缺少第二因素驗證的憑證。',
+          'Weak, reused, and missing-factor credentials prioritized for immediate remediation.',
+        )
+      "
       :badge="lt('Beta', 'Beta', 'Beta')"
       badge-tone="beta"
     />
 
     <article class="surface-card pass-monitor__hero">
       <div class="pass-monitor__score">
-        <span class="section-label">{{ tr(lt('全局安全指标', '全域安全指標', 'Global security metric')) }}</span>
-        <strong>{{ securityScore }} <small>/ {{ MAX_SECURITY_SCORE }}</small></strong>
+        <span class="section-label">{{
+          tr(lt("全局安全指标", "全域安全指標", "Global security metric"))
+        }}</span>
+        <strong
+          >{{ securityScore }} <small>/ {{ MAX_SECURITY_SCORE }}</small></strong
+        >
         <p class="page-subtitle">{{ statusCopy }}</p>
       </div>
       <div class="pass-monitor__rails">
         <div class="pass-monitor__rail">
-          <span>{{ tr(lt('已监控项目', '已監控項目', 'Tracked items')) }}</span>
-          <strong>{{ passMonitor?.trackedItemCount || 0 }} / {{ passMonitor?.totalItemCount || 0 }}</strong>
+          <span>{{ tr(lt("已监控项目", "已監控項目", "Tracked items")) }}</span>
+          <strong
+            >{{ passMonitor?.trackedItemCount || 0 }} /
+            {{ passMonitor?.totalItemCount || 0 }}</strong
+          >
         </div>
         <div class="pass-monitor__bar"><span :style="{ width: `${trackedCoverage}%` }" /></div>
         <div class="pass-monitor__rail">
-          <span>{{ tr(lt('重点信号', '重點訊號', 'Priority signals')) }}</span>
+          <span>{{ tr(lt("重点信号", "重點訊號", "Priority signals")) }}</span>
           <strong>{{ totalSignals }}</strong>
         </div>
-        <div class="pass-monitor__bar pass-monitor__bar--risk"><span :style="{ width: `${Math.min(MAX_SECURITY_SCORE, totalSignals * 10)}%` }" /></div>
+        <div class="pass-monitor__bar pass-monitor__bar--risk">
+          <span :style="{ width: `${Math.min(MAX_SECURITY_SCORE, totalSignals * 10)}%` }" />
+        </div>
       </div>
     </article>
 
     <div class="pass-monitor__grid">
-      <article v-for="column in issueColumns" :key="column.id" class="surface-card pass-monitor__column">
+      <article
+        v-for="column in issueColumns"
+        :key="column.id"
+        class="surface-card pass-monitor__column"
+      >
         <div class="pass-monitor__column-head">
           <span class="section-label">{{ tr(column.title) }}</span>
           <strong>{{ column.count }}</strong>
@@ -162,9 +220,11 @@ watch(() => authStore.accessToken, () => {
             <strong>{{ item.website || item.title }}</strong>
             <p>{{ item.username || item.itemType }}</p>
           </div>
-          <a href="/pass">{{ tr(lt('修复', '修復', 'Fix')) }}</a>
+          <a href="/pass">{{ tr(lt("修复", "修復", "Fix")) }}</a>
         </div>
-        <a class="pass-monitor__link" href="/pass">{{ tr(lt('查看全部', '查看全部', 'View all')) }}</a>
+        <a class="pass-monitor__link" href="/pass">{{
+          tr(lt("查看全部", "查看全部", "View all"))
+        }}</a>
       </article>
     </div>
   </section>

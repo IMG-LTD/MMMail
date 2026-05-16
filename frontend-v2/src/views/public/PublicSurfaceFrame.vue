@@ -1,20 +1,20 @@
 <script setup lang="ts">
-import { RouterLink } from 'vue-router'
-import { lt, useLocaleText, type TextLike } from '@/locales'
+import { RouterLink } from "vue-router";
+import { lt, useLocaleText, type TextLike } from "@/locales";
 
 withDefaults(
   defineProps<{
-    eyebrow?: TextLike
-    title: TextLike
-    description?: TextLike
+    eyebrow?: TextLike;
+    title: TextLike;
+    description?: TextLike;
   }>(),
   {
     description: undefined,
-    eyebrow: () => lt('公开访问', '公開存取', 'Public access')
-  }
-)
+    eyebrow: () => lt("公开访问", "公開存取", "Public access"),
+  },
+);
 
-const { tr } = useLocaleText()
+const { tr } = useLocaleText();
 </script>
 
 <template>
@@ -22,8 +22,8 @@ const { tr } = useLocaleText()
     <header class="public-surface-frame__header">
       <RouterLink class="public-surface-frame__brand" to="/workspace">MMMail</RouterLink>
       <nav class="public-surface-frame__nav" aria-label="Public navigation">
-        <RouterLink to="/boundary">{{ tr(lt('边界', '邊界', 'Boundary')) }}</RouterLink>
-        <RouterLink to="/login">{{ tr(lt('登录', '登入', 'Login')) }}</RouterLink>
+        <RouterLink to="/boundary">{{ tr(lt("边界", "邊界", "Boundary")) }}</RouterLink>
+        <RouterLink to="/login">{{ tr(lt("登录", "登入", "Login")) }}</RouterLink>
       </nav>
     </header>
 

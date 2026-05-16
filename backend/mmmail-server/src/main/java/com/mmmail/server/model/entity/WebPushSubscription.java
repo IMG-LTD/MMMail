@@ -19,6 +19,7 @@ public class WebPushSubscription {
     private String authKey;
     private String contentEncoding;
     private String userAgent;
+    private String label;
     private LocalDateTime lastSuccessAt;
     private LocalDateTime lastFailureAt;
     private String lastErrorMessage;
@@ -89,6 +90,14 @@ public class WebPushSubscription {
 
     public void setUserAgent(String userAgent) {
         this.userAgent = userAgent;
+    }
+
+    public String getLabel() {
+        return label;
+    }
+
+    public void setLabel(String label) {
+        this.label = label;
     }
 
     public LocalDateTime getLastSuccessAt() {

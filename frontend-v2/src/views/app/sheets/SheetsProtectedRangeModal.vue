@@ -1,56 +1,60 @@
 <script setup lang="ts">
-import { computed, ref, watch } from 'vue'
-import Modal from '@/design-system/components/Modal.vue'
+import { NButton, NInput, NRadio, NRadioGroup } from "naive-ui";
+import { computed, ref, watch } from "vue";
+import Modal from "@/design-system/components/Modal.vue";
 
-type ProtectionMode = 'warning' | 'blocked'
+type ProtectionMode = "warning" | "blocked";
 
-const DEFAULT_RANGE = 'C2:D8'
+const DEFAULT_RANGE = "C2:D8";
 
 const props = defineProps<{
-  selectedCellLabel: string
-  show: boolean
-}>()
+  selectedCellLabel: string;
+  show: boolean;
+}>();
 
 const emit = defineEmits<{
-  'update:show': [value: boolean]
-}>()
+  "update:show": [value: boolean];
+}>();
 
-const rangeValue = ref(DEFAULT_RANGE)
-const mode = ref<ProtectionMode>('blocked')
-const saveError = ref('')
-const retryCount = ref(0)
+const rangeValue = ref(DEFAULT_RANGE);
+const mode = ref<ProtectionMode>("blocked");
+const saveError = ref("");
+const retryCount = ref(0);
 
 const modeCopy = computed(() => {
-  if (mode.value === 'warning') {
-    return 'Editors see a warning before changing protected cells.'
+  if (mode.value === "warning") {
+    return "Editors see a warning before changing protected cells.";
   }
-  return 'Only whitelisted editors can change protected cells.'
-})
+  return "Only whitelisted editors can change protected cells.";
+});
 const retryCopy = computed(() => {
-  return retryCount.value ? `Retry queued ${retryCount.value} time(s)` : 'Retry save'
-})
+  return retryCount.value ? `Retry queued ${retryCount.value} time(s)` : "Retry save";
+});
 
 function saveRule() {
   if (!rangeValue.value.trim()) {
-    saveError.value = 'Enter a range before saving protection.'
-    return
+    saveError.value = "Enter a range before saving protection.";
+    return;
   }
-  saveError.value = 'Protected range save is blocked by an overlapping rule.'
+  saveError.value = "Protected range save is blocked by an overlapping rule.";
 }
 
 function retrySave() {
-  retryCount.value += 1
-  saveError.value = 'Retry requested; overlap must be resolved before saving.'
+  retryCount.value += 1;
+  saveError.value = "Retry requested; overlap must be resolved before saving.";
 }
 
-watch(() => props.show, value => {
-  if (!value) {
-    rangeValue.value = DEFAULT_RANGE
-    mode.value = 'blocked'
-    saveError.value = ''
-    retryCount.value = 0
-  }
-})
+watch(
+  () => props.show,
+  (value) => {
+    if (!value) {
+      rangeValue.value = DEFAULT_RANGE;
+      mode.value = "blocked";
+      saveError.value = "";
+      retryCount.value = 0;
+    }
+  },
+);
 </script>
 
 <template>
@@ -71,23 +75,13 @@ watch(() => props.show, value => {
 
       <label class="sheets-protected-range-modal__field">
         <span class="section-label">Range</span>
-        <input
-          v-model="rangeValue"
-          class="sheets-protected-range-modal__range-input"
-          type="text"
-        >
+        <NInput v-model:value="rangeValue" class="sheets-protected-range-modal__range-input" />
       </label>
 
-      <div class="sheets-protected-range-modal__mode">
-        <label>
-          <input v-model="mode" type="radio" value="warning">
-          Warning only
-        </label>
-        <label>
-          <input v-model="mode" type="radio" value="blocked">
-          Block edits
-        </label>
-      </div>
+      <NRadioGroup v-model:value="mode" class="sheets-protected-range-modal__mode">
+        <NRadio value="warning">Warning only</NRadio>
+        <NRadio value="blocked">Block edits</NRadio>
+      </NRadioGroup>
 
       <div class="sheets-protected-range-modal__editors">
         <div>
@@ -108,12 +102,16 @@ watch(() => props.show, value => {
       </p>
 
       <div class="sheets-protected-range-modal__actions">
-        <button class="sheets-protected-range-modal__save" type="button" @click="saveRule">
+        <NButton class="sheets-protected-range-modal__save" native-type="button" @click="saveRule">
           Save rule
-        </button>
-        <button class="sheets-protected-range-modal__retry" type="button" @click="retrySave">
+        </NButton>
+        <NButton
+          class="sheets-protected-range-modal__retry"
+          native-type="button"
+          @click="retrySave"
+        >
           {{ retryCopy }}
-        </button>
+        </NButton>
       </div>
     </section>
   </Modal>

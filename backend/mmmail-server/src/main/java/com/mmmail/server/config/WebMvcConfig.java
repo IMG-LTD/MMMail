@@ -1,6 +1,7 @@
 package com.mmmail.server.config;
 
 import com.mmmail.server.access.V21ApiAccessGateInterceptor;
+import com.mmmail.server.security.AuthorizationAnnotationInterceptor;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.web.servlet.config.annotation.InterceptorRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
@@ -10,19 +11,24 @@ public class WebMvcConfig implements WebMvcConfigurer {
 
     private final V21ApiAccessGateInterceptor v21ApiAccessGateInterceptor;
     private final OrgProductAccessInterceptor orgProductAccessInterceptor;
+    private final AuthorizationAnnotationInterceptor authorizationAnnotationInterceptor;
 
     public WebMvcConfig(
             V21ApiAccessGateInterceptor v21ApiAccessGateInterceptor,
-            OrgProductAccessInterceptor orgProductAccessInterceptor
+            OrgProductAccessInterceptor orgProductAccessInterceptor,
+            AuthorizationAnnotationInterceptor authorizationAnnotationInterceptor
     ) {
         this.v21ApiAccessGateInterceptor = v21ApiAccessGateInterceptor;
         this.orgProductAccessInterceptor = orgProductAccessInterceptor;
+        this.authorizationAnnotationInterceptor = authorizationAnnotationInterceptor;
     }
 
     @Override
     public void addInterceptors(InterceptorRegistry registry) {
         registry.addInterceptor(v21ApiAccessGateInterceptor)
                 .addPathPatterns("/api/v2/**");
+        registry.addInterceptor(authorizationAnnotationInterceptor)
+                .addPathPatterns("/api/v1/**", "/api/v2/**");
         registry.addInterceptor(orgProductAccessInterceptor)
                 .addPathPatterns("/api/v1/**", "/api/v2/**")
                 .excludePathPatterns(

@@ -1,0 +1,109 @@
+{
+  "title": "MMMail WebSocket Gateway",
+  "uid": "mmmail-ws-gateway",
+  "schemaVersion": 39,
+  "version": 1,
+  "refresh": "30s",
+  "tags": [
+    "mmmail",
+    "websocket"
+  ],
+  "panels": [
+    {
+      "type": "timeseries",
+      "title": "Active connections",
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 0
+      },
+      "targets": [
+        {
+          "expr": "sum(ws_active_connections) by (module)",
+          "legendFormat": "{{module}}"
+        }
+      ]
+    },
+    {
+      "type": "timeseries",
+      "title": "Message throughput",
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 0
+      },
+      "targets": [
+        {
+          "expr": "sum(rate(ws_message_total[5m])) by (module, direction, type)",
+          "legendFormat": "{{module}} {{direction}} {{type}}"
+        }
+      ]
+    },
+    {
+      "type": "timeseries",
+      "title": "Message latency p95",
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 8
+      },
+      "targets": [
+        {
+          "expr": "histogram_quantile(0.95, sum(rate(ws_message_latency_ms_bucket[5m])) by (le, module))",
+          "legendFormat": "{{module}} p95"
+        }
+      ]
+    },
+    {
+      "type": "timeseries",
+      "title": "Disconnects",
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 8
+      },
+      "targets": [
+        {
+          "expr": "sum(rate(ws_disconnect_total[5m])) by (module, reason)",
+          "legendFormat": "{{module}} {{reason}}"
+        }
+      ]
+    },
+    {
+      "type": "timeseries",
+      "title": "Collaboration rooms",
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 16
+      },
+      "targets": [
+        {
+          "expr": "sum(ws_collab_active_rooms) by (resource_type)",
+          "legendFormat": "{{resource_type}}"
+        }
+      ]
+    },
+    {
+      "type": "timeseries",
+      "title": "Notification fanout latency p95",
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 16
+      },
+      "targets": [
+        {
+          "expr": "histogram_quantile(0.95, sum(rate(ws_notification_fanout_latency_ms_bucket[5m])) by (le, module))",
+          "legendFormat": "{{module}} p95"
+        }
+      ]
+    }
+  ]
+}

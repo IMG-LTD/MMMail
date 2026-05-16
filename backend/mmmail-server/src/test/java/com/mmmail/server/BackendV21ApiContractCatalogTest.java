@@ -32,7 +32,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 class BackendV21ApiContractCatalogTest {
 
     private static final String PASSWORD = "Password@123";
-    private static final int EXPECTED_CONTRACT_COUNT = 139;
+    private static final int EXPECTED_CONTRACT_COUNT = 152;
     private static final Set<String> REQUIRED_OWNER_MODULES = Set.of(
             "workspace",
             "mail",
@@ -104,7 +104,15 @@ class BackendV21ApiContractCatalogTest {
         assertContract(contractsByIdentity, "GET /api/v2/platform/capabilities", "platform", "PlatformCapabilities", "community");
         assertContract(contractsByIdentity, "GET /api/v2/ai-platform/capabilities", "ai-platform", "AiPlatformCapabilities", "community");
         assertContract(contractsByIdentity, "GET /api/v2/mcp/registry", "mcp", "McpRegistryCapabilities", "community");
+        assertContract(contractsByIdentity, "GET /api/v2/collaboration/projects/:id/board", "collaboration", "CollaborationBoard", "community");
+        assertContract(contractsByIdentity, "PATCH /api/v2/collaboration/tasks/:id/move", "collaboration", "CollaborationTaskMove", "community");
+        assertContract(contractsByIdentity, "GET /api/v2/command-center/catalog", "command-center", "CommandCatalogItem[]", "community");
+        assertContract(contractsByIdentity, "GET /api/v2/command-center/recents", "command-center", "CommandRecent[]", "community");
+        assertContract(contractsByIdentity, "POST /api/v2/command-center/pin", "command-center", "CommandPreference", "community");
+        assertContract(contractsByIdentity, "GET /api/v2/command-center/quick-search", "command-center", "CommandQuickSearchItem[]", "community");
+        assertContract(contractsByIdentity, "GET /api/v2/notifications/since", "notifications", "NotificationRealtimeReplay", "community");
         assertContract(contractsByIdentity, "POST /api/v2/auth/refresh", "identity", "AuthPayload", "community");
+        assertContract(contractsByIdentity, "GET /api/v2/auth/me", "identity", "AuthUserInfo", "community");
         assertContract(contractsByIdentity, "GET /api/v2/auth/sessions", "identity", "UserSession[]", "community");
         assertContract(contractsByIdentity, "POST /api/v2/auth/sessions/:id/revoke", "identity", "Void", "community");
         assertContract(contractsByIdentity, "GET /api/v2/share/capabilities", "public-share", "PublicShareCapabilities", "community");
@@ -162,7 +170,14 @@ class BackendV21ApiContractCatalogTest {
                 .contains("x-permission: [\"ai-platform:capabilities:read\"]")
                 .contains("/api/v2/mcp/registry:")
                 .contains("x-permission: [\"mcp:registry:read\"]")
+                .contains("/api/v2/collaboration/projects/{id}/board:")
+                .contains("/api/v2/collaboration/tasks/{id}/move:")
+                .contains("/api/v2/command-center/catalog:")
+                .contains("/api/v2/command-center/recents:")
+                .contains("/api/v2/command-center/pin:")
+                .contains("/api/v2/command-center/quick-search:")
                 .contains("/api/v2/auth/refresh:")
+                .contains("/api/v2/auth/me:")
                 .contains("/api/v2/auth/sessions:")
                 .contains("/api/v2/share/capabilities:")
                 .contains("/api/v2/share/mail/{token}/attachments/{id}/download:")

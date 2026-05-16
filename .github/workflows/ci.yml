@@ -25,7 +25,32 @@ jobs:
         with:
           node-version: 22
           cache: pnpm
-          cache-dependency-path: frontend-v2/pnpm-lock.yaml
+          cache-dependency-path: |
+            frontend-v2/pnpm-lock.yaml
+            frontend-admin/pnpm-lock.yaml
+
+      - name: Root v2.1.2 contract gates
+        run: node --test tests/*.test.mjs
+
+      - name: Install frontend-admin deps
+        run: pnpm --dir frontend-admin install --frozen-lockfile
+
+      - name: Soybean API type generation guard
+        run: |
+          MMMAIL_OPENAPI_SOURCE=../contracts/openapi/v21-api-catalog.yaml pnpm --dir frontend-admin gen:api
+          git diff --exit-code -- frontend-admin/src/service/api/__generated__
+
+      - name: Soybean v2.1.2 contract and bundle budget gates
+        run: |
+          pnpm --dir frontend-admin test:v212
+          pnpm --dir frontend-admin test:e2e
+          pnpm --dir frontend-admin check:style-discipline
+          pnpm --dir frontend-admin check:i18n
+          pnpm --dir frontend-admin check:bundle-budget
+          pnpm --dir frontend-admin test:lighthouse
+
+      - name: Soybean v2.1.2 coverage gates
+        run: pnpm --dir frontend-admin test:coverage
 
       - name: Install frontend-v2 deps
         run: pnpm --dir frontend-v2 install --frozen-lockfile
@@ -55,6 +80,9 @@ jobs:
       - name: Frontend-v2 typecheck
         run: pnpm --dir frontend-v2 typecheck
 
+      - name: Frontend-v2 coverage gates
+        run: pnpm --dir frontend-v2 test:coverage
+
       - name: Frontend-v2 audit (high)
         run: pnpm --dir frontend-v2 audit --prod --audit-level=high --ignore-registry-errors
 
@@ -74,7 +102,7 @@ jobs:
       - name: Backend auth/rbac and v2 contract regression
         run: >
           mvn -f backend/pom.xml -pl mmmail-server -am
-          -Dtest=AuthFlowIntegrationTest,OrgAuthenticationSecurityIntegrationTest,OrgAdminConsoleIntegrationTest,OrgMemberGovernanceIntegrationTest,PlatformCapabilityIntegrationTest,PublicShareCapabilityIntegrationTest,WorkspaceAggregationIntegrationTest,AiMcpCapabilityIntegrationTest,RequestHeaderContractIntegrationTest,ObservabilityIntegrationTest,BillingReadinessIntegrationTest,ContractCatalogRegressionTest,TenantScopeFoundationContractTest,BackendModuleExtractionContractTest,PublicShareTokenHashMigrationIntegrationTest,MailPublicShareTokenHashContractTest,PassPublicShareTokenHashContractTest,DrivePublicShareTokenHashContractTest
+          -Dtest=AuthFlowIntegrationTest,OrgAuthenticationSecurityIntegrationTest,OrgAdminConsoleIntegrationTest,OrgMemberGovernanceIntegrationTest,PlatformCapabilityIntegrationTest,PublicShareCapabilityIntegrationTest,WorkspaceAggregationIntegrationTest,AiMcpCapabilityIntegrationTest,RequestHeaderContractIntegrationTest,ObservabilityIntegrationTest,PrometheusEndpointRuntimeTest,BillingReadinessIntegrationTest,ContractCatalogRegressionTest,TenantScopeFoundationContractTest,BackendModuleExtractionContractTest,PublicShareTokenHashMigrationIntegrationTest,MailPublicShareTokenHashContractTest,PassPublicShareTokenHashContractTest,DrivePublicShareTokenHashContractTest
           -Dsurefire.failIfNoSpecifiedTests=false test
 
       - name: Backend v2.1 runtime regression
@@ -82,6 +110,24 @@ jobs:
           mvn -f backend/pom.xml -pl mmmail-server -am
           -Dtest=BackendV21AccessEntitlementGatesTest,BackendV21ApiContractCatalogTest,BackendV21BackgroundJobFoundationTest,BackendV21CalendarRuntimeBridgeTest,BackendV21CollaborationWriteRuntimeTest,BackendV21CommunityRuntimeClosureTest,BackendV21DocsSheetsRuntimeBridgeTest,BackendV21DriveRuntimeBridgeTest,BackendV21EventOutboxFoundationTest,BackendV21MailRuntimeBridgeTest,BackendV21OpsRuntimeBridgeTest,BackendV21PassRuntimeBridgeTest,BackendV21RuntimeContractGapClosureTest
           -Dsurefire.failIfNoSpecifiedTests=false test
+
+      - name: Backend v2.1.2 runtime regression
+        run: >
+          mvn -f backend/pom.xml -pl mmmail-server -am
+          -Dtest=*V212*Test,*V212*IntegrationTest,DevSeedV212ContractTest,DevSeedV212StartupIntegrationTest,ApiSpecV212ErrorCodeContractTest,AuditV212ContractTest,FlywayMigrationVersionUniquenessTest,V21CollaborationBoardRanksTest,WebSocketMetricsServiceTest,WebSocketHandshakeFailureContractTest,SuiteNotificationSyncWebSocketReplayTest,RequestObservationServiceTest,RequestRouteModuleResolverTest,WebSocketLoadTestScriptContractTest,WebSocketIdleTimeoutConfigTest
+          -Dsurefire.failIfNoSpecifiedTests=false test
+
+      - name: Backend coverage seed tests
+        run: |
+          rm -f backend/mmmail-server/target/jacoco.exec
+          mvn -f backend/pom.xml -pl mmmail-server -am \
+            -Dtest=WebSocketMetricsServiceTest,WebSocketChannelLimitServiceTest,WebSocketConnectionLimitServiceTest,WebSocketThrottleServiceTest \
+            -Dsurefire.failIfNoSpecifiedTests=false test
+
+      - name: Backend coverage gate
+        run: >
+          mvn -f backend/pom.xml -pl mmmail-server -am
+          -DskipTests verify
 
   validate:
     runs-on: ubuntu-latest
@@ -176,3 +222,79 @@ jobs:
           path: |
             artifacts/
             backend/mmmail-server/target/surefire-reports/
+
+  docker-test-baseline:
+    runs-on: ubuntu-latest
+    name: Docker test baseline (v2.1.3 release-gate)
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 9
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+          cache-dependency-path: frontend-admin/pnpm-lock.yaml
+
+      - name: Install frontend-admin deps
+        run: pnpm --dir frontend-admin install --frozen-lockfile
+
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 21
+          cache: maven
+
+      - name: Verify docker access
+        run: bash scripts/check-docker-group.sh
+
+      - name: Run docker-backed e2e baseline
+        run: bash scripts/run-tests-docker.sh e2e
+
+      - name: Tear down stack
+        if: always()
+        run: bash scripts/run-tests-docker.sh e2e --teardown-only
+
+  release-gate:
+    runs-on: ubuntu-latest
+    needs: [frontend, backend, docker-test-baseline]
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 9
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+          cache-dependency-path: |
+            frontend-v2/pnpm-lock.yaml
+            frontend-admin/pnpm-lock.yaml
+
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 21
+          cache: maven
+
+      - name: Install frontend-v2 deps
+        run: pnpm --dir frontend-v2 install --frozen-lockfile
+
+      - name: Install frontend-admin deps
+        run: pnpm --dir frontend-admin install --frozen-lockfile
+
+      - name: Run unified release gate
+        run: bash scripts/release-gate.sh --skip 1,5,8

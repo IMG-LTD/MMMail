@@ -1,104 +1,106 @@
 <script setup lang="ts">
-import { computed, nextTick, onBeforeUnmount, ref, watch } from 'vue'
-import { NModal } from 'naive-ui'
-import { useDialogStack } from '@/shared/composables/useDialogStack'
+import { NButton } from "naive-ui";
+import { computed, nextTick, onBeforeUnmount, ref, watch } from "vue";
+import { NModal } from "naive-ui";
+import { useDialogStack } from "@/shared/composables/useDialogStack";
 
-let modalIdSeed = 0
+let modalIdSeed = 0;
 
 const props = withDefaults(
   defineProps<{
-    closeLabel?: string
-    description?: string
-    show: boolean
-    size?: 'sm' | 'md' | 'lg'
-    title: string
-    tone?: 'neutral' | 'danger'
+    closeLabel?: string;
+    description?: string;
+    show: boolean;
+    size?: "sm" | "md" | "lg";
+    title: string;
+    tone?: "neutral" | "danger";
   }>(),
   {
-    closeLabel: 'Close modal',
+    closeLabel: "Close modal",
     description: undefined,
-    size: 'md',
-    tone: 'neutral'
-  }
-)
+    size: "md",
+    tone: "neutral",
+  },
+);
 
 const emit = defineEmits<{
-  afterLeave: []
-  close: []
-  escape: []
-  'update:show': [value: boolean]
-}>()
+  afterLeave: [];
+  close: [];
+  escape: [];
+  "update:show": [value: boolean];
+}>();
 
-const dialogStack = useDialogStack()
-const modalId = `mm-modal-${++modalIdSeed}`
-const modalRef = ref<HTMLElement | null>(null)
-const registered = ref(false)
-const restoreTarget = ref<HTMLElement | null>(null)
-const titleId = computed(() => `${modalId}-title`)
-const descriptionId = computed(() => `${modalId}-description`)
+const dialogStack = useDialogStack();
+const modalId = `mm-modal-${++modalIdSeed}`;
+const modalRef = ref<HTMLElement | null>(null);
+const registered = ref(false);
+const restoreTarget = ref<HTMLElement | null>(null);
+const titleId = computed(() => `${modalId}-title`);
+const descriptionId = computed(() => `${modalId}-description`);
 
 const modalWidth = computed(() => {
-  if (props.size === 'sm') {
-    return '420px'
+  if (props.size === "sm") {
+    return "420px";
   }
-  if (props.size === 'lg') {
-    return '760px'
+  if (props.size === "lg") {
+    return "760px";
   }
-  return '560px'
-})
+  return "560px";
+});
 
 function registerStack() {
   if (!registered.value) {
-    dialogStack.push({ id: modalId, kind: 'dialog' })
-    registered.value = true
+    dialogStack.push({ id: modalId, kind: "dialog" });
+    registered.value = true;
   }
 }
 
 function releaseStack() {
   if (registered.value && dialogStack.top.value?.id === modalId) {
-    dialogStack.pop()
+    dialogStack.pop();
   }
-  registered.value = false
+  registered.value = false;
 }
 
 function focusModal() {
-  if (typeof document !== 'undefined') {
-    restoreTarget.value = document.activeElement instanceof HTMLElement ? document.activeElement : null
+  if (typeof document !== "undefined") {
+    restoreTarget.value =
+      document.activeElement instanceof HTMLElement ? document.activeElement : null;
   }
-  nextTick(() => modalRef.value?.focus())
+  nextTick(() => modalRef.value?.focus());
 }
 
 function handleClose() {
-  emit('update:show', false)
-  emit('close')
+  emit("update:show", false);
+  emit("close");
 }
 
 function handleAfterLeave() {
-  releaseStack()
-  restoreTarget.value?.focus()
-  restoreTarget.value = null
-  emit('afterLeave')
+  releaseStack();
+  restoreTarget.value?.focus();
+  restoreTarget.value = null;
+  emit("afterLeave");
 }
 
 function handleEscape() {
-  emit('escape')
-  handleClose()
+  emit("escape");
+  handleClose();
 }
 
 watch(
   () => props.show,
-  value => {
+  (value) => {
     if (value) {
-      registerStack()
-      focusModal()
-      return
+      registerStack();
+      focusModal();
+      return;
     }
-    releaseStack()
+    releaseStack();
   },
-  { immediate: true }
-)
+  { immediate: true },
+);
 
-onBeforeUnmount(releaseStack)
+onBeforeUnmount(releaseStack);
 </script>
 
 <template>
@@ -120,7 +122,7 @@ onBeforeUnmount(releaseStack)
           <h2 :id="titleId">{{ title }}</h2>
           <p v-if="description" :id="descriptionId">{{ description }}</p>
         </div>
-        <button type="button" :aria-label="closeLabel" @click="handleClose">×</button>
+        <NButton native-type="button" :aria-label="closeLabel" @click="handleClose">×</NButton>
       </header>
       <div class="mm-modal__body">
         <slot />

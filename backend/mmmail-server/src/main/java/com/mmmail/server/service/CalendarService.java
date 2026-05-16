@@ -33,6 +33,7 @@ import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -61,6 +62,7 @@ public class CalendarService {
     private final SuiteService suiteService;
     private final AuditService auditService;
     private final CalendarInvitationOrchestrationService calendarInvitationOrchestrationService;
+    private final CalendarRecurrenceService recurrenceService;
 
     public CalendarService(
             CalendarEventMapper calendarEventMapper,
@@ -69,7 +71,8 @@ public class CalendarService {
             UserAccountMapper userAccountMapper,
             SuiteService suiteService,
             AuditService auditService,
-            CalendarInvitationOrchestrationService calendarInvitationOrchestrationService
+            CalendarInvitationOrchestrationService calendarInvitationOrchestrationService,
+            CalendarRecurrenceService recurrenceService
     ) {
         this.calendarEventMapper = calendarEventMapper;
         this.calendarEventAttendeeMapper = calendarEventAttendeeMapper;
@@ -78,6 +81,7 @@ public class CalendarService {
         this.suiteService = suiteService;
         this.auditService = auditService;
         this.calendarInvitationOrchestrationService = calendarInvitationOrchestrationService;
+        this.recurrenceService = recurrenceService;
     }
 
     public List<CalendarEventItemVo> listEvents(Long userId, String from, String to) {
@@ -92,11 +96,11 @@ public class CalendarService {
         Map<Long, Integer> attendeeCountMap = buildAttendeeCountMap(accesses.stream().map(access -> access.event().getId()).toList());
         Map<Long, String> ownerEmailMap = buildOwnerEmailMap(accesses.stream().map(access -> access.event().getOwnerId()).toList());
 
-        return accesses.stream()
-                .map(access -> toItemVo(
-                        access,
-                        attendeeCountMap.getOrDefault(access.event().getId(), 0),
-                        ownerEmailMap.get(access.event().getOwnerId())
+        return expandAccesses(accesses, fromAt, toAt).stream()
+                .map(occurrence -> toItemVo(
+                        occurrence,
+                        attendeeCountMap.getOrDefault(occurrence.access().event().getId(), 0),
+                        ownerEmailMap.get(occurrence.access().event().getOwnerId())
                 ))
                 .toList();
     }
@@ -123,6 +127,7 @@ public class CalendarService {
         event.setLocation(normalizeText(request.location()));
         event.setStartAt(request.startAt());
         event.setEndAt(request.endAt());
+        applyRecurrence(event, request.rrule(), request.rdate(), request.exdate());
         event.setAllDay(Boolean.TRUE.equals(request.allDay()) ? 1 : 0);
         event.setTimezone(normalizeTimezone(request.timezone()));
         event.setReminderMinutes(request.reminderMinutes());
@@ -130,6 +135,8 @@ public class CalendarService {
         event.setUpdatedAt(now);
         event.setDeleted(0);
         calendarEventMapper.insert(event);
+        event.setSeriesId(event.getId());
+        calendarEventMapper.updateById(event);
 
         replaceAttendees(userId, event.getId(), request.attendees(), now);
         calendarInvitationOrchestrationService.syncInternalInvitations(userId, event.getId(), ipAddress, now);
@@ -139,6 +146,17 @@ public class CalendarService {
 
     @Transactional
     public CalendarEventDetailVo updateEvent(Long userId, Long eventId, UpdateCalendarEventRequest request, String ipAddress) {
+        return updateEvent(userId, eventId, request, null, ipAddress);
+    }
+
+    @Transactional
+    public CalendarEventDetailVo updateEvent(
+            Long userId,
+            Long eventId,
+            UpdateCalendarEventRequest request,
+            String scope,
+            String ipAddress
+    ) {
         EventAccess access = resolveEventAccess(userId, eventId);
         if (!access.canEdit()) {
             throw new BizException(ErrorCode.FORBIDDEN, "No edit permission for this shared event");
@@ -146,6 +164,9 @@ public class CalendarService {
 
         LocalDateTime now = LocalDateTime.now();
         validateEventTime(request.startAt(), request.endAt());
+        if (isThisAndFollowing(scope) && StringUtils.hasText(access.event().getRrule())) {
+            return splitRecurringSeries(userId, access, request, now, ipAddress);
+        }
 
         CalendarEvent event = access.event();
         event.setTitle(request.title().trim());
@@ -153,6 +174,7 @@ public class CalendarService {
         event.setLocation(normalizeText(request.location()));
         event.setStartAt(request.startAt());
         event.setEndAt(request.endAt());
+        applyRecurrence(event, request.rrule(), request.rdate(), request.exdate());
         event.setAllDay(Boolean.TRUE.equals(request.allDay()) ? 1 : 0);
         event.setTimezone(normalizeTimezone(request.timezone()));
         event.setReminderMinutes(request.reminderMinutes());
@@ -168,6 +190,68 @@ public class CalendarService {
                 ipAddress
         );
         return getEvent(userId, eventId);
+    }
+
+    private CalendarEventDetailVo splitRecurringSeries(
+            Long userId,
+            EventAccess access,
+            UpdateCalendarEventRequest request,
+            LocalDateTime now,
+            String ipAddress
+    ) {
+        CalendarEvent original = access.event();
+        LocalDateTime cutoff = recurrenceService.splitCutoff(original, request.startAt());
+        if (!cutoff.isAfter(original.getStartAt())) {
+            throw new BizException(ErrorCode.INVALID_ARGUMENT, "thisAndFollowing scope must start after the first occurrence");
+        }
+
+        original.setRecurrenceUntil(cutoff.minusSeconds(1));
+        original.setUpdatedAt(now);
+        calendarEventMapper.updateById(original);
+
+        CalendarEvent nextSeries = buildSplitEvent(original, request, now);
+        calendarEventMapper.insert(nextSeries);
+        nextSeries.setSeriesId(nextSeries.getId());
+        calendarEventMapper.updateById(nextSeries);
+        replaceAttendees(userId, nextSeries.getId(), splitAttendees(original.getId(), request), now);
+
+        auditService.record(userId, "CAL_EVENT_RECURRENCE_SPLIT", "eventId=" + original.getId(), ipAddress);
+        return toDetailVo(
+                new EventAccess(nextSeries, access.shared(), access.permission(), access.canEdit(), access.canDelete()),
+                listAttendees(nextSeries.getId()),
+                resolveUserEmail(nextSeries.getOwnerId()),
+                String.valueOf(seriesIdOrId(original))
+        );
+    }
+
+    private CalendarEvent buildSplitEvent(CalendarEvent original, UpdateCalendarEventRequest request, LocalDateTime now) {
+        CalendarEvent event = new CalendarEvent();
+        event.setOwnerId(original.getOwnerId());
+        event.setTitle(request.title().trim());
+        event.setDescription(normalizeText(request.description()));
+        event.setLocation(normalizeText(request.location()));
+        event.setStartAt(request.startAt());
+        event.setEndAt(request.endAt());
+        applyRecurrence(event, request.rrule(), request.rdate(), request.exdate());
+        event.setAllDay(Boolean.TRUE.equals(request.allDay()) ? 1 : 0);
+        event.setTimezone(normalizeTimezone(request.timezone()));
+        event.setReminderMinutes(request.reminderMinutes());
+        event.setCreatedAt(now);
+        event.setUpdatedAt(now);
+        event.setDeleted(0);
+        return event;
+    }
+
+    private List<CalendarAttendeeInput> splitAttendees(Long originalEventId, UpdateCalendarEventRequest request) {
+        if (request.attendees() != null) {
+            return request.attendees();
+        }
+        return calendarEventAttendeeMapper.selectList(new LambdaQueryWrapper<CalendarEventAttendee>()
+                        .eq(CalendarEventAttendee::getEventId, originalEventId)
+                        .orderByAsc(CalendarEventAttendee::getEmail))
+                .stream()
+                .map(attendee -> new CalendarAttendeeInput(attendee.getEmail(), attendee.getDisplayName()))
+                .toList();
     }
 
     @Transactional
@@ -356,18 +440,19 @@ public class CalendarService {
         Map<Long, Integer> attendeeCountMap = buildAttendeeCountMap(accesses.stream().map(access -> access.event().getId()).toList());
         Map<Long, String> ownerEmailMap = buildOwnerEmailMap(accesses.stream().map(access -> access.event().getOwnerId()).toList());
 
-        auditService.record(userId, "CAL_AGENDA_QUERY", "days=" + safeDays + ",count=" + accesses.size(), ipAddress);
-        return accesses.stream()
-                .map(access -> new CalendarAgendaItemVo(
-                        String.valueOf(access.event().getId()),
-                        access.event().getTitle(),
-                        access.event().getLocation(),
-                        access.event().getStartAt(),
-                        access.event().getEndAt(),
-                        attendeeCountMap.getOrDefault(access.event().getId(), 0),
-                        access.shared(),
-                        ownerEmailMap.get(access.event().getOwnerId()),
-                        access.permission()
+        List<EventOccurrenceAccess> occurrences = expandAccesses(accesses, fromAt, toAt);
+        auditService.record(userId, "CAL_AGENDA_QUERY", "days=" + safeDays + ",count=" + occurrences.size(), ipAddress);
+        return occurrences.stream()
+                .map(occurrence -> new CalendarAgendaItemVo(
+                        String.valueOf(occurrence.access().event().getId()),
+                        occurrence.access().event().getTitle(),
+                        occurrence.access().event().getLocation(),
+                        occurrence.occurrence().startAt(),
+                        occurrence.occurrence().endAt(),
+                        attendeeCountMap.getOrDefault(occurrence.access().event().getId(), 0),
+                        occurrence.access().shared(),
+                        ownerEmailMap.get(occurrence.access().event().getOwnerId()),
+                        occurrence.access().permission()
                 ))
                 .toList();
     }
@@ -511,7 +596,7 @@ public class CalendarService {
     }
 
     private List<CalendarEvent> queryEventsByOwnerAndRange(Long ownerId, LocalDateTime fromAt, LocalDateTime toAt) {
-        return calendarEventMapper.selectList(buildOverlapQuery(fromAt, toAt)
+        return calendarEventMapper.selectList(buildAccessibleRangeQuery(fromAt, toAt)
                 .eq(CalendarEvent::getOwnerId, ownerId));
     }
 
@@ -519,7 +604,7 @@ public class CalendarService {
         if (eventIds.isEmpty()) {
             return List.of();
         }
-        return calendarEventMapper.selectList(buildOverlapQuery(fromAt, toAt)
+        return calendarEventMapper.selectList(buildAccessibleRangeQuery(fromAt, toAt)
                 .in(CalendarEvent::getId, eventIds));
     }
 
@@ -529,10 +614,17 @@ public class CalendarService {
         }
     }
 
-    private LambdaQueryWrapper<CalendarEvent> buildOverlapQuery(LocalDateTime fromAt, LocalDateTime toAt) {
+    private LambdaQueryWrapper<CalendarEvent> buildAccessibleRangeQuery(LocalDateTime fromAt, LocalDateTime toAt) {
         return new LambdaQueryWrapper<CalendarEvent>()
-                .lt(CalendarEvent::getStartAt, toAt)
-                .gt(CalendarEvent::getEndAt, fromAt)
+                .and(query -> query
+                        .and(overlap -> overlap.lt(CalendarEvent::getStartAt, toAt).gt(CalendarEvent::getEndAt, fromAt))
+                        .or(recurring -> recurring
+                                .isNotNull(CalendarEvent::getRrule)
+                                .lt(CalendarEvent::getStartAt, toAt)
+                                .and(until -> until
+                                        .isNull(CalendarEvent::getRecurrenceUntil)
+                                        .or()
+                                        .gt(CalendarEvent::getRecurrenceUntil, fromAt))))
                 .orderByAsc(CalendarEvent::getStartAt)
                 .orderByAsc(CalendarEvent::getId);
     }
@@ -645,31 +737,86 @@ public class CalendarService {
         return user == null ? null : user.getEmail();
     }
 
-    private CalendarEventItemVo toItemVo(EventAccess access, int attendeeCount, String ownerEmail) {
-        CalendarEvent event = access.event();
+    private void applyRecurrence(
+            CalendarEvent event,
+            String rawRule,
+            List<LocalDateTime> rdates,
+            List<LocalDateTime> exdates
+    ) {
+        CalendarRecurrenceRule rule = recurrenceService.parseOptional(rawRule);
+        event.setRrule(rule == null ? null : rule.normalized());
+        event.setRecurrenceUntil(recurrenceService.effectiveUntil(rule));
+        event.setRecurrenceRdatesJson(recurrenceService.encodeDates(rdates));
+        event.setRecurrenceExdatesJson(recurrenceService.encodeDates(exdates));
+    }
+
+    private boolean isThisAndFollowing(String scope) {
+        return StringUtils.hasText(scope) && "thisAndFollowing".equalsIgnoreCase(scope.trim());
+    }
+
+    private Long seriesIdOrId(CalendarEvent event) {
+        return event.getSeriesId() == null ? event.getId() : event.getSeriesId();
+    }
+
+    private List<EventOccurrenceAccess> expandAccesses(
+            List<EventAccess> accesses,
+            LocalDateTime fromAt,
+            LocalDateTime toAt
+    ) {
+        List<EventOccurrenceAccess> occurrences = new ArrayList<>();
+        for (EventAccess access : accesses) {
+            recurrenceService.expand(access.event(), fromAt, toAt)
+                    .forEach(occurrence -> occurrences.add(new EventOccurrenceAccess(access, occurrence)));
+        }
+        occurrences.sort(Comparator
+                .comparing((EventOccurrenceAccess item) -> item.occurrence().startAt())
+                .thenComparing(item -> item.access().event().getId()));
+        return occurrences;
+    }
+
+    private CalendarEventItemVo toItemVo(EventOccurrenceAccess occurrence, int attendeeCount, String ownerEmail) {
+        CalendarEvent event = occurrence.access().event();
         return new CalendarEventItemVo(
                 String.valueOf(event.getId()),
+                String.valueOf(seriesIdOrId(event)),
+                event.getRrule(),
+                occurrence.occurrence().startAt(),
+                event.getRecurrenceUntil(),
                 event.getTitle(),
                 event.getLocation(),
-                event.getStartAt(),
-                event.getEndAt(),
+                occurrence.occurrence().startAt(),
+                occurrence.occurrence().endAt(),
                 event.getAllDay() != null && event.getAllDay() == 1,
                 event.getTimezone(),
                 event.getReminderMinutes(),
                 attendeeCount,
                 event.getUpdatedAt(),
-                access.shared(),
+                occurrence.access().shared(),
                 ownerEmail,
-                access.permission(),
-                access.canEdit(),
-                access.canDelete()
+                occurrence.access().permission(),
+                occurrence.access().canEdit(),
+                occurrence.access().canDelete()
         );
     }
 
     private CalendarEventDetailVo toDetailVo(EventAccess access, List<CalendarAttendeeVo> attendees, String ownerEmail) {
+        return toDetailVo(access, attendees, ownerEmail, null);
+    }
+
+    private CalendarEventDetailVo toDetailVo(
+            EventAccess access,
+            List<CalendarAttendeeVo> attendees,
+            String ownerEmail,
+            String truncatedSeriesId
+    ) {
         CalendarEvent event = access.event();
         return new CalendarEventDetailVo(
                 String.valueOf(event.getId()),
+                String.valueOf(seriesIdOrId(event)),
+                truncatedSeriesId,
+                event.getRrule(),
+                event.getStartAt(),
+                event.getRecurrenceUntil(),
                 event.getTitle(),
                 event.getDescription(),
                 event.getLocation(),
@@ -799,6 +946,12 @@ public class CalendarService {
             String permission,
             boolean canEdit,
             boolean canDelete
+    ) {
+    }
+
+    private record EventOccurrenceAccess(
+            EventAccess access,
+            CalendarEventOccurrence occurrence
     ) {
     }
 }

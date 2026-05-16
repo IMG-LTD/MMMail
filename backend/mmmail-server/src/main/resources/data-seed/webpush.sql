@@ -1,0 +1,4 @@
+-- Web Push subscriptions need a real endpoint, p256dh key, and auth key from a browser.
+-- Keep this seed disabled by default and replace the placeholder values locally before enabling.
+-- insert ignore into web_push_subscription (id, owner_id, endpoint_hash, endpoint, p256dh_key, auth_key, content_encoding, user_agent, label, created_at, updated_at, deleted)
+-- values (9100000006001, 9100000000001, 'replace-with-sha256-endpoint-hash', 'https://example.invalid/real endpoint', 'replace-with-p256dh', 'replace-with-auth', 'aes128gcm', 'Dev browser', 'Dev Seed Browser', current_timestamp, current_timestamp, 0);

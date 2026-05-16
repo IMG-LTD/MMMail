@@ -77,6 +77,12 @@ class BackendV21RuntimeContractGapClosureTest {
         JsonNode auth = readJson(register).at("/data");
         String accessToken = auth.at("/accessToken").asText();
         String refreshToken = auth.at("/refreshToken").asText();
+        mockMvc.perform(get("/api/v2/auth/me")
+                        .header("Authorization", "Bearer " + accessToken))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.userId").isNotEmpty())
+                .andExpect(jsonPath("$.data.roles[0]").value("USER"));
+
         mockMvc.perform(get("/api/v2/auth/sessions")
                         .header("Authorization", "Bearer " + accessToken))
                 .andExpect(status().isOk())

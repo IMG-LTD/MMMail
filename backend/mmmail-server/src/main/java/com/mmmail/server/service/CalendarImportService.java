@@ -42,10 +42,40 @@ public class CalendarImportService {
 
     @Transactional
     public CalendarImportResultVo importIcs(Long userId, ImportCalendarIcsRequest request, String ipAddress) {
-        String timezone = resolveTimezone(userId, request.timezone());
-        List<CalendarIcsImportParser.CalendarImportDraft> drafts = calendarIcsImportParser.parse(request.content(), timezone);
+        return importIcsContent(
+                userId,
+                request.content(),
+                request.timezone(),
+                request.reminderMinutes(),
+                "CAL_IMPORT",
+                ipAddress
+        );
+    }
+
+    @Transactional
+    public CalendarImportResultVo importIcsContent(
+            Long userId,
+            String content,
+            String timezone,
+            Integer reminderMinutes,
+            String auditAction,
+            String ipAddress
+    ) {
+        String resolvedTimezone = resolveTimezone(userId, timezone);
+        List<CalendarIcsImportParser.CalendarImportDraft> drafts = calendarIcsImportParser.parse(content, resolvedTimezone);
+        CalendarImportResultVo result = importDrafts(userId, drafts, reminderMinutes, ipAddress);
+        auditService.record(userId, auditAction, "count=" + result.importedCount(), ipAddress);
+        return result;
+    }
+
+    private CalendarImportResultVo importDrafts(
+            Long userId,
+            List<CalendarIcsImportParser.CalendarImportDraft> drafts,
+            Integer reminderMinutesValue,
+            String ipAddress
+    ) {
         LocalDateTime now = LocalDateTime.now();
-        int reminderMinutes = request.reminderMinutes() == null ? DEFAULT_REMINDER_MINUTES : request.reminderMinutes();
+        int reminderMinutes = reminderMinutesValue == null ? DEFAULT_REMINDER_MINUTES : reminderMinutesValue;
         List<String> eventIds = new ArrayList<>();
 
         for (CalendarIcsImportParser.CalendarImportDraft draft : drafts) {
@@ -55,7 +85,6 @@ public class CalendarImportService {
             eventIds.add(String.valueOf(event.getId()));
         }
 
-        auditService.record(userId, "CAL_IMPORT", "count=" + eventIds.size(), ipAddress);
         return new CalendarImportResultVo(drafts.size(), eventIds.size(), eventIds);
     }
 

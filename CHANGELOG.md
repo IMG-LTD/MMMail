@@ -1,5 +1,10 @@
 # Changelog
 
+## v2.1.2
+- Renamed legacy admin frontend to frontend-admin; moved dev-only artifacts to a local filesystem archive; ingested v2.1.3 closure code into main history.
+- Closed v2.1.2 release-gate via v2.1.3 followups (T-1..T-7 + U-1..U-6).
+- Promoted docker-backed e2e, oxfmt hard blocking, CI release-gate, and v2.1.4 roadmap ownership.
+
 ## v2.0.4
 - Added Bash and PowerShell one-click installers for minimal and standard Docker Compose deployment paths.
 - Restructured first-time install documentation around one-click, Docker manual, bare-metal manual, and local development paths.

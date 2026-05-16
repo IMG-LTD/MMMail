@@ -1,0 +1,16 @@
+[
+  {
+    "file": "frontend-v2/src/views/app/DocsEditorView.vue",
+    "tag": "textarea",
+    "reason": "rich-text-editor-canvas",
+    "removeBy": "P5",
+    "owner": "v2.1.1-ui"
+  },
+  {
+    "file": "frontend-v2/src/views/app/SheetsEditorView.vue",
+    "tag": "input",
+    "reason": "spreadsheet-cell-editor",
+    "removeBy": "P5",
+    "owner": "v2.1.1-ui"
+  }
+]

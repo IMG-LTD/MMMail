@@ -7,6 +7,8 @@ import com.mmmail.server.model.entity.AuditEvent;
 import com.mmmail.server.model.entity.UserAccount;
 import com.mmmail.server.model.vo.AuditEventVo;
 import com.mmmail.server.model.vo.OrgAuditEventVo;
+import io.micrometer.core.instrument.Counter;
+import io.micrometer.core.instrument.MeterRegistry;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 
@@ -18,12 +20,23 @@ import java.util.Set;
 @Service
 public class AuditService {
 
+    private static final String METRIC_AUDIT_EVENT_TOTAL = "audit_event_total";
+    private static final String DEFAULT_SEVERITY = "low";
+    private static final int ACTOR_EVENT_LIMIT_MAX = 100;
+    private static final int RECENT_ACTOR_EVENT_LIMIT_MAX = 1000;
+
     private final AuditEventMapper auditEventMapper;
     private final UserAccountMapper userAccountMapper;
+    private final MeterRegistry meterRegistry;
 
-    public AuditService(AuditEventMapper auditEventMapper, UserAccountMapper userAccountMapper) {
+    public AuditService(
+            AuditEventMapper auditEventMapper,
+            UserAccountMapper userAccountMapper,
+            MeterRegistry meterRegistry
+    ) {
         this.auditEventMapper = auditEventMapper;
         this.userAccountMapper = userAccountMapper;
+        this.meterRegistry = meterRegistry;
     }
 
     public void record(Long actorId, String eventType, String detail, String ipAddress) {
@@ -39,16 +52,49 @@ public class AuditService {
     }
 
     public AuditEventVo recordEvent(Long actorId, String eventType, String detail, String ipAddress, Long orgId) {
+        return insertAuditEvent(actorId, eventType, null, detail, ipAddress, orgId);
+    }
+
+    public AuditEventVo recordRegisteredEvent(
+            Long actorId,
+            String eventType,
+            String targetId,
+            String detail,
+            String ipAddress
+    ) {
+        String canonicalType = AuditEventRegistry.canonicalType(eventType);
+        if (AuditEventRegistry.resolve(canonicalType) == null) {
+            throw new IllegalArgumentException("Unregistered audit event type: " + eventType);
+        }
+        return insertAuditEvent(actorId, canonicalType, targetId, detail, ipAddress, null);
+    }
+
+    private AuditEventVo insertAuditEvent(
+            Long actorId,
+            String eventType,
+            String targetId,
+            String detail,
+            String ipAddress,
+            Long orgId
+    ) {
+        AuditEventSpec spec = AuditEventRegistry.resolve(eventType);
+        String severity = spec == null ? DEFAULT_SEVERITY : spec.severity();
+
         AuditEvent event = new AuditEvent();
         event.setOrgId(orgId);
         event.setActorId(actorId);
         event.setEventType(eventType);
+        event.setTargetType(spec == null ? null : spec.targetType());
+        event.setTargetId(AuditEventRegistry.targetIdFor(eventType, targetId, detail));
+        event.setSeverity(severity);
         event.setDetail(detail);
         event.setIpAddress(ipAddress == null || ipAddress.isBlank() ? "0.0.0.0" : ipAddress);
         event.setCreatedAt(LocalDateTime.now());
         event.setUpdatedAt(LocalDateTime.now());
         event.setDeleted(0);
         auditEventMapper.insert(event);
+        incrementAuditCounter(eventType, severity);
+        BusinessEventMetrics.recordFromAudit(meterRegistry, eventType);
         return toAuditEventVo(event);
     }
 
@@ -74,12 +120,42 @@ public class AuditService {
         if (userId == null || eventTypes == null || eventTypes.isEmpty()) {
             return List.of();
         }
-        int safeLimit = Math.max(1, Math.min(limit, 100));
+        int safeLimit = Math.max(1, Math.min(limit, ACTOR_EVENT_LIMIT_MAX));
         LambdaQueryWrapper<AuditEvent> query = new LambdaQueryWrapper<AuditEvent>()
                 .eq(AuditEvent::getActorId, userId)
                 .in(AuditEvent::getEventType, eventTypes);
         if (afterEventId != null && afterEventId > 0) {
             query.gt(AuditEvent::getId, afterEventId);
+        }
+        if (ascending) {
+            query.orderByAsc(AuditEvent::getId);
+        } else {
+            query.orderByDesc(AuditEvent::getId);
+        }
+        query.last("limit " + safeLimit);
+        return auditEventMapper.selectList(query).stream().map(this::toAuditEventVo).toList();
+    }
+
+    public List<AuditEventVo> listRecentActorEvents(
+            Long userId,
+            Set<String> eventTypes,
+            Long afterEventId,
+            int limit,
+            LocalDateTime sinceCreatedAt,
+            boolean ascending
+    ) {
+        if (userId == null || eventTypes == null || eventTypes.isEmpty()) {
+            return List.of();
+        }
+        int safeLimit = Math.max(1, Math.min(limit, RECENT_ACTOR_EVENT_LIMIT_MAX));
+        LambdaQueryWrapper<AuditEvent> query = new LambdaQueryWrapper<AuditEvent>()
+                .eq(AuditEvent::getActorId, userId)
+                .in(AuditEvent::getEventType, eventTypes);
+        if (afterEventId != null && afterEventId > 0) {
+            query.gt(AuditEvent::getId, afterEventId);
+        }
+        if (sinceCreatedAt != null) {
+            query.ge(AuditEvent::getCreatedAt, sinceCreatedAt);
         }
         if (ascending) {
             query.orderByAsc(AuditEvent::getId);
@@ -157,7 +233,7 @@ public class AuditService {
                 .eq(AuditEvent::getOrgId, orgId);
 
         if (StringUtils.hasText(eventType)) {
-            query.eq(AuditEvent::getEventType, eventType.trim().toUpperCase());
+            query.eq(AuditEvent::getEventType, eventType.trim());
         }
         if (StringUtils.hasText(keyword)) {
             String safeKeyword = keyword.trim();
@@ -267,6 +343,9 @@ public class AuditService {
                         event.getActorId() == null ? null : String.valueOf(event.getActorId()),
                         actorEmailMap.get(event.getActorId()),
                         event.getEventType(),
+                        event.getTargetType(),
+                        event.getTargetId(),
+                        event.getSeverity(),
                         event.getIpAddress(),
                         event.getDetail(),
                         event.getCreatedAt()
@@ -278,9 +357,21 @@ public class AuditService {
         return new AuditEventVo(
                 event.getId(),
                 event.getEventType(),
+                event.getTargetType(),
+                event.getTargetId(),
+                event.getSeverity(),
                 event.getIpAddress(),
                 event.getDetail(),
                 event.getCreatedAt()
         );
+    }
+
+    private void incrementAuditCounter(String eventType, String severity) {
+        String metricType = AuditEventRegistry.canonicalType(eventType);
+        Counter.builder(METRIC_AUDIT_EVENT_TOTAL)
+                .tag("type", metricType)
+                .tag("severity", severity)
+                .register(meterRegistry)
+                .increment();
     }
 }

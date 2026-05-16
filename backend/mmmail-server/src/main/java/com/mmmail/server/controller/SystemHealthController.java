@@ -1,12 +1,11 @@
 package com.mmmail.server.controller;
 
-import com.mmmail.common.exception.BizException;
-import com.mmmail.common.exception.ErrorCode;
 import com.mmmail.common.model.Result;
 import com.mmmail.server.model.dto.CreateClientErrorEventRequest;
 import com.mmmail.server.model.vo.SystemHealthOverviewVo;
 import com.mmmail.server.observability.ErrorTrackingService;
 import com.mmmail.server.observability.SystemHealthService;
+import com.mmmail.server.security.RequireRole;
 import com.mmmail.server.security.SecurityRateLimitService;
 import com.mmmail.server.service.AuditService;
 import com.mmmail.server.util.SecurityUtils;
@@ -41,8 +40,8 @@ public class SystemHealthController {
     }
 
     @GetMapping("/health")
+    @RequireRole("ADMIN")
     public Result<SystemHealthOverviewVo> getHealth(HttpServletRequest request) {
-        requireAdmin();
         SystemHealthOverviewVo overview = systemHealthService.getOverview();
         auditService.record(SecurityUtils.currentUserId(), "SYSTEM_HEALTH_VIEW", "status=" + overview.status(), request.getRemoteAddr());
         return Result.success(overview);
@@ -66,12 +65,6 @@ public class SystemHealthController {
                 httpRequest.getHeader("User-Agent")
         );
         return Result.success(null);
-    }
-
-    private void requireAdmin() {
-        if (!SecurityUtils.isAdmin()) {
-            throw new BizException(ErrorCode.FORBIDDEN, "System health requires admin role");
-        }
     }
 
     private String resolveOrgId(HttpServletRequest request) {

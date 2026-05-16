@@ -1,0 +1,50 @@
+{
+  "home": {
+    "routeRoot": "/",
+    "designSource": "docs/MMMail/UI/首页/工作台-设计概览.png"
+  },
+  "mail": {
+    "routeRoot": "/mail",
+    "designSource": "docs/MMMail/UI/邮件/邮件-设计概览.png"
+  },
+  "calendar": {
+    "routeRoot": "/calendar",
+    "designSource": "docs/MMMail/UI/日历/日历概览.png"
+  },
+  "drive": {
+    "routeRoot": "/drive",
+    "designSource": "docs/MMMail/UI/云盘/云盘概览.png"
+  },
+  "docs": {
+    "routeRoot": "/docs",
+    "designSource": "docs/MMMail/UI/文档/文档概览.png"
+  },
+  "sheets": {
+    "routeRoot": "/sheets",
+    "designSource": "docs/MMMail/UI/Sheets和labs/表格概览.png"
+  },
+  "pass": {
+    "routeRoot": "/pass",
+    "designSource": "docs/MMMail/UI/Pass/Pass概览.png"
+  },
+  "collaboration": {
+    "routeRoot": "/collaboration",
+    "designSource": "docs/MMMail/UI/Collaboration/协作概览.png"
+  },
+  "command-center": {
+    "routeRoot": "/command-center",
+    "designSource": "docs/MMMail/UI/CommandCenter/命令概览.png"
+  },
+  "notifications": {
+    "routeRoot": "/notifications",
+    "designSource": "docs/MMMail/UI/Notifications/通知概览.png"
+  },
+  "admin": {
+    "routeRoot": "/admin",
+    "designSource": "docs/MMMail/UI/Admin/管理后台.png"
+  },
+  "settings": {
+    "routeRoot": "/settings",
+    "designSource": "docs/MMMail/UI/Setting/设置概览.png"
+  }
+}

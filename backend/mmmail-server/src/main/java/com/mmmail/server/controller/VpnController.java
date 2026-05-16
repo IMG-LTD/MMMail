@@ -10,6 +10,7 @@ import com.mmmail.server.model.vo.VpnConnectionProfileVo;
 import com.mmmail.server.model.vo.VpnServerVo;
 import com.mmmail.server.model.vo.VpnSessionVo;
 import com.mmmail.server.model.vo.VpnSettingsVo;
+import com.mmmail.server.security.RequireEntitlement;
 import com.mmmail.server.service.VpnProfileService;
 import com.mmmail.server.service.VpnSettingsService;
 import com.mmmail.server.service.VpnService;
@@ -30,6 +31,7 @@ import org.springframework.web.bind.annotation.RestController;
 import java.util.List;
 
 @RestController
+@RequireEntitlement("VPN")
 @RequestMapping("/api/v1/vpn")
 public class VpnController {
 

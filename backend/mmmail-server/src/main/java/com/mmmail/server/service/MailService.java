@@ -590,7 +590,7 @@ public class MailService {
             dispatchDeliveryTargets(sent, deliveryTargets, now);
         }
         if (immediateQueuedDispatch) {
-            dispatchQueuedMessage(sent, "OUTBOX", "MAIL_OUTBOX_DISPATCH", now, true);
+            dispatchQueuedMessage(sent, QueuedDispatchOptions.immediate("OUTBOX", "MAIL_OUTBOX_DISPATCH"), now);
         }
 
         auditService.record(
@@ -1243,45 +1243,69 @@ public class MailService {
             return;
         }
         for (MailMessage message : dueMessages) {
-            dispatchQueuedMessage(message, sourceFolder, auditEvent, now, false);
+            dispatchQueuedMessage(message, QueuedDispatchOptions.due(sourceFolder, auditEvent), now);
         }
     }
 
     private void dispatchQueuedMessage(
             MailMessage message,
-            String sourceFolder,
-            String auditEvent,
-            LocalDateTime now,
-            boolean failFast
+            QueuedDispatchOptions options,
+            LocalDateTime now
     ) {
         List<MailDeliveryTarget> deliveryTargets = resolveStoredDeliveryTargets(message);
         try {
+            if (options.transitionBeforeDispatch()
+                    && !transitionQueuedMessageToSent(message, options.sourceFolder(), now, options.requireDue())) {
+                return;
+            }
             dispatchDeliveryTargets(message, deliveryTargets, now);
-            if (!transitionQueuedMessageToSent(message, sourceFolder, now)) {
+            if (!options.transitionBeforeDispatch()
+                    && !transitionQueuedMessageToSent(message, options.sourceFolder(), now, options.requireDue())) {
                 return;
             }
             auditService.record(
                     message.getOwnerId(),
-                    auditEvent,
+                    options.auditEvent(),
                     "mail=" + message.getId() + ",routeCount=" + deliveryTargets.size(),
                     "system"
             );
         } catch (BizException exception) {
-            handleQueuedDispatchFailure(message, exception, failFast);
+            handleQueuedDispatchFailure(message, exception, options.failFast());
         }
     }
 
-    private boolean transitionQueuedMessageToSent(MailMessage message, String sourceFolder, LocalDateTime now) {
-        int transitioned = mailMessageMapper.update(
-                null,
-                new LambdaUpdateWrapper<MailMessage>()
-                        .eq(MailMessage::getId, message.getId())
-                        .eq(MailMessage::getFolderType, sourceFolder)
-                        .le(MailMessage::getSentAt, now)
-                        .set(MailMessage::getFolderType, "SENT")
-                        .set(MailMessage::getCustomFolderId, null)
-                        .set(MailMessage::getUpdatedAt, now)
-        );
+    private record QueuedDispatchOptions(
+            String sourceFolder,
+            String auditEvent,
+            boolean failFast,
+            boolean requireDue,
+            boolean transitionBeforeDispatch
+    ) {
+        private static QueuedDispatchOptions immediate(String sourceFolder, String auditEvent) {
+            return new QueuedDispatchOptions(sourceFolder, auditEvent, true, false, true);
+        }
+
+        private static QueuedDispatchOptions due(String sourceFolder, String auditEvent) {
+            return new QueuedDispatchOptions(sourceFolder, auditEvent, false, true, false);
+        }
+    }
+
+    private boolean transitionQueuedMessageToSent(
+            MailMessage message,
+            String sourceFolder,
+            LocalDateTime now,
+            boolean requireDue
+    ) {
+        LambdaUpdateWrapper<MailMessage> update = new LambdaUpdateWrapper<MailMessage>()
+                .eq(MailMessage::getId, message.getId())
+                .eq(MailMessage::getFolderType, sourceFolder);
+        if (requireDue) {
+            update.le(MailMessage::getSentAt, now);
+        }
+        int transitioned = mailMessageMapper.update(null, update
+                .set(MailMessage::getFolderType, "SENT")
+                .set(MailMessage::getCustomFolderId, null)
+                .set(MailMessage::getUpdatedAt, now));
         return transitioned > 0;
     }
 
