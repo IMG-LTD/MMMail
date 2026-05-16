@@ -27,8 +27,8 @@
   },
   "type": "module",
   "scripts": {
-    "build": "vite build --mode prod",
-    "build:test": "vite build --mode test",
+    "build": "vite build --mode prod && node scripts/normalize-generated-types.mjs",
+    "build:test": "vite build --mode test && node scripts/normalize-generated-types.mjs",
     "check:bundle-budget": "pnpm build && node scripts/check-bundle-budget.mjs && size-limit",
     "check:i18n": "tsx scripts/check-i18n-keys.ts",
     "check:style-discipline": "node scripts/check-style-discipline.mjs",

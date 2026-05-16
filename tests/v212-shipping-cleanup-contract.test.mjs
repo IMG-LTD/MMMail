@@ -130,8 +130,31 @@ test('v2.1.2 shipping cleanup scopes imported admin git hooks to frontend-admin'
 
   assert.match(hooks['pre-commit'], /pnpm --dir frontend-admin typecheck/);
   assert.match(hooks['pre-commit'], /pnpm --dir frontend-admin exec oxfmt --check/);
-  assert.match(hooks['commit-msg'], /pnpm --dir frontend-admin sa git-commit-verify/);
+  assert.match(hooks['commit-msg'], /cd frontend-admin && pnpm sa git-commit-verify/);
   assert.doesNotMatch(hooks['pre-commit'], /^pnpm typecheck/);
+});
+
+test('v2.1.2 shipping cleanup keeps release gate from leaving generated route type diffs', async () => {
+  const [packageJson, releaseGate, normalizeScript] = await Promise.all([
+    read('frontend-admin/package.json').then(JSON.parse),
+    read('scripts/release-gate.sh'),
+    read('frontend-admin/scripts/normalize-generated-types.mjs')
+  ]);
+
+  assert.match(packageJson.scripts.build, /node scripts\/normalize-generated-types\.mjs/);
+  assert.match(packageJson.scripts['build:test'], /node scripts\/normalize-generated-types\.mjs/);
+  assert.match(releaseGate, /release-gate-final-clean-diff\.log/);
+  assert.match(releaseGate, /git diff --exit-code/);
+  assert.match(normalizeScript, /elegant-router\.d\.ts/);
+  assert.match(normalizeScript, /\[ \\t\]\+\$/);
+});
+
+test('v2.1.2 shipping cleanup keeps docker test runtime outside the repository tmp root', async () => {
+  const dockerRunner = await read('scripts/run-tests-docker.sh');
+
+  assert.match(dockerRunner, /MMMAIL_TEST_RUNTIME_DIR/);
+  assert.match(dockerRunner, /mmmail-test-runtime/);
+  assert.doesNotMatch(dockerRunner, /\$ROOT_DIR\/\.tmp/);
 });
 
 test('v2.1.2 shipping cleanup ingests first-time tracked code without dependency caches', () => {

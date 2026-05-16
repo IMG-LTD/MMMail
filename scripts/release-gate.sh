@@ -147,6 +147,14 @@ run_step 10 "bundle-budget"       bundle-budget       step_bundle_budget
 run_step 11 "i18n-keys"           i18n-keys           step_i18n_keys
 run_step 12 "migration-naming"    migration-naming    step_migration_naming
 
+clean_diff_log="$LOG_DIR/release-gate-final-clean-diff.log"
+echo "[release-gate] final clean diff check -> $clean_diff_log"
+if ! git diff --exit-code >"$clean_diff_log" 2>&1; then
+  echo "[release-gate] final clean diff check FAILED. Tail of log:" >&2
+  tail -40 "$clean_diff_log" >&2 || true
+  exit 1
+fi
+
 elapsed=$(( $(date +%s) - start_ts ))
 echo
 echo "[release-gate] all gates green (${#PASSED[@]} passed, ${#SKIPPED[@]} skipped) in ${elapsed}s"
