@@ -9,7 +9,7 @@ async function read(relativePath) {
 }
 
 test('v2.1.2 mail rules routes expose list, detail, and create entry points', async () => {
-  const routes = await read('src/router/routes/index.ts');
+  const routes = await read('src/router/routes/custom-routes.ts');
 
   assert.match(routes, /name: 'mail_rules'/);
   assert.match(routes, /path: '\/mail\/rules'/);

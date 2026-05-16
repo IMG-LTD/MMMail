@@ -1,7 +1,7 @@
 # MMMail v2 Support Boundaries
 
 **版本**: `v2-mainline`
-**日期**: `2026-04-23`
+**日期**: `2026-05-16`
 
 ## 支持范围
 ### GA
@@ -28,13 +28,14 @@
 - Preview 面只保留方向验证与壳层体验，不承诺稳定性或兼容性
 
 ## 当前自托管运行模型
-- `frontend-v2 Web + 单个 Spring Boot 后端进程 + MySQL / Redis`
+- `frontend-admin Web + 单个 Spring Boot 后端进程 + MySQL / Redis`
+- `frontend-v2` 是冻结 legacy reference，只允许删除文件或迁出历史材料，不是产品运行入口
 - 标准模式可额外启用 `Nacos`，但这不代表仓库交付了微服务网格
 - Compose 运行入口默认使用 `http://127.0.0.1:3001`
-- 本地前端开发入口默认使用 `http://127.0.0.1:5174`
+- 本地产品前端开发入口默认使用 `http://127.0.0.1:9527`
 
-## Community 与 Hosted 边界
-### Community
+## Free 与 Hosted / Commercial 边界
+### Free
 - 当前仓库中的自托管运行、升级、备份恢复、验证脚本与文档
 - `Mail → Calendar → Drive → Pass` 主线协作链路
 - 组织、治理、安全、设置与公开边界页面
@@ -68,4 +69,4 @@
 - `docs/open-source/module-maturity-matrix.md`
 - `docs/ops/install.md`
 - `docs/ops/runbook.md`
-- `docs/release/v2.0.4-release-notes.md`
+- `docs/release/v2.1.2-shipping-clean-release-notes.md`

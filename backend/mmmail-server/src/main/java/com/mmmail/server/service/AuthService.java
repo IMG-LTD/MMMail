@@ -132,6 +132,31 @@ public class AuthService {
     }
 
     @Transactional
+    public AuthResponse loginSso(SsoLoginRequest request) {
+        String normalizedEmail = normalizeEmail(request.email());
+        if (!StringUtils.hasText(normalizedEmail)) {
+            throw new BizException(ErrorCode.INVALID_ARGUMENT, "OIDC email is required");
+        }
+        UserAccount user = userAccountMapper.selectOne(
+                new LambdaQueryWrapper<UserAccount>().eq(UserAccount::getEmail, normalizedEmail)
+        );
+        if (user == null) {
+            throw new BizException(ErrorCode.USER_NOT_FOUND, "OIDC user is not linked to a local account");
+        }
+        if (user.getStatus() == null || user.getStatus() != 1) {
+            throw new BizException(ErrorCode.FORBIDDEN, "User is disabled");
+        }
+        String normalizedIpAddress = normalizeIpAddress(request.ipAddress());
+        auditService.record(
+                user.getId(),
+                "OIDC_LOGIN_SUCCESS",
+                "OIDC login success subject=" + request.providerSubject(),
+                normalizedIpAddress
+        );
+        return buildAuthResponse(user, LoginRiskAssessment.low(), normalizedIpAddress);
+    }
+
+    @Transactional
     public AuthResponse refresh(String refreshToken, String ipAddress) {
         UserSession session = findActiveSession(refreshToken);
         UserAccount user = userAccountMapper.selectById(session.getOwnerId());

@@ -9,7 +9,7 @@ async function read(relativePath) {
 }
 
 test('round7 mail exposes explicit folder routes instead of falling through to 404', async () => {
-  const router = await read('src/router/routes/index.ts');
+  const router = await read('src/router/routes/custom-routes.ts');
 
   assert.match(router, /mail_folder/);
   assert.match(router, /\/mail\/:folder/);

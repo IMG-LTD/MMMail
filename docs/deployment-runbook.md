@@ -1,12 +1,12 @@
 # MMMail v2.1.2 Deployment Runbook
 
-**版本**: `v2.1.2`
-**日期**: `2026-05-16`
-**状态**: `release candidate`
+**版本**: `v2-mainline`
+**日期**: `2026-05-17`
+**状态**: `v2.1.2 shipping-clean baseline + v2.2 governance aligned`
 
 ## 1. 目的
-- 记录 `main` 切到 v2.1.2 之后的部署基线。
-- 统一 `frontend-v2`、Compose、自托管门禁与发布文档口径。
+- 记录 `main` 当前公开部署基线。
+- 统一 `frontend-admin`、Compose、自托管门禁与发布文档口径。
 - First-time install source of truth: `docs/ops/install.md`。
 - 首次安装路径选择（一键安装、Docker 手动安装、裸机手动安装、本地体验 / 开发）以 `docs/ops/install.md` 为准；本 Runbook 从操作者已经选定安装路径之后开始，聚焦部署执行、验证、升级、备份、恢复与事故处理步骤。
 - 更完整的升级、备份恢复、运行态排障请参考：
@@ -15,8 +15,9 @@
   - `docs/ops/runbook.md`
 
 ## 2. 适用部署基线
-- 当前 shipped baseline：`main` / `v2.1.2`
-- 当前默认自托管运行模型：`frontend-v2 Web + 单个 Spring Boot 后端进程 + MySQL / Redis`
+- 当前 shipped baseline：`main` / `v2.1.2-shipping-clean`
+- 当前默认自托管运行模型：`frontend-admin Web + 单个 Spring Boot 后端进程 + MySQL / Redis`
+- legacy `frontend-v2` 只作为 contract / migration reference，不是产品运行入口
 - 标准模式可额外启用 `Nacos`
 - archive 分支 `archive/v2-only-pre-cleanup-20260423` 仅用于保留清理前仓库状态，不参与当前发布门禁
 
@@ -52,7 +53,8 @@
 - `Mail / Calendar / Drive / Suite Shell / Business / Organizations / Settings / Security` 保持当前公开主线
 - `Pass / Docs / Sheets` 仍按 `Beta` 口径暴露
 - `Collaboration / Command Center / Notifications / Labs` 保持 `Preview`
-- `frontend-v2` tests、contract regression、typecheck 与 audit 门禁全部通过
+- `frontend-admin` typecheck、v2.1.2 contract、coverage、e2e、style、i18n、bundle 与 Lighthouse 门禁通过
+- legacy `frontend-v2` selected contracts 已迁入 root tests / `frontend-admin`；当前只保留 freeze gate，不能作为产品发布入口
 - backend migration、security 与 capability 回归全部通过
 - 发布门禁必须覆盖 `token-hash public-share contract`
 - 发布门禁必须覆盖 `tenant/scope foundation kernel`
@@ -99,6 +101,8 @@
 - `MMMAIL_WEB_PUSH_VAPID_SUBJECT`：Web Push VAPID subject。
 - `MMMAIL_WEB_PUSH_VAPID_PUBLIC_KEY`：Web Push VAPID 公钥。
 - `MMMAIL_WEB_PUSH_VAPID_PRIVATE_KEY`：Web Push VAPID 私钥。
+- `MMMAIL_BILLING_WEBHOOK_SECRET`：外部计费网关 webhook HMAC 共享密钥，生产必须配置为 32 位以上随机值。
+- `MMMAIL_LICENSE_PUBLIC_KEY`：用于验证自托管商业 license 的 Ed25519 X.509 公钥，允许 PEM 或 Base64 DER 格式。
 - `MMMAIL_FEATURE_FLAGS_WATCH_INTERVAL_MS`：feature_flag 表 watch 刷新间隔，默认 `5000`。
 
 ### 5.7 v2.1.2 dev seed 变量
@@ -117,7 +121,7 @@
 - 需要恢复时，按 `docs/ops/backup-restore.md` 执行恢复或回滚
 
 ## 7. 发布工件对齐
-- Release notes source of truth: `docs/release/v2.0.4-release-notes.md`
+- Release notes source of truth: `docs/release/v2.1.2-shipping-clean-release-notes.md`
 - First-time install source of truth: `docs/ops/install.md`
 - Support boundaries: `docs/release/v2-support-boundaries.md`
 - Module maturity: `docs/open-source/module-maturity-matrix.md`

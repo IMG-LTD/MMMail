@@ -104,6 +104,8 @@ public class SecurityConfig {
                                 "/api/v2/auth/login",
                                 "/api/v2/auth/register",
                                 "/api/v2/auth/refresh",
+                                "/api/v2/auth/oidc/login",
+                                "/api/v2/auth/oidc/callback",
                                 "/api/v2/platform/capabilities",
                                 "/api/v2/share/capabilities",
                                 "/api/v2/share/mail/**",

@@ -1,0 +1,82 @@
+name: MMMail Images
+
+on:
+  push:
+    tags:
+      - "v*"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  packages: write
+
+env:
+  REGISTRY: ghcr.io
+  IMAGE_NAMESPACE: img-ltd
+  VITE_API_BASE_URL: ${{ vars.MMMAIL_IMAGE_VITE_API_BASE_URL || 'http://localhost:8080' }}
+
+jobs:
+  images:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - component: backend
+            image: mmmail-backend
+            dockerfile: backend/Dockerfile
+            context: .
+          - component: frontend-admin
+            image: mmmail-frontend-admin
+            dockerfile: frontend-admin/Dockerfile
+            context: .
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v3
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Login to GHCR
+        if: startsWith(github.ref, 'refs/tags/')
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Docker metadata
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAMESPACE }}/${{ matrix.image }}
+          tags: |
+            type=ref,event=tag
+            type=sha,prefix=sha-
+
+      - name: Build and optionally push image
+        id: build
+        uses: docker/build-push-action@v6
+        with:
+          context: ${{ matrix.context }}
+          file: ${{ matrix.dockerfile }}
+          platforms: linux/amd64,linux/arm64
+          push: ${{ startsWith(github.ref, 'refs/tags/') }}
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          build-args: |
+            ${{ matrix.component == 'frontend-admin' && format('VITE_API_BASE_URL={0}', env.VITE_API_BASE_URL) || '' }}
+          provenance: true
+
+      - name: Publish image digest summary
+        if: always()
+        run: |
+          {
+            echo "## Image Digests"
+            echo "| Component | Image | Digest |"
+            echo "|---|---|---|"
+            echo "| ${{ matrix.component }} | ${{ env.REGISTRY }}/${{ env.IMAGE_NAMESPACE }}/${{ matrix.image }} | ${{ steps.build.outputs.digest }} |"
+          } >> "$GITHUB_STEP_SUMMARY"

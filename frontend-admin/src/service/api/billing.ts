@@ -12,6 +12,18 @@ export function readSuiteBillingCenter() {
   return request<Api.Billing.Center>({ url: '/api/v1/suite/billing/center' });
 }
 
+export function readCommercialLicenseStatus() {
+  return request<Api.Billing.CommercialLicenseStatus>({ url: '/api/v2/billing/license/status' });
+}
+
+export function uploadCommercialLicense(data: Api.Billing.CommercialLicenseUploadPayload) {
+  return request<Api.Billing.CommercialLicenseStatus>({
+    url: '/api/v2/billing/license',
+    method: 'post',
+    data
+  });
+}
+
 export function createSuiteBillingQuote(data: Api.Billing.QuotePayload) {
   return request<Api.Billing.Quote>({
     url: '/api/v1/suite/billing/quote',

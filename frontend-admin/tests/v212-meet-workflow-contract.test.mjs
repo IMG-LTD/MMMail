@@ -51,7 +51,7 @@ test('v2.1.2 meet service exposes access, room lifecycle, participant, guest, pu
 });
 
 test('v2.1.2 meet routes expose access, room, lobby, join, and host entry points', async () => {
-  const routes = await read('src/router/routes/index.ts');
+  const routes = await read('src/router/routes/custom-routes.ts');
 
   for (const routeName of [
     'meet_access',

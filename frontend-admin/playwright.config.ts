@@ -32,7 +32,7 @@ export default defineConfig({
     }
   },
   webServer: {
-    command: `VITE_SERVICE_BASE_URL=${API_BASE_URL} pnpm dev --mode test --host ${HOST} --port ${PORT}`,
+    command: `VITE_DEVTOOLS_ENABLED=N VITE_SERVICE_BASE_URL=${API_BASE_URL} pnpm dev --mode test --host ${HOST} --port ${PORT}`,
     url: `${BASE_URL}/login`,
     reuseExistingServer: false,
     timeout: 120_000,

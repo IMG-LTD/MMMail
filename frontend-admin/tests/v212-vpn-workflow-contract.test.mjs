@@ -23,7 +23,7 @@ test('v2.1.2 vpn service exposes settings, profiles CRUD, connect, and session h
 });
 
 test('v2.1.2 vpn routes expose servers, profiles, sessions, and settings entry points', async () => {
-  const routes = await read('src/router/routes/index.ts');
+  const routes = await read('src/router/routes/custom-routes.ts');
 
   for (const routeName of ['vpn_servers', 'vpn_profiles', 'vpn_sessions', 'vpn_settings']) {
     assert.match(routes, new RegExp(`name: '${routeName}'`));

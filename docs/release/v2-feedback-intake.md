@@ -4,7 +4,7 @@
 **日期**: `2026-04-23`
 
 ## 当前反馈基线
-- 默认公开基线：`main` / `v2.0.4`
+- 默认公开基线：`main` / `v2.1.2-shipping-clean`
 - 支持边界：`docs/release/v2-support-boundaries.md`
 - 模块成熟度：`docs/open-source/module-maturity-matrix.md`
 
@@ -24,7 +24,7 @@
 ### Boundary clarification
 适用于：
 - 不确定某个能力是否属于当前 `GA / Beta / Preview`
-- 不确定 Community 是否承诺某个模块、流程或运行模型
+- 不确定 Free 是否承诺某个模块、流程或运行模型
 
 请附带：
 - 目标模块或路由

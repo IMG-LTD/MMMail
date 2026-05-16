@@ -1,11 +1,12 @@
 # MMMail v2 Mainline 首次安装指南
 
-**版本**: `v2.0.4`
-**日期**: `2026-04-24`
+**版本**: `v2.1.2-shipping-clean`
+**日期**: `2026-05-16`
 
 ## 当前边界与前置条件
-- 当前公开基线为 `main` / `v2.0.4`，仓库主线只保留 v2 代码与运行路径。
-- 当前默认自托管运行模型为 `frontend-v2 Web + 单个 Spring Boot 后端进程 + MySQL / Redis`。
+- 当前公开基线为 `main` / `v2.1.2-shipping-clean`，仓库主线只保留 v2 代码与运行路径。
+- 当前默认自托管运行模型为 `frontend-admin Web + 单个 Spring Boot 后端进程 + MySQL / Redis`。
+- `frontend-v2` 是冻结 legacy reference，只允许删除文件或迁出历史材料，不是产品运行入口。
 - 标准模式可额外启用 `Nacos`，但这不代表仓库已经交付真实微服务网格。
 - Docker 安装需要 `Docker` 与 `Docker Compose v2`；建议至少 `4 CPU / 8 GB RAM`。
 - 最小模式端口：`3001`、`8080`、`3306`、`6379`；标准模式额外使用 `8848`。
@@ -19,6 +20,7 @@
 | --- | --- | --- |
 | 一键安装 | 希望脚本完成校验并启动 Compose | 可选最小模式或标准模式 |
 | Docker 手动安装 | 希望自己执行 Compose 命令、查看状态和日志 | 可选最小模式或标准模式 |
+| Kubernetes / Helm | 已有 K8s 集群，准备接入外部 MySQL / Redis | `helm/mmmail` chart，只发布 `backend` 与 `frontend-admin` |
 | 裸机手动安装 | 不使用 Docker，需要接入现有主机、数据库或前端托管 | MySQL 8.4 + Redis 7.4 + Java 后端 + 前端构建产物 |
 | 本地体验 / 开发 | 贡献代码、快速体验前端或调试本地 API | Vite dev server + 本地后端/依赖 |
 
@@ -39,6 +41,8 @@
    - `NACOS_AUTH_TOKEN`
    - `NACOS_AUTH_IDENTITY_KEY`
    - `NACOS_AUTH_IDENTITY_VALUE`
+
+Helm 路径见 `docs/ops/helm.md`。该路径不部署 MySQL / Redis，不发布 `frontend-v2`，敏感值必须来自 Kubernetes Secret。
 4. 保持 `SPRING_SQL_INIT_MODE=never`，数据库结构迁移由 Flyway 管理。
 
 ## 2. 一键安装
@@ -107,7 +111,7 @@ Windows PowerShell：
    - MySQL `8.4`，创建 `mmmail` 数据库与应用用户。
    - Redis `7.4`，设置访问密码并持久化数据。
    - Java `21` 与 Maven。
-   - Node.js / pnpm，用于构建 `frontend-v2`。
+   - Node.js / pnpm，用于构建 `frontend-admin`。
 2. 准备环境变量：
    - `cp .env.example .env`
    - 替换所有 `replace-with-*` 占位值。
@@ -121,22 +125,22 @@ Windows PowerShell：
    - 或在 `backend` 目录内运行 Maven Spring Boot：`mvn -pl mmmail-server -am -DskipTests spring-boot:run`
    - 生产守护方式可用 systemd、supervisor 或等价平台能力管理 Java 进程；systemd 服务请配置 `EnvironmentFile=/path/to/.env` 或等价环境注入。
 4. 构建并托管前端：
-   - `pnpm --dir frontend-v2 install`
-   - `VITE_API_BASE_URL=https://api.example.com pnpm --dir frontend-v2 build`
-   - 将 `frontend-v2/dist` 交给静态文件服务器或反向代理托管。
-   - 前端命令不会自动读取仓库根目录 `.env`；请通过 shell 环境变量，或 `frontend-v2/.env.production` 设置构建时 `VITE_API_BASE_URL`。
+   - `pnpm --dir frontend-admin install`
+   - `VITE_API_BASE_URL=https://api.example.com pnpm --dir frontend-admin build`
+   - 将 `frontend-admin/dist` 交给静态文件服务器或反向代理托管。
+   - 前端命令不会自动读取仓库根目录 `.env`；请通过 shell 环境变量，或 `frontend-admin/.env.production` 设置构建时 `VITE_API_BASE_URL`。
 5. 数据迁移：
    - 查看迁移状态：`./scripts/db-upgrade.sh .env info`
    - 需要升级时执行：`./scripts/db-upgrade.sh .env upgrade`
 
 ## 5. 本地体验 / 开发
-本地体验适合开发、调试或快速查看前端交互。默认前端开发端口是 `5174`，Compose 托管前端端口是 `3001`。
+本地体验适合开发、调试或快速查看前端交互。默认产品前端开发端口是 `9527`，Compose 托管前端端口是 `3001`。
 
 前端开发服务器：
-- `pnpm --dir frontend-v2 install`
-- 通过 shell 环境变量或 `frontend-v2/.env.local` 设置 `VITE_API_BASE_URL=http://localhost:8080`。
-- `pnpm --dir frontend-v2 dev`
-- 默认地址：`http://127.0.0.1:5174`
+- `pnpm --dir frontend-admin install`
+- 通过 shell 环境变量或 `frontend-admin/.env.local` 设置 `VITE_API_BASE_URL=http://localhost:8080`。
+- `pnpm --dir frontend-admin dev`
+- 默认地址：`http://127.0.0.1:9527`
 
 后端本地启动：
 - 先准备 MySQL、Redis 与 `.env`。
@@ -146,7 +150,7 @@ Windows PowerShell：
 
 本地校验：
 - `bash scripts/validate-local.sh`
-- 前端测试：`pnpm --dir frontend-v2 test`
+- 前端测试：`pnpm --dir frontend-admin test:v212`
 
 ## 6. 验证方式
 安装或启动后至少验证：

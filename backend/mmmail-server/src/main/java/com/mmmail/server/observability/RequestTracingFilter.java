@@ -17,6 +17,7 @@ import org.springframework.web.servlet.HandlerMapping;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
+import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 
@@ -27,13 +28,16 @@ public class RequestTracingFilter extends OncePerRequestFilter {
 
     private final RequestObservationService requestObservationService;
     private final RequestRouteModuleResolver moduleResolver;
+    private final RuntimeTraceService runtimeTraceService;
 
     public RequestTracingFilter(
             RequestObservationService requestObservationService,
-            RequestRouteModuleResolver moduleResolver
+            RequestRouteModuleResolver moduleResolver,
+            RuntimeTraceService runtimeTraceService
     ) {
         this.requestObservationService = requestObservationService;
         this.moduleResolver = moduleResolver;
+        this.runtimeTraceService = runtimeTraceService;
     }
 
     @Override
@@ -42,9 +46,23 @@ public class RequestTracingFilter extends OncePerRequestFilter {
         String requestId = resolveRequestId(request);
         long startedAt = System.nanoTime();
         prepareContext(request, response, requestId);
+        RuntimeTraceService.TraceScope traceScope = runtimeTraceService.start(
+                "mmmail.http.request",
+                Map.of(
+                        "component", "http",
+                        "module", moduleResolver.resolve(request.getRequestURI()),
+                        "method", request.getMethod()
+                )
+        );
         try {
             filterChain.doFilter(request, response);
+        } catch (IOException | ServletException | RuntimeException ex) {
+            traceScope.error(ex);
+            throw ex;
         } finally {
+            traceScope.tag("route", endpointPattern(request));
+            traceScope.tag("status", String.valueOf(response.getStatus()));
+            traceScope.close();
             logRequest(request, response, startedAt);
             TenantScopeContextHolder.clear();
             MDC.clear();

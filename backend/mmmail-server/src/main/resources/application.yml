@@ -4,7 +4,7 @@ server:
 
 spring:
   application:
-    name: mmmail-server
+    name: ${OTEL_SERVICE_NAME:mmmail-server}
   profiles:
     active: ${SPRING_PROFILES_ACTIVE:local}
   datasource:
@@ -64,6 +64,13 @@ springdoc:
     path: /swagger-ui.html
 
 management:
+  tracing:
+    enabled: ${MMMAIL_OTEL_ENABLED:false}
+    sampling:
+      probability: ${MMMAIL_OTEL_SAMPLING_PROBABILITY:1.0}
+  otlp:
+    tracing:
+      endpoint: ${OTEL_EXPORTER_OTLP_ENDPOINT:}
   endpoint:
     metrics:
       enabled: true
@@ -96,6 +103,15 @@ mmmail:
     csrf-cookie-name: ${MMMAIL_AUTH_CSRF_COOKIE_NAME:MMMAIL_CSRF_TOKEN}
     cookie-secure: ${MMMAIL_AUTH_COOKIE_SECURE:true}
     cookie-same-site: ${MMMAIL_AUTH_COOKIE_SAME_SITE:Lax}
+  billing:
+    webhook:
+      secret: ${MMMAIL_BILLING_WEBHOOK_SECRET:}
+  license:
+    public-key: ${MMMAIL_LICENSE_PUBLIC_KEY:}
+  oidc:
+    enabled: ${MMMAIL_OIDC_ENABLED:false}
+    callback-path: ${MMMAIL_OIDC_CALLBACK_PATH:/api/v2/auth/oidc/callback}
+    client-secret: ${MMMAIL_OIDC_CLIENT_SECRET:}
   security:
     rate-limit:
       login:

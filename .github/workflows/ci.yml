@@ -14,6 +14,8 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       - name: Setup pnpm
         uses: pnpm/action-setup@v4
@@ -25,22 +27,31 @@ jobs:
         with:
           node-version: 22
           cache: pnpm
-          cache-dependency-path: |
-            frontend-v2/pnpm-lock.yaml
-            frontend-admin/pnpm-lock.yaml
+          cache-dependency-path: frontend-admin/pnpm-lock.yaml
 
-      - name: Root v2.1.2 contract gates
+      - name: Root repository contract gates
         run: node --test tests/*.test.mjs
 
       - name: Install frontend-admin deps
         run: pnpm --dir frontend-admin install --frozen-lockfile
 
-      - name: Soybean API type generation guard
+      - name: Generate SBOM and dependency license report
+        run: node scripts/generate-sbom-license-report.mjs
+        env:
+          MMMAIL_SUPPLY_CHAIN_REPORT_DIR: ${{ runner.temp }}/supply-chain
+
+      - name: Upload supply chain reports
+        uses: actions/upload-artifact@v4
+        with:
+          name: supply-chain-reports
+          path: ${{ runner.temp }}/supply-chain/
+
+      - name: MMMail admin API type generation guard
         run: |
           MMMAIL_OPENAPI_SOURCE=../contracts/openapi/v21-api-catalog.yaml pnpm --dir frontend-admin gen:api
           git diff --exit-code -- frontend-admin/src/service/api/__generated__
 
-      - name: Soybean v2.1.2 contract and bundle budget gates
+      - name: MMMail admin v2.1.2 contract and bundle budget gates
         run: |
           pnpm --dir frontend-admin test:v212
           pnpm --dir frontend-admin test:e2e
@@ -49,42 +60,8 @@ jobs:
           pnpm --dir frontend-admin check:bundle-budget
           pnpm --dir frontend-admin test:lighthouse
 
-      - name: Soybean v2.1.2 coverage gates
+      - name: MMMail admin v2.1.2 coverage gates
         run: pnpm --dir frontend-admin test:coverage
-
-      - name: Install frontend-v2 deps
-        run: pnpm --dir frontend-v2 install --frozen-lockfile
-
-      - name: Frontend-v2 tests
-        run: pnpm --dir frontend-v2 test
-
-      - name: Frontend-v2 contract regression
-        run: >
-          pnpm --dir frontend-v2 exec node --test
-          tests/foundation-route-contract.test.mjs
-          tests/redirect-contract.test.mjs
-          tests/auth-scope-contract.test.mjs
-          tests/public-share-contract.test.mjs
-          tests/public-share-runtime-contract.test.mjs
-          tests/public-share-view-contract.test.mjs
-          tests/mail-workspace-contract.test.mjs
-          tests/calendar-workspace-contract.test.mjs
-          tests/drive-workspace-contract.test.mjs
-          tests/pass-workspace-contract.test.mjs
-          tests/docs-sheets-runtime-contract.test.mjs
-          tests/workspace-aggregation-contract.test.mjs
-          tests/settings-panel-contract.test.mjs
-          tests/system-health-contract.test.mjs
-          tests/command-center-query-contract.test.mjs
-
-      - name: Frontend-v2 typecheck
-        run: pnpm --dir frontend-v2 typecheck
-
-      - name: Frontend-v2 coverage gates
-        run: pnpm --dir frontend-v2 test:coverage
-
-      - name: Frontend-v2 audit (high)
-        run: pnpm --dir frontend-v2 audit --prod --audit-level=high --ignore-registry-errors
 
   backend:
     runs-on: ubuntu-latest
@@ -117,6 +94,12 @@ jobs:
           -Dtest=*V212*Test,*V212*IntegrationTest,DevSeedV212ContractTest,DevSeedV212StartupIntegrationTest,ApiSpecV212ErrorCodeContractTest,AuditV212ContractTest,FlywayMigrationVersionUniquenessTest,V21CollaborationBoardRanksTest,WebSocketMetricsServiceTest,WebSocketHandshakeFailureContractTest,SuiteNotificationSyncWebSocketReplayTest,RequestObservationServiceTest,RequestRouteModuleResolverTest,WebSocketLoadTestScriptContractTest,WebSocketIdleTimeoutConfigTest
           -Dsurefire.failIfNoSpecifiedTests=false test
 
+      - name: Backend v2.2 commercial regression
+        run: >
+          mvn -f backend/pom.xml -pl mmmail-server -am
+          -Dtest=BackendV22EditionCoreContractTest,BackendV22LicenseVerifierContractTest,BackendV22BillingWebhookContractTest,BackendV22EntitlementEnforcementContractTest,BackendV22CommercialSurfaceCoverageContractTest,BackendV22LicenseManagementApiContractTest,BackendV22AuditExportContractTest,BackendV22DsrContractTest,BackendV22OpenTelemetryContractTest,BackendV22OidcSsoContractTest
+          -Dsurefire.failIfNoSpecifiedTests=false test
+
       - name: Backend coverage seed tests
         run: |
           rm -f backend/mmmail-server/target/jacoco.exec
@@ -136,10 +119,13 @@ jobs:
       MMMAIL_VALIDATE_CONTAINER_TESTS: "true"
       MMMAIL_RUN_BACKEND_DEPENDENCY_SCAN: "true"
       MMMAIL_DEPENDENCY_SCAN_TIMEOUT_SECONDS: "1800"
+      MMMAIL_SECURITY_REPORT_DIR: artifacts/security
       MMMAIL_NVD_API_KEY: ${{ secrets.MMMAIL_NVD_API_KEY }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       - name: Validate required CI secrets
         run: |
@@ -159,10 +145,10 @@ jobs:
         with:
           node-version: 22
           cache: pnpm
-          cache-dependency-path: frontend-v2/pnpm-lock.yaml
+          cache-dependency-path: frontend-admin/pnpm-lock.yaml
 
-      - name: Install frontend-v2 deps
-        run: pnpm --dir frontend-v2 install --frozen-lockfile
+      - name: Install frontend-admin deps
+        run: pnpm --dir frontend-admin install --frozen-lockfile
 
       - name: Setup Java
         uses: actions/setup-java@v4
@@ -170,6 +156,11 @@ jobs:
           distribution: temurin
           java-version: 21
           cache: maven
+
+      - name: Setup Helm
+        uses: azure/setup-helm@v4
+        with:
+          version: v3.14.4
 
       - name: Restore dependency-check data
         id: dependency-check-cache
@@ -225,7 +216,7 @@ jobs:
 
   docker-test-baseline:
     runs-on: ubuntu-latest
-    name: Docker test baseline (v2.1.3 release-gate)
+    name: Docker test baseline (v2.1.2 shipping-clean release-gate)
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -268,6 +259,8 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       - name: Setup pnpm
         uses: pnpm/action-setup@v4
@@ -279,9 +272,7 @@ jobs:
         with:
           node-version: 22
           cache: pnpm
-          cache-dependency-path: |
-            frontend-v2/pnpm-lock.yaml
-            frontend-admin/pnpm-lock.yaml
+          cache-dependency-path: frontend-admin/pnpm-lock.yaml
 
       - name: Setup Java
         uses: actions/setup-java@v4
@@ -290,11 +281,13 @@ jobs:
           java-version: 21
           cache: maven
 
-      - name: Install frontend-v2 deps
-        run: pnpm --dir frontend-v2 install --frozen-lockfile
+      - name: Setup Helm
+        uses: azure/setup-helm@v4
+        with:
+          version: v3.14.4
 
       - name: Install frontend-admin deps
         run: pnpm --dir frontend-admin install --frozen-lockfile
 
       - name: Run unified release gate
-        run: bash scripts/release-gate.sh --skip 1,5,8
+        run: bash scripts/release-gate.sh

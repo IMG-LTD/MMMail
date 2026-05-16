@@ -25,7 +25,7 @@ test('v2.1.2 authenticator service exposes CRUD, PIN, QR import, and backup APIs
 });
 
 test('v2.1.2 authenticator routes expose detail, import, backup, and settings entry points', async () => {
-  const routes = await read('src/router/routes/index.ts');
+  const routes = await read('src/router/routes/custom-routes.ts');
 
   for (const routeName of [
     'security_authenticator_detail',

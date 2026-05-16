@@ -4,23 +4,21 @@ set -euo pipefail
 ROOT_DIR="$(cd "$(dirname "$0")/.." && pwd)"
 cd "$ROOT_DIR"
 
-REPORT_DIR="${MMMAIL_SECURITY_REPORT_DIR:-$ROOT_DIR/artifacts/security}"
+DEFAULT_REPORT_DIR="${TMPDIR:-/tmp}/mmmail-security"
+REPORT_DIR="${MMMAIL_SECURITY_REPORT_DIR:-$DEFAULT_REPORT_DIR}"
 REPORT_FILE="$REPORT_DIR/secret-scan.txt"
 mkdir -p "$REPORT_DIR"
 
 mapfile -t TRACKED_FILES < <(
-  find . -type f \
-    -not -path './.git/*' \
-    -not -path './.codex-tasks/*' \
-    -not -path './frontend-v2/node_modules/*' \
-    -not -path './frontend-v2/dist/*' \
-    -not -name 'pnpm-lock.yaml' \
-    -not -name 'package-lock.json' \
-    -not -name 'yarn.lock' \
-    -not -path './backend/*/target/*' \
-    -not -path './artifacts/*' \
-    -not -path './.tools/dependency-check-data/*' \
-    | sed 's#^\./##'
+  while IFS= read -r -d '' file; do
+    [[ -f "$file" ]] || continue
+    case "$file" in
+      pnpm-lock.yaml|package-lock.json|yarn.lock|*/pnpm-lock.yaml|*/package-lock.json|*/yarn.lock)
+        continue
+        ;;
+    esac
+    printf '%s\n' "$file"
+  done < <(git ls-files --cached --others --exclude-standard -z)
 )
 
 trim_value() {
@@ -33,6 +31,11 @@ trim_value() {
   value="${value%\"}"
   value="${value#\'}"
   value="${value%\'}"
+  value="${value%\\}"
+  value="${value%${value##*[![:space:]]}}"
+  value="${value%)}"
+  value="${value%;}"
+  value="${value%${value##*[![:space:]]}}"
   printf '%s\n' "$value"
 }
 
@@ -40,12 +43,17 @@ is_safe_config_value() {
   local lowered
   lowered="$(printf '%s' "$1" | tr '[:upper:]' '[:lower:]')"
   [[ -z "$lowered" ]] && return 0
+  [[ "$lowered" == \{* || "$lowered" == \[* ]] && return 0
+  [[ "$lowered" == true || "$lowered" == false || "$lowered" == null ]] && return 0
+  [[ "$lowered" == read || "$lowered" == write || "$lowered" == none ]] && return 0
+  [[ "$lowered" == \$* ]] && return 0
+  [[ "$lowered" == \\\$\{* ]] && return 0
   [[ "$lowered" == \$\{* ]] && return 0
   case "$lowered" in
     replace-with-*|test-*|dummy*|example*|changeme*|localhost*|127.0.0.1*|0.0.0.0*|http://*|https://*)
       return 0
       ;;
-    0123456789abcdef0123456789abcdef|nacos|mmmail_refresh_token|mmmail_csrf_token)
+    0123456789abcdef0123456789abcdef|nacos|mmmail_refresh_token|mmmail_csrf_token|mmmail_test_password|redis_test_password)
       return 0
       ;;
   esac
@@ -56,7 +64,7 @@ scan_hard_patterns() {
   local pattern
   pattern="-----BEGIN (RSA|OPENSSH|EC|DSA|PGP|PRIVATE KEY)-----|AKIA[0-9A-Z]{16}|AIza[0-9A-Za-z_-]{35}|ghp_[0-9A-Za-z]{36}|xox[baprs]-[0-9A-Za-z-]{10,48}"
   printf '%s\0' "${TRACKED_FILES[@]}" \
-    | xargs -0 grep -nEH -- "$pattern" || true
+    | xargs -0r grep -nEH -- "$pattern" || true
 }
 
 scan_config_assignments() {

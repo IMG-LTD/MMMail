@@ -1,6 +1,6 @@
 ---
 name: Bug report
-about: 报告 Community Edition 当前公开范围内的缺陷
+about: 报告 MMMail Free 当前公开范围内的缺陷
 title: "[Bug] "
 labels: bug,needs-triage
 assignees: ""

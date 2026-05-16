@@ -1,29 +1,31 @@
 {
-  "name": "soybean-admin",
+  "name": "mmmail-frontend-admin",
   "version": "2.2.0",
-  "description": "A fresh and elegant admin template, based on Vue3、Vite8、TypeScript、NaiveUI and UnoCSS. 一个基于Vue3、Vite8、TypeScript、NaiveUI and UnoCSS的清新优雅的中后台模版。",
+  "description": "MMMail product frontend for the self-hosted workspace, built with Vue 3, Vite, TypeScript, Naive UI and UnoCSS.",
   "keywords": [
+    "MMMail",
     "TypeScript",
     "UnoCSS",
     "Vite8",
-    "Vue3 admin ",
-    "ant-design-vue v4",
+    "Vue3 admin",
+    "collaboration-suite",
     "naive-ui",
     "naive-ui-admin",
+    "self-hosted",
     "vue-admin-template"
   ],
-  "homepage": "https://github.com/soybeanjs/soybean-admin",
+  "homepage": "https://github.com/IMG-LTD/MMMail",
   "bugs": {
-    "url": "https://github.com/soybeanjs/soybean-admin/issues"
+    "url": "https://github.com/IMG-LTD/MMMail/issues"
   },
   "license": "MIT",
   "author": {
-    "name": "Soybean",
-    "email": "soybeanjs@outlook.com",
-    "url": "https://github.com/soybeanjs"
+    "name": "MMMail contributors",
+    "url": "https://github.com/IMG-LTD/MMMail"
   },
   "repository": {
-    "url": "https://github.com/soybeanjs/soybean-admin.git"
+    "url": "https://github.com/IMG-LTD/MMMail.git",
+    "directory": "frontend-admin"
   },
   "type": "module",
   "scripts": {
@@ -38,7 +40,7 @@
     "dev": "vite --mode test",
     "dev:prod": "vite --mode prod",
     "fmt": "oxfmt",
-    "gen-route": "sa gen-route",
+    "gen-route": "sa gen-route && node scripts/normalize-generated-types.mjs",
     "gen:api": "node scripts/gen-api.mjs",
     "lint": "oxlint --fix && eslint --fix .",
     "prepare": "simple-git-hooks",
@@ -96,6 +98,7 @@
     "@vitejs/plugin-vue-jsx": "5.1.5",
     "@vitest/coverage-v8": "^4.1.6",
     "@vue/test-utils": "^2.4.10",
+    "axe-core": "4.11.4",
     "consola": "3.4.2",
     "eslint": "10.3.0",
     "jsdom": "^29.1.1",
@@ -164,5 +167,5 @@
     "node": ">=20.19.0",
     "pnpm": ">=10.5.0"
   },
-  "website": "https://admin.soybeanjs.cn"
+  "website": "https://github.com/IMG-LTD/MMMail"
 }

@@ -1,12 +1,13 @@
-# MMMail Community Edition
+# MMMail Free
 
-MMMail Community Edition is a privacy-first, self-host-friendly collaboration baseline.
+MMMail Free is a privacy-first, self-host-friendly collaboration baseline.
 
 ## What it is
 - A real self-hosted deployment path
 - A shipped mainline across Mail, Calendar, Drive, Admin, and shared workspace shell surfaces
 - Visible `Beta` surfaces for Pass, Docs, and Sheets
 - Explicit `GA / Beta / Preview` boundaries
+- `frontend-admin` as the product frontend; `frontend-v2` as legacy reference only
 
 ## What it is not
 - A finished replacement for every Google Workspace, Microsoft 365, or Proton surface
@@ -16,5 +17,5 @@ MMMail Community Edition is a privacy-first, self-host-friendly collaboration ba
 ## Start here
 - Install quickstart: `../ops/install.en.md`
 - Support boundaries: `../release/v2-support-boundaries.md`
-- Release notes: `../release/v2.0.4-release-notes.md`
+- Release notes: `../release/v2.1.2-shipping-clean-release-notes.md`
 - Module maturity: `module-maturity-matrix.md`

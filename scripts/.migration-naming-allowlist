@@ -22,4 +22,5 @@ V32__feature_flags.sql
 # 跳号豁免：v2.1.x 期间删除冲突迁移留下的间隙
 GAP V3 V8
 GAP V10 V16
+GAP V13 V15
 GAP V18 V21

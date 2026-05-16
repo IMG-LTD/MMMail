@@ -27,7 +27,7 @@ test('v2.1.3 U-1 keeps only documented info-only NAlert usages in closure views'
   assert.equal(countMatches(combined, /info-only, see v213-closure-spec-v1\.1 §2\.1/g), 4);
 });
 
-test('v2.1.3 U-2 makes oxfmt a hard release gate in both frontend workspaces', async () => {
+test('v2.1.3 U-2 makes oxfmt a hard release gate for the product frontend', async () => {
   const [releaseGate, frontendPackage] = await Promise.all([
     read('scripts/release-gate.sh'),
     read('frontend-v2/package.json')
@@ -38,7 +38,7 @@ test('v2.1.3 U-2 makes oxfmt a hard release gate in both frontend workspaces', a
   assert.equal(packageJson.scripts['fmt:check'], 'oxfmt --check');
   assert.match(packageJson.devDependencies.oxfmt, /\^0\.49\.0/);
   assert.doesNotMatch(releaseGate, /MMMAIL_RELEASE_GATE_FMT_STRICT|WARN: oxfmt drift|warn-only/);
-  assert.match(releaseGate, /pnpm --dir frontend-v2 exec oxfmt --check/);
+  assert.doesNotMatch(releaseGate, /pnpm --dir frontend-v2 exec oxfmt --check/);
   assert.match(releaseGate, /pnpm --dir frontend-admin exec oxfmt --check/);
 });
 
@@ -89,7 +89,10 @@ test('v2.1.3 U-4 wires CI to docker e2e and the unified release gate', async () 
 
   assert.match(workflow, /docker-test-baseline:[\s\S]+bash scripts\/run-tests-docker\.sh e2e/);
   assert.match(workflow, /release-gate:[\s\S]+needs: \[frontend, backend, docker-test-baseline\]/);
-  assert.match(workflow, /bash scripts\/release-gate\.sh --skip 1,5,8/);
+  assert.match(workflow, /release-gate:[\s\S]+bash scripts\/release-gate\.sh/);
+  assert.doesNotMatch(workflow, /bash scripts\/release-gate\.sh --skip/);
+  assert.doesNotMatch(workflow, /legacy-frontend-migration/);
+  assert.doesNotMatch(workflow, /validate-legacy-frontend-v2\.sh/);
 });
 
 test('v2.1.3 U-5 and U-6 close documentation and roadmap ownership', async () => {

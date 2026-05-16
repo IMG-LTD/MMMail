@@ -1,25 +1,26 @@
-# MMMail v2.0.4 Deployment Topology
+# MMMail v2 Mainline Deployment Topology
 
-**版本**: `v2.0.4`
-**日期**: `2026-04-23`
+**版本**: `v2-mainline`
+**日期**: `2026-05-17`
 
 ## 目标
-- 提供两个可复现的单机 `Docker Compose` 拓扑，覆盖当前 `v2.0.4` 公开主路径。
+- 提供两个可复现的单机 `Docker Compose` 拓扑，覆盖当前公开自托管主路径。
 - `docker-compose.yml` 表示标准模式；`docker-compose.minimal.yml` 表示更轻量的最小自托管模式。
 - 交付对象是本地试用、自托管验证和后续运维脚本化，不追求生产级高可用。
 
 ## 当前运行模型
 - 当前自托管运行模型是：
-  - 一个 `frontend-v2` Web 前端
+  - 一个 `frontend-admin` Web 前端
   - 一个 `Spring Boot` 后端进程
   - `MySQL` + `Redis`
+- `frontend-v2` 是冻结 legacy reference，只允许删除文件或迁出历史材料，不属于运行时拓扑、Compose 服务、Helm chart 或镜像发布矩阵。
 - 标准模式里的 `Nacos` 只代表本地注册/配置依赖占位，不代表仓库已经拆分出真实服务发现拓扑或多服务编排。
 - 当前仓库没有把 `Kafka` 作为当前公开运行主路径。
 
 ## 标准模式服务拓扑
 | 服务 | Compose 名称 | 端口 | 责任 |
 |---|---|---|---|
-| Frontend | `frontend` | `3001` | `frontend-v2` Web 工作区入口 |
+| Frontend | `frontend` | `3001` | `frontend-admin` Web 工作区入口 |
 | Backend | `backend` | `8080` | Spring Boot API、认证、Mail / Calendar / Drive / Admin |
 | MySQL | `mysql` | `3306` | 主业务库，启动时由 Flyway 执行版本化迁移 |
 | Redis | `redis` | `6379` | 会话、缓存与限流基线 |
@@ -28,7 +29,7 @@
 ## 最小模式服务拓扑
 | 服务 | Compose 名称 | 端口 | 责任 |
 |---|---|---|---|
-| Frontend | `frontend` | `3001` | `frontend-v2` Web 工作区入口 |
+| Frontend | `frontend` | `3001` | `frontend-admin` Web 工作区入口 |
 | Backend | `backend` | `8080` | Spring Boot API、认证、Mail / Calendar / Drive / Admin |
 | MySQL | `mysql` | `3306` | 主业务库，启动时由 Flyway 执行版本化迁移 |
 | Redis | `redis` | `6379` | 会话、缓存与限流基线 |

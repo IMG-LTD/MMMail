@@ -1,0 +1,14 @@
+MMMail
+Copyright 2026 MMMail contributors.
+
+This product includes software developed by MMMail contributors and is distributed under the Apache License, Version 2.0. See `LICENSE`.
+
+Frontend attribution:
+
+The `frontend-admin` application is derived from Soybean Admin and related SoybeanJS packages, which are distributed under the MIT License. See `frontend-admin/LICENSE` for the upstream license text and retained copyright notice.
+
+Soybean Admin upstream references:
+- https://github.com/soybeanjs/soybean-admin
+- https://github.com/honghuangdc/soybean-admin
+
+This NOTICE file preserves attribution. It does not grant use of trademarks beyond the licenses referenced above.

@@ -7,7 +7,9 @@ public enum JobRunType {
     COMMAND_RUN("command.run", "command-center", true, true, true, true),
     AI_LABS("ai.labs", "labs", true, true, true, true),
     BILLING_ENTITLEMENT_SYNC("billing.entitlement_sync", "billing", true, true, true, true),
-    AUDIT_EXPORT("audit.export", "admin-governance", true, true, true, true);
+    AUDIT_EXPORT("audit.export", "admin-governance", true, true, true, true),
+    DSR_EXPORT("dsr.export", "privacy-compliance", true, true, true, true),
+    DSR_ERASURE("dsr.erasure", "privacy-compliance", true, true, true, true);
 
     private final String jobName;
     private final String ownerModule;

@@ -56,25 +56,29 @@ test('backend enforces JaCoCo coverage before CI can pass', async () => {
   assert.match(serverPom, /<goal>check<\/goal>/);
 });
 
-test('local and CI validation run frontend and backend coverage gates', async () => {
+test('local and CI validation run product coverage gates and keep legacy frontend retired', async () => {
   const validateLocal = await readText('scripts/validate-local.sh');
   const ci = await readText('.github/workflows/ci.yml');
 
-  assert.match(validateLocal, /frontend-v2 coverage gates/);
-  assert.match(validateLocal, /soybean v2\.1\.2 coverage gates/);
+  assert.match(validateLocal, /mmmail admin v2\.1\.2 coverage gates/);
+  assert.doesNotMatch(validateLocal, /frontend-v2 coverage gates/);
+  assert.doesNotMatch(validateLocal, /validate-legacy-frontend-v2\.sh/);
   assert.match(validateLocal, /backend coverage gate/);
-  assert.match(ci, /Soybean v2\.1\.2 coverage gates/);
-  assert.match(ci, /Frontend-v2 coverage gates/);
+  assert.match(ci, /MMMail admin v2\.1\.2 coverage gates/);
+  assert.doesNotMatch(ci, /Legacy frontend-v2 migration signal/);
+  assert.doesNotMatch(ci, /validate-legacy-frontend-v2\.sh/);
   assert.match(ci, /Backend coverage gate/);
 });
 
-test('local and CI validation run root v2.1.2 contract gates', async () => {
+test('local and CI validation run root repository contract gates', async () => {
   const validateLocal = await readText('scripts/validate-local.sh');
   const ci = await readText('.github/workflows/ci.yml');
 
-  assert.match(validateLocal, /root v2\.1\.2 contract gates/);
+  assert.match(validateLocal, /root repository contract gates/);
+  assert.doesNotMatch(validateLocal, /root v2\.1\.2 contract gates/);
   assert.match(validateLocal, /node --test tests\/\*\.test\.mjs/);
-  assert.match(ci, /Root v2\.1\.2 contract gates/);
+  assert.match(ci, /Root repository contract gates/);
+  assert.doesNotMatch(ci, /Root v2\.1\.2 contract gates/);
   assert.match(ci, /node --test tests\/\*\.test\.mjs/);
 });
 

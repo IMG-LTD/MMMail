@@ -45,9 +45,7 @@ import com.mmmail.server.model.vo.DriveShareLinkVo;
 import com.mmmail.server.model.vo.DriveTrashItemVo;
 import com.mmmail.server.model.vo.DriveUsageVo;
 import com.mmmail.server.model.vo.DriveVersionCleanupVo;
-import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -59,8 +57,6 @@ import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.time.Duration;
-import java.time.Instant;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -72,9 +68,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.concurrent.atomic.AtomicInteger;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 
@@ -103,9 +96,6 @@ public class DriveService {
     private static final String DRIVE_PUBLIC_SHARE_E2EE_PREVIEW_UNAVAILABLE = "Drive E2EE public shares must be decrypted locally before preview";
     private static final int DEFAULT_RECYCLE_BIN_RETENTION_DAYS = 30;
     private static final int DEFAULT_PREVIEW_TEXT_MAX_BYTES = 262_144;
-    private static final int DEFAULT_PUBLIC_RATE_LIMIT_WINDOW_SECONDS = 60;
-    private static final int DEFAULT_PUBLIC_RATE_LIMIT_MAX_REQUESTS = 30;
-    private static final String DEFAULT_PUBLIC_RATE_LIMIT_REDIS_KEY_PREFIX = "mmmail:drive:share-rate";
     private static final String PUBLIC_ACTION_METADATA = "METADATA";
     private static final String PUBLIC_ACTION_LIST = "LIST";
     private static final String PUBLIC_ACTION_DOWNLOAD = "DOWNLOAD";
@@ -140,22 +130,15 @@ public class DriveService {
     private final SuiteCollaborationService suiteCollaborationService;
     private final DriveFileE2eeService driveFileE2eeService;
     private final DriveReadableShareE2eeService driveReadableShareE2eeService;
+    private final DrivePublicShareRateLimiter drivePublicShareRateLimiter;
     private final PasswordEncoder passwordEncoder;
-    private final ObjectProvider<StringRedisTemplate> stringRedisTemplateProvider;
     private final PublicShareTokenCodec publicShareTokenCodec = new PublicShareTokenCodec();
-    private final Map<String, PublicRateCounter> publicRateCounterMap = new ConcurrentHashMap<>();
     @Value("${mmmail.drive.storage-root:${java.io.tmpdir}/mmmail-drive}")
     private String driveStorageRoot;
     @Value("${mmmail.drive.recycle-bin.retention-days:30}")
     private Integer recycleBinRetentionDays;
     @Value("${mmmail.drive.preview-text-max-bytes:262144}")
     private Integer previewTextMaxBytes;
-    @Value("${mmmail.drive.public-share-rate-limit.window-seconds:60}")
-    private Integer publicShareRateLimitWindowSeconds;
-    @Value("${mmmail.drive.public-share-rate-limit.max-requests:30}")
-    private Integer publicShareRateLimitMaxRequests;
-    @Value("${mmmail.drive.public-share-rate-limit.redis-key-prefix:mmmail:drive:share-rate}")
-    private String publicShareRateLimitRedisKeyPrefix;
     @Value("${mmmail.drive.upload.max-file-size-bytes:52428800}")
     private Long uploadMaxFileSizeBytes;
 
@@ -172,8 +155,8 @@ public class DriveService {
             SuiteCollaborationService suiteCollaborationService,
             DriveFileE2eeService driveFileE2eeService,
             DriveReadableShareE2eeService driveReadableShareE2eeService,
-            PasswordEncoder passwordEncoder,
-            ObjectProvider<StringRedisTemplate> stringRedisTemplateProvider
+            DrivePublicShareRateLimiter drivePublicShareRateLimiter,
+            PasswordEncoder passwordEncoder
     ) {
         this.driveFileVersionMapper = driveFileVersionMapper;
         this.driveItemMapper = driveItemMapper;
@@ -187,8 +170,8 @@ public class DriveService {
         this.suiteCollaborationService = suiteCollaborationService;
         this.driveFileE2eeService = driveFileE2eeService;
         this.driveReadableShareE2eeService = driveReadableShareE2eeService;
+        this.drivePublicShareRateLimiter = drivePublicShareRateLimiter;
         this.passwordEncoder = passwordEncoder;
-        this.stringRedisTemplateProvider = stringRedisTemplateProvider;
     }
 
     public List<DriveItemVo> listItems(Long userId, Long parentId, String keyword, String itemType, Integer limit) {
@@ -1163,7 +1146,7 @@ public class DriveService {
             boolean requirePassword
     ) {
         String token = normalizeShareToken(rawToken);
-        if (isPublicShareRateLimited(token, ipAddress, action)) {
+        if (drivePublicShareRateLimiter.isLimited(token, ipAddress, action)) {
             recordPublicAccess(resolveShareForAudit(token), token, action, ACCESS_STATUS_DENY_RATE_LIMIT, ipAddress, userAgent);
             throw new BizException(ErrorCode.RATE_LIMITED, "Public share access is temporarily rate limited");
         }
@@ -1407,20 +1390,6 @@ public class DriveService {
         return recycleBinRetentionDays;
     }
 
-    private int effectivePublicRateLimitWindowSeconds() {
-        if (publicShareRateLimitWindowSeconds == null || publicShareRateLimitWindowSeconds <= 0) {
-            return DEFAULT_PUBLIC_RATE_LIMIT_WINDOW_SECONDS;
-        }
-        return publicShareRateLimitWindowSeconds;
-    }
-
-    private int effectivePublicRateLimitMaxRequests() {
-        if (publicShareRateLimitMaxRequests == null || publicShareRateLimitMaxRequests <= 0) {
-            return DEFAULT_PUBLIC_RATE_LIMIT_MAX_REQUESTS;
-        }
-        return publicShareRateLimitMaxRequests;
-    }
-
     private void assertUploadSizeWithinLimit(long sizeBytes) {
         long maxSizeBytes = effectiveUploadMaxFileSizeBytes();
         if (sizeBytes > maxSizeBytes) {
@@ -1433,77 +1402,6 @@ public class DriveService {
             return 52_428_800L;
         }
         return uploadMaxFileSizeBytes;
-    }
-
-    private String effectivePublicRateLimitRedisKeyPrefix() {
-        if (!StringUtils.hasText(publicShareRateLimitRedisKeyPrefix)) {
-            return DEFAULT_PUBLIC_RATE_LIMIT_REDIS_KEY_PREFIX;
-        }
-        return publicShareRateLimitRedisKeyPrefix.trim();
-    }
-
-    private boolean isPublicShareRateLimited(String token, String ipAddress, String action) {
-        if (!StringUtils.hasText(token)) {
-            return false;
-        }
-        String normalizedIp = StringUtils.hasText(ipAddress) ? ipAddress.trim() : "unknown";
-        int windowSeconds = effectivePublicRateLimitWindowSeconds();
-        int maxRequests = effectivePublicRateLimitMaxRequests();
-        Boolean redisLimited = isPublicShareRateLimitedByRedis(token, normalizedIp, action, windowSeconds, maxRequests);
-        if (redisLimited != null) {
-            return redisLimited;
-        }
-        long nowSeconds = Instant.now().getEpochSecond();
-        String counterKey = token + ":" + normalizedIp + ":" + action;
-        AtomicBoolean limited = new AtomicBoolean(false);
-        publicRateCounterMap.compute(counterKey, (key, existing) -> {
-            PublicRateCounter counter = existing == null ? new PublicRateCounter(nowSeconds) : existing;
-            if ((nowSeconds - counter.windowStartSeconds()) >= windowSeconds) {
-                counter.reset(nowSeconds);
-            }
-            int current = counter.count().incrementAndGet();
-            counter.setLastSeenSeconds(nowSeconds);
-            if (current > maxRequests) {
-                limited.set(true);
-            }
-            return counter;
-        });
-        cleanupPublicRateCounterIfNeeded(nowSeconds, windowSeconds);
-        return limited.get();
-    }
-
-    private Boolean isPublicShareRateLimitedByRedis(
-            String token,
-            String normalizedIp,
-            String action,
-            int windowSeconds,
-            int maxRequests
-    ) {
-        StringRedisTemplate redisTemplate = stringRedisTemplateProvider.getIfAvailable();
-        if (redisTemplate == null) {
-            return null;
-        }
-        String key = effectivePublicRateLimitRedisKeyPrefix() + ":" + token + ":" + normalizedIp + ":" + action;
-        try {
-            Long count = redisTemplate.opsForValue().increment(key);
-            if (count == null) {
-                return null;
-            }
-            if (count == 1L) {
-                redisTemplate.expire(key, Duration.ofSeconds(windowSeconds));
-            }
-            return count > maxRequests;
-        } catch (Exception ignored) {
-            return null;
-        }
-    }
-
-    private void cleanupPublicRateCounterIfNeeded(long nowSeconds, int windowSeconds) {
-        if (publicRateCounterMap.size() < 10_000) {
-            return;
-        }
-        long expireBefore = nowSeconds - (windowSeconds * 2L);
-        publicRateCounterMap.entrySet().removeIf(entry -> entry.getValue().lastSeenSeconds() < expireBefore);
     }
 
     private void recordPublicAccess(
@@ -2452,37 +2350,4 @@ public class DriveService {
         void apply(Long itemId);
     }
 
-    private static final class PublicRateCounter {
-        private long windowStartSeconds;
-        private long lastSeenSeconds;
-        private final AtomicInteger count;
-
-        private PublicRateCounter(long nowSeconds) {
-            this.windowStartSeconds = nowSeconds;
-            this.lastSeenSeconds = nowSeconds;
-            this.count = new AtomicInteger(0);
-        }
-
-        private void reset(long nowSeconds) {
-            this.windowStartSeconds = nowSeconds;
-            this.lastSeenSeconds = nowSeconds;
-            this.count.set(0);
-        }
-
-        private long windowStartSeconds() {
-            return windowStartSeconds;
-        }
-
-        private long lastSeenSeconds() {
-            return lastSeenSeconds;
-        }
-
-        private void setLastSeenSeconds(long nowSeconds) {
-            this.lastSeenSeconds = nowSeconds;
-        }
-
-        private AtomicInteger count() {
-            return count;
-        }
-    }
 }

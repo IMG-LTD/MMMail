@@ -75,6 +75,27 @@ test('round7 auth shell follows the current admin visual system', async () => {
   assert.match(loginShell, /auth-shell/);
   assert.match(loginShell, /auth-brand-panel/);
   assert.match(loginShell, /auth-form-panel/);
+  assert.match(loginShell, /auth-logo-mark/);
+  assert.match(loginShell, /auth-tool-button/);
+  assert.match(loginShell, /auth-lang-select/);
+  assert.doesNotMatch(loginShell, /<Transition[^>]*appear/);
+  assert.doesNotMatch(loginShell, /<SystemLogo/);
+  assert.doesNotMatch(loginShell, /<NTag/);
+  assert.doesNotMatch(loginShell, /ThemeSchemaSwitch/);
+  assert.doesNotMatch(loginShell, /LangSwitch/);
+  assert.match(loginShell, /import \{ computed, defineAsyncComponent \} from 'vue';/);
+  assert.match(loginShell, /import PwdLogin from '\.\/modules\/pwd-login\.vue';/);
+
+  for (const moduleName of ['code-login', 'register', 'reset-pwd', 'bind-wechat']) {
+    assert.match(
+      loginShell,
+      new RegExp(`defineAsyncComponent\\(\\(\\) => import\\('\\./modules/${moduleName}\\.vue'\\)\\)`)
+    );
+  }
+
+  for (const componentName of ['CodeLogin', 'Register', 'ResetPwd', 'BindWechat']) {
+    assert.doesNotMatch(loginShell, new RegExp(`import ${componentName} from`));
+  }
 
   for (const source of [appTypes, zhCN, enUS]) {
     assert.match(source, /headline:/);

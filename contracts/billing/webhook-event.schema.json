@@ -1,0 +1,42 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://mmmail.local/contracts/billing/webhook-event.schema.json",
+  "title": "MMMail Billing Webhook Event",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "eventId",
+    "orgId",
+    "plan",
+    "status",
+    "occurredAt",
+    "signatureVersion"
+  ],
+  "properties": {
+    "eventId": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 128
+    },
+    "orgId": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "plan": {
+      "type": "string",
+      "enum": ["FREE", "PRO", "BUSINESS"]
+    },
+    "status": {
+      "type": "string",
+      "enum": ["TRIAL", "ACTIVE", "PAST_DUE", "CANCELED", "EXPIRED"]
+    },
+    "occurredAt": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "signatureVersion": {
+      "type": "string",
+      "const": "v1"
+    }
+  }
+}

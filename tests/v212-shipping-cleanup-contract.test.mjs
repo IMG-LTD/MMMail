@@ -143,6 +143,7 @@ test('v2.1.2 shipping cleanup keeps release gate from leaving generated route ty
 
   assert.match(packageJson.scripts.build, /node scripts\/normalize-generated-types\.mjs/);
   assert.match(packageJson.scripts['build:test'], /node scripts\/normalize-generated-types\.mjs/);
+  assert.match(packageJson.scripts['gen-route'], /node scripts\/normalize-generated-types\.mjs/);
   assert.match(releaseGate, /release-gate-final-clean-diff\.log/);
   assert.match(releaseGate, /git diff --exit-code/);
   assert.match(normalizeScript, /elegant-router\.d\.ts/);

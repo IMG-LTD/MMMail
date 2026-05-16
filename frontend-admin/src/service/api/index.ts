@@ -15,6 +15,7 @@ export * from './meet';
 export * from './notifications';
 export * from './org-business';
 export * from './pass';
+export * from './public-share';
 export * from './route';
 export * from './search';
 export * from './settings';

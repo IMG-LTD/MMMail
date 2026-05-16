@@ -11,7 +11,7 @@ async function read(relativePath) {
 test('v2.1.2 route meta patches mirror the EntitlementGate default table', async () => {
   const [accessMeta, routes] = await Promise.all([
     read('src/router/routes/access-meta.ts'),
-    read('src/router/routes/index.ts')
+    read('src/router/routes/custom-routes.ts')
   ]);
 
   assert.match(accessMeta, /wallet:\s*\{[\s\S]*orgRequired:\s*true[\s\S]*premiumOnly:\s*true/);

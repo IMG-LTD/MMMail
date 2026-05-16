@@ -1,11 +1,12 @@
 # MMMail v2 Mainline First-time Install Guide
 
-**Version**: `v2.0.4`
-**Date**: `2026-04-24`
+**Version**: `v2.1.2-shipping-clean`
+**Date**: `2026-05-16`
 
 ## Current boundaries and prerequisites
-- Public baseline: `main` / `v2.0.4`; the repository mainline contains v2-only code and runtime paths.
-- Default self-hosted runtime: `frontend-v2 Web + single Spring Boot backend + MySQL / Redis`.
+- Public baseline: `main` / `v2.1.2-shipping-clean`; the repository mainline contains v2-only code and runtime paths.
+- Default self-hosted runtime: `frontend-admin Web + single Spring Boot backend + MySQL / Redis`.
+- `frontend-v2` is a frozen legacy reference; only deletion or migration out of historical material is allowed, and it is not the product runtime entry.
 - Standard mode may additionally enable `Nacos`, but this is not a promise of a production microservice mesh.
 - Docker installs require `Docker` and `Docker Compose v2`; at least `4 CPU / 8 GB RAM` is recommended.
 - Minimal mode ports: `3001`, `8080`, `3306`, `6379`; standard mode additionally uses `8848`.
@@ -19,6 +20,7 @@ Choose one path before the first deployment:
 | --- | --- | --- |
 | One-click install | You want scripts to validate the environment and start Compose | Minimal or standard mode |
 | Docker manual install | You want to run Compose commands and inspect status/logs yourself | Minimal or standard mode |
+| Kubernetes / Helm | You already operate a Kubernetes cluster and external MySQL / Redis | `helm/mmmail` chart, publishing only `backend` and `frontend-admin` |
 | Bare-metal manual install | You do not use Docker, or you need existing hosts, databases, or frontend hosting | MySQL 8.4 + Redis 7.4 + Java backend + built frontend assets |
 | Local experience / development | You contribute code, quickly try the frontend, or debug a local API | Vite dev server + local backend/dependencies |
 
@@ -39,6 +41,8 @@ All self-hosted paths should start from the environment template:
    - `NACOS_AUTH_TOKEN`
    - `NACOS_AUTH_IDENTITY_KEY`
    - `NACOS_AUTH_IDENTITY_VALUE`
+
+The Helm path is documented in `docs/ops/helm.md`. It does not deploy MySQL / Redis, does not publish `frontend-v2`, and requires sensitive values to come from a Kubernetes Secret.
 4. Keep `SPRING_SQL_INIT_MODE=never`; Flyway owns schema migrations.
 
 ## 2. One-click install
@@ -107,7 +111,7 @@ Use the bare-metal path when installing without Docker. These are high-level ste
    - MySQL `8.4`, with an `mmmail` database and application user.
    - Redis `7.4`, with a password and persistence enabled.
    - Java `21` and Maven.
-   - Node.js / pnpm for building `frontend-v2`.
+   - Node.js / pnpm for building `frontend-admin`.
 2. Prepare environment variables:
    - `cp .env.example .env`
    - Replace every `replace-with-*` placeholder.
@@ -121,22 +125,22 @@ Use the bare-metal path when installing without Docker. These are high-level ste
    - Or run Maven Spring Boot from the `backend` directory: `mvn -pl mmmail-server -am -DskipTests spring-boot:run`
    - For production-like hosting, manage the Java process with systemd, supervisor, or equivalent platform tooling; systemd services should use `EnvironmentFile=/path/to/.env` or equivalent environment injection.
 4. Build and serve the frontend:
-   - `pnpm --dir frontend-v2 install`
-   - `VITE_API_BASE_URL=https://api.example.com pnpm --dir frontend-v2 build`
-   - Serve `frontend-v2/dist` through a static file server or reverse proxy.
-   - Frontend commands do not automatically read the repository-root `.env`; set build-time `VITE_API_BASE_URL` through the shell environment or `frontend-v2/.env.production`.
+   - `pnpm --dir frontend-admin install`
+   - `VITE_API_BASE_URL=https://api.example.com pnpm --dir frontend-admin build`
+   - Serve `frontend-admin/dist` through a static file server or reverse proxy.
+   - Frontend commands do not automatically read the repository-root `.env`; set build-time `VITE_API_BASE_URL` through the shell environment or `frontend-admin/.env.production`.
 5. Database migrations:
    - Check migration status: `./scripts/db-upgrade.sh .env info`
    - Run upgrades when needed: `./scripts/db-upgrade.sh .env upgrade`
 
 ## 5. Local experience / development
-Local experience is for development, debugging, or quickly trying the frontend. The default frontend dev port is `5174`; the Compose-hosted frontend port is `3001`.
+Local experience is for development, debugging, or quickly trying the frontend. The default product frontend dev port is `9527`; the Compose-hosted frontend port is `3001`.
 
 Frontend dev server:
-- `pnpm --dir frontend-v2 install`
-- Set `VITE_API_BASE_URL=http://localhost:8080` through the shell environment or `frontend-v2/.env.local`.
-- `pnpm --dir frontend-v2 dev`
-- Default URL: `http://127.0.0.1:5174`
+- `pnpm --dir frontend-admin install`
+- Set `VITE_API_BASE_URL=http://localhost:8080` through the shell environment or `frontend-admin/.env.local`.
+- `pnpm --dir frontend-admin dev`
+- Default URL: `http://127.0.0.1:9527`
 
 Local backend:
 - Prepare MySQL, Redis, and `.env` first.
@@ -146,7 +150,7 @@ Local backend:
 
 Local validation:
 - `bash scripts/validate-local.sh`
-- Frontend tests: `pnpm --dir frontend-v2 test`
+- Frontend tests: `pnpm --dir frontend-admin test:v212`
 
 ## 6. Verification
 After installing or starting, verify at least:

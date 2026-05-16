@@ -1,10 +1,10 @@
 #!/usr/bin/env bash
 # scripts/release-gate.sh
-# v2.1.3 release-gate 自动化校验（spec §9）。
-# 12 步顺序硬阻断；任意一步非零退出即终止。
+# v2.1.2 shipping-clean + v2.2 deployment release-gate 自动化校验。
+# 17 步顺序硬阻断；任意一步非零退出即终止。
 #
 # 用法:
-#   bash scripts/release-gate.sh             # 全 12 步
+#   bash scripts/release-gate.sh             # 全 17 步
 #   bash scripts/release-gate.sh --skip 5,8  # 跳过指定步骤号（仅本地排查用，CI 不允许）
 #   bash scripts/release-gate.sh --only 1,2  # 仅执行指定步骤号
 #
@@ -32,6 +32,17 @@ while [[ $# -gt 0 ]]; do
     *) echo "[release-gate] 未知参数: $1" >&2; exit 1 ;;
   esac
 done
+
+if [[ "${CI:-false}" == "true" ]]; then
+  if [[ -n "$SKIP_LIST" || -n "$ONLY_LIST" ]]; then
+    echo "[release-gate] CI must run the full gate; --skip/--only are local diagnostics only" >&2
+    exit 1
+  fi
+  if [[ "${MMMAIL_SKIP_BACKEND:-0}" == "1" || "${MMMAIL_SKIP_E2E:-0}" == "1" ]]; then
+    echo "[release-gate] CI must not set MMMAIL_SKIP_BACKEND or MMMAIL_SKIP_E2E" >&2
+    exit 1
+  fi
+fi
 
 is_skipped() {
   local step="$1"
@@ -68,29 +79,23 @@ step_docker_group() {
 }
 
 step_typecheck() {
-  echo "[typecheck] frontend-v2"
-  pnpm --dir frontend-v2 typecheck
   echo "[typecheck] frontend-admin"
   pnpm --dir frontend-admin typecheck
   echo "[typecheck] backend compile"
-  if [[ -x "$(command -v mvn)" ]]; then
-    mvn -B -ntp -f backend/pom.xml -pl mmmail-server -am -DskipTests compile
-  else
-    echo "[typecheck] mvn not on PATH; skipping backend compile" >&2
+  if ! command -v mvn >/dev/null 2>&1; then
+    echo "[typecheck] mvn not on PATH" >&2
+    exit 1
   fi
+  mvn -B -ntp -f backend/pom.xml -pl mmmail-server -am -DskipTests compile
 }
 
 step_lint() {
-  echo "[lint] frontend-v2 oxlint + eslint (check-only)"
-  pnpm --dir frontend-v2 exec oxlint
-  pnpm --dir frontend-v2 exec eslint .
   echo "[lint] frontend-admin oxlint + eslint (check-only)"
   pnpm --dir frontend-admin exec oxlint
   pnpm --dir frontend-admin exec eslint .
 }
 
 step_fmt_clean() {
-  pnpm --dir frontend-v2 exec oxfmt --check
   pnpm --dir frontend-admin exec oxfmt --check
 }
 
@@ -134,24 +139,58 @@ step_migration_naming() {
   bash "$ROOT_DIR/scripts/check-migration-naming.sh"
 }
 
+step_sbom_license() {
+  node "$ROOT_DIR/scripts/generate-sbom-license-report.mjs"
+}
+
+step_helm_lint() {
+  bash "$ROOT_DIR/scripts/validate-helm-chart.sh"
+}
+
+step_image_workflow_contract() {
+  node --test "$ROOT_DIR/tests/v22-image-publishing-contract.test.mjs"
+}
+
+step_dsr_inventory() {
+  node "$ROOT_DIR/scripts/validate-dsr-inventory.mjs"
+}
+
+step_legacy_frontend_freeze() {
+  bash "$ROOT_DIR/scripts/validate-legacy-frontend-v2-freeze.sh"
+}
+
 run_step  1 "docker-group"        docker-group        step_docker_group
 run_step  2 "typecheck"           typecheck           step_typecheck
 run_step  3 "lint"                lint                step_lint
 run_step  4 "fmt-clean-diff"      fmt-clean           step_fmt_clean
 run_step  5 "backend-tests"       backend-tests       step_backend_tests
-run_step  6 "frontend-v212"       frontend-v212       step_frontend_v212
+run_step  6 "frontend-admin-v212" frontend-admin-v212 step_frontend_v212
 run_step  7 "frontend-coverage"   frontend-coverage   step_frontend_coverage
 run_step  8 "frontend-e2e"        frontend-e2e        step_frontend_e2e
 run_step  9 "style-discipline"    style-discipline    step_style_discipline
 run_step 10 "bundle-budget"       bundle-budget       step_bundle_budget
 run_step 11 "i18n-keys"           i18n-keys           step_i18n_keys
 run_step 12 "migration-naming"    migration-naming    step_migration_naming
+run_step 13 "sbom-license"        sbom-license        step_sbom_license
+run_step 14 "helm-lint"           helm-lint           step_helm_lint
+run_step 15 "image-workflow-contract" image-workflow-contract step_image_workflow_contract
+run_step 16 "dsr-inventory"       dsr-inventory       step_dsr_inventory
+run_step 17 "legacy-frontend-freeze" legacy-frontend-freeze step_legacy_frontend_freeze
 
 clean_diff_log="$LOG_DIR/release-gate-final-clean-diff.log"
 echo "[release-gate] final clean diff check -> $clean_diff_log"
 if ! git diff --exit-code >"$clean_diff_log" 2>&1; then
   echo "[release-gate] final clean diff check FAILED. Tail of log:" >&2
   tail -40 "$clean_diff_log" >&2 || true
+  exit 1
+fi
+
+clean_status_log="$LOG_DIR/release-gate-final-clean-status.log"
+echo "[release-gate] final clean status check -> $clean_status_log"
+git status --short >"$clean_status_log"
+if [[ -s "$clean_status_log" ]]; then
+  echo "[release-gate] final clean status check FAILED. Working tree has tracked or untracked changes:" >&2
+  cat "$clean_status_log" >&2
   exit 1
 fi
 

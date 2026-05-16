@@ -25,15 +25,16 @@ test('v2.1.2 drive e2ee share services use backend readable-share contract', asy
 });
 
 test('v2.1.2 drive e2ee share routes expose private and public entry points', async () => {
-  const routes = await read('src/router/routes/index.ts');
+  const routes = await read('src/router/routes/custom-routes.ts');
+  const publicShareRoutes = await read('src/router/routes/public-share-routes.ts');
   const imports = await read('src/router/elegant/imports.ts');
 
   assert.match(routes, /name: 'drive_file_secure_share'/);
   assert.match(routes, /path: '\/drive\/files\/:fileId\/share\/secure'/);
-  assert.match(routes, /name: 'public_share'/);
-  assert.match(routes, /path: '\/share\/:token'/);
-  assert.match(routes, /component: 'layout\.blank\$view\.share'/);
-  assert.match(routes, /constant: true/);
+  assert.match(publicShareRoutes, /name: 'public_share'/);
+  assert.match(publicShareRoutes, /path: '\/share\/:token'/);
+  assert.match(publicShareRoutes, /component: 'layout\.blank\$view\.share'/);
+  assert.match(publicShareRoutes, /constant: true/);
   assert.match(imports, /share: \(\) => import\("@\/views\/share\/index\.vue"\)/);
 });
 

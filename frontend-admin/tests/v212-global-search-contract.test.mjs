@@ -40,7 +40,7 @@ test('v2.1.2 global search renders backend result metadata instead of local menu
 
 test('v2.1.2 global search has a dedicated search result page', async () => {
   const [routes, imports, searchPage] = await Promise.all([
-    read('src/router/routes/index.ts'),
+    read('src/router/routes/custom-routes.ts'),
     read('src/router/elegant/imports.ts'),
     read('src/views/search/index.vue')
   ]);

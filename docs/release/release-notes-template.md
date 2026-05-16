@@ -40,6 +40,10 @@
 - `bash scripts/validate-all.sh`
 - `MMMAIL_VALIDATE_CONTAINER_TESTS=true bash scripts/validate-ci.sh`
 
+## Image Digests
+- `ghcr.io/img-ltd/mmmail-backend`:
+- `ghcr.io/img-ltd/mmmail-frontend-admin`:
+
 ## Known Limitations
 - 
 

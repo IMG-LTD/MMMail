@@ -34,7 +34,8 @@ timeout 60s env \
 if [[ "${MMMAIL_RUN_BACKEND_DEPENDENCY_SCAN:-false}" == "true" ]]; then
   echo "[validate-security] backend dependency scan"
   bash scripts/security-backend-dependency-scan.sh >/tmp/mmmail-dependency-scan.log 2>&1
-  report_dir="${MMMAIL_SECURITY_REPORT_DIR:-$ROOT_DIR/artifacts/security}/dependency-check"
+  default_report_dir="${TMPDIR:-/tmp}/mmmail-security"
+  report_dir="${MMMAIL_SECURITY_REPORT_DIR:-$default_report_dir}/dependency-check"
   required_reports=(
     "$report_dir/dependency-check-report.html"
     "$report_dir/dependency-check-report.json"

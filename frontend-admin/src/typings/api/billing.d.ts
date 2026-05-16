@@ -2,6 +2,7 @@ declare namespace Api {
   namespace Billing {
     type BillingCycle = 'MONTHLY' | 'ANNUAL';
     type PaymentMethodType = 'CARD' | 'PAYPAL' | 'BITCOIN' | 'CASH';
+    type CommercialLicenseState = 'MISSING' | 'ACTIVE' | 'EXPIRED' | 'INVALID';
 
     interface QuotePayload {
       offerCode: string;
@@ -29,6 +30,22 @@ declare namespace Api {
 
     interface SubscriptionActionPayload {
       actionCode: string;
+    }
+
+    interface CommercialLicenseUploadPayload {
+      licenseKey: string;
+    }
+
+    interface CommercialLicenseStatus {
+      orgId: string;
+      state: CommercialLicenseState;
+      edition: string;
+      features: string[];
+      externalBillingStatus: string;
+      expiresAt?: string;
+      syncedAt?: string;
+      requiredAction?: string;
+      message?: string;
     }
 
     interface PricingOffer {

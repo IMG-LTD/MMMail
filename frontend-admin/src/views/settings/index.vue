@@ -38,6 +38,7 @@ import {
 } from '@/service/api';
 import { useOrgStore } from '@/store/modules/org';
 import { $t } from '@/locales';
+import LicensePanel from './modules/LicensePanel.vue';
 
 defineOptions({
   name: 'Settings'
@@ -382,6 +383,10 @@ onMounted(loadSettings);
           </NSpace>
         </NCard>
       </NSpace>
+    </NGi>
+
+    <NGi span="24">
+      <LicensePanel />
     </NGi>
 
     <NGi span="24">

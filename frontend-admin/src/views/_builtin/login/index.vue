@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed } from 'vue';
+import { computed, defineAsyncComponent } from 'vue';
 import type { Component } from 'vue';
 import { getPaletteColorByNumber, mixColor } from '@sa/color';
 import { loginModuleRecord } from '@/constants/app';
@@ -7,10 +7,6 @@ import { useAppStore } from '@/store/modules/app';
 import { useThemeStore } from '@/store/modules/theme';
 import { $t } from '@/locales';
 import PwdLogin from './modules/pwd-login.vue';
-import CodeLogin from './modules/code-login.vue';
-import Register from './modules/register.vue';
-import ResetPwd from './modules/reset-pwd.vue';
-import BindWechat from './modules/bind-wechat.vue';
 
 const COLOR_WHITE = '#ffffff';
 const COLOR_INK = '#0f172a';
@@ -37,6 +33,11 @@ interface LoginModule {
   label: App.I18n.I18nKey;
   component: Component;
 }
+
+const CodeLogin = defineAsyncComponent(() => import('./modules/code-login.vue'));
+const Register = defineAsyncComponent(() => import('./modules/register.vue'));
+const ResetPwd = defineAsyncComponent(() => import('./modules/reset-pwd.vue'));
+const BindWechat = defineAsyncComponent(() => import('./modules/bind-wechat.vue'));
 
 const moduleMap: Record<UnionKey.LoginModule, LoginModule> = {
   'pwd-login': { label: loginModuleRecord['pwd-login'], component: PwdLogin },
@@ -68,6 +69,19 @@ const authSurfaceStyle = computed(() => ({
 }));
 
 const authBrandStyle = computed(() => ({ backgroundColor: brandColor.value }));
+
+const themeIcons: Record<UnionKey.ThemeScheme, string> = {
+  light: 'material-symbols:sunny',
+  dark: 'material-symbols:nightlight-rounded',
+  auto: 'material-symbols:hdr-auto'
+};
+
+const themeIcon = computed(() => themeIcons[themeStore.themeScheme]);
+
+function handleLocaleChange(event: Event) {
+  const target = event.target as HTMLSelectElement;
+  appStore.changeLocale(target.value as App.I18n.LangType);
+}
 </script>
 
 <template>
@@ -82,10 +96,10 @@ const authBrandStyle = computed(() => ({ backgroundColor: brandColor.value }));
           :style="authBrandStyle"
         >
           <div class="flex-y-center gap-14px">
-            <SystemLogo class="size-56px lt-sm:size-46px" />
+            <div class="auth-logo-mark lt-sm:size-46px" aria-hidden="true">M</div>
             <div>
               <h1 class="m-0 text-26px font-600 lt-sm:text-22px">{{ $t('system.title') }}</h1>
-              <p class="m-0 pt-4px text-14px opacity-75">{{ $t('page.login.common.loginOrRegister') }}</p>
+              <p class="m-0 pt-4px text-14px opacity-90">{{ $t('page.login.common.loginOrRegister') }}</p>
             </div>
           </div>
 
@@ -93,43 +107,51 @@ const authBrandStyle = computed(() => ({ backgroundColor: brandColor.value }));
             <h2 class="m-0 text-36px font-600 leading-tight lt-sm:text-28px">
               {{ $t('page.login.common.headline') }}
             </h2>
-            <p class="m-0 pt-16px text-16px leading-7 opacity-82">
+            <p class="m-0 pt-16px text-16px leading-7 opacity-95">
               {{ $t('page.login.common.subtitle') }}
             </p>
           </div>
 
           <div class="flex flex-wrap gap-10px">
-            <NTag round :bordered="false">{{ $t('route.mail') }}</NTag>
-            <NTag round :bordered="false">{{ $t('route.drive') }}</NTag>
-            <NTag round :bordered="false">{{ $t('route.calendar') }}</NTag>
-            <NTag round :bordered="false">{{ $t('route.admin') }}</NTag>
+            <span class="auth-feature-chip">{{ $t('route.mail') }}</span>
+            <span class="auth-feature-chip">{{ $t('route.drive') }}</span>
+            <span class="auth-feature-chip">{{ $t('route.calendar') }}</span>
+            <span class="auth-feature-chip">{{ $t('route.admin') }}</span>
           </div>
         </aside>
 
         <main class="auth-form-panel flex flex-col justify-center p-40px lt-sm:p-24px">
           <div class="mx-auto w-full max-w-430px">
             <div class="mb-28px flex-y-center justify-end gap-12px">
-              <ThemeSchemaSwitch
-                :theme-schema="themeStore.themeScheme"
-                :show-tooltip="false"
-                class="text-20px lt-sm:text-18px"
-                @switch="themeStore.toggleThemeScheme"
-              />
-              <LangSwitch
+              <button
+                class="auth-tool-button"
+                type="button"
+                :aria-label="$t('icon.themeSchema')"
+                @click="themeStore.toggleThemeScheme"
+              >
+                <SvgIcon :icon="themeIcon" />
+              </button>
+              <select
                 v-if="themeStore.header.multilingual.visible"
-                :lang="appStore.locale"
-                :lang-options="appStore.localeOptions"
-                :show-tooltip="false"
-                @change-lang="appStore.changeLocale"
-              />
+                class="auth-lang-select"
+                :aria-label="$t('icon.lang')"
+                :value="appStore.locale"
+                @change="handleLocaleChange"
+              >
+                <option v-for="option in appStore.localeOptions" :key="option.key" :value="option.key">
+                  {{ option.label }}
+                </option>
+              </select>
             </div>
 
             <header class="mb-24px">
-              <p class="m-0 text-13px text-primary font-600">{{ $t('page.login.common.loginOrRegister') }}</p>
+              <p class="m-0 text-13px text-[var(--n-text-color-2)] font-600">
+                {{ $t('page.login.common.loginOrRegister') }}
+              </p>
               <h2 class="m-0 pt-8px text-28px font-600 lt-sm:text-24px">{{ $t(activeModule.label) }}</h2>
             </header>
 
-            <Transition :name="themeStore.page.animateMode" mode="out-in" appear>
+            <Transition :name="themeStore.page.animateMode" mode="out-in">
               <component :is="activeModule.component" />
             </Transition>
           </div>
@@ -139,4 +161,56 @@ const authBrandStyle = computed(() => ({ backgroundColor: brandColor.value }));
   </div>
 </template>
 
-<style scoped></style>
+<style scoped>
+.auth-logo-mark {
+  width: 56px;
+  height: 56px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid rgb(255 255 255 / 0.28);
+  border-radius: 8px;
+  background: rgb(255 255 255 / 0.16);
+  color: #fff;
+  font-size: 24px;
+  font-weight: 700;
+  line-height: 1;
+}
+
+.auth-feature-chip {
+  min-height: 28px;
+  display: inline-flex;
+  align-items: center;
+  border: 1px solid rgb(255 255 255 / 0.86);
+  border-radius: 999px;
+  background: rgb(255 255 255 / 0.92);
+  padding: 0 12px;
+  color: #0f172a;
+  font-size: 13px;
+  line-height: 1;
+}
+
+.auth-tool-button,
+.auth-lang-select {
+  height: 36px;
+  border: 1px solid var(--n-border-color);
+  border-radius: 8px;
+  background: var(--n-color);
+  color: var(--n-text-color);
+}
+
+.auth-tool-button {
+  width: 36px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  font-size: 18px;
+}
+
+.auth-lang-select {
+  min-width: 96px;
+  padding: 0 10px;
+  font-size: 13px;
+}
+</style>

@@ -2,9 +2,12 @@ package com.mmmail.server.jobs;
 
 import com.mmmail.platform.jobs.JobRunHandler;
 import com.mmmail.platform.jobs.JobRunType;
+import com.mmmail.platform.jobs.TypedJobRunHandler;
 
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 public final class ExplicitJobRunHandlerRegistry {
 
@@ -19,6 +22,13 @@ public final class ExplicitJobRunHandlerRegistry {
             throw new IllegalArgumentException("handlers is required");
         }
         return new ExplicitJobRunHandlerRegistry(handlers);
+    }
+
+    public static ExplicitJobRunHandlerRegistry fromTypedHandlers(List<TypedJobRunHandler> handlers) {
+        if (handlers == null) {
+            throw new IllegalArgumentException("handlers is required");
+        }
+        return of(handlers.stream().collect(Collectors.toMap(TypedJobRunHandler::type, handler -> handler)));
     }
 
     public static ExplicitJobRunHandlerRegistry empty() {

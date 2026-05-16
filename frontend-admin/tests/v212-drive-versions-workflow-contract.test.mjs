@@ -9,7 +9,7 @@ async function read(relativePath) {
 }
 
 test('v2.1.2 drive version routes expose timeline and compare entry points', async () => {
-  const routes = await read('src/router/routes/index.ts');
+  const routes = await read('src/router/routes/custom-routes.ts');
 
   assert.match(routes, /name: 'drive_file_versions'/);
   assert.match(routes, /path: '\/drive\/files\/:fileId\/versions'/);

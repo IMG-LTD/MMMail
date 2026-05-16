@@ -1,7 +1,7 @@
 # MMMail v2 Mainline 备份与恢复
 
-**版本**: `v2.0.4`
-**日期**: `2026-04-23`
+**版本**: `v2.1.2-shipping-clean`
+**日期**: `2026-05-16`
 
 ## 备份范围
 - MySQL 业务库：`database.sql`
@@ -33,7 +33,7 @@
 ## 恢复后验证
 - 检查备份 manifest 中的 schema 版本：
   - `cat ./backups/pre-upgrade/manifest.txt`
-- 当前公开基线的最新 schema 版本为 `15`
+- 当前公开基线的最新 schema 版本为 `35`
 - 检查数据库对象恢复：
   - `./scripts/db-upgrade.sh .env info`
 - 检查 Drive 文件恢复：

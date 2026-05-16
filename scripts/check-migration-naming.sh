@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # scripts/check-migration-naming.sh
-# 校验 backend/mmmail-server/src/main/resources/db/migration/ 下的 Flyway 迁移文件命名与首部注释。
+# 校验 Flyway SQL 迁移文件命名与首部注释，并校验 SQL / Java migration 版本号全局唯一。
 # spec 出处：docs/v212-migration-spec.md §21.1（v1.3 修订）。
 # CI 中由 scripts/release-gate.sh 调起；任意失败退出码 1。
 
@@ -8,6 +8,7 @@ set -euo pipefail
 
 ROOT_DIR="$(cd "$(dirname "$0")/.." && pwd)"
 MIGRATION_DIR="$ROOT_DIR/backend/mmmail-server/src/main/resources/db/migration"
+JAVA_MIGRATION_DIR="$ROOT_DIR/backend/mmmail-server/src/main/java/db/migration"
 ALLOWLIST_FILE="$ROOT_DIR/scripts/.migration-naming-allowlist"
 
 declare -A FILE_ALLOWLIST=()
@@ -73,12 +74,31 @@ for file in V*.sql; do
   fi
 done
 
-# 5. 编号连续性（允许 GAP allowlist 豁免）
-if [[ ${#versions[@]} -ge 2 ]]; then
-  IFS=$'\n' sorted=($(printf '%s\n' "${versions[@]}" | sort -n -u))
+# 5. SQL / Java migration 全局版本唯一性与连续性
+declare -A GLOBAL_VERSION_LOCATIONS=()
+global_versions=()
+while IFS= read -r migration_file || [[ -n "$migration_file" ]]; do
+  filename="$(basename "$migration_file")"
+  if ! [[ "$filename" =~ ^V([0-9]+)__.+\.(sql|java)$ ]]; then
+    continue
+  fi
+  version="${BASH_REMATCH[1]}"
+  global_versions+=("$version")
+  if [[ -n "${GLOBAL_VERSION_LOCATIONS[$version]:-}" ]]; then
+    echo "[check-migration-naming] FAIL 重复版本号: V${version} 同时存在于 ${GLOBAL_VERSION_LOCATIONS[$version]} 和 $migration_file" >&2
+    errors=$((errors + 1))
+    continue
+  fi
+  GLOBAL_VERSION_LOCATIONS["$version"]="$migration_file"
+done < <(
+  find "$MIGRATION_DIR" "$JAVA_MIGRATION_DIR" -maxdepth 1 -type f \( -name 'V*.sql' -o -name 'V*.java' \) -print | sort
+)
+
+if [[ ${#global_versions[@]} -ge 2 ]]; then
+  IFS=$'\n' sorted_global=($(printf '%s\n' "${global_versions[@]}" | sort -n -u))
   unset IFS
   prev=""
-  for v in "${sorted[@]}"; do
+  for v in "${sorted_global[@]}"; do
     if [[ -n "$prev" ]]; then
       gap=$((v - prev))
       if [[ $gap -gt 1 ]]; then
@@ -90,12 +110,6 @@ if [[ ${#versions[@]} -ge 2 ]]; then
     fi
     prev="$v"
   done
-
-  # 6. 唯一性
-  if [[ ${#versions[@]} -ne ${#sorted[@]} ]]; then
-    echo "[check-migration-naming] FAIL 重复版本号: 同一 V{N} 被多个文件占用" >&2
-    errors=$((errors + 1))
-  fi
 fi
 
 if [[ $errors -gt 0 ]]; then
@@ -103,4 +117,4 @@ if [[ $errors -gt 0 ]]; then
   exit 1
 fi
 
-echo "[check-migration-naming] OK — 校验通过 ${#versions[@]} 个迁移文件"
+echo "[check-migration-naming] OK — 校验通过 ${#versions[@]} 个 SQL 迁移文件，${#GLOBAL_VERSION_LOCATIONS[@]} 个 SQL/Java 迁移版本全局唯一且连续"

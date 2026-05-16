@@ -1,0 +1,45 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://contracts.mmmail.local/license/license-claims.schema.json",
+  "title": "MMMail License Claims",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["orgId", "edition", "seats", "features", "issuedAt", "expiresAt"],
+  "properties": {
+    "orgId": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "edition": {
+      "type": "string",
+      "enum": ["FREE", "PRO", "BUSINESS"]
+    },
+    "seats": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "features": {
+      "type": "array",
+      "uniqueItems": true,
+      "items": {
+        "type": "string",
+        "enum": [
+          "license.management",
+          "billing.admin",
+          "billing.webhook",
+          "oidc.sso",
+          "audit.export",
+          "dsr.requests"
+        ]
+      }
+    },
+    "issuedAt": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "expiresAt": {
+      "type": "string",
+      "format": "date-time"
+    }
+  }
+}

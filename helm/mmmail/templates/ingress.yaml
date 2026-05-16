@@ -1,0 +1,38 @@
+{{- if .Values.ingress.enabled }}
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: {{ include "mmmail.fullname" . }}
+  labels:
+    {{- include "mmmail.labels" . | nindent 4 }}
+  annotations:
+    {{- toYaml .Values.ingress.annotations | nindent 4 }}
+spec:
+  {{- if .Values.ingress.className }}
+  ingressClassName: {{ .Values.ingress.className | quote }}
+  {{- end }}
+  {{- if .Values.ingress.tls }}
+  tls:
+    {{- toYaml .Values.ingress.tls | nindent 4 }}
+  {{- end }}
+  rules:
+    - host: {{ .Values.ingress.host | quote }}
+      http:
+        paths:
+          {{- if .Values.ingress.backend.enabled }}
+          - path: {{ .Values.ingress.backend.path | quote }}
+            pathType: {{ .Values.ingress.backend.pathType }}
+            backend:
+              service:
+                name: {{ include "mmmail.backendName" . }}
+                port:
+                  name: http
+          {{- end }}
+          - path: {{ .Values.ingress.frontend.path | quote }}
+            pathType: {{ .Values.ingress.frontend.pathType }}
+            backend:
+              service:
+                name: {{ include "mmmail.frontendName" . }}
+                port:
+                  name: http
+{{- end }}

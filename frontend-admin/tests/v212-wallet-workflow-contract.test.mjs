@@ -38,7 +38,7 @@ test('v2.1.2 wallet service exposes account, transfer, execution, and reconcilia
 });
 
 test('v2.1.2 wallet routes expose accounts, transactions, send, receive, and reconciliation entries', async () => {
-  const routes = await read('src/router/routes/index.ts');
+  const routes = await read('src/router/routes/custom-routes.ts');
 
   for (const routeName of [
     'wallet_accounts',

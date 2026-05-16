@@ -6,6 +6,7 @@ import com.mmmail.platform.jobs.JobRunRepository;
 import com.mmmail.platform.jobs.JobRunResult;
 import com.mmmail.platform.jobs.JobRunState;
 import com.mmmail.platform.jobs.JobRunner;
+import com.mmmail.platform.jobs.TypedJobRunHandler;
 import io.micrometer.core.instrument.Counter;
 import io.micrometer.core.instrument.MeterRegistry;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -32,8 +33,12 @@ public class InProcessJobRunner implements JobRunner {
     private final RunnerOptions options;
 
     @Autowired
-    public InProcessJobRunner(JobRunRepository repository, MeterRegistry meterRegistry) {
-        this(repository, meterRegistry, RunnerOptions.defaultOptions());
+    public InProcessJobRunner(
+            JobRunRepository repository,
+            MeterRegistry meterRegistry,
+            List<TypedJobRunHandler> handlers
+    ) {
+        this(repository, meterRegistry, RunnerOptions.withHandlers(handlers));
     }
 
     public InProcessJobRunner(
@@ -178,6 +183,14 @@ public class InProcessJobRunner implements JobRunner {
         public static RunnerOptions defaultOptions() {
             return new RunnerOptions(
                     ExplicitJobRunHandlerRegistry.empty(),
+                    DEFAULT_BATCH_LIMIT,
+                    DEFAULT_RETRY_DELAY
+            );
+        }
+
+        public static RunnerOptions withHandlers(List<TypedJobRunHandler> handlers) {
+            return new RunnerOptions(
+                    ExplicitJobRunHandlerRegistry.fromTypedHandlers(handlers),
                     DEFAULT_BATCH_LIMIT,
                     DEFAULT_RETRY_DELAY
             );

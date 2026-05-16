@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # scripts/run-tests-docker.sh
-# v2.1.3 收尾期统一测试入口。测试数据层必须使用 docker 隔离；E2E 使用宿主机真实后端与前端，
+# v2.1.2 shipping-clean 统一测试入口。测试数据层必须使用 docker 隔离；E2E 使用宿主机真实后端与前端，
 # 避免基础镜像源异常时绕过真实运行路径。
 #
 # 用法：

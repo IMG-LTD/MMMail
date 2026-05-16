@@ -15,7 +15,7 @@
 | Docs | `/docs` | `BETA` | 是 | 保留轻协作工作区，不作为正式发布阻塞。 |
 | Sheets | `/sheets` | `BETA` | 是 | 保留轻协作表格工作区，不作为正式发布阻塞。 |
 | Pass | `/pass` | `BETA` | 是 | 默认导航可见，但仍按 Beta 口径维护。 |
-| Billing | `/suite/billing` | `BETA` | 否 | Community 仅保留计费姿态与 readiness，不承诺真实结算。 |
+| Billing | `/suite/billing` | `BETA` | 否 | Free 仅保留计费姿态与 readiness，不承诺真实结算。 |
 | Collaboration | `/collaboration` | `PREVIEW` | 否 | 聚合预览面，不进入正式发布承诺。 |
 | Command Center | `/command-center` | `PREVIEW` | 否 | 聚合预览面，不进入正式发布承诺。 |
 | Notifications | `/notifications` | `PREVIEW` | 否 | 聚合预览面，不进入正式发布承诺。 |

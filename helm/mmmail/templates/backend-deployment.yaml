@@ -1,0 +1,98 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "mmmail.backendName" . }}
+  labels:
+    {{- include "mmmail.labels" . | nindent 4 }}
+    app.kubernetes.io/component: backend
+spec:
+  replicas: {{ .Values.backend.replicaCount }}
+  selector:
+    matchLabels:
+      {{- include "mmmail.backendSelectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      annotations:
+        {{- toYaml .Values.backend.podAnnotations | nindent 8 }}
+      labels:
+        {{- include "mmmail.backendSelectorLabels" . | nindent 8 }}
+    spec:
+      containers:
+        - name: backend
+          image: "{{ .Values.backend.image.repository }}:{{ default .Chart.AppVersion .Values.backend.image.tag }}"
+          imagePullPolicy: {{ default .Values.global.imagePullPolicy .Values.backend.image.pullPolicy }}
+          ports:
+            - name: http
+              containerPort: {{ .Values.backend.service.port }}
+          envFrom:
+            - configMapRef:
+                name: {{ include "mmmail.backendName" . }}-config
+          env:
+            - name: SPRING_DATASOURCE_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "mmmail.secretName" . }}
+                  key: {{ .Values.secrets.secretKeys.springDatasourcePassword }}
+            - name: SPRING_REDIS_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "mmmail.secretName" . }}
+                  key: {{ .Values.secrets.secretKeys.springRedisPassword }}
+                  optional: true
+            - name: MMMAIL_JWT_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "mmmail.secretName" . }}
+                  key: {{ .Values.secrets.secretKeys.jwtSecret }}
+                  optional: true
+            - name: MMMAIL_BILLING_WEBHOOK_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "mmmail.secretName" . }}
+                  key: {{ .Values.secrets.secretKeys.billingWebhookSecret }}
+                  optional: true
+            - name: MMMAIL_LICENSE_PUBLIC_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "mmmail.secretName" . }}
+                  key: {{ .Values.secrets.secretKeys.licensePublicKey }}
+                  optional: true
+            - name: MMMAIL_OIDC_CLIENT_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "mmmail.secretName" . }}
+                  key: {{ .Values.secrets.secretKeys.oidcClientSecret }}
+                  optional: true
+          livenessProbe:
+            httpGet:
+              path: /actuator/health
+              port: http
+          readinessProbe:
+            httpGet:
+              path: /actuator/health
+              port: http
+          resources:
+            {{- toYaml .Values.backend.resources | nindent 12 }}
+          volumeMounts:
+            - name: drive-storage
+              mountPath: {{ .Values.backend.driveStorageRoot }}
+      volumes:
+        - name: drive-storage
+          {{- if .Values.backend.persistence.enabled }}
+          persistentVolumeClaim:
+            claimName: {{ default (printf "%s-drive" (include "mmmail.backendName" .)) .Values.backend.persistence.existingClaim }}
+          {{- else }}
+          emptyDir: {}
+          {{- end }}
+      {{- with .Values.backend.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.backend.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.backend.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}

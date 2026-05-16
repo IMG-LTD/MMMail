@@ -1,0 +1,106 @@
+nameOverride: ""
+fullnameOverride: ""
+
+global:
+  imagePullPolicy: IfNotPresent
+  publicBaseUrl: http://localhost:3001
+  corsAllowedOrigins: http://localhost:3001,http://127.0.0.1:3001
+
+backend:
+  replicaCount: 1
+  image:
+    repository: ghcr.io/img-ltd/mmmail-backend
+    tag: ""
+    pullPolicy: ""
+  service:
+    type: ClusterIP
+    port: 8080
+  springProfilesActive: local
+  forwardHeadersStrategy: framework
+  driveStorageRoot: /var/lib/mmmail/drive
+  resources: {}
+  podAnnotations: {}
+  nodeSelector: {}
+  tolerations: []
+  affinity: {}
+  persistence:
+    enabled: false
+    existingClaim: ""
+    storageClassName: ""
+    accessModes:
+      - ReadWriteOnce
+    size: 10Gi
+
+frontend:
+  replicaCount: 1
+  image:
+    repository: ghcr.io/img-ltd/mmmail-frontend-admin
+    tag: ""
+    pullPolicy: ""
+  service:
+    type: ClusterIP
+    port: 3001
+  apiBaseUrl: http://localhost:8080
+  resources: {}
+  podAnnotations: {}
+  nodeSelector: {}
+  tolerations: []
+  affinity: {}
+
+externalDatabase:
+  host: mysql
+  port: 3306
+  name: mmmail
+  username: mmmail_app
+  driver: com.mysql.cj.jdbc.Driver
+  params: useUnicode=true&characterEncoding=utf8&serverTimezone=Asia/Shanghai&useSSL=false&allowPublicKeyRetrieval=true
+
+externalRedis:
+  host: redis
+  port: 6379
+  database: 0
+  timeout: 5s
+
+secrets:
+  create: false
+  existingSecret: ""
+  stringData: {}
+  secretKeys:
+    springDatasourcePassword: SPRING_DATASOURCE_PASSWORD
+    springRedisPassword: SPRING_REDIS_PASSWORD
+    jwtSecret: MMMAIL_JWT_SECRET
+    billingWebhookSecret: MMMAIL_BILLING_WEBHOOK_SECRET
+    licensePublicKey: MMMAIL_LICENSE_PUBLIC_KEY
+    oidcClientSecret: MMMAIL_OIDC_CLIENT_SECRET
+
+commercial:
+  billing:
+    provider: none
+  license:
+    enabled: true
+  oidc:
+    enabled: false
+    issuerUri: ""
+    clientId: ""
+  auditExport:
+    enabled: false
+    retentionDays: 90
+  otel:
+    enabled: false
+    serviceName: mmmail-server
+    tracesExporter: otlp
+    endpoint: ""
+
+ingress:
+  enabled: false
+  className: ""
+  annotations: {}
+  host: mmmail.local
+  tls: []
+  frontend:
+    path: /
+    pathType: Prefix
+  backend:
+    enabled: true
+    path: /api
+    pathType: Prefix

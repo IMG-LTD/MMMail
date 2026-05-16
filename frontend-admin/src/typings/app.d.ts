@@ -537,6 +537,11 @@ declare namespace App {
             primary: string;
             secondary: string;
           };
+          backendEntitlement: {
+            requiredEdition: string;
+            currentEdition: string;
+            upgradeAction: string;
+          };
         };
         login: {
           common: {
@@ -669,6 +674,7 @@ declare namespace App {
         publicShare: {
           title: string;
           password: string;
+          passwordHint: string;
           localKeyNotice: string;
           download: string;
           encrypted: string;
@@ -697,6 +703,27 @@ declare namespace App {
           emailDigest: string;
           productUpdates: string;
           revokeDevice: string;
+        };
+        license: {
+          title: string;
+          state: string;
+          noEdition: string;
+          features: string;
+          externalBillingStatus: string;
+          expiresAt: string;
+          syncedAt: string;
+          licenseKey: string;
+          licenseKeyPlaceholder: string;
+          licenseKeyRequired: string;
+          upload: string;
+          uploadAccepted: string;
+          refresh: string;
+        };
+        oidc: {
+          title: string;
+          configure: string;
+          unavailableTitle: string;
+          unavailableDescription: string;
         };
         notifications: {
           title: string;
@@ -1018,6 +1045,7 @@ declare namespace App {
           addPaymentMethod: string;
           createQuote: string;
           createDraft: string;
+          externalBillingStatus: string;
         };
       };
       form: {

@@ -24,6 +24,7 @@ public class AuditService {
     private static final String DEFAULT_SEVERITY = "low";
     private static final int ACTOR_EVENT_LIMIT_MAX = 100;
     private static final int RECENT_ACTOR_EVENT_LIMIT_MAX = 1000;
+    private static final int ORG_EXPORT_EVENT_LIMIT_MAX = 10_000;
 
     private final AuditEventMapper auditEventMapper;
     private final UserAccountMapper userAccountMapper;
@@ -261,6 +262,30 @@ public class AuditService {
         query.last("limit " + safeLimit);
         List<AuditEvent> events = auditEventMapper.selectList(query);
         return toOrgAuditEvents(events);
+    }
+
+    public List<OrgAuditEventVo> listByOrgForExport(
+            Long orgId,
+            int limit,
+            Set<String> eventTypes,
+            Long afterEventId,
+            LocalDateTime fromAt,
+            LocalDateTime toAt,
+            boolean ascending
+    ) {
+        int safeLimit = Math.max(1, Math.min(limit, ORG_EXPORT_EVENT_LIMIT_MAX));
+        LambdaQueryWrapper<AuditEvent> query = new LambdaQueryWrapper<AuditEvent>()
+                .eq(AuditEvent::getOrgId, orgId);
+        if (eventTypes != null && !eventTypes.isEmpty()) {
+            query.in(AuditEvent::getEventType, eventTypes);
+        }
+        if (afterEventId != null && afterEventId > 0) {
+            query.gt(AuditEvent::getId, afterEventId);
+        }
+        applyDateRange(query, fromAt, toAt);
+        applySort(query, ascending);
+        query.last("limit " + safeLimit);
+        return toOrgAuditEvents(auditEventMapper.selectList(query));
     }
 
     public int countOrgEvents(Long orgId) {

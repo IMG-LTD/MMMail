@@ -1,6 +1,6 @@
 ---
 name: Release-blocking regression
-about: 报告阻塞 Community Edition 当前公开基线的回归问题
+about: 报告阻塞 MMMail Free 当前公开基线的回归问题
 title: "[Release Blocker] "
 labels: bug,release-blocking,ga-stabilization
 assignees: ""

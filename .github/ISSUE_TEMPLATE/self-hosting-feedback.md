@@ -1,6 +1,6 @@
 ---
 name: Self-hosting feedback
-about: 提交 Community Edition 自托管安装、升级、恢复或运维反馈
+about: 提交 MMMail Free 自托管安装、升级、恢复或运维反馈
 title: "[Self-hosting] "
 labels: needs-triage,self-hosting-feedback
 assignees: ""

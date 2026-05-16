@@ -1,7 +1,7 @@
-# MMMail v2.0.4 Threat Model
+# MMMail v2 Mainline Threat Model
 
-**版本**: `v2.0.4`
-**日期**: `2026-04-23`
+**版本**: `v2-mainline`
+**日期**: `2026-05-17`
 
 ## 保护资产
 - 用户身份、访问令牌、刷新令牌、会话状态
@@ -9,6 +9,7 @@
 - Mail / Calendar / Drive / Pass 主数据、附件与公开分享对象
 - 备份数据、迁移脚本、部署配置
 - 审计日志、运行时错误事件、系统健康信息
+- Business OIDC 配置、授权 state、nonce、PKCE verifier、callback redirect allowlist、IdP token response 和本地会话发行路径
 
 ## 攻击者模型
 - 匿名互联网访问者：尝试登录爆破、公共分享滥用、公开接口枚举
@@ -17,10 +18,11 @@
 - 自托管运维者失误：错误配置 TLS、暴露默认凭据、错误开放 Actuator
 
 ## 信任边界
-1. 浏览器 / `frontend-v2` 运行时 ↔ 后端 API
+1. 浏览器 / `frontend-admin` 运行时 ↔ 后端 API
 2. 公共分享入口 ↔ 受保护 Drive / Mail / Pass 数据
 3. 应用服务 ↔ MySQL / Redis / 本地存储路径
 4. 本地与 CI 验证链 ↔ 发布产物与运维脚本
+5. 外部 IdP / OIDC callback ↔ 后端 `/api/v2/auth/oidc/callback`
 
 ## 已覆盖的当前控制
 - `JWT + refresh token` 会话校验与 token rotation
@@ -31,11 +33,12 @@
 - `X-Frame-Options`、`X-Content-Type-Options`、`Referrer-Policy`、API 级 `CSP / Permissions-Policy`
 - secrets 防回归扫描与后端依赖漏洞扫描门禁
 - 审计日志、请求追踪、Prometheus 指标、system-health 可见性
+- OIDC state / nonce / PKCE `S256`、callback URI 精确匹配、post-login `redirect_uri` allowlist、single-use state、ID token signature / issuer / audience / nonce 校验，以及 verified email 到现有 active 本地用户的显式映射
 
 ## 当前未覆盖 / 明确不承诺
 - 分布式限流一致性：当前更适合 Community Edition 单实例 / 轻量部署
 - 完整 DAST / WAF / Bot 管理能力
-- 外部 IdP / SSO / 硬件密钥体系
+- 外部 IdP 深度适配、SCIM 同步、硬件密钥体系
 - `Pass` 浏览器扩展、自动填充、真实 `WebAuthn / passkey ceremony`
 - Preview 模块的深引擎安全评估（VPN / Meet / Wallet / Lumo）
 - 多区域灾备和密钥托管服务
@@ -48,11 +51,12 @@
 | 公开分享滥用 | Mail / Drive / Pass | 分享密码或 token 校验、访问日志、访问限流、权限回归 |
 | 客户端错误上报滥用 | Observability | 鉴权保护、会话级限流、错误缓冲上限 |
 | 仓库 secrets 回归 | 配置 / CI | `scripts/security-secret-scan.sh`、模板占位符、`SECURITY.md` 要求 |
-| 第三方依赖漏洞 | Frontend / Backend | `pnpm --dir frontend-v2 audit --prod --audit-level=high --ignore-registry-errors`、OWASP Dependency-Check |
+| 第三方依赖漏洞 | Frontend / Backend | `node scripts/generate-sbom-license-report.mjs`、`scripts/security-backend-dependency-scan.sh`、CI artifact review |
+| OIDC callback 攻击 | Business SSO | `state` 单次消费、`nonce` 绑定、PKCE `S256`、callback URI 精确匹配、post-login `redirect_uri` allowlist、ID token signature / issuer / audience / nonce 校验、只为现有 active 本地用户发行 session、`mmmail.oidc.callback` trace |
 
 ## 自托管默认建议
 - 生产环境启用 HTTPS，并设置 `MMMAIL_AUTH_COOKIE_SECURE=true`
 - 轮转 `.env` 中所有数据库、Redis、Nacos、JWT secrets
 - 仅向受信网段暴露 `actuator` 与管理入口
 - 为 MySQL / 备份目录 / Drive 存储路径设置最小权限
-- 保留 `artifacts/security/` 与 CI 报告作为发布证据
+- 本地安全报告默认写入系统临时目录；CI 通过 `MMMAIL_SECURITY_REPORT_DIR=artifacts/security` 显式收集发布证据，避免本地门禁在仓库根留下 `artifacts/`

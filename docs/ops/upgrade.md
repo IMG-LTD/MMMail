@@ -1,12 +1,12 @@
 # MMMail v2 Mainline 升级说明
 
-**版本**: `v2.0.4`
-**日期**: `2026-04-23`
+**版本**: `v2.1.2-shipping-clean`
+**日期**: `2026-05-16`
 
 ## 适用范围
-- 适用于当前 `main` / `v2.0.4` 公开基线的数据库 schema 升级。
+- 适用于当前 `main` / `v2.1.2-shipping-clean` 公开基线的数据库 schema 升级。
 - 当前默认数据库为 `MySQL 8`。
-- 当前默认运行模型为 `frontend-v2 Web + 单个 Spring Boot 后端进程 + MySQL / Redis`。
+- 当前默认运行模型为 `frontend-admin Web + 单个 Spring Boot 后端进程 + MySQL / Redis`。
 
 ## 升级前提
 - 已准备可写 `.env`
@@ -38,12 +38,12 @@
   - `./scripts/db-rollback.sh .env <backup-dir>`
 
 ## 当前 schema 基线
-- 当前 `v2.0.4` 公开基线对应最新 schema 版本 `15`。
+- 当前 `v2.1.2-shipping-clean` 公开基线对应最新 schema 版本 `35`。
 - `system_release_metadata.schema_version` 与 `flyway_schema_history` 中的最新成功版本应保持一致。
 
 ## 验证方式
 - `flyway_schema_history` 中存在最新成功版本
-- `system_release_metadata` 的 `schema_version` 为 `15`
+- `system_release_metadata` 的 `schema_version` 为 `35`
 - 应用健康检查恢复：
   - `curl -sf http://127.0.0.1:8080/actuator/health`
 - 如需补充运维排查，参考：

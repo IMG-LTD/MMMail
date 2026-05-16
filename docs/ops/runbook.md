@@ -1,7 +1,7 @@
 # MMMail v2 Mainline 运维 Runbook
 
-**版本**: `v2.0.4`
-**日期**: `2026-04-23`
+**版本**: `v2.1.2-shipping-clean`
+**日期**: `2026-05-16`
 
 ## 1. 入口清单
 - 健康检查：`GET /actuator/health`
@@ -31,15 +31,14 @@
 - `Mail / Calendar / Drive / Business / Organizations / Security / Settings` 为正式主线检查面
 - `Pass / Docs / Sheets` 为默认可见但按 `Beta` 口径维护
 - `Collaboration / Command Center / Notifications / Labs` 为 `Preview`
+- `frontend-admin` 是产品前端；`frontend-v2` 只作为 frozen legacy reference
 
 ### 本地门禁环境
 - `bash scripts/validate-local.sh` 会显式执行：
-  - `frontend-v2` tests
-  - `frontend-v2` contract regression
-  - `frontend-v2` typecheck
-  - `frontend-v2` production dependency audit
+  - `frontend-admin` v2.1.2 contract / coverage / e2e / bundle / i18n / style gates
   - backend fast regression / migration / security gates
-- `main` 不再要求 legacy `frontend/` 的测试、i18n 或构建门禁。
+- legacy frontend selected contracts 已迁入 root tests / `frontend-admin`；`validate-local` 只保留 `scripts/validate-legacy-frontend-v2-freeze.sh` 阻断 `frontend-v2` 新增或修改文件。
+- `main` 不再把 legacy `frontend-v2` 作为产品发布门禁或运行入口。
 
 ### 日志
 - 后端日志为结构化 JSON，包含：

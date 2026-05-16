@@ -1,4 +1,5 @@
 import { enUSErrorMessages } from './v212-error-messages';
+import { v22CommercialPageLocale } from './v22-commercial/en-us';
 
 const local: App.I18n.Schema = {
   system: {
@@ -313,7 +314,8 @@ const local: App.I18n.Schema = {
         description: 'Your account does not have permission to access this page.',
         primary: 'Back home',
         secondary: 'Contact admin'
-      }
+      },
+      backendEntitlement: v22CommercialPageLocale.accessGate.backendEntitlement
     },
     login: {
       common: {
@@ -443,13 +445,7 @@ const local: App.I18n.Schema = {
       secureLink: 'Secure link',
       create: 'Create encrypted share'
     },
-    publicShare: {
-      title: 'Public share',
-      password: 'Access password',
-      localKeyNotice: 'The key is only used locally in this browser and is never sent with API requests.',
-      download: 'Download file',
-      encrypted: 'End-to-end encrypted'
-    },
+    publicShare: v22CommercialPageLocale.publicShare,
     workspace: {
       systemStatus: 'System status',
       recommendations: 'Recommendations',
@@ -475,6 +471,8 @@ const local: App.I18n.Schema = {
       productUpdates: 'Product updates',
       revokeDevice: 'Revoke device'
     },
+    license: v22CommercialPageLocale.license,
+    oidc: v22CommercialPageLocale.oidc,
     notifications: {
       title: 'Title',
       body: 'Body',
@@ -776,26 +774,7 @@ const local: App.I18n.Schema = {
       restore: 'Restore version',
       e2eeReady: 'Encrypted sharing capability ready'
     },
-    billing: {
-      title: 'Billing',
-      plan: 'Current plan',
-      subscriptions: 'Subscriptions',
-      invoices: 'Invoices',
-      paymentMethods: 'Payment methods',
-      offers: 'Offers',
-      invoice: 'Invoice',
-      offer: 'Offer',
-      quote: 'Quote preview',
-      checkoutDraft: 'Draft',
-      billingCycle: 'Billing cycle',
-      seatCount: 'Seats',
-      defaultPayment: 'Default payment method',
-      total: 'Total',
-      runAction: 'Run subscription action',
-      addPaymentMethod: 'Add payment method',
-      createQuote: 'Create quote',
-      createDraft: 'Create draft'
-    }
+    billing: v22CommercialPageLocale.billing
   },
   form: {
     required: 'Cannot be empty',

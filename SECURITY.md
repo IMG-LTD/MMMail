@@ -1,15 +1,16 @@
 # Security Policy
 
 ## Scope
-- `v2.0.4` is the current public baseline.
+- `v2.1.2-shipping-clean` is the current public baseline.
 - Security fixes that affect authentication, organization isolation, data access, public share access, storage, self-hosted deployment, or documented `GA` capabilities are treated as release blockers.
 - Current support boundaries are documented in `docs/release/v2-support-boundaries.md`.
 
 ## Reporting a Vulnerability
 - Do **not** open a public GitHub issue for a live security vulnerability.
-- GitHub private vulnerability reporting is currently **not enabled** for this repository.
+- GitHub private vulnerability reporting is enabled for this repository.
 - Live or undisclosed vulnerabilities that affect the current public baseline are still treated as release blockers, but they must enter through a private disclosure path first.
-- If you do not already have a private maintainer contact path, open a minimal public issue using `.github/ISSUE_TEMPLATE/security-contact-request.md` only to request a private handoff. Do **not** include vulnerability details, proof of concept, affected secrets, reproduction steps, or direct contact details in that public issue.
+- Use GitHub private vulnerability reporting for live or undisclosed vulnerabilities whenever you can.
+- If GitHub private vulnerability reporting is unavailable to you and you do not already have a private maintainer contact path, open a minimal public issue using `.github/ISSUE_TEMPLATE/security-contact-request.md` only to request a private handoff. Do **not** include vulnerability details, proof of concept, affected secrets, reproduction steps, or direct contact details in that public issue.
 - Maintainers should move the report to a private channel before requesting logs, artifacts, or exploit details.
 - Public issues may be used only after the vulnerability is fixed or explicitly approved for disclosure.
 - Threat boundaries are documented in `docs/security/threat-model.md`.

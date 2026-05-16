@@ -1,4 +1,5 @@
 import { zhCNErrorMessages } from './v212-error-messages';
+import { v22CommercialPageLocale } from './v22-commercial/zh-cn';
 
 const local: App.I18n.Schema = {
   system: {
@@ -309,7 +310,8 @@ const local: App.I18n.Schema = {
         description: '当前账号没有访问此页面的权限。',
         primary: '返回首页',
         secondary: '联系管理员'
-      }
+      },
+      backendEntitlement: v22CommercialPageLocale.accessGate.backendEntitlement
     },
     login: {
       common: {
@@ -439,13 +441,7 @@ const local: App.I18n.Schema = {
       secureLink: '安全链接',
       create: '创建加密分享'
     },
-    publicShare: {
-      title: '公开分享',
-      password: '访问密码',
-      localKeyNotice: '密钥只在浏览器本地使用，不会随 API 请求发送到服务器。',
-      download: '下载文件',
-      encrypted: '端到端加密'
-    },
+    publicShare: v22CommercialPageLocale.publicShare,
     workspace: {
       systemStatus: '系统状态',
       recommendations: '建议',
@@ -471,6 +467,8 @@ const local: App.I18n.Schema = {
       productUpdates: '产品更新',
       revokeDevice: '移除设备'
     },
+    license: v22CommercialPageLocale.license,
+    oidc: v22CommercialPageLocale.oidc,
     notifications: {
       title: '标题',
       body: '内容',
@@ -772,26 +770,7 @@ const local: App.I18n.Schema = {
       restore: '还原版本',
       e2eeReady: '加密分享能力可用'
     },
-    billing: {
-      title: '计费',
-      plan: '当前套餐',
-      subscriptions: '订阅',
-      invoices: '发票',
-      paymentMethods: '支付方式',
-      offers: '套餐定价',
-      invoice: '发票',
-      offer: '套餐',
-      quote: '报价预览',
-      checkoutDraft: '草稿',
-      billingCycle: '计费周期',
-      seatCount: '席位数',
-      defaultPayment: '默认支付方式',
-      total: '总额',
-      runAction: '执行订阅操作',
-      addPaymentMethod: '添加支付方式',
-      createQuote: '生成报价',
-      createDraft: '创建草稿'
-    }
+    billing: v22CommercialPageLocale.billing
   },
   form: {
     required: '不能为空',

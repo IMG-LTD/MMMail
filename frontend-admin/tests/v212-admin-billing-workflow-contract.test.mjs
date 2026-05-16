@@ -23,7 +23,7 @@ test('v2.1.2 admin billing service exposes quote, checkout, payment, and subscri
 });
 
 test('v2.1.2 admin billing routes require BILLING_ADMIN role', async () => {
-  const routes = await read('src/router/routes/index.ts');
+  const routes = await read('src/router/routes/custom-routes.ts');
 
   for (const routeName of [
     'admin_billing',

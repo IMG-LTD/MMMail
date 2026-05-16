@@ -1,0 +1,13 @@
+# Default owner for all repository changes.
+* @IMG-LTD
+
+# Core areas.
+/backend/ @IMG-LTD
+/frontend-admin/ @IMG-LTD
+
+# Legacy frontend-v2 ownership is limited to deletion or rename-out archival.
+/frontend-v2/ @IMG-LTD
+/contracts/ @IMG-LTD
+/scripts/ @IMG-LTD
+/docs/ @IMG-LTD
+/.github/ @IMG-LTD

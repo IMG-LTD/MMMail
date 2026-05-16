@@ -45,7 +45,9 @@ class BackendV21BackgroundJobFoundationTest {
             "command.run",
             "ai.labs",
             "billing.entitlement_sync",
-            "audit.export"
+            "audit.export",
+            "dsr.export",
+            "dsr.erasure"
     );
 
     @Autowired

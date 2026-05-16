@@ -3,7 +3,7 @@
 .idea/
 .vscode/
 .worktrees/
-.claude/worktrees/
+.claude/
 
 # Env files
 .env
@@ -25,7 +25,7 @@ soybean-admin-main/dist/
 soybean-admin-main/coverage/
 soybean-admin-main/test-results/
 soybean-admin-main/playwright-report/
-frontend/
+/frontend/
 
 # Backend
 backend/**/target/

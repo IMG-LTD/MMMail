@@ -1,0 +1,35 @@
+{{- $db := .Values.externalDatabase -}}
+{{- $redis := .Values.externalRedis -}}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "mmmail.backendName" . }}-config
+  labels:
+    {{- include "mmmail.labels" . | nindent 4 }}
+    app.kubernetes.io/component: backend
+data:
+  SPRING_PROFILES_ACTIVE: {{ .Values.backend.springProfilesActive | quote }}
+  SERVER_PORT: {{ .Values.backend.service.port | quote }}
+  SERVER_FORWARD_HEADERS_STRATEGY: {{ .Values.backend.forwardHeadersStrategy | quote }}
+  SPRING_DATASOURCE_DRIVER: {{ $db.driver | quote }}
+  SPRING_DATASOURCE_URL: {{ printf "jdbc:mysql://%s:%v/%s?%s" $db.host $db.port $db.name $db.params | quote }}
+  SPRING_DATASOURCE_USERNAME: {{ $db.username | quote }}
+  SPRING_REDIS_HOST: {{ $redis.host | quote }}
+  SPRING_REDIS_PORT: {{ $redis.port | quote }}
+  SPRING_REDIS_DATABASE: {{ $redis.database | quote }}
+  SPRING_REDIS_TIMEOUT: {{ $redis.timeout | quote }}
+  MMMAIL_NACOS_ENABLED: "false"
+  MMMAIL_PUBLIC_BASE_URL: {{ .Values.global.publicBaseUrl | quote }}
+  MMMAIL_CORS_ALLOWED_ORIGINS: {{ .Values.global.corsAllowedOrigins | quote }}
+  MMMAIL_DRIVE_STORAGE_ROOT: {{ .Values.backend.driveStorageRoot | quote }}
+  MMMAIL_BILLING_PROVIDER: {{ .Values.commercial.billing.provider | quote }}
+  MMMAIL_LICENSE_ENABLED: {{ .Values.commercial.license.enabled | quote }}
+  MMMAIL_OIDC_ENABLED: {{ .Values.commercial.oidc.enabled | quote }}
+  MMMAIL_OIDC_ISSUER_URI: {{ .Values.commercial.oidc.issuerUri | quote }}
+  MMMAIL_OIDC_CLIENT_ID: {{ .Values.commercial.oidc.clientId | quote }}
+  MMMAIL_AUDIT_EXPORT_ENABLED: {{ .Values.commercial.auditExport.enabled | quote }}
+  MMMAIL_AUDIT_EXPORT_RETENTION_DAYS: {{ .Values.commercial.auditExport.retentionDays | quote }}
+  MMMAIL_OTEL_ENABLED: {{ .Values.commercial.otel.enabled | quote }}
+  OTEL_SERVICE_NAME: {{ .Values.commercial.otel.serviceName | quote }}
+  OTEL_TRACES_EXPORTER: {{ ternary .Values.commercial.otel.tracesExporter "none" .Values.commercial.otel.enabled | quote }}
+  OTEL_EXPORTER_OTLP_ENDPOINT: {{ .Values.commercial.otel.endpoint | quote }}

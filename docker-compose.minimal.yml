@@ -56,6 +56,8 @@ services:
       MMMAIL_NACOS_ENABLED: "false"
       MMMAIL_JWT_SECRET: ${MMMAIL_JWT_SECRET:-}
       MMMAIL_JWT_SECRET_FILE: ${MMMAIL_JWT_SECRET_FILE:-}
+      MMMAIL_BILLING_WEBHOOK_SECRET: ${MMMAIL_BILLING_WEBHOOK_SECRET:-}
+      MMMAIL_LICENSE_PUBLIC_KEY: ${MMMAIL_LICENSE_PUBLIC_KEY:-}
       MMMAIL_AUTH_CSRF_COOKIE_NAME: ${MMMAIL_AUTH_CSRF_COOKIE_NAME}
       MMMAIL_AUTH_REFRESH_COOKIE_NAME: ${MMMAIL_AUTH_REFRESH_COOKIE_NAME}
       MMMAIL_PUBLIC_BASE_URL: http://localhost:3001
@@ -102,7 +104,7 @@ services:
   frontend:
     build:
       context: .
-      dockerfile: frontend-v2/Dockerfile
+      dockerfile: frontend-admin/Dockerfile
       args:
         VITE_API_BASE_URL: ${VITE_API_BASE_URL}
     container_name: mmmail-frontend

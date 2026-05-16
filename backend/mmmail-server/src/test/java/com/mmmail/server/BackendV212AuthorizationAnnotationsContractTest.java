@@ -13,10 +13,14 @@ import com.mmmail.server.controller.VpnController;
 import com.mmmail.server.controller.WalletController;
 import com.mmmail.server.controller.WalletParityController;
 import com.mmmail.server.controller.WebPushController;
+import com.mmmail.server.commercial.EditionContextResolver;
+import com.mmmail.server.commercial.FeatureGate;
 import com.mmmail.server.security.AuthorizationAnnotationInterceptor;
+import com.mmmail.server.security.CommercialAuthorizationGate;
 import com.mmmail.server.security.JwtPrincipal;
 import com.mmmail.server.security.RequireEntitlement;
 import com.mmmail.server.security.RequireRole;
+import com.mmmail.server.service.AuditService;
 import com.mmmail.server.service.OrgProductAccessGuardService;
 import com.mmmail.server.service.OrgProductAccessService;
 import org.junit.jupiter.api.AfterEach;
@@ -69,7 +73,7 @@ class BackendV212AuthorizationAnnotationsContractTest {
     void entitlementInterceptorShouldEnforceOrgScopedProductAccess() throws Exception {
         OrgProductAccessGuardService guardService = mock(OrgProductAccessGuardService.class);
         OrgProductAccessService accessService = mock(OrgProductAccessService.class);
-        AuthorizationAnnotationInterceptor interceptor = new AuthorizationAnnotationInterceptor(guardService, accessService);
+        AuthorizationAnnotationInterceptor interceptor = interceptor(guardService, accessService);
         MockHttpServletRequest request = new MockHttpServletRequest("GET", "/api/v1/wallet/accounts");
         HandlerMethod handler = new HandlerMethod(new EntitlementFixtureController(), "handle");
         authenticateAs("USER");
@@ -83,7 +87,7 @@ class BackendV212AuthorizationAnnotationsContractTest {
 
     @Test
     void roleInterceptorShouldRejectMissingRole() throws Exception {
-        AuthorizationAnnotationInterceptor interceptor = new AuthorizationAnnotationInterceptor(
+        AuthorizationAnnotationInterceptor interceptor = interceptor(
                 mock(OrgProductAccessGuardService.class),
                 mock(OrgProductAccessService.class)
         );
@@ -112,6 +116,21 @@ class BackendV212AuthorizationAnnotationsContractTest {
 
         assertThat(gate).isNotNull();
         assertThat(gate.value()).containsExactly(role);
+    }
+
+    private AuthorizationAnnotationInterceptor interceptor(
+            OrgProductAccessGuardService guardService,
+            OrgProductAccessService accessService
+    ) {
+        return new AuthorizationAnnotationInterceptor(
+                guardService,
+                accessService,
+                new CommercialAuthorizationGate(
+                        mock(EditionContextResolver.class),
+                        new FeatureGate(),
+                        mock(AuditService.class)
+                )
+        );
     }
 
     private void authenticateAs(String role) {
