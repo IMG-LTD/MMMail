@@ -1,7 +1,7 @@
 ---
 name: v2.2 开源 + 商业化筹备 spec
 date: 2026-05-16
-spec_version: oss-comm-v1.79
+spec_version: oss-comm-v1.81
 based_on:
   - docs/v213-closure-spec-v1.1.md (implemented)
   - docs/v212-shipping-cleanup-spec.md (implemented)
@@ -107,6 +107,8 @@ iteration_history:
   - v1.77 同步 CI 工具链复查：CI pnpm 版本对齐 `frontend-admin` 的 `engines.pnpm >=10.5.0`，并把 GitHub Actions / Docker Actions 升到当前 Node 24 兼容主版本
   - v1.78 同步镜像构建复查：`frontend-admin` 显式声明 Vite config 直接依赖的 `@iconify/utils`，避免 Docker fresh install 依赖 pnpm transitive dependency 泄漏
   - v1.79 同步 Docker context 规范复查：`.dockerignore` 排除 `frontend-admin` 生成产物、本地 agent 目录和 validation cache，避免镜像构建上传 GB 级无关上下文
+  - v1.80 同步 API 生成规范复查：`frontend-admin/scripts/gen-api.mjs` 在 openapi-typescript 后直接执行 `oxfmt`，避免远端 CI 生成类型后因格式漂移触发 clean-diff guard
+  - v1.81 同步前端构建 env 规范复查：`frontend-admin/.env` 与 `.env.test` 作为非敏感 Vite 默认值显式进入 Git 和 Docker context，根目录本地 env 仍保持 ignored
 review_passes:
   - pass-1 现状对账：用 grep / ls / package.json / CI / release-gate 核对已存在与缺失项
   - pass-2 一致性复查：统一 Free-Pro-Business、Adapay 独立仓、个人开发者容量
@@ -189,6 +191,8 @@ review_passes:
   - pass-79 CI 工具链复查：`v2.2.0-rc.1` 的 docker baseline 失败来自 workflow 使用 pnpm 9，而 `frontend-admin/package.json` 要求 pnpm `>=10.5.0`；修复为统一 `MMMAIL_PNPM_VERSION=10.5.0` 并升级 actions major，避免 Node 20 actions deprecation 进入 2026-06 强制切换窗口
   - pass-80 image publishing 复查：frontend-admin 镜像 fresh install 失败来自 `build/plugins/unocss.ts` 直接 import `@iconify/utils` 但 package 未声明直接依赖；修复为显式 devDependency，并用 CI toolchain contract 固定
   - pass-81 Docker context 复查：本地 frontend-admin 镜像 clean build 证明缺失依赖修复有效，同时暴露 `.dockerignore` 未排除 `frontend-admin/node_modules`、`.claude`、`.tools` 等目录导致 context 约 1GB；修复后由 CI toolchain contract 固定
+  - pass-82 API 生成 clean-diff 复查：远端 rc2 CI 暴露 `gen:api` 输出未格式化，根因是脚本只跑 openapi-typescript 未跑项目 formatter；修复为生成脚本内联 `oxfmt`
+  - pass-83 frontend-admin env 复查：远端 rc2 镜像 fresh build 暴露 Vite config 必需的 `VITE_ICON_LOCAL_PREFIX` 只存在本地未跟踪 `.env`；修复为跟踪非敏感前端默认 env，并让 `.dockerignore` 只排除根目录 env
 ---
 
 # v2.2 开源 + 商业化筹备 spec
@@ -1067,7 +1071,7 @@ mmmail-billing-gateway (private)
 - `bash scripts/release-gate.sh` 输出新增 step。
 - 最终 `git diff --exit-code` 仍保留。
 
-**当前落地状态（2026-05-17 / pass-81）**：
+**当前落地状态（2026-05-17 / pass-83）**：
 - `tests/v22-legacy-frontend-contract-migration.test.mjs` 已作为 `legacy-contract-migration` gate，证明 selected legacy contracts 已迁入 root tests / `frontend-admin`，并证明旧迁移信号脚本和 CI job 不会被重新引入。
 - `BackendV22CommercialSurfaceCoverageContractTest` 已作为 commercial surface coverage gate，证明当前 v2.2 OIDC / audit / DSR Business API 有服务端 feature gate，并证明 license upgrade path 与 billing webhook 是显式例外而非 silent paid fallback。
 - 已新增 `scripts/generate-sbom-license-report.mjs`，默认输出到系统临时目录 `mmmail-supply-chain`；可用 `MMMAIL_SUPPLY_CHAIN_REPORT_DIR` 显式指定目录，避免在仓库内留下 `artifacts/`。
@@ -1085,6 +1089,8 @@ mmmail-billing-gateway (private)
 - `.github/workflows/ci.yml` 使用 `MMMAIL_PNPM_VERSION=10.5.0`，和 `frontend-admin/package.json` 的 pnpm engine 下限一致；`.github/workflows/ci.yml`、`.github/workflows/images.yml`、`.github/workflows/dco.yml` 已升级到当前 Node 24 兼容 action major。
 - `docs/superpowers/specs/2026-05-15-v212-decision-log.md`、`2026-05-15-v212-module-design-coverage.md`、`2026-05-15-collab-sheets-board-design.md` 是 root contract 读取的 fixture 文档，必须跟随测试一起进入 Git 跟踪。
 - `.dockerignore` 明确排除 `frontend-admin/node_modules`、`frontend-admin/dist`、`.claude`、`.tools`、`artifacts` 等本地产物和缓存目录，防止 image workflow 上传无关 GB 级 context。
+- `frontend-admin/scripts/gen-api.mjs` 在 `openapi-typescript` 后立即执行 `oxfmt`，因此 CI 的 generated API clean-diff guard 不再依赖开发者手动格式化生成产物。
+- `frontend-admin/.env` 与 `frontend-admin/.env.test` 仅包含非敏感 Vite 构建默认值并进入 Git 跟踪；`.dockerignore` 只排除根目录 `.env*`，确保 Docker fresh build 能读取 `VITE_ICON_PREFIX`、`VITE_ICON_LOCAL_PREFIX` 等必需配置。
 - `.github/workflows/ci.yml` 已在 validate / release-gate job 安装 Helm。
 - `tests/v22-repository-governance-contract.test.mjs`、`tests/v22-repository-governance-validation-contract.test.mjs`、`tests/v22-deployment-helm-contract.test.mjs` 与 `tests/v22-image-publishing-contract.test.mjs` 已覆盖脚本存在、门禁接入和产物可解析。
 

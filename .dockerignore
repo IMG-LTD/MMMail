@@ -10,9 +10,10 @@
 .vscode
 artifacts
 
-.env
-.env.local
-.env.*.local
+/.env
+/.env.local
+/.env.*.local
+/.env.test
 
 frontend-v2/node_modules
 frontend-v2/dist

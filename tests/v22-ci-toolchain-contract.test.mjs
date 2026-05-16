@@ -13,6 +13,7 @@ const requiredTrackedDocs = [
   'docs/superpowers/specs/2026-05-15-v212-module-design-coverage.md',
   'docs/superpowers/specs/2026-05-15-collab-sheets-board-design.md'
 ];
+const requiredTrackedFrontendEnv = ['frontend-admin/.env', 'frontend-admin/.env.test'];
 
 async function read(path) {
   return readFile(new URL(path, root), 'utf8');
@@ -77,6 +78,33 @@ test('frontend Docker build declares direct Vite config dependencies', async () 
   const packageJson = JSON.parse(await read('frontend-admin/package.json'));
 
   assert.equal(packageJson.devDependencies['@iconify/utils'], '3.1.3');
+});
+
+test('frontend API type generation formats generated output before CI diff guard', async () => {
+  const [packageJson, script] = await Promise.all([
+    read('frontend-admin/package.json').then(JSON.parse),
+    read('frontend-admin/scripts/gen-api.mjs')
+  ]);
+
+  assert.equal(packageJson.devDependencies.oxfmt, '^0.49.0');
+  assert.match(script, /openapi-typescript/);
+  assert.match(script, /oxfmt/);
+  assert.match(script, /src\/service\/api\/__generated__\/openapi\.d\.ts/);
+});
+
+test('frontend Docker build tracks non-secret Vite env defaults', async () => {
+  const [gitIgnore, dockerIgnore] = await Promise.all([read('.gitignore'), read('.dockerignore')]);
+  const tracked = await trackedFiles(requiredTrackedFrontendEnv);
+
+  for (const path of requiredTrackedFrontendEnv) {
+    assert.equal(tracked.has(path), true, `${path} must be tracked`);
+    assert.match(gitIgnore, new RegExp(`^!${path.replaceAll('.', '\\.')}$`, 'm'));
+  }
+
+  assert.match(dockerIgnore, /^\/\.env$/m);
+  assert.match(dockerIgnore, /^\/\.env\.test$/m);
+  assert.doesNotMatch(dockerIgnore, /^frontend-admin\/\.env$/m);
+  assert.doesNotMatch(dockerIgnore, /^frontend-admin\/\.env\.test$/m);
 });
 
 test('Docker build context excludes generated and local agent artifacts', async () => {

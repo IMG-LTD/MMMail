@@ -12,6 +12,10 @@
 .env.test
 config/*.local
 
+# frontend-admin uses these non-secret Vite defaults during CI and Docker builds.
+!frontend-admin/.env
+!frontend-admin/.env.test
+
 # Frontend
 frontend-v2/node_modules
 frontend-v2/dist
