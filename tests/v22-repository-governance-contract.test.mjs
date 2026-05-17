@@ -291,7 +291,7 @@ test('v2.2 completion audit maps the objective to concrete evidence and external
   assert.match(audit, /GitHub private vulnerability reporting/);
   assert.match(audit, /live Keycloak login, callback, MMMail session, logout, and token refresh e2e evidence/);
   assert.match(audit, /GATE-01 requires the live Keycloak e2e gate evidence/);
-  assert.match(audit, /successful `v2\.2\.0-rc\.10` Images workflow[\s\S]*completed image digest evidence/);
+  assert.match(audit, /successful tag-baseline Images workflows through `v2\.2\.0-rc\.13`[\s\S]*completed image digest evidence/);
   assert.match(audit, /independent billing repository/);
   assert.match(audit, /Generated type and diff hygiene/);
   assert.match(audit, /`gen:api` runs `openapi-typescript` and then `oxfmt`/);
@@ -329,11 +329,11 @@ test('v2.2 completion audit maps the objective to concrete evidence and external
   assert.match(audit, /tag `v2\.2\.0-rc\.6`/);
   assert.match(audit, /explicitly use the historical desktop Lighthouse preset[\s\S]*tag `v2\.2\.0-rc\.7`/);
   assert.match(audit, /not acceptable release evidence/);
-  assert.match(audit, /25977701508[\s\S]*25977702756[\s\S]*rc10 provides a main-repo remote release evidence baseline/);
+  assert.match(audit, /25977701508[\s\S]*25977702756[\s\S]*rc10 provided the first clean main-repo remote release evidence baseline[\s\S]*25979632379[\s\S]*v2\.2\.0-rc\.13[\s\S]*historical evidence/);
   assert.match(audit, /same Public MMMail commit/);
   assert.match(audit, /not complete until the external evidence gaps above are resolved/);
   assert.match(spec, /status: main-repo-implemented-external-evidence-required/);
-  assert.match(spec, /spec_version: oss-comm-v1\.91/);
+  assert.match(spec, /spec_version: oss-comm-v1\.93/);
   for (const requiredPass of [
     /pass-51 外部状态核查/, /pass-52 OTel 文档复查/, /pass-53 live OIDC 证据模板复查/,
     /pass-54 DEP-02 \/ billing 外部证据模板复查/, /pass-55 远端 CI 状态复查/, /pass-56 后端 v2\.2 contract 新鲜验证/,
@@ -421,7 +421,7 @@ test('v2.2 completion audit maps the objective to concrete evidence and external
     /release tag named by the image digest evidence must be visible on `origin`/,
     /origin\/main` or `origin\/release\/\*`/,
     /live OIDC evidence file is not provided/,
-    /rc10 `MMMail Images` success is historical baseline evidence only/,
+    /visible rc10 through rc13 `MMMail Images` successes are historical baseline evidence only/,
     /final image digest acceptance must come from a tag and workflow tied to the same Public MMMail commit/,
     /backend GHCR package versions are not visible/,
     /private billing repository is not accessible/,

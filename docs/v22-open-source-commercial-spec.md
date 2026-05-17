@@ -1,7 +1,7 @@
 ---
 name: v2.2 开源 + 商业化筹备 spec
 date: 2026-05-16
-spec_version: oss-comm-v1.91
+spec_version: oss-comm-v1.93
 based_on:
   - docs/v213-closure-spec-v1.1.md (implemented)
   - docs/v212-shipping-cleanup-spec.md (implemented)
@@ -120,6 +120,7 @@ iteration_history:
   - v1.90 同步 release evidence 文案稳定性复查：把 rc10 远端结果描述为主仓门禁基线证据，避免每次 docs-only 证据同步提交都把 spec 的“current run”字段变陈旧
   - v1.91 同步供应链安全规范复查：Dependabot open alert 处理、前端脆弱 transitive 版本 overrides、Bouncy Castle patched baseline、GHCR `read:packages` 证据权限和根目录供应链合约进入仓库规范
   - v1.92 同步主分支证据复查：供应链审计同步提交的远端 CI 成功，rc10 image workflow 只作为历史基线；最终 DEP-02 / OIDC / billing 外部证据必须锚定同一个待验收 Public MMMail commit
+  - v1.93 同步 DEP-02 证据链复查：远端可见 `MMMail Images` 已有 rc10-rc13 成功 tag-baseline，最新可见成功为 rc13；这些仍只是历史 workflow baseline，不替代同 commit digest evidence、GHCR 可见性和 release notes
 review_passes:
   - pass-1 现状对账：用 grep / ls / package.json / CI / release-gate 核对已存在与缺失项
   - pass-2 一致性复查：统一 Free-Pro-Business、Adapay 独立仓、个人开发者容量
@@ -380,7 +381,7 @@ v2.2 的落地结论是：**只保留一个产品前端：`frontend-admin`。`fr
 | 企业 | 审计日志导出 | 已新增 v2 JSONL / SIEM export、Business `audit.export` gate 和 `docs/compliance/audit-export.md` | P0 done |
 | 企业 | DSR 导出 / 删除 / 匿名化 | 已新增 Business-gated DSR export/erasure job、public status、`docs/compliance/data-inventory.yaml` 和 inventory gate | P0 done |
 | 部署 | Helm chart | 已新增 `helm/mmmail` chart、`docs/ops/helm.md` 和 `scripts/validate-helm-chart.sh`，CI / validate-local / release-gate 已接入 Helm 校验 | P0 done；真实镜像 tag / digest 归 DEP-02 |
-| 部署 | 镜像发布流水 | 已新增 GHCR buildx multi-arch workflow，matrix 只包含 backend 与 frontend-admin，release notes 模板要求记录 digest；`v2.2.0-rc.10` 的 `MMMail Images` workflow 已成功构建 backend 与 frontend-admin | P0 partial done；仍需完成 image digest evidence 文件、可见 GHCR package / digest 证据和 release note 记录后才能转 done |
+| 部署 | 镜像发布流水 | 已新增 GHCR buildx multi-arch workflow，matrix 只包含 backend 与 frontend-admin，release notes 模板要求记录 digest；远端可见 `v2.2.0-rc.10` 到 `v2.2.0-rc.13` 的 `MMMail Images` tag-baseline 已成功构建 backend 与 frontend-admin | P0 partial done；仍需完成 image digest evidence 文件、可见 GHCR package / digest 证据和 release note 记录后才能转 done |
 | 可观测 | OpenTelemetry tracing | 已新增 runtime tracing 依赖、配置、`RuntimeTraceService`、HTTP/DB/Redis/billing webhook/license/OIDC callback span、`docs/observability/opentelemetry.md`、`BackendV22OpenTelemetryContractTest` 和 `BackendV22OidcSsoContractTest` | P0 partial done；live Keycloak e2e 的真实 route/error trace evidence 待补 |
 | 可观测 | SLI/SLO 文档 | 已新增 `docs/observability/sli-slo.md`，覆盖 API p99、5xx rate、billing webhook success rate、license verification failure rate、OIDC callback failure rate，且明确不是对外 SLA | P0 done |
 
@@ -1122,7 +1123,7 @@ mmmail-billing-gateway (private)
 - `backend/pom.xml` 固定 Spring Boot 3.5.14、Tomcat 10.1.55、Spring Security 6.5.10、Log4j 2.26.0、Netty 4.1.133.Final、OpenTelemetry semconv 1.41.1、Kotlin stdlib 2.3.21 和 Bouncy Castle 1.84；`DependencyVersionGuardTest` 覆盖这些运行时版本下限，避免后续 OWASP dependency-check 漂移或 Dependabot 漂移只在远端 validate 暴露。
 - `frontend-admin/package.json` 的 `pnpm.overrides` 固定当前 Dependabot 告警涉及的 `braces@3.0.3`、`glob@10.5.0`、`postcss@8.5.14` 和 `postcss-prefix-selector@2.1.1`，并由 `tests/v22-supply-chain-security-contract.test.mjs` 验证旧脆弱 lockfile 条目不回流。
 - `config/dependency-check-suppressions.xml` 只对 Java `opentelemetry-semconv@1.41.1` package URL 与 OpenTelemetry-Go CVE 做精确 suppression；`scripts/security-backend-dependency-scan.sh` 和 `scripts/validate-security.sh` 均把相对 `MMMAIL_SECURITY_REPORT_DIR` 解析到仓库根绝对路径，避免 Maven `-f backend/pom.xml` 把报告写入 `backend/artifacts/security`。
-- `MMMail CI` run `25977701508` 与 `MMMail Images` run `25977702756` 已在 commit `50165923` / tag `v2.2.0-rc.10` 成功；这是主仓远端门禁的可复查基线证据，不替代最新提交的 GitHub Actions 状态，也不替代 live Keycloak/OIDC、image digest evidence 文件或 private billing repository 的外部验收。
+- `MMMail CI` run `25977701508` 与 `MMMail Images` run `25977702756` 已在 commit `50165923` / tag `v2.2.0-rc.10` 成功；后续可见 `MMMail Images` run `25979632379` 已在 commit `de152921` / tag `v2.2.0-rc.13` 成功；这些是主仓远端门禁的可复查历史基线证据，不替代最新提交的 GitHub Actions 状态，也不替代 live Keycloak/OIDC、image digest evidence 文件或 private billing repository 的外部验收。
 - `.github/workflows/ci.yml` 已在 validate / release-gate job 安装 Helm。
 - `tests/v22-repository-governance-contract.test.mjs`、`tests/v22-repository-governance-validation-contract.test.mjs`、`tests/v22-deployment-helm-contract.test.mjs` 与 `tests/v22-image-publishing-contract.test.mjs` 已覆盖脚本存在、门禁接入和产物可解析。
 

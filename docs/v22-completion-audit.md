@@ -112,9 +112,10 @@ The latest targeted verification for this audit:
 | `timeout 60s mvn -f backend/pom.xml -pl mmmail-server -am -Dtest=BackendV22EditionCoreContractTest -Dsurefire.failIfNoSpecifiedTests=false test` | 6 passed, build success |
 | `timeout 60s mvn -f backend/pom.xml -pl mmmail-server -am -Dtest=BackendV22CommercialSurfaceCoverageContractTest -Dsurefire.failIfNoSpecifiedTests=false test` | 4 passed, build success |
 | `timeout 60s mvn -f backend/pom.xml -pl mmmail-server -am -Dtest=BackendV22EditionCoreContractTest,BackendV22LicenseVerifierContractTest,BackendV22BillingWebhookContractTest,BackendV22EntitlementEnforcementContractTest,BackendV22CommercialSurfaceCoverageContractTest,BackendV22LicenseManagementApiContractTest,BackendV22AuditExportContractTest,BackendV22DsrContractTest,BackendV22OpenTelemetryContractTest,BackendV22OidcSsoContractTest -Dsurefire.failIfNoSpecifiedTests=false test` | 41 passed, build success |
-| `bash scripts/validate-v22-external-evidence.sh` | Expected failure while external evidence remains incomplete; after rc10, the image workflow has succeeded but completed image digest evidence files, visible GHCR package metadata and private billing evidence are still unavailable |
+| `bash scripts/validate-v22-external-evidence.sh` | Expected failure while external evidence remains incomplete; after the visible rc10 through rc13 tag baselines, the image workflow has succeeded but completed image digest evidence files, visible GHCR package metadata and private billing evidence are still unavailable |
 | `gh run view 25977701508 --repo IMG-LTD/MMMail --json status,conclusion,jobs,url,headSha,headBranch,event,displayTitle` | Remote `MMMail CI` for commit `50165923` / tag `v2.2.0-rc.10` completed with success across backend, frontend, Docker baseline, validate and release-gate jobs |
 | `gh run view 25977702756 --repo IMG-LTD/MMMail --json status,conclusion,jobs,url,headSha,headBranch,event,displayTitle` | Remote `MMMail Images` for commit `50165923` / tag `v2.2.0-rc.10` completed with success for backend and frontend-admin image jobs |
+| `gh run list --repo IMG-LTD/MMMail --workflow "MMMail Images" --limit 5 --json databaseId,status,conclusion,headSha,event,headBranch,displayTitle,url,createdAt` | Latest visible `MMMail Images` push baseline is run `25979632379` for `v2.2.0-rc.13` at commit `de1529218714ef35926ba3f8116c0323b4f95487`; it is still historical baseline evidence, not completed digest evidence for the current acceptance commit |
 | `timeout 120s bash scripts/validate-v22-external-evidence.sh` | Expected failure with status 1 after the latest branch publication: completion audit/checklist still mark external evidence incomplete; live OIDC, image digest and private billing evidence files are missing; backend and frontend-admin GHCR package versions require `gh auth` with `read:packages`; private billing repository is not accessible |
 
 ## Remaining Evidence Gaps
@@ -123,7 +124,7 @@ These items cannot be completed by repository edits alone without live infrastru
 
 1. BUS-01 requires live Keycloak login, callback, MMMail session, logout, and token refresh e2e evidence before it can move from partial done to done.
 2. OBS-01 requires the live Keycloak route/error trace evidence tied to BUS-01 before it can move from partial done to done.
-3. DEP-02 has a successful `v2.2.0-rc.10` Images workflow, but still requires completed image digest evidence, visible GHCR package / digest evidence, and release note recording before the image-publishing item can move from partial done to done.
+3. DEP-02 has visible successful tag-baseline Images workflows through `v2.2.0-rc.13`, but still requires completed image digest evidence, visible GHCR package / digest evidence, and release note recording before the image-publishing item can move from partial done to done.
 4. GATE-01 requires the live Keycloak e2e gate evidence before the release gate expansion can move from partial done to done.
 5. Real payment processing, customer portal, invoices/refunds, and license signing private keys remain outside the public repository in the independent billing repository.
 
@@ -155,11 +156,13 @@ The follow-up commit `61293d4493294801368a7bb63a9353a9f5a7a373` and tag `v2.2.0-
 
 The follow-up commit `921108688aa2e3b9f0a08bfba05d0555e1bd2489` and tag `v2.2.0-rc.9` fixed the OpenTelemetry dependency-check false positive. rc9 is still not acceptable release evidence because remote dependency-check then reached `BUILD SUCCESS`, but `validate-security.sh` could not find the generated HTML/JSON reports. The root cause is path resolution: CI sets `MMMAIL_SECURITY_REPORT_DIR=artifacts/security`, and Maven executed with `-f backend/pom.xml` wrote that relative path under `backend/artifacts/security` while the validator checked `artifacts/security` at the repository root. Security report paths now normalize relative env values to `$ROOT_DIR/...` before invoking Maven and before checking required reports.
 
-The follow-up commit `50165923b6dddc6c2f9d96dc5ab7bb2c8b47a2d4` and tag `v2.2.0-rc.10` fixed the security report path issue. `MMMail CI` run `25977701508` and `MMMail Images` run `25977702756` both completed with success for that commit; rc10 provides a main-repo remote release evidence baseline for the repository gates and image workflow.
+The follow-up commit `50165923b6dddc6c2f9d96dc5ab7bb2c8b47a2d4` and tag `v2.2.0-rc.10` fixed the security report path issue. `MMMail CI` run `25977701508` and `MMMail Images` run `25977702756` both completed with success for that commit; rc10 provided the first clean main-repo remote release evidence baseline for the repository gates and image workflow.
+
+The later visible `MMMail Images` tag-baseline run `25979632379` also completed with success for `v2.2.0-rc.13` at commit `de1529218714ef35926ba3f8116c0323b4f95487`. This keeps the image workflow baseline fresher than rc10, but it is still historical evidence and does not supply completed digest evidence for the current acceptance commit.
 
 The later supply-chain hardening commit `a340c62e1045e55b9bb316b048b818044f6dc807` also completed remote `MMMail CI` run `25980457119` with success, and the follow-up audit sync commit `4052934fccc818ffeb4cf06ab54fe50744dec0be` completed remote `MMMail CI` run `25980751689` with success. These runs keep the branch evidence green, but they are not image digest or live-environment acceptance evidence.
 
-The rc10 image workflow evidence is now historical baseline evidence only. Final DEP-02 image digest acceptance must be produced from a tag and image workflow tied to the same Public MMMail commit as the completed OIDC, image, and private billing evidence packages.
+The rc10 through rc13 image workflow evidence is now historical baseline evidence only. Final DEP-02 image digest acceptance must be produced from a tag and image workflow tied to the same Public MMMail commit as the completed OIDC, image, and private billing evidence packages.
 
 Those main-repo remote gates still do not complete v2.2 external acceptance. The manual external verifier continues to fail because live OIDC evidence, image digest evidence files, private billing evidence, GHCR package visibility and the private billing repository are still unavailable in the current environment.
 
