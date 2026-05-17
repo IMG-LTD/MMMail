@@ -94,4 +94,4 @@ It also reports current read-only evidence gaps that can be evaluated before the
 - `frontend-admin GHCR package versions are not visible`
 - `private billing repository is not accessible`
 
-If the GHCR rows fail with HTTP 403 or GitHub's `read:packages` message, the missing item remains visible until package metadata can be read with an appropriately scoped token. The verifier still retains publication precondition and workflow visibility checks for regressions, but rc10 already provides successful `MMMail Images` workflow visibility for the current main-repo commit.
+If the GHCR rows fail with HTTP 403 or GitHub's `read:packages` message, the missing item remains visible until package metadata can be read with an appropriately scoped token. The verifier still retains publication precondition and workflow visibility checks for regressions. The rc10 `MMMail Images` success is historical baseline evidence only; final image digest acceptance must come from a tag and workflow tied to the same Public MMMail commit as the other completed evidence packages.

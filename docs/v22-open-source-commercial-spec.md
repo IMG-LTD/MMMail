@@ -119,6 +119,7 @@ iteration_history:
   - v1.89 同步 rc10 远端主仓发布证据复查：远端 CI 与 Images workflow 均在 `50165923` / `v2.2.0-rc.10` 成功，主仓门禁闭环；外部 verifier 仍因 live OIDC、image digest evidence 文件、GHCR package visibility 和 private billing repo 证据缺失而失败
   - v1.90 同步 release evidence 文案稳定性复查：把 rc10 远端结果描述为主仓门禁基线证据，避免每次 docs-only 证据同步提交都把 spec 的“current run”字段变陈旧
   - v1.91 同步供应链安全规范复查：Dependabot open alert 处理、前端脆弱 transitive 版本 overrides、Bouncy Castle patched baseline、GHCR `read:packages` 证据权限和根目录供应链合约进入仓库规范
+  - v1.92 同步当前主分支证据复查：`4052934f` 远端 CI 成功，rc10 image workflow 只作为历史基线；最终 DEP-02 / OIDC / billing 外部证据必须锚定同一个待验收 Public MMMail commit
 review_passes:
   - pass-1 现状对账：用 grep / ls / package.json / CI / release-gate 核对已存在与缺失项
   - pass-2 一致性复查：统一 Free-Pro-Business、Adapay 独立仓、个人开发者容量
