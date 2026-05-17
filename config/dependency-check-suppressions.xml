@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<suppressions xmlns="https://jeremylong.github.io/DependencyCheck/dependency-suppression.1.3.xsd">
+    <suppress>
+        <notes><![CDATA[
+        False positive for Java artifact io.opentelemetry.semconv:opentelemetry-semconv@1.41.1.
+        CVE-2026-39882 and CVE-2026-39883 target OpenTelemetry-Go packages
+        go.opentelemetry.io/otel/exporters/otlp/otlptrace/otlptracehttp and go.opentelemetry.io/otel/sdk.
+        Keep the suppression narrow to the exact Maven package URL and CVEs so unrelated OpenTelemetry findings still fail CI.
+        ]]></notes>
+        <packageUrl>pkg:maven/io.opentelemetry.semconv/opentelemetry-semconv@1.41.1</packageUrl>
+        <cve>CVE-2026-39882</cve>
+        <cve>CVE-2026-39883</cve>
+    </suppress>
+</suppressions>

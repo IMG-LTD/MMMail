@@ -117,6 +117,20 @@ test('backend dependency scan baseline declares patched runtime versions', async
   assert.match(guard, /kotlin-stdlib version %s should be at least 2\.3\.21/);
 });
 
+test('backend dependency scan keeps OpenTelemetry false-positive suppression explicit', async () => {
+  const [script, suppressions] = await Promise.all([
+    read('scripts/security-backend-dependency-scan.sh'),
+    read('config/dependency-check-suppressions.xml')
+  ]);
+
+  assert.match(script, /SUPPRESSION_FILE="\$ROOT_DIR\/config\/dependency-check-suppressions\.xml"/);
+  assert.match(script, /-DsuppressionFile="\$SUPPRESSION_FILE"/);
+  assert.match(suppressions, /pkg:maven\/io\.opentelemetry\.semconv\/opentelemetry-semconv@1\.41\.1/);
+  assert.match(suppressions, /CVE-2026-39882/);
+  assert.match(suppressions, /CVE-2026-39883/);
+  assert.match(suppressions, /go\.opentelemetry\.io\/otel\/sdk/);
+});
+
 test('frontend API type generation formats generated output before CI diff guard', async () => {
   const [packageJson, script] = await Promise.all([
     read('frontend-admin/package.json').then(JSON.parse),

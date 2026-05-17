@@ -10,6 +10,7 @@ MVN_BIN="$(resolve_maven_bin "$ROOT_DIR")"
 DEFAULT_REPORT_DIR="${TMPDIR:-/tmp}/mmmail-security"
 REPORT_DIR="${MMMAIL_SECURITY_REPORT_DIR:-$DEFAULT_REPORT_DIR}/dependency-check"
 DATA_DIR="${MMMAIL_DEPENDENCY_CHECK_DATA_DIR:-$ROOT_DIR/.tools/dependency-check-data}"
+SUPPRESSION_FILE="$ROOT_DIR/config/dependency-check-suppressions.xml"
 FAIL_ON_CVSS="${MMMAIL_DEPENDENCY_SCAN_FAIL_ON_CVSS:-7}"
 TIMEOUT_SECONDS="${MMMAIL_DEPENDENCY_SCAN_TIMEOUT_SECONDS:-900}"
 mkdir -p "$REPORT_DIR" "$DATA_DIR"
@@ -27,6 +28,7 @@ maven_args=(
   -Dodc.outputDirectory="$REPORT_DIR"
   -DdataDirectory="$DATA_DIR"
   -DfailBuildOnCVSS="$FAIL_ON_CVSS"
+  -DsuppressionFile="$SUPPRESSION_FILE"
 )
 
 if [[ -n "${MMMAIL_NVD_API_KEY:-}" ]]; then

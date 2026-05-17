@@ -1,7 +1,7 @@
 ---
 name: v2.2 开源 + 商业化筹备 spec
 date: 2026-05-16
-spec_version: oss-comm-v1.86
+spec_version: oss-comm-v1.87
 based_on:
   - docs/v213-closure-spec-v1.1.md (implemented)
   - docs/v212-shipping-cleanup-spec.md (implemented)
@@ -114,6 +114,7 @@ iteration_history:
   - v1.84 同步后端依赖安全基线复查：远端 rc5 validate 的 OWASP dependency-check 暴露 Boot / Tomcat / Log4j / Netty / OTel / Kotlin 等运行时依赖需要补丁线升级，后端 POM 与 `DependencyVersionGuardTest` 固定新安全下限
   - v1.85 同步 Lighthouse 测量条件复查：远端 rc6 暴露登录页 Lighthouse 在默认移动测量条件下边界抖动到 80；修复为显式使用 desktop preset，阈值仍保持 `> 80`
   - v1.86 同步登录首屏性能规范复查：远端 rc7 证明仅固定 desktop preset 仍会在 CI 抖动到 80；密码登录首屏改为原生表单控件，去除 Naive 表单组件首屏依赖，契约测试阻止回归，Lighthouse fresh build 提升到 performance=86
+  - v1.87 同步 dependency-check 误报治理：远端 rc8 validate 暴露 `opentelemetry-semconv@1.41.1` 被 CPE 误配到 OpenTelemetry-Go CVE；新增精确 package URL + CVE suppression，不降低 CVSS 门槛、不关闭依赖扫描
 review_passes:
   - pass-1 现状对账：用 grep / ls / package.json / CI / release-gate 核对已存在与缺失项
   - pass-2 一致性复查：统一 Free-Pro-Business、Adapay 独立仓、个人开发者容量
@@ -203,6 +204,7 @@ review_passes:
   - pass-86 后端依赖安全基线复查：远端 rc5 validate 暴露 OWASP dependency-check 高危依赖失败；修复为 Spring Boot 3.5.14、Tomcat 10.1.55、Spring Security 6.5.10、Log4j 2.26.0、Netty 4.1.133.Final、OpenTelemetry semconv 1.41.1、Kotlin stdlib 2.3.21，并纳入运行时版本 guard
   - pass-87 Lighthouse desktop preset 复查：远端 rc6 暴露 `run-lighthouse.mjs` 未固定 desktop preset，CI 下登录页分数正好为 80 时失败；修复为显式 desktop preset，不降低 `MIN_LIGHTHOUSE_SCORE = 80` 且继续要求 `score > 80`
   - pass-88 密码登录首屏性能复查：远端 rc7 在 desktop preset 下仍为 80，说明首屏依赖余量不足；`pwd-login.vue` 改为原生 `auth-native-form`，移除 `NForm` / `NInput` / `NButton` / `NCheckbox` / `NDivider` / `NAlert` 和 `useNaiveForm` / `useFormRules` 首屏依赖，本地 Lighthouse fresh build 为 performance=86
+  - pass-89 依赖扫描误报治理复查：远端 rc8 的 backend、frontend、Docker baseline、release-gate 和 Images 均已通过，validate 仅因 `CVE-2026-39883` 命中 Java `opentelemetry-semconv` 的 CPE 误报失败；新增 `config/dependency-check-suppressions.xml` 并由 security scan 脚本显式加载，范围限定为该 Maven package URL 与两个 OpenTelemetry-Go CVE
 ---
 
 # v2.2 开源 + 商业化筹备 spec

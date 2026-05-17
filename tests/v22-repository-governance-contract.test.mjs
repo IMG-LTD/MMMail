@@ -305,7 +305,8 @@ test('v2.2 completion audit maps the objective to concrete evidence and external
   assert.match(audit, /OWASP dependency-check failures/);
   assert.match(audit, /dependency-check-maven:aggregate/);
   assert.match(audit, /Spring Boot 3\.5\.14/);
-  assert.match(audit, /OpenTelemetry semconv 1\.41\.1/);
+  assert.match(audit, /OpenTelemetry-Go CVEs/);
+  assert.match(audit, /config\/dependency-check-suppressions\.xml/);
   assert.match(audit, /Kotlin stdlib 2\.3\.21/);
   assert.match(audit, /git diff --check/);
   assert.match(audit, /Only `mmmail-nacos` and `mmmail-kafka` are running/);
@@ -332,7 +333,7 @@ test('v2.2 completion audit maps the objective to concrete evidence and external
   assert.match(audit, /same Public MMMail commit/);
   assert.match(audit, /not complete until the external evidence gaps above are resolved/);
   assert.match(spec, /status: main-repo-implemented-external-evidence-required/);
-  assert.match(spec, /spec_version: oss-comm-v1\.86/);
+  assert.match(spec, /spec_version: oss-comm-v1\.87/);
   for (const requiredPass of [
     /pass-51 外部状态核查/, /pass-52 OTel 文档复查/, /pass-53 live OIDC 证据模板复查/,
     /pass-54 DEP-02 \/ billing 外部证据模板复查/, /pass-55 远端 CI 状态复查/, /pass-56 后端 v2\.2 contract 新鲜验证/,
@@ -345,7 +346,8 @@ test('v2.2 completion audit maps the objective to concrete evidence and external
     /pass-75 完成态发布前置条件加固复查/, /pass-76 仓库规范超大文件复查/, /pass-77 仓库规范源码行数与本地产物复查/,
     /pass-81 Docker context 复查/, /pass-82 API 生成 clean-diff 复查/, /pass-83 frontend-admin env 复查/,
     /pass-84 frontend e2e Java 工具链复查/, /pass-85 Lighthouse 直接依赖复查/, /pass-86 后端依赖安全基线复查/,
-    /pass-87 Lighthouse desktop preset 复查/, /pass-88 密码登录首屏性能复查/
+    /pass-87 Lighthouse desktop preset 复查/, /pass-88 密码登录首屏性能复查/,
+    /pass-89 依赖扫描误报治理复查/
   ]) {
     assert.match(spec, requiredPass);
   }
