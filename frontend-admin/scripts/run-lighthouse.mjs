@@ -37,6 +37,7 @@ try {
     port: chrome.port,
     output: 'json',
     logLevel: 'error',
+    preset: 'desktop',
     onlyCategories: ['performance']
   });
   const score = (result?.lhr.categories.performance.score || 0) * 100;

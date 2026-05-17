@@ -325,12 +325,14 @@ test('v2.2 completion audit maps the objective to concrete evidence and external
   assert.match(audit, /tag `v2\.2\.0-rc\.5`/);
   assert.match(audit, /MMMail Images` succeeded for backend and frontend-admin/);
   assert.match(audit, /opentelemetry-semconv/);
+  assert.match(audit, /tag `v2\.2\.0-rc\.6`/);
+  assert.match(audit, /explicitly use the historical desktop Lighthouse preset/);
   assert.match(audit, /not acceptable release evidence/);
   assert.match(audit, /follow-up commit and a new tag-triggered `MMMail Images` run/);
   assert.match(audit, /same Public MMMail commit/);
   assert.match(audit, /not complete until the external evidence gaps above are resolved/);
   assert.match(spec, /status: main-repo-implemented-external-evidence-required/);
-  assert.match(spec, /spec_version: oss-comm-v1\.84/);
+  assert.match(spec, /spec_version: oss-comm-v1\.85/);
   for (const requiredPass of [
     /pass-51 外部状态核查/, /pass-52 OTel 文档复查/, /pass-53 live OIDC 证据模板复查/,
     /pass-54 DEP-02 \/ billing 外部证据模板复查/, /pass-55 远端 CI 状态复查/, /pass-56 后端 v2\.2 contract 新鲜验证/,
@@ -342,7 +344,8 @@ test('v2.2 completion audit maps the objective to concrete evidence and external
     /pass-72 仓库规范 release-gate 复查/, /pass-73 外部 verifier 发布前置条件复查/, /pass-74 默认门禁外部 verifier 隔离复查/,
     /pass-75 完成态发布前置条件加固复查/, /pass-76 仓库规范超大文件复查/, /pass-77 仓库规范源码行数与本地产物复查/,
     /pass-81 Docker context 复查/, /pass-82 API 生成 clean-diff 复查/, /pass-83 frontend-admin env 复查/,
-    /pass-84 frontend e2e Java 工具链复查/, /pass-85 Lighthouse 直接依赖复查/, /pass-86 后端依赖安全基线复查/
+    /pass-84 frontend e2e Java 工具链复查/, /pass-85 Lighthouse 直接依赖复查/, /pass-86 后端依赖安全基线复查/,
+    /pass-87 Lighthouse desktop preset 复查/
   ]) {
     assert.match(spec, requiredPass);
   }
@@ -350,6 +353,7 @@ test('v2.2 completion audit maps the objective to concrete evidence and external
   assert.match(spec, /frontend-admin\/\.env` 与 `frontend-admin\/\.env\.test` 仅包含非敏感 Vite 构建默认值/);
   assert.match(spec, /frontend job 在 `pnpm --dir frontend-admin test:e2e` 前安装 Temurin Java 21/);
   assert.match(spec, /frontend-admin\/package\.json` 显式声明 `chrome-launcher@1\.2\.1`/);
+  assert.match(spec, /frontend-admin\/scripts\/run-lighthouse\.mjs` 显式使用 Lighthouse `preset: 'desktop'`/);
   assert.match(spec, /backend\/pom\.xml` 固定 Spring Boot 3\.5\.14/);
   assert.match(spec, /DependencyVersionGuardTest` 覆盖这些运行时版本下限/);
   assert.match(spec, /OWASP dependency-check 漂移/);

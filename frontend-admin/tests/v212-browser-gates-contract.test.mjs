@@ -28,6 +28,7 @@ test('v2.1.2 browser gates cover auth shell flows and Lighthouse threshold', asy
   assert.match(lighthouseScript, /MIN_LIGHTHOUSE_SCORE\s*=\s*80/);
   assert.match(lighthouseScript, /score <= MIN_LIGHTHOUSE_SCORE/);
   assert.match(lighthouseScript, /must be greater than/);
+  assert.match(lighthouseScript, /preset:\s*'desktop'/);
   assert.match(lighthouseScript, /performance/);
   assert.match(lighthouseScript, /CLEANUP_TIMEOUT_MS/);
   assert.match(lighthouseScript, /Promise\.race/);
