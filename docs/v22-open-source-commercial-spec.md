@@ -1,7 +1,7 @@
 ---
 name: v2.2 开源 + 商业化筹备 spec
 date: 2026-05-16
-spec_version: oss-comm-v1.95
+spec_version: oss-comm-v1.96
 based_on:
   - docs/v213-closure-spec-v1.1.md (implemented)
   - docs/v212-shipping-cleanup-spec.md (implemented)
@@ -123,6 +123,7 @@ iteration_history:
   - v1.93 同步 DEP-02 证据链复查：远端可见 `MMMail Images` 已有 rc10-rc13 成功 tag-baseline，最新可见成功为 rc13；这些仍只是历史 workflow baseline，不替代同 commit digest evidence、GHCR 可见性和 release notes
   - v1.94 同步 DEP-02 release notes 复查：GitHub Release 列表最新仍是 v2.0.4，未发布 v2.2 release notes，因此 image digest evidence 仍缺 release note 记录
   - v1.95 同步外部 verifier 当前输出复查：当前主分支已发布且 tag-push Images workflow 可见，未发布实现和 Images workflow 不可见不再计入当前 read-only gap；实际失败口径为 7 个 status markers 加 6 个 read-only evidence gaps
+  - v1.96 同步 DEP-02 release notes verifier：外部 verifier 完成态必须通过 `gh release view` 看到同 tag release notes，且 release body 同时包含 backend/frontend-admin 镜像名和对应 immutable digest；当前失败口径变为 7 个 status markers 加 7 个 read-only evidence gaps
 review_passes:
   - pass-1 现状对账：用 grep / ls / package.json / CI / release-gate 核对已存在与缺失项
   - pass-2 一致性复查：统一 Free-Pro-Business、Adapay 独立仓、个人开发者容量
@@ -217,7 +218,8 @@ review_passes:
   - pass-91 rc10 远端主仓发布证据复查：`MMMail CI` run `25977701508` 与 `MMMail Images` run `25977702756` 均在 commit `50165923` 成功；手动外部 verifier 仍以 status=1 报告 live OIDC、image digest evidence 文件、GHCR package visibility 和 private billing repo 缺口
   - pass-92 release evidence 文案稳定性复查：completion audit 不再把某个历史 rc 写成永久“current”结果；最新提交的远端 run 以 GitHub Actions 状态为准，spec 只保留可复查基线证据
   - pass-93 供应链安全规范复查：AGENTS / CONTRIBUTING / PR template 要求 Dependabot 告警按 fixed version 收敛，`tests/v22-supply-chain-security-contract.test.mjs` 阻断已知 npm 脆弱版本和 Bouncy Castle 旧版本回流，外部 verifier 对 GHCR 403 明确提示 `read:packages`
-  - pass-94 外部 verifier 当前口径复查：`timeout 120s bash scripts/validate-v22-external-evidence.sh` 当前实际输出为 7 个 status markers 加 6 个 read-only evidence gaps；已发布主分支和可见 tag-push Images workflow 不再作为当前缺口，只保留 live OIDC evidence file、image digest evidence file、private billing evidence file、backend/frontend-admin GHCR package visibility 和 private billing repo access
+  - pass-94 外部 verifier 当前口径复查：`timeout 120s bash scripts/validate-v22-external-evidence.sh` 当时实际输出为 7 个 status markers 加 6 个 read-only evidence gaps；已发布主分支和可见 tag-push Images workflow 不再作为当时缺口，只保留 live OIDC evidence file、image digest evidence file、private billing evidence file、backend/frontend-admin GHCR package visibility 和 private billing repo access
+  - pass-95 DEP-02 release notes verifier 复查：DEP-02 不能只靠 image evidence 文件自述 release notes；`scripts/validate-v22-external-evidence.sh` 当前态显式报告 v2.2 image digest release notes 不可见，完成态会用 `gh release view <tag>` 校验同 tag release body 包含 `mmmail-backend`、`mmmail-frontend-admin` 和 evidence 中的两个 immutable digest
 ---
 
 # v2.2 开源 + 商业化筹备 spec

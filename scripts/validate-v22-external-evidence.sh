@@ -83,6 +83,15 @@ record_if_ghcr_versions_unavailable() {
   missing+=("$message")
 }
 
+record_if_v22_release_notes_unavailable() {
+  local output
+  if output="$(gh release list --repo IMG-LTD/MMMail --limit 20 2>/dev/null)" \
+    && printf '%s\n' "$output" | grep -Eq '(^|[[:space:]])v2\.2'; then
+    return 0
+  fi
+  missing+=("v2.2 image digest release notes are not visible")
+}
+
 record_if_unpublished_worktree() {
   local tracked_count untracked_count ahead_count
   tracked_count="$(git diff --name-only | wc -l | tr -d '[:space:]')"
@@ -240,6 +249,24 @@ require_command_output() {
   printf '%s\n' "$output" >/tmp/mmmail-v22-external-evidence-check.log
 }
 
+verify_image_release_notes() {
+  local release_tag backend_digest frontend_digest body
+  release_tag="$(field_value "$MMMAIL_IMAGE_DIGEST_EVIDENCE_FILE" "Release tag")"
+  backend_digest="$(field_value "$MMMAIL_IMAGE_DIGEST_EVIDENCE_FILE" "Backend immutable digest")"
+  frontend_digest="$(field_value "$MMMAIL_IMAGE_DIGEST_EVIDENCE_FILE" "Frontend immutable digest")"
+  if ! body="$(gh release view "$release_tag" --repo IMG-LTD/MMMail --json body --jq .body 2>&1)"; then
+    echo "external evidence command failed: image digest release notes" >&2
+    printf '%s\n' "$body" >&2
+    exit 1
+  fi
+  for expected in "mmmail-backend" "mmmail-frontend-admin" "$backend_digest" "$frontend_digest"; do
+    if ! printf '%s\n' "$body" | grep -Fq "$expected"; then
+      echo "missing completed external evidence in release notes: $expected" >&2
+      exit 1
+    fi
+  done
+}
+
 verify_private_vulnerability_reporting() {
   require_command gh
   local output
@@ -271,6 +298,7 @@ verify_completed_external_evidence() {
   require_nonempty_field "$MMMAIL_IMAGE_DIGEST_EVIDENCE_FILE" "Release tag" "image release tag"
   require_nonempty_field "$MMMAIL_IMAGE_DIGEST_EVIDENCE_FILE" "Git commit SHA" "image commit SHA"
   require_nonempty_field "$MMMAIL_IMAGE_DIGEST_EVIDENCE_FILE" "GitHub workflow run URL" "image workflow run URL"
+  require_nonempty_field "$MMMAIL_IMAGE_DIGEST_EVIDENCE_FILE" "GitHub release URL" "image digest release notes URL"
   require_nonempty_field "$MMMAIL_IMAGE_DIGEST_EVIDENCE_FILE" "Backend immutable digest" "backend immutable digest"
   require_nonempty_field "$MMMAIL_IMAGE_DIGEST_EVIDENCE_FILE" "Frontend immutable digest" "frontend immutable digest"
   require_nonempty_field "$MMMAIL_PRIVATE_BILLING_EVIDENCE_FILE" "Billing repository URL" "billing repository URL"
@@ -286,6 +314,7 @@ verify_completed_external_evidence() {
   require_contains "$MMMAIL_IMAGE_DIGEST_EVIDENCE_FILE" "Workflow event: push" "tag-triggered image workflow evidence"
   require_contains "$MMMAIL_IMAGE_DIGEST_EVIDENCE_FILE" "Workflow conclusion: success" "successful image workflow evidence"
   reject_contains "$MMMAIL_IMAGE_DIGEST_EVIDENCE_FILE" "sha256:*" "image digest evidence still has wildcard digest placeholder"
+  verify_image_release_notes
   require_contains "$MMMAIL_PRIVATE_BILLING_EVIDENCE_FILE" "License signing" "private billing license signing evidence"
   require_command_output "successful tag-triggered MMMail Images workflow run exists" gh run list --repo IMG-LTD/MMMail --workflow "MMMail Images" --event push --status success --limit 1
   require_command_output "backend GHCR package exists" gh api orgs/IMG-LTD/packages/container/mmmail-backend/versions
@@ -420,6 +449,8 @@ record_if_unpublished_worktree
 record_if_command_fails \
   "successful tag-triggered MMMail Images workflow run is not visible" \
   gh run list --repo IMG-LTD/MMMail --workflow "MMMail Images" --event push --status success --limit 1
+
+record_if_v22_release_notes_unavailable
 
 record_if_ghcr_versions_unavailable "mmmail-backend" "backend"
 

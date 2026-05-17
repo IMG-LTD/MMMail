@@ -42,9 +42,10 @@ test('v2.2 image matrix publishes backend and frontend-admin only', async () => 
 });
 
 test('v2.2 image digests are part of release notes and release gates', async () => {
-  const [template, evidenceTemplate, releaseGate, validateLocal, spec] = await Promise.all([
+  const [template, evidenceTemplate, verifier, releaseGate, validateLocal, spec] = await Promise.all([
     read('docs/release/release-notes-template.md'),
     read('docs/release/image-digest-evidence-template.md'),
+    read('scripts/validate-v22-external-evidence.sh'),
     read('scripts/release-gate.sh'),
     read('scripts/validate-local.sh'),
     read('docs/v22-open-source-commercial-spec.md')
@@ -55,9 +56,15 @@ test('v2.2 image digests are part of release notes and release gates', async () 
   assert.match(template, /mmmail-frontend-admin/);
   assert.match(evidenceTemplate, /not a substitute for a real tag-triggered image publishing workflow run/);
   assert.match(evidenceTemplate, /GitHub workflow run URL/);
+  assert.match(evidenceTemplate, /GitHub release URL/);
   assert.match(evidenceTemplate, /Backend immutable digest/);
   assert.match(evidenceTemplate, /Frontend immutable digest/);
   assert.match(evidenceTemplate, /workflow_dispatch.*without tag-published image digests/s);
+  assert.match(evidenceTemplate, /Release notes that omit either image name or either immutable digest/);
+  assert.match(verifier, /verify_image_release_notes/);
+  assert.match(verifier, /gh release view "\$release_tag"/);
+  assert.match(verifier, /v2\.2 image digest release notes are not visible/);
+  assert.match(verifier, /missing completed external evidence in release notes/);
   assert.match(releaseGate, /step_image_workflow_contract/);
   assert.match(releaseGate, /image-workflow-contract/);
   assert.match(validateLocal, /v22-image-publishing-contract\.test\.mjs/);

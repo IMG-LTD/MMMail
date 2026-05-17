@@ -10,6 +10,7 @@ Create one redacted evidence package per release tag:
 - Git commit SHA:
 - GitHub workflow name:
 - GitHub workflow run URL:
+- GitHub release URL:
 - Workflow event:
 - Workflow conclusion:
 - Workflow started at:
@@ -29,7 +30,7 @@ Create one redacted evidence package per release tag:
 | Backend image | `mmmail-backend` image pushed to GHCR with `linux/amd64` and `linux/arm64` support |
 | Frontend image | `mmmail-frontend-admin` image pushed to GHCR with `linux/amd64` and `linux/arm64` support |
 | Immutable digests | Backend and frontend image digests recorded as `sha256:*` |
-| Release notes | Release notes include both image names, tags, and immutable digests |
+| Release notes | GitHub Release for the same tag includes both image names, tags, and immutable digests |
 
 ## Non-Evidence
 
@@ -40,3 +41,4 @@ These do not satisfy DEP-02:
 - A workflow file existing only in the local working tree.
 - Mutable tags without immutable digests.
 - GHCR package listings without a matching workflow run URL and commit SHA.
+- Release notes that omit either image name or either immutable digest.
