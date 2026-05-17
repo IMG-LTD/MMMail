@@ -230,6 +230,10 @@ test('v2.2 local validation guards repository governance files', async () => {
   for (const script of [validateSecurity, secretScan, dependencyScan]) {
     assert.match(script, /\$\{TMPDIR:-\/tmp\}\/mmmail-security/);
   }
+  assert.match(dependencyScan, /REPORT_ROOT="\$\{MMMAIL_SECURITY_REPORT_DIR:-\$DEFAULT_REPORT_DIR\}"/);
+  assert.match(dependencyScan, /REPORT_ROOT="\$ROOT_DIR\/\$REPORT_ROOT"/);
+  assert.match(validateSecurity, /report_root="\$\{MMMAIL_SECURITY_REPORT_DIR:-\$default_report_dir\}"/);
+  assert.match(validateSecurity, /report_root="\$ROOT_DIR\/\$report_root"/);
   assert.match(ciWorkflow, /MMMAIL_SECURITY_REPORT_DIR: artifacts\/security/);
   assert.doesNotMatch(validateLocal, /ROOT_DIR\/artifacts\/security/);
   assert.match(validateLocal, /node frontend-admin\/scripts\/normalize-generated-types\.mjs/);

@@ -8,7 +8,11 @@ source "$ROOT_DIR/scripts/lib/java-common.sh"
 
 MVN_BIN="$(resolve_maven_bin "$ROOT_DIR")"
 DEFAULT_REPORT_DIR="${TMPDIR:-/tmp}/mmmail-security"
-REPORT_DIR="${MMMAIL_SECURITY_REPORT_DIR:-$DEFAULT_REPORT_DIR}/dependency-check"
+REPORT_ROOT="${MMMAIL_SECURITY_REPORT_DIR:-$DEFAULT_REPORT_DIR}"
+if [[ "$REPORT_ROOT" != /* ]]; then
+  REPORT_ROOT="$ROOT_DIR/$REPORT_ROOT"
+fi
+REPORT_DIR="$REPORT_ROOT/dependency-check"
 DATA_DIR="${MMMAIL_DEPENDENCY_CHECK_DATA_DIR:-$ROOT_DIR/.tools/dependency-check-data}"
 SUPPRESSION_FILE="$ROOT_DIR/config/dependency-check-suppressions.xml"
 FAIL_ON_CVSS="${MMMAIL_DEPENDENCY_SCAN_FAIL_ON_CVSS:-7}"

@@ -35,7 +35,11 @@ if [[ "${MMMAIL_RUN_BACKEND_DEPENDENCY_SCAN:-false}" == "true" ]]; then
   echo "[validate-security] backend dependency scan"
   bash scripts/security-backend-dependency-scan.sh >/tmp/mmmail-dependency-scan.log 2>&1
   default_report_dir="${TMPDIR:-/tmp}/mmmail-security"
-  report_dir="${MMMAIL_SECURITY_REPORT_DIR:-$default_report_dir}/dependency-check"
+  report_root="${MMMAIL_SECURITY_REPORT_DIR:-$default_report_dir}"
+  if [[ "$report_root" != /* ]]; then
+    report_root="$ROOT_DIR/$report_root"
+  fi
+  report_dir="$report_root/dependency-check"
   required_reports=(
     "$report_dir/dependency-check-report.html"
     "$report_dir/dependency-check-report.json"

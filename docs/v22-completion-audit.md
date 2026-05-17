@@ -143,6 +143,8 @@ The follow-up commit `4f61d48f3baea604c15e36be3840c7637ac6c0dc` and tag `v2.2.0-
 
 The follow-up commit `61293d4493294801368a7bb63a9353a9f5a7a373` and tag `v2.2.0-rc.8` fixed the login first-screen performance headroom. rc8 is still not acceptable release evidence because the remote validate job failed only in OWASP dependency-check: `io.opentelemetry.semconv:opentelemetry-semconv@1.41.1` was matched to OpenTelemetry-Go CVEs `CVE-2026-39882` and `CVE-2026-39883` through CPE metadata. Maven Central currently lists `1.41.1` as the latest release for the Java artifact, so the fix is an explicit narrow suppression tied to that package URL and those CVEs, not a disabled scan or lower CVSS gate.
 
+The follow-up commit `921108688aa2e3b9f0a08bfba05d0555e1bd2489` and tag `v2.2.0-rc.9` fixed the OpenTelemetry dependency-check false positive. rc9 is still not acceptable release evidence because remote dependency-check then reached `BUILD SUCCESS`, but `validate-security.sh` could not find the generated HTML/JSON reports. The root cause is path resolution: CI sets `MMMAIL_SECURITY_REPORT_DIR=artifacts/security`, and Maven executed with `-f backend/pom.xml` wrote that relative path under `backend/artifacts/security` while the validator checked `artifacts/security` at the repository root. Security report paths now normalize relative env values to `$ROOT_DIR/...` before invoking Maven and before checking required reports.
+
 The next acceptable release evidence must come from a follow-up commit and a new tag-triggered `MMMail Images` run that succeeds for both backend and frontend-admin. Live OIDC and private billing evidence are still external and remain outside what repository edits alone can complete.
 
 ## Completion Decision
