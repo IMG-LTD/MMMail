@@ -19,7 +19,7 @@ test('round7 auth forms submit through real login and register APIs', async () =
   assert.match(authApi, /\/api\/v2\/auth\/register/);
   assert.match(pwdLogin, /fetchLogin\(model\.email,\s*model\.password\)/);
   assert.match(register, /fetchRegister\(model\.displayName,\s*model\.email,\s*model\.password\)/);
-  assert.match(pwdLogin, /@click="handleSubmit"/);
+  assert.match(pwdLogin, /@submit\.prevent="handleSubmit"/);
   assert.match(register, /@click="handleSubmit"/);
   assert.match(register, /page\.login\.register\.submit/);
 });

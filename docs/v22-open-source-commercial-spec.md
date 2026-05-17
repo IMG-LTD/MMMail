@@ -1,7 +1,7 @@
 ---
 name: v2.2 开源 + 商业化筹备 spec
 date: 2026-05-16
-spec_version: oss-comm-v1.85
+spec_version: oss-comm-v1.86
 based_on:
   - docs/v213-closure-spec-v1.1.md (implemented)
   - docs/v212-shipping-cleanup-spec.md (implemented)
@@ -113,6 +113,7 @@ iteration_history:
   - v1.83 同步 Lighthouse 直接依赖复查：`frontend-admin/scripts/run-lighthouse.mjs` 直接 import `chrome-launcher`，因此 `frontend-admin/package.json` 必须显式声明该 devDependency
   - v1.84 同步后端依赖安全基线复查：远端 rc5 validate 的 OWASP dependency-check 暴露 Boot / Tomcat / Log4j / Netty / OTel / Kotlin 等运行时依赖需要补丁线升级，后端 POM 与 `DependencyVersionGuardTest` 固定新安全下限
   - v1.85 同步 Lighthouse 测量条件复查：远端 rc6 暴露登录页 Lighthouse 在默认移动测量条件下边界抖动到 80；修复为显式使用 desktop preset，阈值仍保持 `> 80`
+  - v1.86 同步登录首屏性能规范复查：远端 rc7 证明仅固定 desktop preset 仍会在 CI 抖动到 80；密码登录首屏改为原生表单控件，去除 Naive 表单组件首屏依赖，契约测试阻止回归，Lighthouse fresh build 提升到 performance=86
 review_passes:
   - pass-1 现状对账：用 grep / ls / package.json / CI / release-gate 核对已存在与缺失项
   - pass-2 一致性复查：统一 Free-Pro-Business、Adapay 独立仓、个人开发者容量
@@ -201,6 +202,7 @@ review_passes:
   - pass-85 Lighthouse 直接依赖复查：远端 rc4 CI 暴露 `scripts/run-lighthouse.mjs` 直接 import `chrome-launcher` 但 package 未声明；修复为显式 devDependency 并纳入 CI toolchain contract
   - pass-86 后端依赖安全基线复查：远端 rc5 validate 暴露 OWASP dependency-check 高危依赖失败；修复为 Spring Boot 3.5.14、Tomcat 10.1.55、Spring Security 6.5.10、Log4j 2.26.0、Netty 4.1.133.Final、OpenTelemetry semconv 1.41.1、Kotlin stdlib 2.3.21，并纳入运行时版本 guard
   - pass-87 Lighthouse desktop preset 复查：远端 rc6 暴露 `run-lighthouse.mjs` 未固定 desktop preset，CI 下登录页分数正好为 80 时失败；修复为显式 desktop preset，不降低 `MIN_LIGHTHOUSE_SCORE = 80` 且继续要求 `score > 80`
+  - pass-88 密码登录首屏性能复查：远端 rc7 在 desktop preset 下仍为 80，说明首屏依赖余量不足；`pwd-login.vue` 改为原生 `auth-native-form`，移除 `NForm` / `NInput` / `NButton` / `NCheckbox` / `NDivider` / `NAlert` 和 `useNaiveForm` / `useFormRules` 首屏依赖，本地 Lighthouse fresh build 为 performance=86
 ---
 
 # v2.2 开源 + 商业化筹备 spec
@@ -1079,7 +1081,7 @@ mmmail-billing-gateway (private)
 - `bash scripts/release-gate.sh` 输出新增 step。
 - 最终 `git diff --exit-code` 仍保留。
 
-**当前落地状态（2026-05-17 / pass-87）**：
+**当前落地状态（2026-05-17 / pass-88）**：
 - `tests/v22-legacy-frontend-contract-migration.test.mjs` 已作为 `legacy-contract-migration` gate，证明 selected legacy contracts 已迁入 root tests / `frontend-admin`，并证明旧迁移信号脚本和 CI job 不会被重新引入。
 - `BackendV22CommercialSurfaceCoverageContractTest` 已作为 commercial surface coverage gate，证明当前 v2.2 OIDC / audit / DSR Business API 有服务端 feature gate，并证明 license upgrade path 与 billing webhook 是显式例外而非 silent paid fallback。
 - 已新增 `scripts/generate-sbom-license-report.mjs`，默认输出到系统临时目录 `mmmail-supply-chain`；可用 `MMMAIL_SUPPLY_CHAIN_REPORT_DIR` 显式指定目录，避免在仓库内留下 `artifacts/`。
@@ -1102,6 +1104,8 @@ mmmail-billing-gateway (private)
 - `.github/workflows/ci.yml` 的 frontend job 在 `pnpm --dir frontend-admin test:e2e` 前安装 Temurin Java 21，匹配 Docker e2e setup 构建后端时使用的 Maven `--release 21`。
 - `frontend-admin/package.json` 显式声明 `chrome-launcher@1.2.1`，匹配 `scripts/run-lighthouse.mjs` 的直接 import，避免 CI 依赖 Lighthouse transitive dependency。
 - `frontend-admin/scripts/run-lighthouse.mjs` 显式使用 Lighthouse `preset: 'desktop'`，匹配历史桌面性能验收口径；`MIN_LIGHTHOUSE_SCORE` 保持 80，脚本仍要求实际分数大于 80。
+- `frontend-admin/src/views/_builtin/login/modules/pwd-login.vue` 的密码登录首屏使用原生 `auth-native-form`、`input` 和 `button` 控件，保留真实 `fetchLogin(model.email, model.password)`、安全异常提示、键盘提交、可访问标签和演示账号入口，但不在首屏引入 Naive 表单组件；`frontend-admin/tests/v212-browser-gates-contract.test.mjs` 固定该性能边界。
+- `pnpm --dir frontend-admin test:v212` 通过，125 tests；`pnpm --dir frontend-admin test:lighthouse` fresh build 下 `/login` performance=86。
 - `backend/pom.xml` 固定 Spring Boot 3.5.14、Tomcat 10.1.55、Spring Security 6.5.10、Log4j 2.26.0、Netty 4.1.133.Final、OpenTelemetry semconv 1.41.1、Kotlin stdlib 2.3.21；`DependencyVersionGuardTest` 覆盖这些运行时版本下限，避免后续 OWASP dependency-check 漂移只在远端 validate 暴露。
 - `.github/workflows/ci.yml` 已在 validate / release-gate job 安装 Helm。
 - `tests/v22-repository-governance-contract.test.mjs`、`tests/v22-repository-governance-validation-contract.test.mjs`、`tests/v22-deployment-helm-contract.test.mjs` 与 `tests/v22-image-publishing-contract.test.mjs` 已覆盖脚本存在、门禁接入和产物可解析。

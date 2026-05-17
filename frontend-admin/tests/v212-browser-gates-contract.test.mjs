@@ -35,6 +35,14 @@ test('v2.1.2 browser gates cover auth shell flows and Lighthouse threshold', asy
   assert.match(lighthouseScript, /process\.exit\(0\)/);
 });
 
+test('v2.1.2 password login first screen avoids heavy form component imports', async () => {
+  const pwdLogin = await read('src/views/_builtin/login/modules/pwd-login.vue');
+
+  assert.match(pwdLogin, /auth-native-form/);
+  assert.doesNotMatch(pwdLogin, /useNaiveForm|useFormRules/);
+  assert.doesNotMatch(pwdLogin, /<N(?:Form|FormItem|Input|Button|Checkbox|Divider|Alert)\b/);
+});
+
 test('v2.1.2 browser gates are part of CI and validate-local', async () => {
   const [workflow, validateLocal] = await Promise.all([
     read('../.github/workflows/ci.yml'),
