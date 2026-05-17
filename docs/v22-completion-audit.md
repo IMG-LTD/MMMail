@@ -66,6 +66,8 @@ The latest targeted verification for this audit:
 
 | Command | Result |
 |---|---|
+| `node --test tests/v22-repository-governance-contract.test.mjs tests/v22-repository-governance-validation-contract.test.mjs tests/v22-supply-chain-security-contract.test.mjs` | 25 passed after the `oss-comm-v1.95` external verifier current-gap sync; governance tests now require the current 7 status marker + 6 read-only evidence gap wording |
+| `git diff --check` | Passed after the `oss-comm-v1.95` governance wording update |
 | `node --test tests/v22-ci-toolchain-contract.test.mjs tests/v22-repository-governance-contract.test.mjs tests/v22-repository-governance-validation-contract.test.mjs tests/v22-supply-chain-security-contract.test.mjs` | 35 passed after pass-93 supply-chain governance update |
 | `timeout 60s mvn -f backend/pom.xml -pl mmmail-server -am -Dtest=DependencyVersionGuardTest -Dsurefire.failIfNoSpecifiedTests=false test` | 22 passed; confirms Spring Boot 3.5.14, Spring Security 6.5.10, Tomcat 10.1.55, Log4j 2.26.0, Netty 4.1.133.Final, OpenTelemetry semconv 1.41.1, Kotlin stdlib 2.3.21, Swagger UI 5.32.5, and Bouncy Castle 1.84 |
 | `bash scripts/validate-security.sh` | Passed; includes secret regression scan, backend security warmup, and backend security regression with `DependencyVersionGuardTest` |
@@ -117,7 +119,7 @@ The latest targeted verification for this audit:
 | `gh run view 25977702756 --repo IMG-LTD/MMMail --json status,conclusion,jobs,url,headSha,headBranch,event,displayTitle` | Remote `MMMail Images` for commit `50165923` / tag `v2.2.0-rc.10` completed with success for backend and frontend-admin image jobs |
 | `gh run list --repo IMG-LTD/MMMail --workflow "MMMail Images" --limit 5 --json databaseId,status,conclusion,headSha,event,headBranch,displayTitle,url,createdAt` | Latest visible `MMMail Images` push baseline is run `25979632379` for `v2.2.0-rc.13` at commit `de1529218714ef35926ba3f8116c0323b4f95487`; it is still historical baseline evidence, not completed digest evidence for the current acceptance commit |
 | `gh release list --repo IMG-LTD/MMMail --limit 20` | Latest visible GitHub Release is `MMMail v2.0.4`; no v2.2 release notes are published, so DEP-02 still lacks release notes with backend and frontend-admin image digests |
-| `timeout 120s bash scripts/validate-v22-external-evidence.sh` | Expected failure with status 1 after the latest branch publication: completion audit/checklist still mark external evidence incomplete; live OIDC, image digest and private billing evidence files are missing; backend and frontend-admin GHCR package versions require `gh auth` with `read:packages`; private billing repository is not accessible |
+| `timeout 120s bash scripts/validate-v22-external-evidence.sh` | Expected failure with status 1 after the latest branch publication: 7 status markers remain incomplete and 6 read-only evidence gaps remain visible; live OIDC, image digest and private billing evidence files are missing; backend and frontend-admin GHCR package versions require `gh auth` with `read:packages`; private billing repository is not accessible |
 
 ## Remaining Evidence Gaps
 
@@ -161,7 +163,7 @@ The follow-up commit `50165923b6dddc6c2f9d96dc5ab7bb2c8b47a2d4` and tag `v2.2.0-
 
 The later visible `MMMail Images` tag-baseline run `25979632379` also completed with success for `v2.2.0-rc.13` at commit `de1529218714ef35926ba3f8116c0323b4f95487`. This keeps the image workflow baseline fresher than rc10, but it is still historical evidence and does not supply completed digest evidence for the current acceptance commit.
 
-The later supply-chain hardening commit `a340c62e1045e55b9bb316b048b818044f6dc807` also completed remote `MMMail CI` run `25980457119` with success, and the follow-up audit sync commit `4052934fccc818ffeb4cf06ab54fe50744dec0be` completed remote `MMMail CI` run `25980751689` with success. These runs keep the branch evidence green, but they are not image digest or live-environment acceptance evidence.
+The later supply-chain hardening commit `a340c62e1045e55b9bb316b048b818044f6dc807` also completed remote `MMMail CI` run `25980457119` with success, and the follow-up audit sync commit `4052934fccc818ffeb4cf06ab54fe50744dec0be` completed remote `MMMail CI` run `25980751689` with success. The later verifier gap-count sync commit `bb87af97cf7e8a864adfb98687a5f29490372599` completed remote `MMMail CI` run `25982475505` with success. These runs keep the branch evidence green, but they are not image digest or live-environment acceptance evidence.
 
 The rc10 through rc13 image workflow evidence is now historical baseline evidence only. Final DEP-02 image digest acceptance must be produced from a tag and image workflow tied to the same Public MMMail commit as the completed OIDC, image, and private billing evidence packages.
 
