@@ -66,7 +66,7 @@ The latest targeted verification for this audit:
 
 | Command | Result |
 |---|---|
-| `node --test tests/v22-image-publishing-contract.test.mjs tests/v22-repository-governance-contract.test.mjs tests/v22-repository-governance-validation-contract.test.mjs tests/v22-supply-chain-security-contract.test.mjs` | 28 passed after the `oss-comm-v1.96` release-note verifier update; image publishing contracts now require the external verifier to validate same-tag GitHub Release notes and current wording requires 7 status markers plus 7 read-only evidence gaps |
+| `node --test tests/v22-image-publishing-contract.test.mjs tests/v22-repository-governance-contract.test.mjs tests/v22-repository-governance-validation-contract.test.mjs tests/v22-supply-chain-security-contract.test.mjs` | 28 passed after the `oss-comm-v1.97` DEP-02 status-table sync; image publishing contracts now require the external verifier to validate same-tag GitHub Release notes and current wording requires 7 status markers plus 7 read-only evidence gaps |
 | `node --test tests/v22-repository-governance-contract.test.mjs tests/v22-repository-governance-validation-contract.test.mjs tests/v22-supply-chain-security-contract.test.mjs` | 25 passed after the `oss-comm-v1.95` external verifier current-gap sync; governance tests required the then-current 7 status marker + 6 read-only evidence gap wording |
 | `git diff --check` | Passed after the `oss-comm-v1.95` governance wording update |
 | `node --test tests/v22-ci-toolchain-contract.test.mjs tests/v22-repository-governance-contract.test.mjs tests/v22-repository-governance-validation-contract.test.mjs tests/v22-supply-chain-security-contract.test.mjs` | 35 passed after pass-93 supply-chain governance update |

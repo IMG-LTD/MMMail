@@ -1,7 +1,7 @@
 ---
 name: v2.2 开源 + 商业化筹备 spec
 date: 2026-05-16
-spec_version: oss-comm-v1.96
+spec_version: oss-comm-v1.97
 based_on:
   - docs/v213-closure-spec-v1.1.md (implemented)
   - docs/v212-shipping-cleanup-spec.md (implemented)
@@ -124,6 +124,7 @@ iteration_history:
   - v1.94 同步 DEP-02 release notes 复查：GitHub Release 列表最新仍是 v2.0.4，未发布 v2.2 release notes，因此 image digest evidence 仍缺 release note 记录
   - v1.95 同步外部 verifier 当前输出复查：当前主分支已发布且 tag-push Images workflow 可见，未发布实现和 Images workflow 不可见不再计入当前 read-only gap；实际失败口径为 7 个 status markers 加 6 个 read-only evidence gaps
   - v1.96 同步 DEP-02 release notes verifier：外部 verifier 完成态必须通过 `gh release view` 看到同 tag release notes，且 release body 同时包含 backend/frontend-admin 镜像名和对应 immutable digest；当前失败口径变为 7 个 status markers 加 7 个 read-only evidence gaps
+  - v1.97 同步 DEP-02 状态表口径：P0 status table 不再只说真实 digest 由 tag push 生成，而是把 completed image digest evidence、同 tag GitHub Release notes、GHCR package visibility 和同 Public MMMail commit 绑定全部列为 remaining evidence
 review_passes:
   - pass-1 现状对账：用 grep / ls / package.json / CI / release-gate 核对已存在与缺失项
   - pass-2 一致性复查：统一 Free-Pro-Business、Adapay 独立仓、个人开发者容量
@@ -220,6 +221,7 @@ review_passes:
   - pass-93 供应链安全规范复查：AGENTS / CONTRIBUTING / PR template 要求 Dependabot 告警按 fixed version 收敛，`tests/v22-supply-chain-security-contract.test.mjs` 阻断已知 npm 脆弱版本和 Bouncy Castle 旧版本回流，外部 verifier 对 GHCR 403 明确提示 `read:packages`
   - pass-94 外部 verifier 当前口径复查：`timeout 120s bash scripts/validate-v22-external-evidence.sh` 当时实际输出为 7 个 status markers 加 6 个 read-only evidence gaps；已发布主分支和可见 tag-push Images workflow 不再作为当时缺口，只保留 live OIDC evidence file、image digest evidence file、private billing evidence file、backend/frontend-admin GHCR package visibility 和 private billing repo access
   - pass-95 DEP-02 release notes verifier 复查：DEP-02 不能只靠 image evidence 文件自述 release notes；`scripts/validate-v22-external-evidence.sh` 当前态显式报告 v2.2 image digest release notes 不可见，完成态会用 `gh release view <tag>` 校验同 tag release body 包含 `mmmail-backend`、`mmmail-frontend-admin` 和 evidence 中的两个 immutable digest
+  - pass-96 DEP-02 status table 复查：§4.2 的 DEP-02 remaining column 同步 completed evidence 文件、同 tag GitHub Release notes、GHCR package visibility 和同 Public MMMail commit 绑定要求，避免旧的“tag push 后生成 digest”简写弱化验收条件
 ---
 
 # v2.2 开源 + 商业化筹备 spec
@@ -538,7 +540,7 @@ mmmail-billing-gateway (private)
 | BUS-02 | done | `OrgAuditExportController` 提供 `/api/v2/orgs/{orgId}/audit/events/export`，`OrgAuditQueryService` 输出 `application/x-ndjson` JSONL，`CommercialAuthorizationGate.enforceFeature(..., AUDIT_EXPORT)` 强制 Business 权益，`BackendV22AuditExportContractTest` 覆盖 JSONL 字段、cursor 和 gate，`docs/compliance/audit-export.md` 记录 SIEM 映射 | 对象存储归档和大文件异步任务仍是未来扩展，不在 v2.2 已交付范围内宣传 |
 | BUS-03 | done | `DsrRequestController` 提供 `/api/v2/orgs/{orgId}/dsr/export`、`/dsr/erasure`、`/dsr/jobs/{jobId}`；`DsrRequestService` 通过 `platform_job_run` 排队 `dsr.export` / `dsr.erasure`；`DsrExecutionService` 按 inventory 执行导出、软删、删除和匿名化；`docs/compliance/data-inventory.yaml` 覆盖 113 个 schema/Flyway 表；`scripts/validate-dsr-inventory.mjs`、`BackendV22DsrContractTest` 和 `tests/v22-dsr-inventory-contract.test.mjs` 固定 gate | 法定保留、财务、安全、治理记录按 inventory retain/anonymize，不宣传为物理全删除 |
 | DEP-01 | done | `helm/mmmail/Chart.yaml`、`helm/mmmail/values.yaml`、backend/frontend-admin/config/secret/ingress templates、`docs/ops/helm.md`、`scripts/validate-helm-chart.sh`、`tests/v22-deployment-helm-contract.test.mjs` | 真实镜像 tag / digest 由 DEP-02 image publishing 补齐 |
-| DEP-02 | partial done | `.github/workflows/images.yml`、`docs/release/release-notes-template.md` Image Digests 段、`docs/release/image-digest-evidence-template.md`、`tests/v22-image-publishing-contract.test.mjs`；workflow 使用 GHCR、QEMU、Buildx、metadata-action、build-push-action、linux/amd64+linux/arm64 | 真实 digest 只有 tag push 后生成；Docker Hub 未作为 v2.2 首发目标 |
+| DEP-02 | partial done | `.github/workflows/images.yml`、`docs/release/release-notes-template.md` Image Digests 段、`docs/release/image-digest-evidence-template.md`、`tests/v22-image-publishing-contract.test.mjs`；workflow 使用 GHCR、QEMU、Buildx、metadata-action、build-push-action、linux/amd64+linux/arm64 | 仍需 completed image digest evidence 文件、同 tag GitHub Release notes 同时记录 backend/frontend-admin 镜像名和 immutable digest、GHCR package visibility，并且 tag / workflow / release notes / OIDC / billing evidence 绑定同一个 Public MMMail commit；Docker Hub 未作为 v2.2 首发目标 |
 | DEP-03 | done | `.env.example`、`config/backend.env.example`、`docs/ops/install.md`、`docs/ops/install.en.md`、`docs/ops/helm.md` 和 `docs/commercial/pricing-boundaries.md` 已记录 license、billing webhook、OIDC、OTel、Helm Secret 和商业自托管边界 | 文档只覆盖主仓可配置入口；商户证书、付款、客户门户和 license signing 私钥仍在独立计费仓 |
 | OBS-01 | partial done | `RuntimeTraceService` 统一包装 Micrometer Observation；`RequestTracingFilter` 输出 `mmmail.http.request`；commercial JDBC repository 输出 `mmmail.db.operation`；Drive Redis limiter 输出 `mmmail.redis.operation`；billing webhook 输出 `mmmail.billing.webhook`；license sync 输出 `mmmail.license.verify`；OIDC callback 输出 `mmmail.oidc.callback`；`.env.example`、`config/backend.env.example`、Helm config 和 `application.yml` 均默认关闭并暴露 OTLP 配置；`docs/observability/opentelemetry.md`、`BackendV22OpenTelemetryContractTest`、validate-local 和 CI 固定门禁 | live Keycloak e2e 中的真实 route/error trace evidence 仍需随 BUS-01 done 前补齐 |
 | OBS-02 | done | `docs/observability/sli-slo.md`、`tests/v22-observability-docs-contract.test.mjs`；文档声明 internal target、not a public SLA、not a contractual commitment | OIDC callback failure rate 已有主仓 route/error 基线；live Keycloak e2e 证据随 BUS-01 done 前补齐 |

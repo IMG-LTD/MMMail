@@ -333,7 +333,7 @@ test('v2.2 completion audit maps the objective to concrete evidence and external
   assert.match(audit, /same Public MMMail commit/);
   assert.match(audit, /not complete until the external evidence gaps above are resolved/);
   assert.match(spec, /status: main-repo-implemented-external-evidence-required/);
-  assert.match(spec, /spec_version: oss-comm-v1\.96/);
+  assert.match(spec, /spec_version: oss-comm-v1\.97/);
   for (const requiredPass of [
     /pass-51 外部状态核查/, /pass-52 OTel 文档复查/, /pass-53 live OIDC 证据模板复查/,
     /pass-54 DEP-02 \/ billing 外部证据模板复查/, /pass-55 远端 CI 状态复查/, /pass-56 后端 v2\.2 contract 新鲜验证/,
@@ -347,7 +347,7 @@ test('v2.2 completion audit maps the objective to concrete evidence and external
     /pass-81 Docker context 复查/, /pass-82 API 生成 clean-diff 复查/, /pass-83 frontend-admin env 复查/,
     /pass-84 frontend e2e Java 工具链复查/, /pass-85 Lighthouse 直接依赖复查/, /pass-86 后端依赖安全基线复查/,
     /pass-87 Lighthouse desktop preset 复查/, /pass-88 密码登录首屏性能复查/,
-    /pass-89 依赖扫描误报治理复查/, /pass-90 安全报告路径复查/, /pass-91 rc10 远端主仓发布证据复查/, /pass-92 release evidence 文案稳定性复查/, /pass-93 供应链安全规范复查/, /pass-94 外部 verifier 当前口径复查/, /pass-95 DEP-02 release notes verifier 复查/
+    /pass-89 依赖扫描误报治理复查/, /pass-90 安全报告路径复查/, /pass-91 rc10 远端主仓发布证据复查/, /pass-92 release evidence 文案稳定性复查/, /pass-93 供应链安全规范复查/, /pass-94 外部 verifier 当前口径复查/, /pass-95 DEP-02 release notes verifier 复查/, /pass-96 DEP-02 status table 复查/
   ]) {
     assert.match(spec, requiredPass);
   }
@@ -359,8 +359,8 @@ test('v2.2 completion audit maps the objective to concrete evidence and external
   assert.match(spec, /backend\/pom\.xml` 固定 Spring Boot 3\.5\.14/);
   assert.match(spec, /DependencyVersionGuardTest` 覆盖这些运行时版本下限/);
   assert.match(spec, /OWASP dependency-check 漂移/);
-  assert.match(spec, /active-source-size-guardrail/);
-  assert.match(spec, /7 个 status markers 加 7 个 read-only evidence gaps/);
+  assert.match(spec, /7 个 status markers 加 7 个 read-only evidence gaps[\s\S]*active-source-size-guardrail/);
+  assert.match(spec, /同 tag GitHub Release notes 同时记录 backend\/frontend-admin 镜像名和 immutable digest/);
   assert.match(spec, /all checks passed/);
   assert.match(spec, /pnpm --dir frontend-admin test:v212` 通过，125 tests/);
   assert.match(spec, /41 tests \/ build success/);
