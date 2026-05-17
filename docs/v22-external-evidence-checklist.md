@@ -85,13 +85,13 @@ The verifier must currently report these incomplete markers:
 - `GATE-01 live Keycloak e2e gate remains partial`
 - `private billing repository and real payment evidence remain external`
 
-It also reports live read-only evidence checks that can be evaluated before the status markers are removed:
+It also reports current read-only evidence gaps that can be evaluated before the status markers are removed:
 
 - `live OIDC evidence file is not provided`
 - `image digest evidence file is not provided`
 - `private billing evidence file is not provided`
-- `current v2.2 implementation is not published to a remote commit/tag`
-- `successful tag-triggered MMMail Images workflow run is not visible`
 - `backend GHCR package versions are not visible`
 - `frontend-admin GHCR package versions are not visible`
 - `private billing repository is not accessible`
+
+The verifier still retains publication precondition and workflow visibility checks for regressions, but rc10 already provides successful `MMMail Images` workflow visibility for the current main-repo commit.

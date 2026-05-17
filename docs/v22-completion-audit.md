@@ -65,9 +65,9 @@ The latest targeted verification for this audit:
 
 | Command | Result |
 |---|---|
-| `node --test tests/v22-ci-toolchain-contract.test.mjs tests/v22-repository-governance-contract.test.mjs tests/v22-repository-governance-validation-contract.test.mjs` | 31 passed after pass-86 backend dependency security baseline governance update |
+| `node --test tests/v22-ci-toolchain-contract.test.mjs tests/v22-repository-governance-contract.test.mjs tests/v22-repository-governance-validation-contract.test.mjs` | 32 passed after pass-90 security report path governance update |
 | `timeout 60s mvn -f backend/pom.xml -pl mmmail-server -am -Dtest=DependencyVersionGuardTest -Dsurefire.failIfNoSpecifiedTests=false test` | 21 passed; confirms Spring Boot 3.5.14, Spring Security 6.5.10, Tomcat 10.1.55, Log4j 2.26.0, Netty 4.1.133.Final, OpenTelemetry semconv 1.41.1, Kotlin stdlib 2.3.21, Swagger UI 5.32.5, and the existing dependency guard surface |
-| `timeout 900s mvn -f backend/pom.xml org.owasp:dependency-check-maven:aggregate -Dformats=HTML,JSON -Dodc.outputDirectory=/tmp/mmmail-security-local/dependency-check -DdataDirectory=.tools/dependency-check-data -DfailBuildOnCVSS=7 -DsuppressionFile=config/dependency-check-suppressions.xml -DautoUpdate=false` | Build success using the cached dependency-check database and the explicit OpenTelemetry-Go false-positive suppression; HTML and JSON reports were written to `/tmp/mmmail-security-local/dependency-check/`, and no CVSS >= 7 backend dependency finding failed the build |
+| `timeout 900s mvn -f backend/pom.xml org.owasp:dependency-check-maven:aggregate -Dformats=HTML,JSON -Dodc.outputDirectory=/tmp/mmmail-security-path-check/dependency-check -DdataDirectory=.tools/dependency-check-data -DfailBuildOnCVSS=7 -DsuppressionFile=config/dependency-check-suppressions.xml -DautoUpdate=false` | Build success using the cached dependency-check database and the explicit OpenTelemetry-Go false-positive suppression; HTML and JSON reports were written to `/tmp/mmmail-security-path-check/dependency-check/`, proving the validator can require repository-root anchored report paths |
 | `node --test tests/v22-dsr-inventory-contract.test.mjs tests/v22-repository-governance-contract.test.mjs tests/v22-repository-governance-validation-contract.test.mjs` | 24 passed |
 | `MMMAIL_OPENAPI_SOURCE=../contracts/openapi/v21-api-catalog.yaml pnpm --dir frontend-admin gen:api && git diff --exit-code -- frontend-admin/src/service/api/__generated__` | Passed; `openapi-typescript` generated `openapi.d.ts`, `oxfmt` formatted it, and the generated API directory kept a clean diff |
 | `node --test tests/v22-ci-toolchain-contract.test.mjs tests/v212-shipping-cleanup-contract.test.mjs tests/v212-coverage-gates-contract.test.mjs tests/v212-module-design-docs-contract.test.mjs` | 22 passed before pass-83; covers tracked v2.1.2 fixture docs, no runner `rg` dependency, pnpm engine-compatible CI setup, action major upgrades, direct `@iconify/utils` dependency and Docker context exclusions |
@@ -105,15 +105,18 @@ The latest targeted verification for this audit:
 | `timeout 60s mvn -f backend/pom.xml -pl mmmail-server -am -Dtest=BackendV22EditionCoreContractTest -Dsurefire.failIfNoSpecifiedTests=false test` | 6 passed, build success |
 | `timeout 60s mvn -f backend/pom.xml -pl mmmail-server -am -Dtest=BackendV22CommercialSurfaceCoverageContractTest -Dsurefire.failIfNoSpecifiedTests=false test` | 4 passed, build success |
 | `timeout 60s mvn -f backend/pom.xml -pl mmmail-server -am -Dtest=BackendV22EditionCoreContractTest,BackendV22LicenseVerifierContractTest,BackendV22BillingWebhookContractTest,BackendV22EntitlementEnforcementContractTest,BackendV22CommercialSurfaceCoverageContractTest,BackendV22LicenseManagementApiContractTest,BackendV22AuditExportContractTest,BackendV22DsrContractTest,BackendV22OpenTelemetryContractTest,BackendV22OidcSsoContractTest -Dsurefire.failIfNoSpecifiedTests=false test` | 41 passed, build success |
-| `bash scripts/validate-v22-external-evidence.sh` | Expected failure while external evidence remains incomplete; after rc1, successful image workflow and GHCR frontend-admin package evidence are still unavailable |
+| `bash scripts/validate-v22-external-evidence.sh` | Expected failure while external evidence remains incomplete; after rc10, the image workflow has succeeded but completed image digest evidence files, visible GHCR package metadata and private billing evidence are still unavailable |
+| `gh run view 25977701508 --repo IMG-LTD/MMMail --json status,conclusion,jobs,url,headSha,headBranch,event,displayTitle` | Remote `MMMail CI` for commit `50165923` / tag `v2.2.0-rc.10` completed with success across backend, frontend, Docker baseline, validate and release-gate jobs |
+| `gh run view 25977702756 --repo IMG-LTD/MMMail --json status,conclusion,jobs,url,headSha,headBranch,event,displayTitle` | Remote `MMMail Images` for commit `50165923` / tag `v2.2.0-rc.10` completed with success for backend and frontend-admin image jobs |
+| `timeout 120s bash scripts/validate-v22-external-evidence.sh` | Expected failure with status 1: completion audit/checklist still mark external evidence incomplete; live OIDC evidence file, image digest evidence file and private billing evidence file are missing; backend and frontend-admin GHCR package versions are not visible to the verifier; private billing repository is not accessible |
 
 ## Remaining Evidence Gaps
 
-These items cannot be completed by repository edits alone without live infrastructure, a real tag workflow run, or a private billing repository. Their concrete acceptance criteria are in `docs/v22-external-evidence-checklist.md`:
+These items cannot be completed by repository edits alone without live infrastructure, completed evidence files, visible GHCR package / digest metadata, or a private billing repository. Their concrete acceptance criteria are in `docs/v22-external-evidence-checklist.md`:
 
 1. BUS-01 requires live Keycloak login, callback, MMMail session, logout, and token refresh e2e evidence before it can move from partial done to done.
 2. OBS-01 requires the live Keycloak route/error trace evidence tied to BUS-01 before it can move from partial done to done.
-3. DEP-02 requires a real tag push and resulting image digest evidence before the image-publishing item can move from partial done to done.
+3. DEP-02 has a successful `v2.2.0-rc.10` Images workflow, but still requires completed image digest evidence, visible GHCR package / digest evidence, and release note recording before the image-publishing item can move from partial done to done.
 4. GATE-01 requires the live Keycloak e2e gate evidence before the release gate expansion can move from partial done to done.
 5. Real payment processing, customer portal, invoices/refunds, and license signing private keys remain outside the public repository in the independent billing repository.
 
@@ -145,7 +148,9 @@ The follow-up commit `61293d4493294801368a7bb63a9353a9f5a7a373` and tag `v2.2.0-
 
 The follow-up commit `921108688aa2e3b9f0a08bfba05d0555e1bd2489` and tag `v2.2.0-rc.9` fixed the OpenTelemetry dependency-check false positive. rc9 is still not acceptable release evidence because remote dependency-check then reached `BUILD SUCCESS`, but `validate-security.sh` could not find the generated HTML/JSON reports. The root cause is path resolution: CI sets `MMMAIL_SECURITY_REPORT_DIR=artifacts/security`, and Maven executed with `-f backend/pom.xml` wrote that relative path under `backend/artifacts/security` while the validator checked `artifacts/security` at the repository root. Security report paths now normalize relative env values to `$ROOT_DIR/...` before invoking Maven and before checking required reports.
 
-The next acceptable release evidence must come from a follow-up commit and a new tag-triggered `MMMail Images` run that succeeds for both backend and frontend-admin. Live OIDC and private billing evidence are still external and remain outside what repository edits alone can complete.
+The follow-up commit `50165923b6dddc6c2f9d96dc5ab7bb2c8b47a2d4` and tag `v2.2.0-rc.10` fixed the security report path issue. `MMMail CI` run `25977701508` and `MMMail Images` run `25977702756` both completed with success for that commit; rc10 provides current main-repo remote release evidence for the repository gates and image workflow.
+
+That rc10 evidence still does not complete v2.2 external acceptance. The manual external verifier continues to fail because live OIDC evidence, image digest evidence files, private billing evidence, GHCR package visibility and the private billing repository are still unavailable in the current environment.
 
 ## Completion Decision
 

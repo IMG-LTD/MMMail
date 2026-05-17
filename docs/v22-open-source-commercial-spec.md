@@ -1,7 +1,7 @@
 ---
 name: v2.2 开源 + 商业化筹备 spec
 date: 2026-05-16
-spec_version: oss-comm-v1.88
+spec_version: oss-comm-v1.89
 based_on:
   - docs/v213-closure-spec-v1.1.md (implemented)
   - docs/v212-shipping-cleanup-spec.md (implemented)
@@ -116,6 +116,7 @@ iteration_history:
   - v1.86 同步登录首屏性能规范复查：远端 rc7 证明仅固定 desktop preset 仍会在 CI 抖动到 80；密码登录首屏改为原生表单控件，去除 Naive 表单组件首屏依赖，契约测试阻止回归，Lighthouse fresh build 提升到 performance=86
   - v1.87 同步 dependency-check 误报治理：远端 rc8 validate 暴露 `opentelemetry-semconv@1.41.1` 被 CPE 误配到 OpenTelemetry-Go CVE；新增精确 package URL + CVE suppression，不降低 CVSS 门槛、不关闭依赖扫描
   - v1.88 同步 security report path 复查：远端 rc9 validate 证明 dependency-check 已通过但报告写入 `backend/artifacts/security`；安全脚本将相对 `MMMAIL_SECURITY_REPORT_DIR` 统一解析到仓库根绝对路径
+  - v1.89 同步 rc10 远端主仓发布证据复查：远端 CI 与 Images workflow 均在 `50165923` / `v2.2.0-rc.10` 成功，主仓门禁闭环；外部 verifier 仍因 live OIDC、image digest evidence 文件、GHCR package visibility 和 private billing repo 证据缺失而失败
 review_passes:
   - pass-1 现状对账：用 grep / ls / package.json / CI / release-gate 核对已存在与缺失项
   - pass-2 一致性复查：统一 Free-Pro-Business、Adapay 独立仓、个人开发者容量
@@ -207,6 +208,7 @@ review_passes:
   - pass-88 密码登录首屏性能复查：远端 rc7 在 desktop preset 下仍为 80，说明首屏依赖余量不足；`pwd-login.vue` 改为原生 `auth-native-form`，移除 `NForm` / `NInput` / `NButton` / `NCheckbox` / `NDivider` / `NAlert` 和 `useNaiveForm` / `useFormRules` 首屏依赖，本地 Lighthouse fresh build 为 performance=86
   - pass-89 依赖扫描误报治理复查：远端 rc8 的 backend、frontend、Docker baseline、release-gate 和 Images 均已通过，validate 仅因 `CVE-2026-39883` 命中 Java `opentelemetry-semconv` 的 CPE 误报失败；新增 `config/dependency-check-suppressions.xml` 并由 security scan 脚本显式加载，范围限定为该 Maven package URL 与两个 OpenTelemetry-Go CVE
   - pass-90 安全报告路径复查：远端 rc9 的 dependency-check 已 BUILD SUCCESS，但 `validate-security.sh` 在仓库根查报告而 Maven 因 `-f backend/pom.xml` 把相对路径写入 `backend/artifacts/security`；修复为相对 `MMMAIL_SECURITY_REPORT_DIR` 先转 `$ROOT_DIR/...` 绝对路径
+  - pass-91 rc10 远端主仓发布证据复查：`MMMail CI` run `25977701508` 与 `MMMail Images` run `25977702756` 均在 commit `50165923` 成功；手动外部 verifier 仍以 status=1 报告 live OIDC、image digest evidence 文件、GHCR package visibility 和 private billing repo 缺口
 ---
 
 # v2.2 开源 + 商业化筹备 spec
@@ -373,7 +375,7 @@ v2.2 的落地结论是：**只保留一个产品前端：`frontend-admin`。`fr
 | 企业 | 审计日志导出 | 已新增 v2 JSONL / SIEM export、Business `audit.export` gate 和 `docs/compliance/audit-export.md` | P0 done |
 | 企业 | DSR 导出 / 删除 / 匿名化 | 已新增 Business-gated DSR export/erasure job、public status、`docs/compliance/data-inventory.yaml` 和 inventory gate | P0 done |
 | 部署 | Helm chart | 已新增 `helm/mmmail` chart、`docs/ops/helm.md` 和 `scripts/validate-helm-chart.sh`，CI / validate-local / release-gate 已接入 Helm 校验 | P0 done；真实镜像 tag / digest 归 DEP-02 |
-| 部署 | 镜像发布流水 | 已新增 GHCR buildx multi-arch workflow，matrix 只包含 backend 与 frontend-admin，release notes 模板要求记录 digest | P0 partial done，真实 tag push 后由 workflow 产出 digest |
+| 部署 | 镜像发布流水 | 已新增 GHCR buildx multi-arch workflow，matrix 只包含 backend 与 frontend-admin，release notes 模板要求记录 digest；`v2.2.0-rc.10` 的 `MMMail Images` workflow 已成功构建 backend 与 frontend-admin | P0 partial done；仍需完成 image digest evidence 文件、可见 GHCR package / digest 证据和 release note 记录后才能转 done |
 | 可观测 | OpenTelemetry tracing | 已新增 runtime tracing 依赖、配置、`RuntimeTraceService`、HTTP/DB/Redis/billing webhook/license/OIDC callback span、`docs/observability/opentelemetry.md`、`BackendV22OpenTelemetryContractTest` 和 `BackendV22OidcSsoContractTest` | P0 partial done；live Keycloak e2e 的真实 route/error trace evidence 待补 |
 | 可观测 | SLI/SLO 文档 | 已新增 `docs/observability/sli-slo.md`，覆盖 API p99、5xx rate、billing webhook success rate、license verification failure rate、OIDC callback failure rate，且明确不是对外 SLA | P0 done |
 
@@ -1085,7 +1087,7 @@ mmmail-billing-gateway (private)
 - `bash scripts/release-gate.sh` 输出新增 step。
 - 最终 `git diff --exit-code` 仍保留。
 
-**当前落地状态（2026-05-17 / pass-88）**：
+**当前落地状态（2026-05-17 / pass-91）**：
 - `tests/v22-legacy-frontend-contract-migration.test.mjs` 已作为 `legacy-contract-migration` gate，证明 selected legacy contracts 已迁入 root tests / `frontend-admin`，并证明旧迁移信号脚本和 CI job 不会被重新引入。
 - `BackendV22CommercialSurfaceCoverageContractTest` 已作为 commercial surface coverage gate，证明当前 v2.2 OIDC / audit / DSR Business API 有服务端 feature gate，并证明 license upgrade path 与 billing webhook 是显式例外而非 silent paid fallback。
 - 已新增 `scripts/generate-sbom-license-report.mjs`，默认输出到系统临时目录 `mmmail-supply-chain`；可用 `MMMAIL_SUPPLY_CHAIN_REPORT_DIR` 显式指定目录，避免在仓库内留下 `artifacts/`。
@@ -1111,6 +1113,8 @@ mmmail-billing-gateway (private)
 - `frontend-admin/src/views/_builtin/login/modules/pwd-login.vue` 的密码登录首屏使用原生 `auth-native-form`、`input` 和 `button` 控件，保留真实 `fetchLogin(model.email, model.password)`、安全异常提示、键盘提交、可访问标签和演示账号入口，但不在首屏引入 Naive 表单组件；`frontend-admin/tests/v212-browser-gates-contract.test.mjs` 固定该性能边界。
 - `pnpm --dir frontend-admin test:v212` 通过，125 tests；`pnpm --dir frontend-admin test:lighthouse` fresh build 下 `/login` performance=86。
 - `backend/pom.xml` 固定 Spring Boot 3.5.14、Tomcat 10.1.55、Spring Security 6.5.10、Log4j 2.26.0、Netty 4.1.133.Final、OpenTelemetry semconv 1.41.1、Kotlin stdlib 2.3.21；`DependencyVersionGuardTest` 覆盖这些运行时版本下限，避免后续 OWASP dependency-check 漂移只在远端 validate 暴露。
+- `config/dependency-check-suppressions.xml` 只对 Java `opentelemetry-semconv@1.41.1` package URL 与 OpenTelemetry-Go CVE 做精确 suppression；`scripts/security-backend-dependency-scan.sh` 和 `scripts/validate-security.sh` 均把相对 `MMMAIL_SECURITY_REPORT_DIR` 解析到仓库根绝对路径，避免 Maven `-f backend/pom.xml` 把报告写入 `backend/artifacts/security`。
+- `MMMail CI` run `25977701508` 与 `MMMail Images` run `25977702756` 已在 commit `50165923` / tag `v2.2.0-rc.10` 成功；这只证明主仓远端门禁闭环，不替代 live Keycloak/OIDC、image digest evidence 文件或 private billing repository 的外部验收。
 - `.github/workflows/ci.yml` 已在 validate / release-gate job 安装 Helm。
 - `tests/v22-repository-governance-contract.test.mjs`、`tests/v22-repository-governance-validation-contract.test.mjs`、`tests/v22-deployment-helm-contract.test.mjs` 与 `tests/v22-image-publishing-contract.test.mjs` 已覆盖脚本存在、门禁接入和产物可解析。
 
