@@ -8,6 +8,7 @@
 ## Validation
 - [ ] `bash scripts/validate-local.sh`
 - [ ] `bash scripts/validate-security.sh`
+- [ ] `node --test tests/v22-supply-chain-security-contract.test.mjs`（依赖、lockfile、POM、Dependabot 告警或供应链安全改动）
 - [ ] `bash scripts/release-gate.sh`（release / gate / CI 改动必须无 skip 通过）
 - [ ] 相关定向测试
 
@@ -24,8 +25,10 @@
 - [ ] 如修改 owner / support / roadmap，已同步 `GOVERNANCE.md`、`MAINTAINERS.md` 或 `ROADMAP.md`
 - [ ] 商业文案仍保持 `real payment processing is not live`；`license signing private keys stay outside the public repository`
 - [ ] 如调整 GitHub private vulnerability reporting 状态，已用 GitHub API 结果同步 `SECURITY.md` / `SUPPORT.md` / completion audit / external evidence verifier
+- [ ] 如响应 Dependabot 告警，已记录 `gh api repos/IMG-LTD/MMMail/dependabot/alerts?state=open&per_page=100` 结果、fixed version 和验证命令；GHCR 证据需要 `read:packages`
 - [ ] 未新增超过 500 行的活跃源码文件；若触及历史超限文件，新增职责已拆到小模块并保持治理 allowlist 可解释
 
 ## Security
 - [ ] 未引入真实 secrets
 - [ ] 涉及权限/上传/分享/管理员接口时已补自动化回归
+- [ ] 供应链安全修复没有关闭扫描、降低 CVSS 门槛或移除真实依赖路径

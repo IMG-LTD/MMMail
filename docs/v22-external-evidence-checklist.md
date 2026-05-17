@@ -65,7 +65,7 @@ When the incomplete markers are removed, the verifier must also check real evide
 - Each evidence package must contain `Evidence status: completed-external-evidence`; the template files themselves and unfilled template copies are rejected.
 - The required metadata fields in each evidence package must be filled with non-empty values, including commit SHAs, provider/run metadata, workflow URL, immutable digests, and billing repository details.
 - Image digest evidence must contain real immutable digests, not the `sha256:*` wildcard placeholder.
-- GitHub CLI checks must see a successful `push` event run for the `MMMail Images` workflow, GHCR backend/frontend-admin package versions, and an accessible `IMG-LTD/mmmail-billing-gateway` repository.
+- GitHub CLI checks must see a successful `push` event run for the `MMMail Images` workflow, GHCR backend/frontend-admin package versions, and an accessible `IMG-LTD/mmmail-billing-gateway` repository. GHCR package version checks require a `gh` token with `read:packages`; a GitHub API 403 is a permissions evidence gap, not proof that the package does not exist.
 - The completed evidence files must point to the same Public MMMail commit: OIDC backend commit, OIDC frontend commit, image digest commit, and private billing evidence `Public MMMail repository commit SHA` must match.
 - The release tag named by the image digest evidence must be visible on `origin`, must resolve to that same commit, and that commit must be contained in `origin/main` or `origin/release/*`.
 
@@ -94,4 +94,4 @@ It also reports current read-only evidence gaps that can be evaluated before the
 - `frontend-admin GHCR package versions are not visible`
 - `private billing repository is not accessible`
 
-The verifier still retains publication precondition and workflow visibility checks for regressions, but rc10 already provides successful `MMMail Images` workflow visibility for the current main-repo commit.
+If the GHCR rows fail with HTTP 403 or GitHub's `read:packages` message, the missing item remains visible until package metadata can be read with an appropriately scoped token. The verifier still retains publication precondition and workflow visibility checks for regressions, but rc10 already provides successful `MMMail Images` workflow visibility for the current main-repo commit.

@@ -169,5 +169,13 @@
     "node": ">=20.19.0",
     "pnpm": ">=10.5.0"
   },
+  "pnpm": {
+    "overrides": {
+      "braces@<3.0.3": "3.0.3",
+      "glob@<10.5.0": "10.5.0",
+      "postcss@<8.5.10": "8.5.14",
+      "postcss-prefix-selector@<2.1.1": "2.1.1"
+    }
+  },
   "website": "https://github.com/IMG-LTD/MMMail"
 }

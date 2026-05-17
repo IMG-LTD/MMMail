@@ -3,6 +3,7 @@ package com.mmmail.server;
 import jakarta.mail.Session;
 import org.apache.catalina.util.ServerInfo;
 import org.apache.maven.artifact.versioning.ComparableVersion;
+import org.bouncycastle.jce.provider.BouncyCastleProvider;
 import org.jose4j.jwt.JwtClaims;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.SpringBootVersion;
@@ -132,6 +133,15 @@ class DependencyVersionGuardTest {
 
         assertThat(versionAtLeast(version, "2.3.21"))
                 .as("resolved kotlin-stdlib version %s should be at least 2.3.21 to clear the CI security gate", version)
+                .isTrue();
+    }
+
+    @Test
+    void bouncyCastleRuntimeShouldStayOnPatchedVersionForSecurityGate() throws Exception {
+        String version = new BouncyCastleProvider().getVersionStr();
+
+        assertThat(versionAtLeast(version, "1.84"))
+                .as("resolved bcprov-jdk18on version %s should be at least 1.84 to clear Dependabot alerts", version)
                 .isTrue();
     }
 

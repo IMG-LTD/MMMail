@@ -64,6 +64,25 @@ record_if_command_fails() {
   fi
 }
 
+# Keep marker strings literal for root governance contracts:
+# - backend GHCR package versions are not visible
+# - frontend-admin GHCR package versions are not visible
+record_if_ghcr_versions_unavailable() {
+  local package_name="$1"
+  local label="$2"
+  local message="$label GHCR package versions are not visible"
+  local output
+  if output="$(gh api "orgs/IMG-LTD/packages/container/$package_name/versions" 2>&1)"; then
+    return 0
+  fi
+  printf '%s\n' "$output" >/tmp/mmmail-v22-external-evidence-check.log
+  if [[ "$output" == *"read:packages"* || "$output" == *"HTTP 403"* ]]; then
+    missing+=("$message (GitHub API requires gh auth with read:packages scope)")
+    return 0
+  fi
+  missing+=("$message")
+}
+
 record_if_unpublished_worktree() {
   local tracked_count untracked_count ahead_count
   tracked_count="$(git diff --name-only | wc -l | tr -d '[:space:]')"
@@ -402,13 +421,9 @@ record_if_command_fails \
   "successful tag-triggered MMMail Images workflow run is not visible" \
   gh run list --repo IMG-LTD/MMMail --workflow "MMMail Images" --event push --status success --limit 1
 
-record_if_command_fails \
-  "backend GHCR package versions are not visible" \
-  gh api orgs/IMG-LTD/packages/container/mmmail-backend/versions
+record_if_ghcr_versions_unavailable "mmmail-backend" "backend"
 
-record_if_command_fails \
-  "frontend-admin GHCR package versions are not visible" \
-  gh api orgs/IMG-LTD/packages/container/mmmail-frontend-admin/versions
+record_if_ghcr_versions_unavailable "mmmail-frontend-admin" "frontend-admin"
 
 record_if_command_fails \
   "private billing repository is not accessible" \

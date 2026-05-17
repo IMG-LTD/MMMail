@@ -1,7 +1,7 @@
 ---
 name: v2.2 开源 + 商业化筹备 spec
 date: 2026-05-16
-spec_version: oss-comm-v1.90
+spec_version: oss-comm-v1.91
 based_on:
   - docs/v213-closure-spec-v1.1.md (implemented)
   - docs/v212-shipping-cleanup-spec.md (implemented)
@@ -118,6 +118,7 @@ iteration_history:
   - v1.88 同步 security report path 复查：远端 rc9 validate 证明 dependency-check 已通过但报告写入 `backend/artifacts/security`；安全脚本将相对 `MMMAIL_SECURITY_REPORT_DIR` 统一解析到仓库根绝对路径
   - v1.89 同步 rc10 远端主仓发布证据复查：远端 CI 与 Images workflow 均在 `50165923` / `v2.2.0-rc.10` 成功，主仓门禁闭环；外部 verifier 仍因 live OIDC、image digest evidence 文件、GHCR package visibility 和 private billing repo 证据缺失而失败
   - v1.90 同步 release evidence 文案稳定性复查：把 rc10 远端结果描述为主仓门禁基线证据，避免每次 docs-only 证据同步提交都把 spec 的“current run”字段变陈旧
+  - v1.91 同步供应链安全规范复查：Dependabot open alert 处理、前端脆弱 transitive 版本 overrides、Bouncy Castle patched baseline、GHCR `read:packages` 证据权限和根目录供应链合约进入仓库规范
 review_passes:
   - pass-1 现状对账：用 grep / ls / package.json / CI / release-gate 核对已存在与缺失项
   - pass-2 一致性复查：统一 Free-Pro-Business、Adapay 独立仓、个人开发者容量
@@ -211,6 +212,7 @@ review_passes:
   - pass-90 安全报告路径复查：远端 rc9 的 dependency-check 已 BUILD SUCCESS，但 `validate-security.sh` 在仓库根查报告而 Maven 因 `-f backend/pom.xml` 把相对路径写入 `backend/artifacts/security`；修复为相对 `MMMAIL_SECURITY_REPORT_DIR` 先转 `$ROOT_DIR/...` 绝对路径
   - pass-91 rc10 远端主仓发布证据复查：`MMMail CI` run `25977701508` 与 `MMMail Images` run `25977702756` 均在 commit `50165923` 成功；手动外部 verifier 仍以 status=1 报告 live OIDC、image digest evidence 文件、GHCR package visibility 和 private billing repo 缺口
   - pass-92 release evidence 文案稳定性复查：completion audit 不再把某个历史 rc 写成永久“current”结果；最新提交的远端 run 以 GitHub Actions 状态为准，spec 只保留可复查基线证据
+  - pass-93 供应链安全规范复查：AGENTS / CONTRIBUTING / PR template 要求 Dependabot 告警按 fixed version 收敛，`tests/v22-supply-chain-security-contract.test.mjs` 阻断已知 npm 脆弱版本和 Bouncy Castle 旧版本回流，外部 verifier 对 GHCR 403 明确提示 `read:packages`
 ---
 
 # v2.2 开源 + 商业化筹备 spec
@@ -409,6 +411,8 @@ v2.2 的落地结论是：**只保留一个产品前端：`frontend-admin`。`fr
 - commercial / OIDC contract gate：`BackendV22EditionCoreContractTest` / `BackendV22LicenseVerifierContractTest` / `BackendV22BillingWebhookContractTest` / `BackendV22EntitlementEnforcementContractTest` / `BackendV22CommercialSurfaceCoverageContractTest` / `BackendV22LicenseManagementApiContractTest` / `BackendV22AuditExportContractTest` / `BackendV22DsrContractTest` / `BackendV22OidcSsoContractTest` 已进入 `scripts/validate-local.sh` 和 CI backend job；root governance contract 已要求 surface coverage gate 同时出现在本地与 CI。
 - secret scan 收敛：`scripts/security-secret-scan.sh` 已改为扫描 Git 管理范围内文件（tracked + untracked non-ignored），不再误扫 `node_modules`、临时 worktree、构建产物等 `.gitignore` 生成目录。
 - supply-chain gate：`scripts/generate-sbom-license-report.mjs` 已输出 CycloneDX、dependency license report 和 SPDX 摘要，并进入 `scripts/validate-local.sh`、`scripts/release-gate.sh` 与 CI artifact。
+- Dependabot 告警治理：`AGENTS.md`、`CONTRIBUTING.md` 和 PR template 要求 open Dependabot alert 按 fixed version 或更高版本处理；`tests/v22-supply-chain-security-contract.test.mjs` 固定前端 `braces` / `glob` / `postcss` / `postcss-prefix-selector` patched overrides 和后端 `bcprov-jdk18on 1.84`，避免已知脆弱版本回流。
+- GHCR 证据权限：`docs/v22-external-evidence-checklist.md` 与 `scripts/validate-v22-external-evidence.sh` 明确 GHCR package version 查询需要 `gh` token 具备 `read:packages`；HTTP 403 是权限证据缺口，不得被解释为 package 不存在或证据完成。
 - Helm 部署入口：`helm/mmmail` chart 只发布 `backend` 和 `frontend-admin`，通过外部 MySQL / Redis 与 Kubernetes Secret 注入运行时配置，并进入 `scripts/validate-helm-chart.sh`。
 - 镜像发布入口：`.github/workflows/images.yml` 在 tag 上构建 GHCR 多架构 backend / frontend-admin 镜像，workflow_dispatch 仅用于 dry run，release notes 模板要求记录 digest。
 - OpenTelemetry runtime tracing：`RuntimeTraceService`、`RequestTracingFilter`、commercial repository/webhook/license service 和 Drive Redis limiter 已接入 `mmmail.http.request` / `mmmail.db.operation` / `mmmail.redis.operation` / `mmmail.billing.webhook` / `mmmail.license.verify` span；`docs/observability/opentelemetry.md`、`BackendV22OpenTelemetryContractTest`、validate-local 和 CI 固定默认关闭、OTLP 配置和失败显式传播。
@@ -1089,7 +1093,7 @@ mmmail-billing-gateway (private)
 - `bash scripts/release-gate.sh` 输出新增 step。
 - 最终 `git diff --exit-code` 仍保留。
 
-**当前落地状态（2026-05-17 / pass-92）**：
+**当前落地状态（2026-05-17 / pass-93）**：
 - `tests/v22-legacy-frontend-contract-migration.test.mjs` 已作为 `legacy-contract-migration` gate，证明 selected legacy contracts 已迁入 root tests / `frontend-admin`，并证明旧迁移信号脚本和 CI job 不会被重新引入。
 - `BackendV22CommercialSurfaceCoverageContractTest` 已作为 commercial surface coverage gate，证明当前 v2.2 OIDC / audit / DSR Business API 有服务端 feature gate，并证明 license upgrade path 与 billing webhook 是显式例外而非 silent paid fallback。
 - 已新增 `scripts/generate-sbom-license-report.mjs`，默认输出到系统临时目录 `mmmail-supply-chain`；可用 `MMMAIL_SUPPLY_CHAIN_REPORT_DIR` 显式指定目录，避免在仓库内留下 `artifacts/`。
@@ -1114,7 +1118,8 @@ mmmail-billing-gateway (private)
 - `frontend-admin/scripts/run-lighthouse.mjs` 显式使用 Lighthouse `preset: 'desktop'`，匹配历史桌面性能验收口径；`MIN_LIGHTHOUSE_SCORE` 保持 80，脚本仍要求实际分数大于 80。
 - `frontend-admin/src/views/_builtin/login/modules/pwd-login.vue` 的密码登录首屏使用原生 `auth-native-form`、`input` 和 `button` 控件，保留真实 `fetchLogin(model.email, model.password)`、安全异常提示、键盘提交、可访问标签和演示账号入口，但不在首屏引入 Naive 表单组件；`frontend-admin/tests/v212-browser-gates-contract.test.mjs` 固定该性能边界。
 - `pnpm --dir frontend-admin test:v212` 通过，125 tests；`pnpm --dir frontend-admin test:lighthouse` fresh build 下 `/login` performance=86。
-- `backend/pom.xml` 固定 Spring Boot 3.5.14、Tomcat 10.1.55、Spring Security 6.5.10、Log4j 2.26.0、Netty 4.1.133.Final、OpenTelemetry semconv 1.41.1、Kotlin stdlib 2.3.21；`DependencyVersionGuardTest` 覆盖这些运行时版本下限，避免后续 OWASP dependency-check 漂移只在远端 validate 暴露。
+- `backend/pom.xml` 固定 Spring Boot 3.5.14、Tomcat 10.1.55、Spring Security 6.5.10、Log4j 2.26.0、Netty 4.1.133.Final、OpenTelemetry semconv 1.41.1、Kotlin stdlib 2.3.21 和 Bouncy Castle 1.84；`DependencyVersionGuardTest` 覆盖这些运行时版本下限，避免后续 OWASP dependency-check 漂移或 Dependabot 漂移只在远端 validate 暴露。
+- `frontend-admin/package.json` 的 `pnpm.overrides` 固定当前 Dependabot 告警涉及的 `braces@3.0.3`、`glob@10.5.0`、`postcss@8.5.14` 和 `postcss-prefix-selector@2.1.1`，并由 `tests/v22-supply-chain-security-contract.test.mjs` 验证旧脆弱 lockfile 条目不回流。
 - `config/dependency-check-suppressions.xml` 只对 Java `opentelemetry-semconv@1.41.1` package URL 与 OpenTelemetry-Go CVE 做精确 suppression；`scripts/security-backend-dependency-scan.sh` 和 `scripts/validate-security.sh` 均把相对 `MMMAIL_SECURITY_REPORT_DIR` 解析到仓库根绝对路径，避免 Maven `-f backend/pom.xml` 把报告写入 `backend/artifacts/security`。
 - `MMMail CI` run `25977701508` 与 `MMMail Images` run `25977702756` 已在 commit `50165923` / tag `v2.2.0-rc.10` 成功；这是主仓远端门禁的可复查基线证据，不替代最新提交的 GitHub Actions 状态，也不替代 live Keycloak/OIDC、image digest evidence 文件或 private billing repository 的外部验收。
 - `.github/workflows/ci.yml` 已在 validate / release-gate job 安装 Helm。
@@ -1233,6 +1238,7 @@ v2.2 不允许只靠“文档存在”验收。release gate 至少新增：
 | helm-lint | `bash scripts/validate-helm-chart.sh` | chart 可 lint/template，只发布 backend 和 frontend-admin，不包含 frontend-v2 |
 | image-workflow-contract | `node --test tests/v22-image-publishing-contract.test.mjs` | tag workflow 使用 GHCR buildx multi-arch，只发布 backend 和 frontend-admin，并要求 release notes 记录 digest |
 | sbom-license | CycloneDX / SPDX | 产物生成且进入 release artifact |
+| supply-chain-security | `node --test tests/v22-supply-chain-security-contract.test.mjs` + `DependencyVersionGuardTest` | Dependabot 告警、前端 lockfile patched overrides、Bouncy Castle 版本下限和 GHCR `read:packages` 证据权限均有可执行规范 |
 | secret-scan | `bash scripts/security-secret-scan.sh` | 主仓无支付私钥、商户证书、license 私钥；扫描范围遵循 Git tracked + untracked non-ignored，避免依赖目录和临时 worktree 假阳性 |
 | a11y-axe | Playwright | 登录、注册、license、billing、OIDC 关键页无严重 a11y 问题 |
 

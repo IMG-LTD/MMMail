@@ -282,7 +282,7 @@ test('v2.2 completion audit maps the objective to concrete evidence and external
   assert.match(audit, /Remote `main` CI for `f29a1510` completed with failure/);
   assert.match(audit, /workflow pnpm was 9 while `frontend-admin` requires pnpm `>=10\.5\.0`/);
   assert.match(audit, /Frontend-admin Docker build failed with `ERR_MODULE_NOT_FOUND` for `@iconify\/utils`/);
-  assert.match(audit, /Package not found, HTTP 404/);
+  assert.match(audit, /HTTP 403: GitHub API requires `read:packages` scope/);
   assert.match(audit, /41 passed, build success/);
   assert.match(audit, /performance=86/);
   assert.match(audit, /refs\/tags\/v2\.1\.2-shipping-clean/);
@@ -333,7 +333,7 @@ test('v2.2 completion audit maps the objective to concrete evidence and external
   assert.match(audit, /same Public MMMail commit/);
   assert.match(audit, /not complete until the external evidence gaps above are resolved/);
   assert.match(spec, /status: main-repo-implemented-external-evidence-required/);
-  assert.match(spec, /spec_version: oss-comm-v1\.90/);
+  assert.match(spec, /spec_version: oss-comm-v1\.91/);
   for (const requiredPass of [
     /pass-51 外部状态核查/, /pass-52 OTel 文档复查/, /pass-53 live OIDC 证据模板复查/,
     /pass-54 DEP-02 \/ billing 外部证据模板复查/, /pass-55 远端 CI 状态复查/, /pass-56 后端 v2\.2 contract 新鲜验证/,
@@ -347,7 +347,7 @@ test('v2.2 completion audit maps the objective to concrete evidence and external
     /pass-81 Docker context 复查/, /pass-82 API 生成 clean-diff 复查/, /pass-83 frontend-admin env 复查/,
     /pass-84 frontend e2e Java 工具链复查/, /pass-85 Lighthouse 直接依赖复查/, /pass-86 后端依赖安全基线复查/,
     /pass-87 Lighthouse desktop preset 复查/, /pass-88 密码登录首屏性能复查/,
-    /pass-89 依赖扫描误报治理复查/, /pass-90 安全报告路径复查/, /pass-91 rc10 远端主仓发布证据复查/, /pass-92 release evidence 文案稳定性复查/
+    /pass-89 依赖扫描误报治理复查/, /pass-90 安全报告路径复查/, /pass-91 rc10 远端主仓发布证据复查/, /pass-92 release evidence 文案稳定性复查/, /pass-93 供应链安全规范复查/
   ]) {
     assert.match(spec, requiredPass);
   }
@@ -451,8 +451,8 @@ test('v2.2 completion audit maps the objective to concrete evidence and external
   assert.match(externalVerifier, /Evidence status: completed-external-evidence/);
   assert.match(externalVerifier, /reject_contains "\$MMMAIL_IMAGE_DIGEST_EVIDENCE_FILE" "sha256:\*"/);
   assert.match(externalVerifier, /gh run list --repo IMG-LTD\/MMMail --workflow "MMMail Images" --event push --status success/);
-  assert.match(externalVerifier, /gh api orgs\/IMG-LTD\/packages\/container\/mmmail-backend\/versions/);
-  assert.match(externalVerifier, /gh api orgs\/IMG-LTD\/packages\/container\/mmmail-frontend-admin\/versions/);
+  assert.match(externalVerifier, /record_if_ghcr_versions_unavailable "mmmail-backend" "backend"/);
+  assert.match(externalVerifier, /record_if_ghcr_versions_unavailable "mmmail-frontend-admin" "frontend-admin"/);
   assert.match(externalVerifier, /gh repo view IMG-LTD\/mmmail-billing-gateway/);
   assert.match(validateLocal, /docs\/v22-completion-audit\.md/);
   assert.match(validateLocal, /docs\/v22-external-evidence-checklist\.md/);
