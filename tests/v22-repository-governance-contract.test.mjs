@@ -301,6 +301,12 @@ test('v2.2 completion audit maps the objective to concrete evidence and external
   assert.match(audit, /installs Temurin Java 21 before `pnpm --dir frontend-admin test:e2e`/);
   assert.match(audit, /Frontend Lighthouse toolchain dependency/);
   assert.match(audit, /declares `chrome-launcher@1\.2\.1` as a direct devDependency/);
+  assert.match(audit, /Backend dependency security baseline/);
+  assert.match(audit, /OWASP dependency-check failures/);
+  assert.match(audit, /dependency-check-maven:aggregate/);
+  assert.match(audit, /Spring Boot 3\.5\.14/);
+  assert.match(audit, /OpenTelemetry semconv 1\.41\.1/);
+  assert.match(audit, /Kotlin stdlib 2\.3\.21/);
   assert.match(audit, /git diff --check/);
   assert.match(audit, /Only `mmmail-nacos` and `mmmail-kafka` are running/);
   assert.match(audit, /rechecks GitHub private vulnerability reporting via GitHub API/);
@@ -316,48 +322,37 @@ test('v2.2 completion audit maps the objective to concrete evidence and external
   assert.match(audit, /Fatal error compiling: error: release version 21 not supported/);
   assert.match(audit, /tag `v2\.2\.0-rc\.4`/);
   assert.match(audit, /ERR_MODULE_NOT_FOUND/);
+  assert.match(audit, /tag `v2\.2\.0-rc\.5`/);
+  assert.match(audit, /MMMail Images` succeeded for backend and frontend-admin/);
+  assert.match(audit, /opentelemetry-semconv/);
   assert.match(audit, /not acceptable release evidence/);
   assert.match(audit, /follow-up commit and a new tag-triggered `MMMail Images` run/);
   assert.match(audit, /same Public MMMail commit/);
   assert.match(audit, /not complete until the external evidence gaps above are resolved/);
   assert.match(spec, /status: main-repo-implemented-external-evidence-required/);
-  assert.match(spec, /spec_version: oss-comm-v1\.83/);
-  assert.match(spec, /pass-51 外部状态核查/);
-  assert.match(spec, /pass-52 OTel 文档复查/);
-  assert.match(spec, /pass-53 live OIDC 证据模板复查/);
-  assert.match(spec, /pass-54 DEP-02 \/ billing 外部证据模板复查/);
-  assert.match(spec, /pass-55 远端 CI 状态复查/);
-  assert.match(spec, /pass-56 后端 v2\.2 contract 新鲜验证/);
-  assert.match(spec, /pass-57 前端 commercial surface 新鲜验证/);
-  assert.match(spec, /pass-58 仓库规范冻结口径复查/);
-  assert.match(spec, /pass-59 仓库规范 Spring 注入与 auth shell 性能复查/);
-  assert.match(spec, /pass-60 仓库规范安全产物复查/);
-  assert.match(spec, /pass-61 auth shell 首屏性能复查/);
-  assert.match(spec, /pass-62 完整本地门禁复查/);
-  assert.match(spec, /pass-63 生成文件 hygiene 复查/);
-  assert.match(spec, /pass-64 外部状态再核查/);
-  assert.match(spec, /pass-65 外部 verifier 完成态加固/);
-  assert.match(spec, /pass-66 completed external evidence 复验/);
-  assert.match(spec, /pass-67 外部 evidence 文件防模板误判/);
-  assert.match(spec, /pass-68 image digest 完成态门禁收紧/);
-  assert.match(spec, /pass-69 外部 evidence 字段级校验/);
-  assert.match(spec, /pass-70 外部 verifier 当前态实证输出/);
-  assert.match(spec, /pass-71 外部 verifier 失败口径复查/);
-  assert.match(spec, /pass-72 仓库规范 release-gate 复查/);
-  assert.match(spec, /pass-73 外部 verifier 发布前置条件复查/);
-  assert.match(spec, /pass-74 默认门禁外部 verifier 隔离复查/);
-  assert.match(spec, /pass-75 完成态发布前置条件加固复查/);
-  assert.match(spec, /pass-76 仓库规范超大文件复查/);
-  assert.match(spec, /pass-81 Docker context 复查/);
-  assert.match(spec, /pass-82 API 生成 clean-diff 复查/);
-  assert.match(spec, /pass-83 frontend-admin env 复查/);
-  assert.match(spec, /pass-84 frontend e2e Java 工具链复查/);
-  assert.match(spec, /pass-85 Lighthouse 直接依赖复查/);
-  assert.match(spec, /pass-77 仓库规范源码行数与本地产物复查/);
+  assert.match(spec, /spec_version: oss-comm-v1\.84/);
+  for (const requiredPass of [
+    /pass-51 外部状态核查/, /pass-52 OTel 文档复查/, /pass-53 live OIDC 证据模板复查/,
+    /pass-54 DEP-02 \/ billing 外部证据模板复查/, /pass-55 远端 CI 状态复查/, /pass-56 后端 v2\.2 contract 新鲜验证/,
+    /pass-57 前端 commercial surface 新鲜验证/, /pass-58 仓库规范冻结口径复查/, /pass-59 仓库规范 Spring 注入与 auth shell 性能复查/,
+    /pass-60 仓库规范安全产物复查/, /pass-61 auth shell 首屏性能复查/, /pass-62 完整本地门禁复查/,
+    /pass-63 生成文件 hygiene 复查/, /pass-64 外部状态再核查/, /pass-65 外部 verifier 完成态加固/,
+    /pass-66 completed external evidence 复验/, /pass-67 外部 evidence 文件防模板误判/, /pass-68 image digest 完成态门禁收紧/,
+    /pass-69 外部 evidence 字段级校验/, /pass-70 外部 verifier 当前态实证输出/, /pass-71 外部 verifier 失败口径复查/,
+    /pass-72 仓库规范 release-gate 复查/, /pass-73 外部 verifier 发布前置条件复查/, /pass-74 默认门禁外部 verifier 隔离复查/,
+    /pass-75 完成态发布前置条件加固复查/, /pass-76 仓库规范超大文件复查/, /pass-77 仓库规范源码行数与本地产物复查/,
+    /pass-81 Docker context 复查/, /pass-82 API 生成 clean-diff 复查/, /pass-83 frontend-admin env 复查/,
+    /pass-84 frontend e2e Java 工具链复查/, /pass-85 Lighthouse 直接依赖复查/, /pass-86 后端依赖安全基线复查/
+  ]) {
+    assert.match(spec, requiredPass);
+  }
   assert.match(spec, /frontend-admin\/scripts\/gen-api\.mjs` 在 `openapi-typescript` 后立即执行 `oxfmt`/);
   assert.match(spec, /frontend-admin\/\.env` 与 `frontend-admin\/\.env\.test` 仅包含非敏感 Vite 构建默认值/);
   assert.match(spec, /frontend job 在 `pnpm --dir frontend-admin test:e2e` 前安装 Temurin Java 21/);
   assert.match(spec, /frontend-admin\/package\.json` 显式声明 `chrome-launcher@1\.2\.1`/);
+  assert.match(spec, /backend\/pom\.xml` 固定 Spring Boot 3\.5\.14/);
+  assert.match(spec, /DependencyVersionGuardTest` 覆盖这些运行时版本下限/);
+  assert.match(spec, /OWASP dependency-check 漂移/);
   assert.match(spec, /active-source-size-guardrail/);
   assert.match(spec, /7 个 status markers 加 8 个 read-only evidence gaps/);
   assert.match(spec, /all checks passed/);

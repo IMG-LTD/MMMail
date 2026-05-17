@@ -58,8 +58,8 @@ class DependencyVersionGuardTest {
     void tomcatRuntimeShouldStayOnPatchedVersionForSecurityGate() {
         String version = ServerInfo.getServerNumber().trim();
 
-        assertThat(versionAtLeast(version, "10.1.53.0"))
-                .as("resolved tomcat-embed-core version %s should be at least 10.1.53.0 to clear the CI security gate", version)
+        assertThat(versionAtLeast(version, "10.1.55"))
+                .as("resolved tomcat-embed-core version %s should be at least 10.1.55 to clear the CI security gate", version)
                 .isTrue();
     }
 
@@ -67,8 +67,8 @@ class DependencyVersionGuardTest {
     void springBootRuntimeShouldStayOnPatchedVersionForSecurityGate() {
         String version = SpringBootVersion.getVersion();
 
-        assertThat(versionAtLeast(version, "3.5.13"))
-                .as("resolved spring-boot version %s should be at least 3.5.13 to clear the CI security gate", version)
+        assertThat(versionAtLeast(version, "3.5.14"))
+                .as("resolved spring-boot version %s should be at least 3.5.14 to clear the CI security gate", version)
                 .isTrue();
     }
 
@@ -76,8 +76,8 @@ class DependencyVersionGuardTest {
     void springSecurityRuntimeShouldStayOnPatchedVersionForSecurityGate() {
         String version = SpringSecurityCoreVersion.getVersion();
 
-        assertThat(versionAtLeast(version, "6.5.9"))
-                .as("resolved spring-security-core version %s should be at least 6.5.9 to clear the CI security gate", version)
+        assertThat(versionAtLeast(version, "6.5.10"))
+                .as("resolved spring-security-core version %s should be at least 6.5.10 to clear the CI security gate", version)
                 .isTrue();
     }
 
@@ -94,8 +94,44 @@ class DependencyVersionGuardTest {
     void swaggerUiRuntimeShouldStayOnPatchedVersionForSecurityGate() throws Exception {
         String version = readRuntimeVersion(DependencyVersionGuardTest.class, "META-INF/maven/org.webjars/swagger-ui/pom.properties");
 
-        assertThat(versionAtLeast(version, "5.32.4"))
-                .as("resolved swagger-ui version %s should be at least 5.32.4 to clear the CI security gate", version)
+        assertThat(versionAtLeast(version, "5.32.5"))
+                .as("resolved swagger-ui version %s should be at least 5.32.5 to clear the CI security gate", version)
+                .isTrue();
+    }
+
+    @Test
+    void log4jApiRuntimeShouldStayOnPatchedVersionForSecurityGate() throws Exception {
+        String version = readRuntimeVersion(DependencyVersionGuardTest.class, "META-INF/maven/org.apache.logging.log4j/log4j-api/pom.properties");
+
+        assertThat(versionAtLeast(version, "2.26.0"))
+                .as("resolved log4j-api version %s should be at least 2.26.0 to clear the CI security gate", version)
+                .isTrue();
+    }
+
+    @Test
+    void nettyTransportRuntimeShouldStayOnPatchedVersionForSecurityGate() throws Exception {
+        String version = readRuntimeVersion(DependencyVersionGuardTest.class, "META-INF/maven/io.netty/netty-transport/pom.properties");
+
+        assertThat(versionAtLeast(version, "4.1.133.Final"))
+                .as("resolved netty-transport version %s should be at least 4.1.133.Final to clear the CI security gate", version)
+                .isTrue();
+    }
+
+    @Test
+    void opentelemetrySemconvRuntimeShouldStayOnPatchedVersionForSecurityGate() throws Exception {
+        String version = readImplementationVersion("io.opentelemetry.semconv.TelemetryAttributes");
+
+        assertThat(versionAtLeast(version, "1.41.1"))
+                .as("resolved opentelemetry-semconv version %s should be at least 1.41.1 to clear the CI security gate", version)
+                .isTrue();
+    }
+
+    @Test
+    void kotlinStdlibRuntimeShouldStayOnPatchedVersionForSecurityGate() throws Exception {
+        String version = readImplementationVersion("kotlin.KotlinVersion");
+
+        assertThat(versionAtLeast(version, "2.3.21"))
+                .as("resolved kotlin-stdlib version %s should be at least 2.3.21 to clear the CI security gate", version)
                 .isTrue();
     }
 
@@ -235,6 +271,14 @@ class DependencyVersionGuardTest {
                     .isNotBlank();
             return version.trim();
         }
+    }
+
+    private String readImplementationVersion(String className) throws Exception {
+        String version = Class.forName(className).getPackage().getImplementationVersion();
+        assertThat(version)
+                .as("runtime package %s should expose an implementation version", className)
+                .isNotBlank();
+        return version.split("-", 2)[0].trim();
     }
 
     private boolean versionAtLeast(String actual, String minimum) {

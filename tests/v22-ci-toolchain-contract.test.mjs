@@ -94,6 +94,29 @@ test('frontend CI declares direct toolchain dependencies', async () => {
   assert.equal(packageJson.devDependencies['chrome-launcher'], '1.2.1');
 });
 
+test('backend dependency scan baseline declares patched runtime versions', async () => {
+  const [pom, guard] = await Promise.all([
+    read('backend/pom.xml'),
+    read('backend/mmmail-server/src/test/java/com/mmmail/server/DependencyVersionGuardTest.java')
+  ]);
+
+  assert.match(pom, /<artifactId>spring-boot-starter-parent<\/artifactId>\s*<version>3\.5\.14<\/version>/);
+  assert.match(pom, /<swagger-ui\.version>5\.32\.5<\/swagger-ui\.version>/);
+  assert.match(pom, /<tomcat\.version>10\.1\.55<\/tomcat\.version>/);
+  assert.match(pom, /<kotlin\.version>2\.3\.21<\/kotlin\.version>/);
+  assert.match(pom, /<log4j2\.version>2\.26\.0<\/log4j2\.version>/);
+  assert.match(pom, /<netty\.version>4\.1\.133\.Final<\/netty\.version>/);
+  assert.match(pom, /<opentelemetry\.semconv\.version>1\.41\.1<\/opentelemetry\.semconv\.version>/);
+  assert.match(pom, /<artifactId>opentelemetry-semconv<\/artifactId>\s*<version>\$\{opentelemetry\.semconv\.version\}<\/version>/);
+  assert.match(guard, /spring-boot version %s should be at least 3\.5\.14/);
+  assert.match(guard, /spring-security-core version %s should be at least 6\.5\.10/);
+  assert.match(guard, /tomcat-embed-core version %s should be at least 10\.1\.55/);
+  assert.match(guard, /log4j-api version %s should be at least 2\.26\.0/);
+  assert.match(guard, /netty-transport version %s should be at least 4\.1\.133\.Final/);
+  assert.match(guard, /opentelemetry-semconv version %s should be at least 1\.41\.1/);
+  assert.match(guard, /kotlin-stdlib version %s should be at least 2\.3\.21/);
+});
+
 test('frontend API type generation formats generated output before CI diff guard', async () => {
   const [packageJson, script] = await Promise.all([
     read('frontend-admin/package.json').then(JSON.parse),
