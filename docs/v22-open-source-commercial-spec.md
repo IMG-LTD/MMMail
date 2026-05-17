@@ -1,7 +1,7 @@
 ---
 name: v2.2 开源 + 商业化筹备 spec
 date: 2026-05-16
-spec_version: oss-comm-v1.94
+spec_version: oss-comm-v1.95
 based_on:
   - docs/v213-closure-spec-v1.1.md (implemented)
   - docs/v212-shipping-cleanup-spec.md (implemented)
@@ -67,7 +67,7 @@ iteration_history:
   - v1.37 同步完成状态：frontmatter 从 `implementation-started` 收敛为 `main-repo-implemented-external-evidence-required`，避免把主仓已落地但外部证据未齐的状态写成仍在启动
   - v1.38 同步外部 verifier 覆盖范围：`scripts/validate-v22-external-evidence.sh` 现在也显式报告独立计费仓 / 真实支付 / license signing 证据仍在主仓外，避免商业闭环缺口被 GitHub、Keycloak 和镜像 digest 缺口掩盖
   - v1.39 同步剩余决策状态：原 Sprint 0 决策点已改为当前决策复查表，区分已落地决策、外部证据项和后续 v2.3 / 私有仓边界
-  - v1.40 同步外部证据 checklist：`docs/v22-external-evidence-checklist.md` 现在列出当前 verifier 必须报告的 8 个 incomplete markers，避免脚本文档和实际输出漂移
+  - v1.40 同步外部证据 checklist：`docs/v22-external-evidence-checklist.md` 当时列出 verifier 必须报告的 incomplete markers，避免脚本文档和实际输出漂移
   - v1.41 同步前端拓扑现状叙述：§0.3 不再说 README / CI / release-gate 现在仍把两个前端当产品入口，而是记录历史风险与当前 frontend-admin-only 落地状态
   - v1.42 同步 release-gate skip 防线：root governance contract 现在动态验证 `CI=true` 时 `MMMAIL_SKIP_BACKEND` / `MMMAIL_SKIP_E2E` 会被 `scripts/release-gate.sh` 早期阻断
   - v1.43 同步 edition source precedence：文档和 `BackendV22EditionCoreContractTest` 固定运行时 edition 按 subscription state、active license、workspace fallback 解析，非付费 subscription 不会被 active license 静默覆盖为 paid
@@ -96,9 +96,9 @@ iteration_history:
   - v1.66 同步 image digest 完成态门禁收紧：DEP-02 evidence 必须证明 `MMMail Images` workflow 是 `push` event 且 conclusion 为 `success`，verifier 对 GH run list 也使用 `--event push --status success`
   - v1.67 同步外部 evidence 字段级校验：verifier 要求 OIDC、image digest 和 private billing evidence 的 commit、provider、run、workflow、digest 与 billing repo 核心字段均为非空，避免空模板加完成标记通过
   - v1.68 同步外部 verifier 当前态实证输出：在 incomplete markers 之外，verifier 现在也报告 evidence 文件缺失、成功 tag-push Images workflow 不可见、GHCR package 不可见和 private billing repo 不可访问
-  - v1.69 同步外部 verifier 失败口径：旧“7 个缺口”口径收敛为 7 个 status markers 加 7 个 read-only evidence gaps，避免误读当前失败输出
+  - v1.69 同步外部 verifier 失败口径：旧“7 个缺口”口径当时收敛为 7 个 status markers 加 7 个 read-only evidence gaps，避免误读失败输出
   - v1.70 同步仓库规范 release-gate 复查：release-gate 增加 legacy frontend freeze 第 17 步，CI release-gate job 使用完整历史，根 contract gate 文案从 v2.1.2 收敛为 repository contract gates，AGENTS 补入新代码质量上限
-  - v1.71 同步外部 verifier 发布前置条件：verifier 当前态输出新增本地 v2.2 实现未发布到远端 commit/tag 的 read-only gap，当前失败口径变为 7 个 status markers 加 8 个 read-only evidence gaps
+  - v1.71 同步外部 verifier 发布前置条件：verifier 当时新增本地 v2.2 实现未发布到远端 commit/tag 的 read-only gap，失败口径变为 7 个 status markers 加 8 个 read-only evidence gaps
   - v1.72 同步默认门禁外部 verifier 隔离：root governance tests 不再直接执行 `scripts/validate-v22-external-evidence.sh`；默认 validate-local / CI / release-gate 只静态保护 verifier 合同、manual-only wiring 和 failure markers，真实执行仍限手动外部证据验收
   - v1.73 同步完成态发布前置条件加固：外部 verifier 完成态会比较 OIDC backend/frontend commit、image commit、private billing 记录的 Public MMMail commit、origin release tag commit 和 origin branch containment，防止 evidence package 指向不同代码版本
   - v1.74 同步仓库规范超大文件复查：`frontend-admin/src/router/routes/index.ts` 拆出 `custom-routes.ts` / `public-share-routes.ts`，locale 字典拆出 `v22-commercial/*`，`DriveService` 拆出 `DrivePublicShareRateLimiter`，避免本轮新增路由、commercial i18n 和 Redis tracing 继续扩大历史 oversized 文件
@@ -122,6 +122,7 @@ iteration_history:
   - v1.92 同步主分支证据复查：供应链审计同步提交的远端 CI 成功，rc10 image workflow 只作为历史基线；最终 DEP-02 / OIDC / billing 外部证据必须锚定同一个待验收 Public MMMail commit
   - v1.93 同步 DEP-02 证据链复查：远端可见 `MMMail Images` 已有 rc10-rc13 成功 tag-baseline，最新可见成功为 rc13；这些仍只是历史 workflow baseline，不替代同 commit digest evidence、GHCR 可见性和 release notes
   - v1.94 同步 DEP-02 release notes 复查：GitHub Release 列表最新仍是 v2.0.4，未发布 v2.2 release notes，因此 image digest evidence 仍缺 release note 记录
+  - v1.95 同步外部 verifier 当前输出复查：当前主分支已发布且 tag-push Images workflow 可见，未发布实现和 Images workflow 不可见不再计入当前 read-only gap；实际失败口径为 7 个 status markers 加 6 个 read-only evidence gaps
 review_passes:
   - pass-1 现状对账：用 grep / ls / package.json / CI / release-gate 核对已存在与缺失项
   - pass-2 一致性复查：统一 Free-Pro-Business、Adapay 独立仓、个人开发者容量
@@ -186,16 +187,16 @@ review_passes:
   - pass-61 auth shell 首屏性能复查：非首屏 auth 模块通过 `defineAsyncComponent` 懒加载；登录页移除 `SystemLogo`、`NTag`、`ThemeSchemaSwitch` 和 `LangSwitch` 首屏依赖，保留原生主题切换和语言选择交互；`pnpm --dir frontend-admin test:lighthouse` 重新构建后登录页 performance=84
   - pass-62 完整本地门禁复查：`V39__oidc_sso_init.sql` 已把 `system_release_metadata.schema_version` 更新到 39；`sg docker -c "cd /home/xiang/桌面/project/MMMail-test/MMMail && PATH=/tmp/mmmail-helm-bin:$PATH env -u http_proxy -u https_proxy -u HTTP_PROXY -u HTTPS_PROXY -u ALL_PROXY -u all_proxy bash scripts/validate-local.sh"` 输出 `all checks passed`
   - pass-63 生成文件 hygiene 复查：完整门禁后发现 `elegant-router.d.ts` 被路由类型生成器重新写入尾随空格；`gen-route`、`validate-local` 和治理 contract 已固定生成后清理与 `git diff --check`，防止门禁绿色但工作树格式失败
-  - pass-64 外部状态再核查：`gh workflow list`、`gh run list --workflow "MMMail Images"`、GHCR package API、`gh repo view IMG-LTD/mmmail-billing-gateway`、OIDC env grep、`sg docker` 和 `ss` 均未提供 live Keycloak、image digest 或私有 billing 仓证据；外部 verifier 当前按 7 个 status markers 加 7 个 read-only evidence gaps 失败
+  - pass-64 外部状态再核查：`gh workflow list`、`gh run list --workflow "MMMail Images"`、GHCR package API、`gh repo view IMG-LTD/mmmail-billing-gateway`、OIDC env grep、`sg docker` 和 `ss` 均未提供 live Keycloak、image digest 或私有 billing 仓证据；外部 verifier 当时按 7 个 status markers 加 7 个 read-only evidence gaps 失败
   - pass-65 外部 verifier 完成态加固：当前缺口存在时 verifier 仍按 7 个 markers 失败；一旦文档 markers 被移除，verifier 会要求 `MMMAIL_OIDC_LIVE_EVIDENCE_FILE`、`MMMAIL_IMAGE_DIGEST_EVIDENCE_FILE`、`MMMAIL_PRIVATE_BILLING_EVIDENCE_FILE` 和真实 GH / GHCR / billing repo 查询通过
   - pass-66 completed external evidence 复验：`scripts/validate-v22-external-evidence.sh` 会用 `gh api --method GET repos/IMG-LTD/MMMail/private-vulnerability-reporting` 重新确认 GitHub private vulnerability reporting 为 enabled，避免已完成外部项退化成纯文档声明
   - pass-67 外部 evidence 文件防模板误判：`scripts/validate-v22-external-evidence.sh` 要求三个完成态 evidence 文件都有 `Evidence status: completed-external-evidence`，并拒绝模板正文、未填写模板与 `sha256:*` wildcard digest
   - pass-68 image digest 完成态门禁收紧：`scripts/validate-v22-external-evidence.sh` 要求 image evidence 写明 `Workflow event: push` 和 `Workflow conclusion: success`，并用 `gh run list --event push --status success` 查询真实 `MMMail Images` run
   - pass-69 外部 evidence 字段级校验：`scripts/validate-v22-external-evidence.sh` 对 OIDC、image digest 和 private billing evidence 的关键字段执行非空校验，包括 commit SHA、provider metadata、workflow URL、immutable digest、billing repo URL 和 signing key location
   - pass-70 外部 verifier 当前态实证输出：`scripts/validate-v22-external-evidence.sh` 在当前 incomplete 状态下也运行只读 GH / evidence file 检查，输出 evidence file、Images workflow、GHCR packages 和 private billing repo 的实际缺口
-  - pass-71 外部 verifier 失败口径复查：spec 不再把当前失败笼统写成“7 个缺口”，而是区分 7 个 status markers 和 7 个 read-only evidence gaps
+  - pass-71 外部 verifier 失败口径复查：spec 不再把当时失败笼统写成“7 个缺口”，而是区分 7 个 status markers 和 7 个 read-only evidence gaps
   - pass-72 仓库规范 release-gate 复查：`scripts/release-gate.sh` 现在第 17 步执行 `scripts/validate-legacy-frontend-v2-freeze.sh`，CI release-gate checkout 使用 `fetch-depth: 0`，root gate 名称改为 repository contract gates，AGENTS 固定新代码 50/500 质量上限和 oversized legacy 例外
-  - pass-73 外部 verifier 发布前置条件复查：`scripts/validate-v22-external-evidence.sh` 当前态会检查本地 tracked / untracked / ahead 状态，并在 v2.2 实现尚未发布到远端 commit/tag 时输出 read-only gap；当前失败口径为 7 个 status markers 加 8 个 read-only evidence gaps
+  - pass-73 外部 verifier 发布前置条件复查：`scripts/validate-v22-external-evidence.sh` 当前态会检查本地 tracked / untracked / ahead 状态，并在 v2.2 实现尚未发布到远端 commit/tag 时输出 read-only gap；该 gap 只适用于未发布工作树，不应在当前主分支已发布后继续计入当前失败口径
   - pass-74 默认门禁外部 verifier 隔离复查：root governance tests 不再 spawn 外部证据 verifier，避免 `node --test tests/*.test.mjs` / `scripts/validate-local.sh` 间接依赖 GitHub CLI、GHCR、远端 workflow 或私有 billing repo；默认门禁只静态断言手动 verifier 的合同和 expected markers
   - pass-75 完成态发布前置条件加固复查：`scripts/validate-v22-external-evidence.sh` 完成态会要求 OIDC backend/frontend commit、image evidence commit、private billing evidence 的 Public MMMail commit 互相一致，origin release tag 指向同一 commit，并且该 commit 出现在 `origin/main` 或 `origin/release/*`
   - pass-76 仓库规范超大文件复查：把新增公共分享路由从 router index 拆到自定义路由模块，把 commercial i18n 文案拆到 `v22-commercial/*`，把 public share Redis limiter 从 `DriveService` 拆到 `DrivePublicShareRateLimiter`，并用治理 contract 固定本轮新增逻辑不得继续扩大已超限文件
@@ -216,6 +217,7 @@ review_passes:
   - pass-91 rc10 远端主仓发布证据复查：`MMMail CI` run `25977701508` 与 `MMMail Images` run `25977702756` 均在 commit `50165923` 成功；手动外部 verifier 仍以 status=1 报告 live OIDC、image digest evidence 文件、GHCR package visibility 和 private billing repo 缺口
   - pass-92 release evidence 文案稳定性复查：completion audit 不再把某个历史 rc 写成永久“current”结果；最新提交的远端 run 以 GitHub Actions 状态为准，spec 只保留可复查基线证据
   - pass-93 供应链安全规范复查：AGENTS / CONTRIBUTING / PR template 要求 Dependabot 告警按 fixed version 收敛，`tests/v22-supply-chain-security-contract.test.mjs` 阻断已知 npm 脆弱版本和 Bouncy Castle 旧版本回流，外部 verifier 对 GHCR 403 明确提示 `read:packages`
+  - pass-94 外部 verifier 当前口径复查：`timeout 120s bash scripts/validate-v22-external-evidence.sh` 当前实际输出为 7 个 status markers 加 6 个 read-only evidence gaps；已发布主分支和可见 tag-push Images workflow 不再作为当前缺口，只保留 live OIDC evidence file、image digest evidence file、private billing evidence file、backend/frontend-admin GHCR package visibility 和 private billing repo access
 ---
 
 # v2.2 开源 + 商业化筹备 spec
