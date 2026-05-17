@@ -116,6 +116,7 @@ The latest targeted verification for this audit:
 | `gh run view 25977701508 --repo IMG-LTD/MMMail --json status,conclusion,jobs,url,headSha,headBranch,event,displayTitle` | Remote `MMMail CI` for commit `50165923` / tag `v2.2.0-rc.10` completed with success across backend, frontend, Docker baseline, validate and release-gate jobs |
 | `gh run view 25977702756 --repo IMG-LTD/MMMail --json status,conclusion,jobs,url,headSha,headBranch,event,displayTitle` | Remote `MMMail Images` for commit `50165923` / tag `v2.2.0-rc.10` completed with success for backend and frontend-admin image jobs |
 | `gh run list --repo IMG-LTD/MMMail --workflow "MMMail Images" --limit 5 --json databaseId,status,conclusion,headSha,event,headBranch,displayTitle,url,createdAt` | Latest visible `MMMail Images` push baseline is run `25979632379` for `v2.2.0-rc.13` at commit `de1529218714ef35926ba3f8116c0323b4f95487`; it is still historical baseline evidence, not completed digest evidence for the current acceptance commit |
+| `gh release list --repo IMG-LTD/MMMail --limit 20` | Latest visible GitHub Release is `MMMail v2.0.4`; no v2.2 release notes are published, so DEP-02 still lacks release notes with backend and frontend-admin image digests |
 | `timeout 120s bash scripts/validate-v22-external-evidence.sh` | Expected failure with status 1 after the latest branch publication: completion audit/checklist still mark external evidence incomplete; live OIDC, image digest and private billing evidence files are missing; backend and frontend-admin GHCR package versions require `gh auth` with `read:packages`; private billing repository is not accessible |
 
 ## Remaining Evidence Gaps
@@ -124,7 +125,7 @@ These items cannot be completed by repository edits alone without live infrastru
 
 1. BUS-01 requires live Keycloak login, callback, MMMail session, logout, and token refresh e2e evidence before it can move from partial done to done.
 2. OBS-01 requires the live Keycloak route/error trace evidence tied to BUS-01 before it can move from partial done to done.
-3. DEP-02 has visible successful tag-baseline Images workflows through `v2.2.0-rc.13`, but still requires completed image digest evidence, visible GHCR package / digest evidence, and release note recording before the image-publishing item can move from partial done to done.
+3. DEP-02 has visible successful tag-baseline Images workflows through `v2.2.0-rc.13`, but still requires completed image digest evidence, visible GHCR package / digest evidence, and v2.2 release note recording before the image-publishing item can move from partial done to done.
 4. GATE-01 requires the live Keycloak e2e gate evidence before the release gate expansion can move from partial done to done.
 5. Real payment processing, customer portal, invoices/refunds, and license signing private keys remain outside the public repository in the independent billing repository.
 

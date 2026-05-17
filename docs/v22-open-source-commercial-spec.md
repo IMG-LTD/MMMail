@@ -1,7 +1,7 @@
 ---
 name: v2.2 开源 + 商业化筹备 spec
 date: 2026-05-16
-spec_version: oss-comm-v1.93
+spec_version: oss-comm-v1.94
 based_on:
   - docs/v213-closure-spec-v1.1.md (implemented)
   - docs/v212-shipping-cleanup-spec.md (implemented)
@@ -121,6 +121,7 @@ iteration_history:
   - v1.91 同步供应链安全规范复查：Dependabot open alert 处理、前端脆弱 transitive 版本 overrides、Bouncy Castle patched baseline、GHCR `read:packages` 证据权限和根目录供应链合约进入仓库规范
   - v1.92 同步主分支证据复查：供应链审计同步提交的远端 CI 成功，rc10 image workflow 只作为历史基线；最终 DEP-02 / OIDC / billing 外部证据必须锚定同一个待验收 Public MMMail commit
   - v1.93 同步 DEP-02 证据链复查：远端可见 `MMMail Images` 已有 rc10-rc13 成功 tag-baseline，最新可见成功为 rc13；这些仍只是历史 workflow baseline，不替代同 commit digest evidence、GHCR 可见性和 release notes
+  - v1.94 同步 DEP-02 release notes 复查：GitHub Release 列表最新仍是 v2.0.4，未发布 v2.2 release notes，因此 image digest evidence 仍缺 release note 记录
 review_passes:
   - pass-1 现状对账：用 grep / ls / package.json / CI / release-gate 核对已存在与缺失项
   - pass-2 一致性复查：统一 Free-Pro-Business、Adapay 独立仓、个人开发者容量

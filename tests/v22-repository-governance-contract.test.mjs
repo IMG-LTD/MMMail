@@ -333,7 +333,7 @@ test('v2.2 completion audit maps the objective to concrete evidence and external
   assert.match(audit, /same Public MMMail commit/);
   assert.match(audit, /not complete until the external evidence gaps above are resolved/);
   assert.match(spec, /status: main-repo-implemented-external-evidence-required/);
-  assert.match(spec, /spec_version: oss-comm-v1\.93/);
+  assert.match(spec, /spec_version: oss-comm-v1\.94/);
   for (const requiredPass of [
     /pass-51 外部状态核查/, /pass-52 OTel 文档复查/, /pass-53 live OIDC 证据模板复查/,
     /pass-54 DEP-02 \/ billing 外部证据模板复查/, /pass-55 远端 CI 状态复查/, /pass-56 后端 v2\.2 contract 新鲜验证/,
